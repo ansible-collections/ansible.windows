@@ -4,7 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#AnsibleRequires -CSharpUtil Ansible.Service
+#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.SCManager
 
 $spec = @{
     options = @{
@@ -20,10 +20,10 @@ $name = $module.Params.name
 $module.Result.exists = $false
 $module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -ErrorAction SilentlyContinue)) {
     try {
-        $service = New-Object -TypeName Ansible.Service.Service -ArgumentList @(
-            $rawService.Name, [Ansible.Service.ServiceRights]'EnumerateDependents, QueryConfig, QueryStatus'
+        $service = New-Object -TypeName Ansible.Windows.SCManager.Service -ArgumentList @(
+            $rawService.Name, [Ansible.Windows.SCManager.ServiceRights]'EnumerateDependents, QueryConfig, QueryStatus'
         )
-    } catch [Ansible.Service.ServiceManagerException] {
+    } catch [Ansible.Windows.SCManager.ServiceManagerException] {
         # ERROR_ACCESS_DENIED, ignore the service and continue on.
         if ($_.Exception.InnerException -and $_.Exception.InnerException.NativeErrorCode -eq 5) {
             $module.Warn("Failed to access service '$($rawService.Name) to get more info, ignoring")
@@ -80,9 +80,9 @@ $module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -Er
 
     # The ServiceType value can contain other flags which are represented by other properties, this strips them out
     # so we don't include them in the service_type return value.
-    $serviceType = [uint32]$service.ServiceType -band -bnot [uint32][Ansible.Service.ServiceType]::InteractiveProcess
-    $serviceType = $serviceType -band -bnot [uint32][Ansible.Service.ServiceType]::UserServiceInstance
-    $serviceType = switch (([Ansible.Service.ServiceType]$serviceType).ToString()) {
+    $serviceType = [uint32]$service.ServiceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::InteractiveProcess
+    $serviceType = $serviceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::UserServiceInstance
+    $serviceType = switch (([Ansible.Windows.SCManager.ServiceType]$serviceType).ToString()) {
         KernelDriver { 'kernel_driver' }
         FileSystemDriver { 'file_system_driver' }
         Adapter { 'adapter' }
@@ -129,16 +129,16 @@ $module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -Er
                 Custom { 'custom' }
             }
             sub_type = switch($trigger.SubType.ToString()) {
-                ([Ansible.Service.Trigger]::NAMED_PIPE_EVENT_GUID) { 'named_pipe_event' }
-                ([Ansible.Service.Trigger]::RPC_INTERFACE_EVENT_GUID) { 'rpc_interface_event' }
-                ([Ansible.Service.Trigger]::DOMAIN_JOIN_GUID) { 'domain_join' }
-                ([Ansible.Service.Trigger]::DOMAIN_LEAVE_GUID) { 'domain_leave' }
-                ([Ansible.Service.Trigger]::FIREWALL_PORT_OPEN_GUID) { 'firewall_port_open' }
-                ([Ansible.Service.Trigger]::FIREWALL_PORT_CLOSE_GUID) { 'firewall_port_close' }
-                ([Ansible.Service.Trigger]::MACHINE_POLICY_PRESENT_GUID) { 'machine_policy_present' }
-                ([Ansible.Service.Trigger]::USER_POLICY_PRESENT_GUID) { 'user_policy_present' }
-                ([Ansible.Service.Trigger]::NETWORK_MANAGER_FIRST_IP_ADDRESS_ARRIVAL_GUID) { 'network_first_ip_arrival' }
-                ([Ansible.Service.Trigger]::NETWORK_MANAGER_LAST_IP_ADDRESS_REMOVAL_GUID) { 'network_last_ip_removal' }
+                ([Ansible.Windows.SCManager.Trigger]::NAMED_PIPE_EVENT_GUID) { 'named_pipe_event' }
+                ([Ansible.Windows.SCManager.Trigger]::RPC_INTERFACE_EVENT_GUID) { 'rpc_interface_event' }
+                ([Ansible.Windows.SCManager.Trigger]::DOMAIN_JOIN_GUID) { 'domain_join' }
+                ([Ansible.Windows.SCManager.Trigger]::DOMAIN_LEAVE_GUID) { 'domain_leave' }
+                ([Ansible.Windows.SCManager.Trigger]::FIREWALL_PORT_OPEN_GUID) { 'firewall_port_open' }
+                ([Ansible.Windows.SCManager.Trigger]::FIREWALL_PORT_CLOSE_GUID) { 'firewall_port_close' }
+                ([Ansible.Windows.SCManager.Trigger]::MACHINE_POLICY_PRESENT_GUID) { 'machine_policy_present' }
+                ([Ansible.Windows.SCManager.Trigger]::USER_POLICY_PRESENT_GUID) { 'user_policy_present' }
+                ([Ansible.Windows.SCManager.Trigger]::NETWORK_MANAGER_FIRST_IP_ADDRESS_ARRIVAL_GUID) { 'network_first_ip_arrival' }
+                ([Ansible.Windows.SCManager.Trigger]::NETWORK_MANAGER_LAST_IP_ADDRESS_REMOVAL_GUID) { 'network_last_ip_removal' }
                 default { 'custom' }
             }
             sub_type_guid = $trigger.SubType.ToString()
@@ -175,7 +175,7 @@ $module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -Er
         dependencies = $service.DependentOn
         dependency_of = $service.DependedBy
         description = $service.Description
-        desktop_interact = $service.ServiceType.HasFlag([Ansible.Service.ServiceType]::InteractiveProcess)
+        desktop_interact = $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::InteractiveProcess)
         display_name = $service.DisplayName
         error_control = $service.ErrorControl.ToString().ToLowerInvariant()
         failure_actions = $failureActions

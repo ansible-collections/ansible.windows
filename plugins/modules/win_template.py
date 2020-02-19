@@ -23,7 +23,6 @@ options:
     default: no
   newline_sequence:
     default: '\r\n'
-  force:
 notes:
 - Beware fetching files from windows machines when creating templates because certain tools, such as Powershell ISE,
   and regedit's export facility add a Byte Order Mark as the first character of the file, which can cause tracebacks.

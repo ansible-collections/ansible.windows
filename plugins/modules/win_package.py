@@ -182,27 +182,11 @@ options:
     aliases: [ user_name ]
 
   # Overrides the options in url_windows
-  client_cert:
-  client_cert_password:
-  follow_redirects:
-  force_basic_auth:
-  headers:
-  http_agent:
-  maximum_redirection:
-  method:
-  proxy_password:
-  proxy_url:
-  proxy_use_default_credential:
-  proxy_username:
   timeout:
     description:
     - Specifies how long the web download request can be pending before it
       times out in seconds.
     - Set to C(0) to specify an infinite timeout.
-  url_password:
-  url_username:
-  use_default_credential:
-  use_proxy:
 extends_documentation_fragment:
 - ansible.windows.url_windows
 

@@ -1,6 +1,8 @@
+---
 - name: run win_whoami with normal execution
-  win_whoami: null
+  win_whoami:
   register: win_whoami_result
+
 - name: assert win_whoami with normal execution
   assert:
     that:
@@ -32,12 +34,14 @@
     - win_whoami_result.token_type == 'TokenPrimary'
     - win_whoami_result.upn is defined
     - win_whoami_result.user_flags is defined
+
 - name: run win_whoami with SYSTEM execution
-  win_whoami: null
-  become: true
+  win_whoami:
+  become: yes
   become_method: ansible.windows.runas
   become_user: SYSTEM
   register: win_whoami_result
+
 - name: assert win_whoami with SYSTEM execution
   assert:
     that:
@@ -69,14 +73,17 @@
     - win_whoami_result.token_type == 'TokenPrimary'
     - win_whoami_result.upn is defined
     - win_whoami_result.user_flags is defined
+
 - set_fact:
     become_username: ansible_become
     become_username_limited: ansible_limited
     gen_pw: password123! + {{lookup('password', '/dev/null chars=ascii_letters,digits length=8')}}
+
 - name: ensure current user is not the become user
   win_shell: whoami
   register: whoami_out
   failed_when: whoami_out.stdout_lines[0].endswith(become_username) or whoami_out.stdout_lines[0].endswith(become_username_limited)
+
 - name: create user
   win_user:
     name: '{{become_username}}'
@@ -84,6 +91,7 @@
     update_password: always
     groups: Administrators
   register: become_user_info
+
 - name: create user limited
   win_user:
     name: '{{become_username_limited}}'
@@ -91,35 +99,41 @@
     update_password: always
     groups: Users
   register: become_user_info_limited
+
 - block:
   - name: get become user profile dir so we can clean it up later
-    vars: &id001
+    vars: &become_vars
       ansible_become_user: '{{become_username}}'
       ansible_become_password: '{{gen_pw}}'
       ansible_become_method: ansible.windows.runas
-      ansible_become: true
+      ansible_become: yes
     win_shell: $env:USERPROFILE
     register: profile_dir_out
+
   - name: ensure profile dir contains test username (eg, if become fails silently, prevent deletion of real user profile)
     assert:
       that:
       - become_username in profile_dir_out.stdout_lines[0]
+
   - name: get become user limited profile dir so we can clean it up later
-    vars: &id002
+    vars: &become_vars_limited
       ansible_become_user: '{{become_username_limited}}'
       ansible_become_password: '{{gen_pw}}'
       ansible_become_method: ansible.windows.runas
-      ansible_become: true
+      ansible_become: yes
     win_shell: $env:USERPROFILE
     register: profile_dir_out_limited
+
   - name: ensure limited profile dir contains test username (eg, if become fails silently, prevent deletion of real user profile)
     assert:
       that:
       - become_username_limited in profile_dir_out_limited.stdout_lines[0]
+
   - name: run win_whoami with become execution
-    win_whoami: null
-    vars: *id001
+    win_whoami:
+    vars: *become_vars
     register: win_whoami_result
+
   - name: assert win_whoami with become execution
     assert:
       that:
@@ -151,10 +165,12 @@
       - win_whoami_result.token_type == 'TokenPrimary'
       - win_whoami_result.upn == ''
       - win_whoami_result.user_flags is defined
+
   - name: run win_whoami with limited become execution
-    win_whoami: null
-    vars: *id002
+    win_whoami:
+    vars: *become_vars_limited
     register: win_whoami_result
+
   - name: assert win_whoami with limited become execution
     assert:
       that:
@@ -186,6 +202,7 @@
       - win_whoami_result.token_type == 'TokenPrimary'
       - win_whoami_result.upn == ''
       - win_whoami_result.user_flags is defined
+
   always:
   - name: ensure test user is deleted
     win_user:
@@ -194,11 +211,13 @@
     with_items:
     - '{{become_username}}'
     - '{{become_username_limited}}'
+
   - name: ensure test user profile is deleted
     win_shell: rmdir /S /Q {{profile_dir_out.stdout_lines[0]}}
     args:
       executable: cmd.exe
     when: become_username in profile_dir_out.stdout_lines[0]
+
   - name: ensure limited test user profile is deleted
     win_shell: rmdir /S /Q {{profile_dir_out_limited.stdout_lines[0]}}
     args:

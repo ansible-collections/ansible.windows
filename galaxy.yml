@@ -1,14 +1,17 @@
 namespace: ansible
 name: windows
-version: 1.0.0
+version: 0.0.1
 readme: README.md
-authors: null
-description: null
-license: GPL-3.0-or-later
-license_file: null
-tags: null
+authors:
+- Jordan Borean @jborean93
+- Matt Davis @nitzmahone
+description: |
+  Ansible collection for core Windows pluigns.
+license_file: LICENSE
+tags:
+- windows
 dependencies: {}
-repository: git@github.com:ansible-collection-migration/ansible.windows.git
-documentation: https://github.com/ansible-collection-migration/ansible.windows/tree/master/docs
-homepage: https://github.com/ansible-collection-migration/ansible.windows
-issues: https://github.com/ansible-collection-migration/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc
+repository: git@github.com:ansible-collection/ansible.windows.git
+documentation: https://github.com/ansible-collection/ansible.windows/tree/master/docs
+homepage: https://github.com/ansible-collection/ansible.windows
+issues: https://github.com/ansible-collection/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc

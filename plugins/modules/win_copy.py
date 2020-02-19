@@ -95,7 +95,7 @@ notes:
   mechanism. If sending large files consider hosting them on a web service and
   using M(win_get_url) instead.
 seealso:
-- module: assemble
+- module: community.general.assemble
 - module: copy
 - module: win_get_url
 - module: win_robocopy

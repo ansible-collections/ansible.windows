@@ -8,7 +8,28 @@ using System.Security.Principal;
 using System.Text;
 using Ansible.Privilege;
 
-namespace Ansible.Service
+//TypeAccelerator -Name Ansible.Windows.SCManager.ControlsAccepted -TypeName ControlsAccepted
+//TypeAccelerator -Name Ansible.Windows.SCManager.ErrorControl -TypeName ErrorControl
+//TypeAccelerator -Name Ansible.Windows.SCManager.FailureAction -TypeName FailureAction
+//TypeAccelerator -Name Ansible.Windows.SCManager.LaunchProtection -TypeName LaunchProtection
+//TypeAccelerator -Name Ansible.Windows.SCManager.SCMRights -TypeName SCMRights
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceFlags -TypeName ServiceFlags
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceManagerException -TypeName ServiceManagerException
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceRights -TypeName ServiceRights
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceStartType -TypeName ServiceStartType
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceType -TypeName ServiceType
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceSidInfo -TypeName ServiceSidInfo
+//TypeAccelerator -Name Ansible.Windows.SCManager.ServiceStatus -TypeName ServiceStatus
+//TypeAccelerator -Name Ansible.Windows.SCManager.TriggerAction -TypeName TriggerAction
+//TypeAccelerator -Name Ansible.Windows.SCManager.TriggerDataType -TypeName TriggerDataType
+//TypeAccelerator -Name Ansible.Windows.SCManager.TriggerType -TypeName TriggerType
+//TypeAccelerator -Name Ansible.Windows.SCManager.Action -TypeName Action
+//TypeAccelerator -Name Ansible.Windows.SCManager.FailureActions -TypeName FailureActions
+//TypeAccelerator -Name Ansible.Windows.SCManager.TriggerItem -TypeName TriggerItem
+//TypeAccelerator -Name Ansible.Windows.SCManager.Trigger -TypeName Trigger
+//TypeAccelerator -Name Ansible.Windows.SCManager.Service -TypeName Service
+
+namespace ansible_collections.ansible.windows.plugins.module_utils.SCManager
 {
     internal class NativeHelpers
     {

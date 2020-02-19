@@ -1,0 +1,44 @@
+language: python
+
+env:
+  matrix:
+    - T=none
+
+matrix:
+  exclude:
+    - env: T=none
+  include:
+    - env: T=sanity/1
+
+    - env: T=windows/2012/1
+    - env: T=windows/2012-R2/1
+    - env: T=windows/2016/1
+    - env: T=windows/2019/1
+
+    - env: T=windows/2012/2
+    - env: T=windows/2012-R2/2
+    - env: T=windows/2016/2
+    - env: T=windows/2019/2
+
+    - env: T=windows/2012/3
+    - env: T=windows/2012-R2/3
+    - env: T=windows/2016/3
+    - env: T=windows/2019/3
+
+branches:
+  except:
+    - "*-patch-*"
+    - "revert-*-*"
+
+build:
+  ci:
+    - tests/utils/shippable/timing.sh tests/utils/shippable/shippable.sh $T
+
+integrations:
+  notifications:
+    - integrationName: email
+      type: email
+      on_success: never
+      on_failure: never
+      on_start: never
+      on_pull_request: never

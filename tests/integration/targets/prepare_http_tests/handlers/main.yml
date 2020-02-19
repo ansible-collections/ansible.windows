@@ -1,0 +1,7 @@
+---
+- name: remove CA trust store cert
+  win_certificate_store:
+    thumbprint: '{{ httptester_ca_cert_info.thumbprints[0] }}'
+    state: absent
+    store_location: LocalMachine
+    store_name: Root

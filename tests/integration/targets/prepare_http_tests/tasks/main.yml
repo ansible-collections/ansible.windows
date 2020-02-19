@@ -3,22 +3,40 @@
 - set_fact:
     has_httptester: "{{ lookup('env', 'HTTPTESTER') != '' }}"
 
-- name: make sure we have the ansible_os_family and ansible_distribution_version facts
-  setup:
-    gather_subset: distribution
-  when: ansible_facts == {}
+- name: If we are running with access to a httptester container, grab it's cacert and install it
+  when: has_httptester | bool
+  block:
+  - name:  Override hostname defaults with httptester linked names
+    include_vars: httptester.yml
 
-# If we are running with access to a httptester container, grab it's cacert and install it
-- block:
-    # Override hostname defaults with httptester linked names
-    - include_vars: httptester.yml
+  - name: make sure the port forwarder is active
+    win_wait_for:
+      host: ansible.http.tests
+      port: 80
+      state: started
+      timeout: 300
 
-    - include_tasks: "{{ lookup('first_found', files)}}"
-      vars:
-        files:
-          - "{{ ansible_os_family | lower }}.yml"
-          - "default.yml"
-  when:
-  - has_httptester|bool
-  # skip the setup if running on Windows Server 2008 as httptester is not available
-  - ansible_os_family != 'Windows' or (ansible_os_family == 'Windows' and not ansible_distribution_version.startswith("6.0."))
+  - name: get client cert/key
+    win_get_url:
+      url: http://ansible.http.tests/{{ item }}
+      dest: '{{ remote_tmp_dir }}\{{ item }}'
+    register: win_download
+    retries: 5  # Just have a retry in case the host is running a bit slower today.
+    until: win_download is successful
+    with_items:
+    - client.pem
+    - client.key
+
+  - name: retrieve test cacert
+    win_get_url:
+      url: http://ansible.http.tests/cacert.pem
+      dest: '{{ remote_tmp_dir }}\cacert.pem'
+
+  - name: update ca trust
+    win_certificate_store:
+      path: '{{ remote_tmp_dir }}\cacert.pem'
+      state: present
+      store_location: LocalMachine
+      store_name: Root
+    register: httptester_ca_cert_info
+    notify: remove CA trust store cert

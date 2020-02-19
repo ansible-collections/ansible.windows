@@ -164,18 +164,8 @@
     - cmdout.stderr is search("starterror")
     - cmdout.stderr is search("doneerror")
 
-- name: create testing folder for argv binary
-  win_file:
-    path: C:\ansible testing
-    state: directory
-
-- name: download binary the outputs argv to stdout
-  win_get_url:
-    url: https://ansible-ci-files.s3.amazonaws.com/test/integration/roles/test_win_module_utils/PrintArgv.exe
-    dest: C:\ansible testing\PrintArgv.exe
-
 - name: call argv binary with absolute path
-  win_command: '"C:\ansible testing\PrintArgv.exe" arg1 "arg 2" C:\path\arg "\"quoted arg\""'
+  win_command: '"{{ win_printargv_path }}" arg1 "arg 2" C:\path\arg "\"quoted arg\""'
   register: cmdout
 
 - name: assert call to argv binary with absolute path
@@ -189,9 +179,9 @@
     - cmdout.stdout_lines[3] == '"quoted arg"'
 
 - name: call argv binary with relative path
-  win_command: 'PrintArgv.exe C:\path\end\slash\ ADDLOCAL="msi,example" two\\slashes'
+  win_command: '{{ win_printargv_path | win_basename }} C:\path\end\slash\ ADDLOCAL="msi,example" two\\slashes'
   args:
-    chdir: C:\ansible testing
+    chdir: '{{ win_printargv_path | win_dirname }}'
   register: cmdout
 
 - name: assert call to argv binary with relative path
@@ -206,10 +196,10 @@
 - name: download binary that output shift_jis chars to console
   win_get_url:
     url: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/win_command/OutputEncodingOverride.exe
-    dest: C:\ansible testing\OutputEncodingOverride.exe
+    dest: '{{ remote_tmp_dir }}\OutputEncodingOverride.exe'
 
 - name: call binary with shift_jis output encoding override
-  win_command: '"C:\ansible testing\OutputEncodingOverride.exe"'
+  win_command: '"{{ remote_tmp_dir }}\OutputEncodingOverride.exe"'
   args:
     output_encoding_override: shift_jis
   register: cmdout

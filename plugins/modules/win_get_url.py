@@ -82,15 +82,6 @@ options:
     - The alias I(password) is deprecated and will be removed in Ansible 2.14.
     aliases:
     - password
-  proxy_url:
-  proxy_username:
-  proxy_password:
-  headers:
-  use_proxy:
-  follow_redirects:
-  maximum_redirection:
-  client_cert:
-  client_cert_password:
   method:
     description:
     - This option is not for use with C(win_get_url) and should be ignored.

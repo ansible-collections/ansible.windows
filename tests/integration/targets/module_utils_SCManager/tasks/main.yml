@@ -1,0 +1,9 @@
+---
+- name: test SCManager.cs
+  scmanager_tests:
+  register: scmanager_test
+
+- name: assert test SCManager.cs
+  assert:
+    that:
+    - scmanager_test.data == "success"
