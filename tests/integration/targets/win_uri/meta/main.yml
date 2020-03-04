@@ -1,2 +1,2 @@
 dependencies:
-- prepare_http_tests
+- setup_http_tests
