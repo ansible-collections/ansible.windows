@@ -20,7 +20,7 @@
 - name: fill in a basic template (DOS)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.dos.templated'
+    dest: '{{ remote_tmp_dir }}/foo.dos.templated'
   register: template_result
 
 - name: verify that the file was marked as changed (DOS)
@@ -31,7 +31,7 @@
 - name: fill in a basic template again (DOS)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.dos.templated'
+    dest: '{{ remote_tmp_dir }}/foo.dos.templated'
   register: template_result2
 
 - name: verify that the template was not changed (DOS)
@@ -43,10 +43,10 @@
 - name: copy known good into place (DOS)
   win_copy:
     src: foo.dos.txt
-    dest: '{{ win_output_dir }}\\foo.dos.txt'
+    dest: '{{ remote_tmp_dir }}\\foo.dos.txt'
 
 - name: compare templated file to known good (DOS)
-  raw: fc.exe {{ win_output_dir }}\\foo.dos.templated {{ win_output_dir }}\\foo.dos.txt
+  raw: fc.exe {{ remote_tmp_dir }}\\foo.dos.templated {{ remote_tmp_dir }}\\foo.dos.txt
   register: diff_result
 
 - debug:
@@ -62,7 +62,7 @@
 - name: fill in a basic template (Unix)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.unix.templated'
+    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
     newline_sequence: '\n'
   register: template_result
 
@@ -74,7 +74,7 @@
 - name: fill in a basic template again (Unix)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.unix.templated'
+    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
     newline_sequence: '\n'
   register: template_result2
 
@@ -87,10 +87,10 @@
 - name: copy known good into place (Unix)
   win_copy:
     src: foo.unix.txt
-    dest: '{{ win_output_dir }}\\foo.unix.txt'
+    dest: '{{ remote_tmp_dir }}\\foo.unix.txt'
 
 - name: compare templated file to known good (Unix)
-  raw: fc.exe {{ win_output_dir }}\\foo.unix.templated {{ win_output_dir }}\\foo.unix.txt
+  raw: fc.exe {{ remote_tmp_dir }}\\foo.unix.templated {{ remote_tmp_dir }}\\foo.unix.txt
   register: diff_result
 
 - debug:
@@ -105,10 +105,10 @@
 - name: copy known good into place (DOS)
   win_copy:
     src: foo.dos.txt
-    dest: '{{ win_output_dir }}\\foo.dos.txt'
+    dest: '{{ remote_tmp_dir }}\\foo.dos.txt'
 
 - name: compare templated file to known good (DOS)
-  raw: fc.exe {{ win_output_dir }}\\foo.dos.templated {{ win_output_dir }}\\foo.dos.txt
+  raw: fc.exe {{ remote_tmp_dir }}\\foo.dos.templated {{ remote_tmp_dir }}\\foo.dos.txt
   register: diff_result
 
 - debug:
@@ -123,7 +123,7 @@
 - name: test backup (check_mode)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.unix.templated'
+    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
     backup: yes
   register: cm_backup_result
   check_mode: yes
@@ -137,7 +137,7 @@
 - name: test backup (normal mode)
   win_template:
     src: foo.j2
-    dest: '{{ win_output_dir }}/foo.unix.templated'
+    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
     backup: yes
   register: nm_backup_result
 
@@ -254,12 +254,12 @@
 - name: template a file with utf-8 encoding
   win_template:
     src: foo.utf-8.j2
-    dest: '{{ win_output_dir }}\foo.encoding.txt'
+    dest: '{{ remote_tmp_dir }}\foo.encoding.txt'
   register: template_utf8
 
 - name: slurp utf-8 templated file
   slurp:
-    path: '{{ win_output_dir }}\foo.encoding.txt'
+    path: '{{ remote_tmp_dir }}\foo.encoding.txt'
   register: template_utf8_actual
 
 - name: get expected templated contents
@@ -275,13 +275,13 @@
 - name: template a file with windows-1252 encoding
   win_template:
     src: foo.utf-8.j2
-    dest: '{{ win_output_dir }}\foo.encoding.txt'
+    dest: '{{ remote_tmp_dir }}\foo.encoding.txt'
     output_encoding: windows-1252
   register: template_windows_1252
 
 - name: slurp windows-1252 encoding
   slurp:
-    path: '{{ win_output_dir }}\foo.encoding.txt'
+    path: '{{ remote_tmp_dir }}\foo.encoding.txt'
   register: template_windows_1252_actual
 
 - name: assert template a file with windows-1252 encoding

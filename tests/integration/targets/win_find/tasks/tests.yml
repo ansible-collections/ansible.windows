@@ -24,7 +24,7 @@
     - actual.examined == 0
     - actual.files == []
     - actual.matched == 0
-    - actual.warnings == ["Argument path '" + win_find_dir + "\\thisisafakefolder' does not exist, skipping"]
+    - actual.warnings == ["Argument path '" + win_find_dir + "\\thisisafakefolder' does not exist or is not accessible, skipping"]
 
 - name: get files in single directory
   win_find:
@@ -736,17 +736,45 @@
     reorganize: false
     state: absent
 
-- name: run win_find with under-privileged account
+- name: run win_find with under-privileged account on inaccesible dir
   win_find:
     paths: '{{win_find_dir}}\secure-tests'
     recurse: true
     file_type: directory
-  register: secure_result
+  register: secure_result_inaccessible
   become: true
   become_method: ansible.windows.runas
   become_user: '{{test_win_find_username}}'
   vars:
     ansible_become_password: '{{test_win_find_password}}'
+
+- name: assert run win_find with under-privileged account on inaccessible dir
+  assert:
+    that:
+    - secure_result_inaccessible.examined == 0
+    - secure_result_inaccessible.matched == 0
+    - secure_result_inaccessible.files == []
+    - secure_result_inaccessible.warnings == ["Argument path '" + win_find_dir + "\\secure-tests' does not exist or is not accessible, skipping"]
+
+- name: add read permissions to parent dir but still keep child dir as secure
+  win_acl:
+    user: '{{ test_win_find_username }}'
+    path: '{{ win_find_dir }}\secure-tests'
+    rights: ListDirectory, Read
+    type: allow
+    state: present
+
+- name: run win_find with under-privileged account on accessible dir
+  win_find:
+    paths: '{{ win_find_dir }}\secure-tests'
+    recurse: true
+    file_type: directory
+  register: secure_result
+  become: true
+  become_method: ansible.windows.runas
+  become_user: '{{ test_win_find_username }}'
+  vars:
+    ansible_become_password: '{{ test_win_find_password }}'
 
 - name: assert win_find only examined 2 files with under-privileged account
   assert:
