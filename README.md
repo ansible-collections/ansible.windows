@@ -40,14 +40,27 @@ You can run the collection's test suites with the commands:
 
 ## Publishing New Version
 
-TBD
+The current process for publishing new versions of the Windows Core Collection is manual, and requires a user who has access to the `ansible` namespace on Ansible Galaxy and Automation Hub to publish the build artifact.
+
+  1. Ensure `CHANGE>OG.md` contains all the latest changes.
+  2. Update `galaxy.yml` with the new `version` for the collection.
+  3. Create a release in GitHub to tag the commit at the version to build.
+  4. Run the following commands to build and release the new version on Galaxy:
+
+     ```
+     ansible-galaxy collection build
+     ansible-galaxy collection publish ./ansible-windows-$VERSION_HERE.tar.gz
+     ```
+
+After the version is published, verify it exists on the [Windows Core Collecton Galaxy page](https://galaxy.ansible.com/ansible/windows).
+
 
 ## More Information
 
-TBD
+For more information about Ansible's Windows integration, join the `#ansible-windows` channel on Freenode IRC, and browse the resources in the [Windows Working Group](https://github.com/ansible/community/wiki/Windows) Community wiki page.
+
 
 ## License
-
 
 GNU General Public License v3.0 or later
 
