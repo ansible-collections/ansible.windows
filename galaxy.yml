@@ -7,7 +7,7 @@ authors:
 - Matt Davis @nitzmahone
 description: |
   Ansible collection for core Windows pluigns.
-license_file: LICENSE
+license_file: COPYING
 tags:
 - windows
 dependencies: {}

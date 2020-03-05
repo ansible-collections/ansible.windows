@@ -65,4 +65,4 @@ For more information about Ansible's Windows integration, join the `#ansible-win
 
 GNU General Public License v3.0 or later
 
-See [LICENSE](LICENSE) to see the full text.
+See [COPYING](COPYING) to see the full text.
