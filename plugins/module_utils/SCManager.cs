@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.Text;
 using Ansible.Privilege;
 
+// Test
 //TypeAccelerator -Name Ansible.Windows.SCManager.ControlsAccepted -TypeName ControlsAccepted
 //TypeAccelerator -Name Ansible.Windows.SCManager.ErrorControl -TypeName ErrorControl
 //TypeAccelerator -Name Ansible.Windows.SCManager.FailureAction -TypeName FailureAction
