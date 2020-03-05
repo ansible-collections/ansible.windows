@@ -333,7 +333,7 @@
   register: add_firewall_rule_with_edge_traversal
 
 # Setup action creates ansible_distribution_version variable
-- action: setup
+- ansible.windows.setup:
 
 - name: Check that creating firewall rule with enge traversal option 'deferapp' succeeds with a change
   assert:
