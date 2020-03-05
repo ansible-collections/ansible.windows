@@ -1,0 +1,1 @@
+AnsibleVhdx: '{{ remote_tmp_dir }}\AnsiblePart.vhdx'
