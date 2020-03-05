@@ -158,7 +158,7 @@
   register: unicode
 
 - name: reboot the server after changing unicode language
-  action: win_reboot
+  ansible.windows.win_reboot:
   when: unicode.restart_required
 
 - name: get actual unicode value
