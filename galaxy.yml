@@ -11,9 +11,9 @@ license_file: COPYING
 tags:
 - windows
 dependencies: {}
-repository: git@github.com:ansible-collection/ansible.windows.git
-documentation: https://github.com/ansible-collection/ansible.windows/tree/master/docs
-homepage: https://github.com/ansible-collection/ansible.windows
-issues: https://github.com/ansible-collection/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc
+repository: https://github.com/ansible-collections/ansible.windows
+documentation: https://github.com/ansible-collections/ansible.windows/tree/master/docs
+homepage: https://github.com/ansible-collections/ansible.windows
+issues: https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc
 build_ignore:
 - tests/integration/inventory*
