@@ -11,7 +11,7 @@ The collection includes the core plugins supported by Ansible to help the manage
 
 ## Installation and Usage
 
-### Installaing the Collection from Ansible Galaxy
+### Installing the Collection from Ansible Galaxy
 
 Before using the Windows collection, you need to install it with the `ansible-galaxy` CLI:
 
@@ -53,7 +53,7 @@ The current process for publishing new versions of the Windows Core Collection i
      ansible-galaxy collection publish ./ansible-windows-$VERSION_HERE.tar.gz
      ```
 
-After the version is published, verify it exists on the [Windows Core Collecton Galaxy page](https://galaxy.ansible.com/ansible/windows).
+After the version is published, verify it exists on the [Windows Core Collection Galaxy page](https://galaxy.ansible.com/ansible/windows).
 
 
 ## More Information
