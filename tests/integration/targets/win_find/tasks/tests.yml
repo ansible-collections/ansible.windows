@@ -743,7 +743,7 @@
     file_type: directory
   register: secure_result_inaccessible
   become: true
-  become_method: ansible.windows.runas
+  become_method: runas
   become_user: '{{test_win_find_username}}'
   vars:
     ansible_become_password: '{{test_win_find_password}}'
@@ -771,7 +771,7 @@
     file_type: directory
   register: secure_result
   become: true
-  become_method: ansible.windows.runas
+  become_method: runas
   become_user: '{{ test_win_find_username }}'
   vars:
     ansible_become_password: '{{ test_win_find_password }}'
