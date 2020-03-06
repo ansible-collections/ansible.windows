@@ -239,6 +239,12 @@ if ($copy_mode -eq "query") {
         $local_checksum = $file.checksum
 
         $filepath = Join-Path -Path $dest -ChildPath $filename
+
+        if (Test-Path -LiteralPath $filepath -PathType Container) {
+            $filename = Join-Path $filename -ChildPath (Split-Path -Path $file.src -Leaf)
+            $filepath = Join-Path -Path $dest -ChildPath $filename
+        }
+
         if (Test-Path -LiteralPath $filepath -PathType Leaf) {
             if ($force) {
                 $checksum = Get-FileChecksum -path $filepath
@@ -306,6 +312,7 @@ if ($copy_mode -eq "query") {
         Fail-Json -obj $result -message "Cannot copy src file: '$src' as it does not exist"
     }
 
+    $remote_dest = $dest
     if (Test-Path -LiteralPath $src -PathType Container) {
         # we are copying a directory or the contents of a directory
         $result.operation = 'folder_copy'
@@ -334,27 +341,30 @@ if ($copy_mode -eq "query") {
         $source_basename = (Get-Item -LiteralPath $src -Force).Name
         $result.original_basename = $source_basename
 
-        if ($dest.EndsWith("/") -or $dest.EndsWith("`\")) {
-            $dest = Join-Path -Path $dest -ChildPath (Get-Item -LiteralPath $src -Force).Name
-            $result.dest = $dest
-        } else {
-            # check if the parent dir exists, this is only done if src is a
-            # file and dest if the path to a file (doesn't end with \ or /)
-            $parent_dir = Split-Path -LiteralPath $dest
-            if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
-                Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
-            } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+        if ($dest.EndsWith("/") -or $dest.EndsWith("`\") -or (Test-Path -LiteralPath $dest -PathType Container)) {
+            $remote_dest = Join-Path -Path $dest -ChildPath (Get-Item -LiteralPath $src -Force).Name
+        }
+        $result.dest = $remote_dest
+        $parent_dir = Split-Path -LiteralPath $remote_dest
+
+        if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
+            Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
+        } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+            if ($dest -eq $remote_dest) {
                 Fail-Json -obj $result -message "Destination directory '$parent_dir' does not exist"
+            } else {
+                $null = New-Item -Path $parent_dir -ItemType Directory
             }
         }
-        $copy_result = Copy-File -source $src -dest $dest
+
+        $copy_result = Copy-File -source $src -dest $remote_dest
         $diff = $copy_result.diff
         $result.checksum = $copy_result.checksum
     }
 
     # the file might not exist if running in check mode
-    if (-not $check_mode -or (Test-Path -LiteralPath $dest -PathType Leaf)) {
-        $result.size = Get-FileSize -path $dest
+    if (-not $check_mode -or (Test-Path -LiteralPath $remote_dest -PathType Leaf)) {
+        $result.size = Get-FileSize -path $remote_dest
     } else {
         $result.size = $null
     }
@@ -370,25 +380,20 @@ if ($copy_mode -eq "query") {
     }
 
     # the dest parameter is a directory, we need to append original_basename
+    $remote_dest = $dest
     if ($dest.EndsWith("/") -or $dest.EndsWith("`\") -or (Test-Path -LiteralPath $dest -PathType Container)) {
         $remote_dest = Join-Path -Path $dest -ChildPath $original_basename
-        $parent_dir = Split-Path -LiteralPath $remote_dest
+    }
+    $parent_dir = Split-Path -LiteralPath $remote_dest
 
-        # when dest ends with /, we need to create the destination directories
-        if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
-            Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
-        } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
-            New-Item -Path $parent_dir -ItemType Directory | Out-Null
-        }
-    } else {
-        $remote_dest = $dest
-        $parent_dir = Split-Path -LiteralPath $remote_dest
-
-        # check if the dest parent dirs exist, need to fail if they don't
-        if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
-            Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
-        } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+    # check if the dest parent dirs exist, need to fail if they don't
+    if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
+        Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
+    } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+        if ($dest -eq $remote_dest) {
             Fail-Json -obj $result -message "Destination directory '$parent_dir' does not exist"
+        } else {
+            $null = New-Item -Path $parent_dir -ItemType Directory
         }
     }
 

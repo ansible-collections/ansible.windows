@@ -154,19 +154,19 @@
 
 - name: create template dest directory
   win_file:
-    path: '{{win_output_dir}}\directory'
+    path: '{{ remote_tmp_dir }}\directory'
     state: directory
 
 - name: template src file to directory with backslash (check mode)
   win_template:
     src: foo.j2
-    dest: '{{win_output_dir}}\directory\'
+    dest: '{{ remote_tmp_dir }}\directory\'
   check_mode: yes
   register: template_to_dir_backslash_check
 
 - name: get result of template src file to directory with backslash (check_mode)
   win_stat:
-    path: '{{win_output_dir}}\directory\foo.j2'
+    path: '{{ remote_tmp_dir }}\directory\foo.j2'
   register: template_to_dir_backslash_result_check
 
 - name: assert template src file to directory with backslash (check mode)
@@ -178,12 +178,12 @@
 - name: template src file to directory with backslash
   win_template:
     src: foo.j2
-    dest: '{{win_output_dir}}\directory\'
+    dest: '{{ remote_tmp_dir }}\directory\'
   register: template_to_dir_backslash
 
 - name: get result of template src file to directory with backslash
   win_stat:
-    path: '{{win_output_dir}}\directory\foo.j2'
+    path: '{{ remote_tmp_dir }}\directory\foo.j2'
   register: template_to_dir_backslash_result
 
 - name: assert template src file to directory with backslash
@@ -196,7 +196,7 @@
 - name: template src file to directory with backslash (idempotent)
   win_template:
     src: foo.j2
-    dest: '{{win_output_dir}}\directory\'
+    dest: '{{ remote_tmp_dir }}\directory\'
   register: template_to_dir_backslash_again
 
 - name: assert template src file to directory with backslash (idempotent)
@@ -207,13 +207,13 @@
 - name: template src file to directory (check mode)
   win_template:
     src: another_foo.j2
-    dest: '{{win_output_dir}}\directory'
+    dest: '{{ remote_tmp_dir }}\directory'
   check_mode: yes
   register: template_to_dir_check
 
 - name: get result of template src file to directory (check_mode)
   win_stat:
-    path: '{{win_output_dir}}\directory\another_foo.j2'
+    path: '{{ remote_tmp_dir }}\directory\another_foo.j2'
   register: template_to_dir_result_check
 
 - name: assert template src file to directory (check mode)
@@ -225,12 +225,12 @@
 - name: template src file to directory
   win_template:
     src: another_foo.j2
-    dest: '{{win_output_dir}}\directory'
+    dest: '{{ remote_tmp_dir }}\directory'
   register: template_to_dir
 
 - name: get result of template src file to directory
   win_stat:
-    path: '{{win_output_dir}}\directory\another_foo.j2'
+    path: '{{ remote_tmp_dir }}\directory\another_foo.j2'
   register: template_to_dir_result
 
 - name: assert template src file to directory with
@@ -243,7 +243,7 @@
 - name: template src file to directory (idempotent)
   win_template:
     src: another_foo.j2
-    dest: '{{win_output_dir}}\directory'
+    dest: '{{ remote_tmp_dir }}\directory'
   register: template_to_dir_again
 
 - name: assert template src file to directory (idempotent)

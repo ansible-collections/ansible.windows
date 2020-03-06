@@ -23,14 +23,6 @@
 
 - name: fail source is a file but dest is a folder
   win_copy:
-    src: '{{test_win_copy_path}}\source\foo.txt'
-    dest: '{{test_win_copy_path}}\target\folder'
-    remote_src: yes
-  register: fail_remote_file_to_folder
-  failed_when: "'dest is already a folder' not in fail_remote_file_to_folder.msg"
-
-- name: fail source is a file but dest is a folder
-  win_copy:
     src: '{{test_win_copy_path}}\source\'
     dest: '{{test_win_copy_path}}\target\'
     remote_src: yes
@@ -124,6 +116,29 @@
   assert:
     that:
     - remote_copy_file_again is not changed
+
+- name: remote source is a file to a folder
+  win_copy:
+    src: '{{test_win_copy_path}}\source\foo.txt'
+    dest: '{{test_win_copy_path}}\target'
+    remote_src: yes
+  register: remote_file_to_folder
+
+- name: get result of remote source is a file to a folder
+  win_stat:
+    path: '{{test_win_copy_path}}\target\foo.txt'
+  register: remote_file_to_folder_actual
+
+- name: assert remote source is a file to a folder
+  assert:
+    that:
+    - remote_file_to_folder is changed
+    - remote_file_to_folder_actual.stat.exists
+
+- name: remove test file
+  win_file:
+    path: '{{test_win_copy_path}}\target\foo.txt'
+    state: absent
 
 - name: copy single file into folder remote (check mode)
   win_copy:
