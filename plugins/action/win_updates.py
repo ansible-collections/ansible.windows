@@ -21,7 +21,7 @@ class ActionModule(ActionBase):
     def _run_win_updates(self, module_args, task_vars, use_task):
         display.vvv("win_updates: running win_updates module")
         wrap_async = self._task.async_val
-        result = self._execute_module_with_become(module_name='win_updates',
+        result = self._execute_module_with_become(module_name='ansible.windows.win_updates',
                                                   module_args=module_args,
                                                   task_vars=task_vars,
                                                   wrap_async=wrap_async,
@@ -33,7 +33,7 @@ class ActionModule(ActionBase):
         reboot_args = {
             'reboot_timeout': reboot_timeout
         }
-        reboot_result = self._run_action_plugin('win_reboot', task_vars,
+        reboot_result = self._run_action_plugin('ansible.windows.win_reboot', task_vars,
                                                 module_args=reboot_args)
         if reboot_result.get('failed', False):
             raise AnsibleError(reboot_result['msg'])
@@ -59,7 +59,7 @@ class ActionModule(ActionBase):
 
             try:
                 shell_result = self._execute_module_with_become(
-                    module_name='win_shell', module_args=shell_module_args,
+                    module_name='ansible.windows.win_shell', module_args=shell_module_args,
                     task_vars=task_vars, wrap_async=False, use_task=use_task
                 )
                 display.vvv("win_updates: shell wait results: %s"
