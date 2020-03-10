@@ -29,7 +29,7 @@ python -V
 command -v pip
 pip --version
 pip list --disable-pip-version-check
-pip install git+https://github.com/ansible-collection-migration/ansible-base
+pip install git+https://github.com/ansible/ansible@temp-2.10-devel
 
 # ansible-test hardcodes win_ping in instance online check which will fail until tombstoning is in. The coverage setup
 # and teardown playbooks also need to be changed to use the FQCN for now.
