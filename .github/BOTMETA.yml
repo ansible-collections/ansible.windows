@@ -1,5 +1,9 @@
 automerge: false
 files:
+  $actions/:
+    maintainers: $team_windows_core
+    labels: win windows
+  $doc_fragments/url_windows.py:
   $module_utils/Ansible.Service.cs:
     maintainers: $team_windows_core
     labels: windows
@@ -106,15 +110,10 @@ files:
   $modules/win_whoami.py:
     authors: jborean93
     maintainers: ShachafGoldstein jhawkesworth
-  $plugins/url_windows.py:
-  $plugins/win_copy.py:
-    maintainers: $team_windows_core
-    labels: win windows
 macros:
   actions: plugins/action
   doc_fragments: plugins/doc_fragments
   module_utils: plugins/module_utils
   modules: plugins/modules
-  plugins: plugins/plugins
   team_windows: ShachafGoldstein jborean93 jhawkesworth
   team_windows_core: jborean93 nitzmahone
