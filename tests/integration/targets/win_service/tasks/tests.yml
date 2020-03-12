@@ -317,9 +317,9 @@
 - name: set password without username
   win_service:
     name: "{{test_win_service_name}}"
-    password: password
+    password: secret
   register: win_service_change_password_without_user
-  failed_when: win_service_change_password_without_user.msg != "The argument 'username' must be supplied with 'password'"
+  failed_when: 'win_service_change_password_without_user.msg != "missing parameter(s) required by ''password'': username"'
 
 - name: set service username to Network Service and desktop interact fail
   win_service:
@@ -327,7 +327,12 @@
     username: NT AUTHORITY\NetworkService
     desktop_interact: True
   register: win_desktop_interact_not_local_system
-  failed_when: win_desktop_interact_not_local_system.msg != "Can only set 'desktop_interact' to true when 'username' equals 'LocalSystem'"
+  failed_when: win_desktop_interact_not_local_system.msg != "Can only set 'desktop_interact' to true when 'username' equals 'SYSTEM'"
+
+- name: set service back to SYSTEM for next test
+  win_service:
+    name: '{{ test_win_service_name }}'
+    username: LocalSystem
 
 - name: set service username to Network Service
   win_service:
@@ -360,7 +365,7 @@
     name: "{{test_win_service_name}}"
     desktop_interact: True
   register: win_service_desktop_interact_current_user_fail
-  failed_when: win_service_desktop_interact_current_user_fail.msg != "Can only set desktop_interact to true when service is run with/or 'username' equals 'LocalSystem'"
+  failed_when: win_service_desktop_interact_current_user_fail.msg != "Can only set 'desktop_interact' to true when 'username' equals 'SYSTEM'"
 
 - name: set service username to Local Service
   win_service:
@@ -494,6 +499,16 @@
     - win_service_desktop_enable_again.username == 'LocalSystem'
     - win_service_desktop_enable_again.desktop_interact == True
 
+- name: get the common output format of the current user
+  win_shell: |
+    $user = [System.Security.Principal.NTAccount]'{{ ansible_user }}'
+    $user.Translate([System.Security.Principal.SecurityIdentifier]).Translate([System.Security.Principal.NTAccount]).Value
+  changed_when: no
+  register: current_user
+
+- set_fact:
+    current_user: '{{ current_user.stdout | trim }}'
+
 - name: set service username to current user
   win_service:
     name: "{{test_win_service_name}}"
@@ -505,7 +520,7 @@
   assert:
     that:
     - win_service_change_password_current_user is changed
-    - win_service_change_password_current_user.username|lower == '.\\{{ansible_user|lower}}'
+    - win_service_change_password_current_user.username == current_user
     - win_service_change_password_current_user.desktop_interact == False
 
 - name: set service username to current user again
@@ -519,8 +534,26 @@
   assert:
     that:
     - win_service_change_password_current_user_again is not changed
-    - win_service_change_password_current_user_again.username|lower == '.\\{{ansible_user|lower}}'
+    - win_service_change_password_current_user_again.username == current_user
     - win_service_change_password_current_user_again.desktop_interact == False
+
+- name: set the service username to a NT SERVICE account
+  win_service:
+    name: '{{ test_win_service_name }}'
+    username: NT SERVICE\{{ test_win_service_name }}
+  register: win_service_nt_account
+
+- name: get result of set the service username to a NT SERVICE account
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: win_service_nt_account_actual
+
+- name: assert set the service username to a NT SERVICE account
+  assert:
+    that:
+    - win_service_nt_account is changed
+    - win_service_nt_account.username == 'NT SERVICE\{{ test_win_service_name }}'
+    - win_service_nt_account_actual.services[0].username == 'NT SERVICE\{{ test_win_service_name }}'
 
 - name: set service display name
   win_service:
@@ -670,7 +703,7 @@
   assert:
     that:
     - win_service_dependency_add is changed
-    - win_service_dependency_add.dependencies == ['TestServiceParent2', '{{test_win_service_name}}']
+    - win_service_dependency_add.dependencies == [test_win_service_name, 'TestServiceParent2']
 
 - name: add another dependency to service again
   win_service:
@@ -683,7 +716,7 @@
   assert:
     that:
     - win_service_dependency_add_again is not changed
-    - win_service_dependency_add_again.dependencies == ['TestServiceParent2', '{{test_win_service_name}}']
+    - win_service_dependency_add_again.dependencies == [test_win_service_name, 'TestServiceParent2']
 
 - name: remove another dependency to service
   win_service:
@@ -696,7 +729,7 @@
   assert:
     that:
     - win_service_dependency_add is changed
-    - win_service_dependency_add.dependencies == ['{{test_win_service_name}}']
+    - win_service_dependency_add.dependencies == [test_win_service_name]
 
 - name: remove another dependency to service again
   win_service:
@@ -709,7 +742,7 @@
   assert:
     that:
     - win_service_dependency_add_again is not changed
-    - win_service_dependency_add_again.dependencies == ['{{test_win_service_name}}']
+    - win_service_dependency_add_again.dependencies == [test_win_service_name]
 
 - name: set dependency with a list
   win_service:
@@ -722,7 +755,7 @@
   assert:
     that:
     - win_service_dependency_set_list is changed
-    - win_service_dependency_set_list.dependencies == ['TestServiceParent2', '{{test_win_service_name}}']
+    - win_service_dependency_set_list.dependencies == [test_win_service_name, 'TestServiceParent2']
 
 - name: make sure all services are stopped, set to LocalSystem and set to auto start before next test
   win_service:
@@ -775,7 +808,7 @@
     name: "{{test_win_service_name}}"
     state: absent
   register: win_service_removed_failed
-  failed_when: win_service_removed_failed.msg != "Cannot stop service 'Test Service New (" + test_win_service_name + ")' because it has dependent services. It can only be stopped if the Force flag is set."
+  failed_when: '"Cannot stop service ''Test Service New (" + test_win_service_name + ")'' because it has dependent services. It can only be stopped if the Force flag is set." not in win_service_removed_failed.msg'
 
 - name: remove the service while ignoring dependencies
   win_service:
@@ -818,11 +851,17 @@
   register: win_service_paused_check
   check_mode: yes
 
+- name: get result of pause a service check
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: win_service_paused_check_actual
+
 - name: assert pause a service check
   assert:
     that:
     - win_service_paused_check is changed
-    - win_service_paused_check.state == 'running'
+    - win_service_paused_check.state == 'paused'
+    - win_service_paused_check_actual.services[0].state == 'started'
 
 - name: pause a service
   win_service:
@@ -830,11 +869,17 @@
     state: paused
   register: win_service_paused
 
+- name: get result of pause a service check
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: win_service_paused_actual
+
 - name: assert pause a service
   assert:
     that:
     - win_service_paused is changed
     - win_service_paused.state == 'paused'
+    - win_service_paused_actual.services[0].state == 'paused'
 
 - name: pause a service again
   win_service:
@@ -854,11 +899,17 @@
   register: start_paused_service_check
   check_mode: yes
 
+- name: get result of start a paused service check
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: start_paused_service_check_actual
+
 - name: assert start a paused service check
   assert:
     that:
     - start_paused_service_check is changed
-    - start_paused_service_check.state == 'paused'
+    - start_paused_service_check.state == 'running'
+    - start_paused_service_check_actual.services[0].state == 'paused'
 
 - name: start a paused service
   win_service:
@@ -866,11 +917,17 @@
     state: started
   register: start_paused_service
 
+- name: get result of start a paused service
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: start_paused_service_actual
+
 - name: assert start a paused service
   assert:
     that:
     - start_paused_service is changed
     - start_paused_service.state == 'running'
+    - start_paused_service_actual.services[0].state == 'started'
 
 - name: pause service for next test
   win_service:
@@ -885,11 +942,17 @@
   register: stop_paused_service_check
   check_mode: yes
 
+- name: get result of stop a paused service check
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: stop_paused_service_check_actual
+
 - name: assert stop a paused service check
   assert:
     that:
     - stop_paused_service_check is changed
-    - stop_paused_service_check.state == 'paused'
+    - stop_paused_service_check.state == 'stopped'
+    - stop_paused_service_check_actual.services[0].state == 'paused'
 
 - name: stop a paused service
   win_service:
@@ -898,11 +961,17 @@
     force_dependent_services: True
   register: stop_paused_service
 
+- name: get result of stop a paused service
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: stop_paused_service_actual
+
 - name: assert stop a paused service
   assert:
     that:
     - stop_paused_service is changed
     - stop_paused_service.state == 'stopped'
+    - stop_paused_service_actual.services[0].state == 'stopped'
 
 - name: fail to pause a stopped service check
   win_service:

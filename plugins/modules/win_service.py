@@ -24,6 +24,7 @@ options:
     - This works by C(dependency_action) to either add/remove or set the
       services in this list.
     type: list
+    elements: str
   dependency_action:
     description:
     - Used in conjunction with C(dependency) to either add the dependencies to
@@ -37,7 +38,7 @@ options:
   desktop_interact:
     description:
     - Whether to allow the service user to interact with the desktop.
-    - This should only be set to C(yes) when using the C(LocalSystem) username.
+    - This can only be set to C(yes) when using the C(LocalSystem) username.
     type: bool
     default: no
   description:
@@ -70,15 +71,15 @@ options:
   password:
     description:
     - The password to set the service to start as.
-    - This and the C(username) argument must be supplied together.
-    - If specifying C(LocalSystem), C(NetworkService) or C(LocalService) this field
-      must be an empty string and not null.
+    - This and the C(username) argument should be supplied together when using a local or domain account.
+    - If omitted then the password will continue to use the existing value password set.
+    - If specifying C(LocalSystem), C(NetworkService), C(LocalService), the C(NT SERVICE), or a gMSA this field can be
+      omitted as those accounts have no password.
     type: str
   start_mode:
     description:
     - Set the startup type for the service.
     - A newly created service will default to C(auto).
-    - C(delayed) added in Ansible 2.3
     type: str
     choices: [ auto, delayed, disabled, manual ]
   state:
@@ -87,28 +88,41 @@ options:
     - C(started)/C(stopped)/C(absent)/C(paused) are idempotent actions that will not run
       commands unless necessary.
     - C(restarted) will always bounce the service.
-    - C(absent) was added in Ansible 2.3
-    - C(paused) was added in Ansible 2.4
     - Only services that support the paused state can be paused, you can
       check the return value C(can_pause_and_continue).
     - You can only pause a service that is already started.
     - A newly created service will default to C(stopped).
     type: str
     choices: [ absent, paused, started, stopped, restarted ]
+  update_password:
+    description:
+    - When set to C(always) and I(password) is set, the module will always report a change and set the password.
+    - Set to C(on_create) to only set the password if the module needs to create the service.
+    - If I(username) was specified and the service changed to that username then I(password) will also be changed if
+      specified.
+    - The current default is C(on_create) but this behaviour may change in the future, it is best to be explicit here.
+    choices:
+    - always
+    - on_create
+    type: str
   username:
     description:
     - The username to set the service to start as.
-    - This and the C(password) argument must be supplied together when using
-      a local or domain account.
-    - Set to C(LocalSystem) to use the SYSTEM account.
+    - Can also be set to C(LocalSystem) or C(SYSTEM) to use the SYSTEM account.
     - A newly created service will default to C(LocalSystem).
     - If using a custom user account, it must have the C(SeServiceLogonRight)
       granted to be able to start up. You can use the M(win_user_right) module
       to grant this user right for you.
+    - Set to C(NT SERVICE\service name) to run as the NT SERVICE account for that service.
+    - This can also be a gMSA in the form C(DOMAIN\gMSA$).
     type: str
+notes:
+- This module historically returning information about the service in its return values. These should be avoided in
+  favour of the M(win_service_info) module.
 seealso:
 - module: service
 - module: win_nssm
+- module: win_service_info
 - module: win_user_right
 author:
 - Chris Hoffman (@chrishoffman)
@@ -157,11 +171,6 @@ EXAMPLES = r'''
     name: service name
     state: absent
 
-- name: Check if a service is installed
-  win_service:
-    name: service name
-  register: service_info
-
 # This is required to be set for non-service accounts that need to run as a service
 - name: Grant domain account the SeServiceLogonRight user right
   win_user_right:
@@ -188,15 +197,13 @@ EXAMPLES = r'''
   win_service:
     name: service name
     state: restarted
-    username: LocalSystem
-    password: ''
+    username: SYSTEM
 
 - name: Set the log on user to Local System and allow it to interact with the desktop
   win_service:
     name: service name
     state: restarted
-    username: LocalSystem
-    password: ""
+    username: SYSTEM
     desktop_interact: yes
 
 - name: Set the log on user to Network Service
@@ -204,14 +211,22 @@ EXAMPLES = r'''
     name: service name
     state: restarted
     username: NT AUTHORITY\NetworkService
-    password: ''
 
 - name: Set the log on user to Local Service
   win_service:
     name: service name
     state: restarted
     username: NT AUTHORITY\LocalService
-    password: ''
+
+- name: Set the log on user as the services' virtual account
+  win_service:
+    name: service name
+    username: NT SERVICE\service name
+
+- name: Set the log on user as a gMSA
+  win_service:
+    name: service name
+    username: DOMAIN\gMSA$  # The end $ is important and should be set for all gMSA
 
 - name: Set dependencies to ones only in the list
   win_service:
