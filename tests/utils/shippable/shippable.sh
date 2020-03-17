@@ -31,13 +31,6 @@ pip --version
 pip list --disable-pip-version-check
 pip install git+https://github.com/ansible/ansible@temp-2.10-devel
 
-# ansible-test hardcodes win_ping in instance online check which will fail until tombstoning is in. The coverage setup
-# and teardown playbooks also need to be changed to use the FQCN for now.
-ANSIBLE_TEST_PATH=$(python -c "import ansible_test; import os.path; print(os.path.dirname(ansible_test.__file__))")
-sed -i 's/win_ping/ansible.windows.win_ping/g' "$ANSIBLE_TEST_PATH/_internal/manage_ci.py"
-sed -i 's/hosts: windows/hosts: windows\n  collections: ["ansible.windows"]/g' "$ANSIBLE_TEST_PATH/_data/playbooks/windows_coverage_setup.yml"
-sed -i 's/hosts: windows/hosts: windows\n  collections: ["ansible.windows"]/g' "$ANSIBLE_TEST_PATH/_data/playbooks/windows_coverage_teardown.yml"
-
 SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
 TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
 mkdir -p "${TEST_DIR}"
