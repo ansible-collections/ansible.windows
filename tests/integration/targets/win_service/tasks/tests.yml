@@ -537,6 +537,31 @@
     - win_service_change_password_current_user_again.username == current_user
     - win_service_change_password_current_user_again.desktop_interact == False
 
+- name: test update_password on_create
+  win_service:
+    name: '{{ test_win_service_name }}'
+    username: '{{ ansible_user }}'
+    password: fake
+  register: update_password_on_create
+
+- name: assert test update_password on_create
+  assert:
+    that:
+    - not update_password_on_create is changed
+
+- name: force password update
+  win_service:
+    name: '{{ test_win_service_name }}'
+    username: '{{ ansible_user }}'
+    password: '{{ ansible_password }}'
+    update_password: always
+  register: update_password_always
+
+- name: assert force password update
+  assert:
+    that:
+    - update_password_always is changed
+
 - name: set the service username to a NT SERVICE account
   win_service:
     name: '{{ test_win_service_name }}'
@@ -602,6 +627,35 @@
     that:
     - win_service_description_again is not changed
     - win_service_description_again.description == 'New Description'
+
+- name: clear the description
+  win_service:
+    name: '{{ test_win_service_name }}'
+    description: ''
+  register: win_service_clear_description
+
+- name: get result of clear the description
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: win_service_clear_description_actual
+
+- name: assert clear the description
+  assert:
+    that:
+    - win_service_clear_description is changed
+    - win_service_clear_description.description == ''
+    - win_service_clear_description_actual.services[0].description == None
+
+- name: clear the description (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    description: ''
+  register: win_service_clear_description_again
+
+- name: assert clear the description (idempotent)
+  assert:
+    that:
+    - not win_service_clear_description_again is changed
 
 - name: set service path
   win_service:
