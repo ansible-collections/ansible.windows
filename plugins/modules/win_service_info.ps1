@@ -18,7 +18,14 @@ $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 $name = $module.Params.name
 
 $module.Result.exists = $false
-$module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -ErrorAction SilentlyContinue)) {
+
+# Need to use Where-Object filter as Get-Service -Name doesn't work for wildcards chars in the service name.
+$services = Get-Service | Where-Object { $_.Name -eq $name }
+if (-not $services) {
+    $services = Get-Service -Name $name -ErrorAction SilentlyContinue
+}
+
+$module.Result.services = @(foreach ($rawService in ($services)) {
     try {
         $service = New-Object -TypeName Ansible.Windows.SCManager.Service -ArgumentList @(
             $rawService.Name, [Ansible.Windows.SCManager.ServiceRights]'EnumerateDependents, QueryConfig, QueryStatus'
@@ -95,8 +102,8 @@ $module.Result.services = @(foreach ($rawService in (Get-Service -Name $name -Er
     }
 
     $startType = switch ($service.StartType) {
-        BootStart { 'boot_start' }
-        SystemStart { 'system_start' }
+        BootStart { 'boot' }
+        SystemStart { 'system' }
         AutoStart { 'auto' }
         DemandStart { 'manual' }
         Disabled { 'disabled' }
