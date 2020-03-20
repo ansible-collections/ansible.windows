@@ -73,11 +73,28 @@ notes:
 - To see the valid options for a DSC resource, run the module with C(-vvv) to
   show the possible module invocation. Default values are not shown in this
   output but are applied within the DSC engine.
+- The DSC engine requires the HTTP WSMan listener to be online and its port
+  configured as the default listener for HTTP. This is set up by default but if
+  a custom HTTP port is used or only a HTTPS listener is present then the
+  module will fail. See the examples for a way to check this out in PowerShell.
 author:
 - Trond Hindenes (@trondhindenes)
 '''
 
 EXAMPLES = r'''
+- name: Verify the WSMan HTTP listener is active and configured correctly
+  win_shell: |
+    $port = (Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP).Value
+    $onlinePorts = @(Get-ChildItem -LiteralPath WSMan:\localhost\Listener |
+        Where-Object { 'Transport=HTTP' -in $_.Keys } |
+        Get-ChildItem |
+        Where-Object Name -eq Port |
+        Select-Object -ExpandProperty Value)
+
+    if ($port -notin $onlinePorts) {
+        "The default client port $port is not set up as a WSMan HTTP listener, win_dsc will not work."
+    }
+
 - name: Extract zip file
   win_dsc:
     resource_name: Archive

@@ -306,6 +306,23 @@ Function Invoke-DscMethod {
     return $result
 }
 
+# DSC requires the default HTTP WSMan listener to be active and cannot be configured by Invoke-DscResource so we check
+# if it is active and present a better error message to the caller if it isn't. The only alternative is to invoke the
+# CIM method manually in our own CimSession but that would mean we need to compile the MOF ourselves which is not
+# something we can realistically tackle.
+$wsman_http_port_path = 'WSMan:\localhost\Client\DefaultPorts\HTTP'
+$wsman_http_port = (Get-Item -LiteralPath $wsman_http_port_path).Value
+if (-not (Test-WSMan -Port $wsman_http_port -ErrorAction SilentlyContinue)) {
+    $msg = "The win_dsc module requires the WSMan HTTP listener to be configured and online. The port win_dsc is set "
+    $msg += "to use is $wsman_http_port as configured by 'Get-Item -LiteralPath $wsman_http_port_path'."
+    $res = @{
+        msg = $msg
+        failed = $true
+    }
+    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
+    exit 1
+}
+
 # win_dsc is unique in that is builds the arg spec based on DSC Resource input. To get this info
 # we need to read the resource_name and module_version value which is done outside of Ansible.Basic
 if ($args.Length -gt 0) {

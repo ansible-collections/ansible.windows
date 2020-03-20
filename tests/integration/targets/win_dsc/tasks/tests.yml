@@ -102,6 +102,24 @@
   register: fail_invalid_option_old_sub_dict
   failed_when: 'fail_invalid_option_old_sub_dict.msg != "Unsupported parameters for (win_dsc) module: Choice found in CimInstanceArrayParam. Supported parameters include: Key, IntValue, StringArrayValue, StringValue"'
 
+# https://github.com/ansible-collections/ansible.windows/issues/32
+- name: temporary change the default HTTP client port
+  win_shell: |
+    (Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP).Value
+    Set-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP -Value 1234
+  register: wsman_default_port
+
+- block:
+  - name: fail with unavailable HTTP WSMan listener
+    win_dsc:
+      resource_name: resource
+    register: fail_no_wsman
+    failed_when: 'fail_no_wsman.msg != "The win_dsc module requires the WSMan HTTP listener to be configured and online. The port win_dsc is set to use is 1234 as configured by ''Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP''."'
+
+  always:
+  - name: change the default HTTP client port back
+    win_shell: Set-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP -Value {{ wsman_default_port.stdout | trim }}
+
 - name: create test file (check mode)
   win_dsc:
     resource_name: File
