@@ -14,7 +14,8 @@
   assert:
     that:
     - set_pre_shutdown_timeout_ms_check is changed
-    - set_pre_shutdown_timeout_ms_actual_check.services[0].pre_shutdown_timeout_ms == 10000
+    # Different OS versions have different defaults, just make sure it didn't set our value in check mode
+    - set_pre_shutdown_timeout_ms_actual_check.services[0].pre_shutdown_timeout_ms != 4294967295
 
 - name: set pre shutdown timeout ms
   win_service:
