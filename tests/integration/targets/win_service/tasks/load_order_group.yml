@@ -1,0 +1,62 @@
+- name: set load order group (check)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    load_order_group: order group
+  register: set_load_order_group_check
+  check_mode: yes
+
+- name: get result of set load order group (check)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_load_order_group_actual_check
+
+- name: assert set load order group (check)
+  assert:
+    that:
+    - set_load_order_group_check is changed
+    - set_load_order_group_actual_check.services[0].load_order_group == ''
+
+- name: set load order group
+  win_service:
+    name: '{{ test_win_service_name }}'
+    load_order_group: order group
+  register: set_type
+
+- name: get result of set load order group
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_load_order_group_actual
+
+- name: assert set load order group
+  assert:
+    that:
+    - set_type is changed
+    - set_load_order_group_actual.services[0].load_order_group == 'order group'
+
+- name: set load order group (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    load_order_group: order group
+  register: set_load_order_group_again
+
+- name: assert set load order group (idempotent)
+  assert:
+    that:
+    - not set_load_order_group_again is changed
+
+- name: reset load order group
+  win_service:
+    name: '{{ test_win_service_name }}'
+    load_order_group: ''
+  register: reset_load_order_group
+
+- name: get result of reset load order group
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: reset_load_order_group_actual
+
+- name: assert reset load order group
+  assert:
+    that:
+    - reset_load_order_group is changed
+    - reset_load_order_group_actual.services[0].load_order_group == ''

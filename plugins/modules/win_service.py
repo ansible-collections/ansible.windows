@@ -39,6 +39,8 @@ options:
     description:
     - Whether to allow the service user to interact with the desktop.
     - This can only be set to C(yes) when using the C(LocalSystem) username.
+    - This can only be set to C(yes) when the I(service_type) is
+      C(win32_own_process) or C(win32_share_process).
     type: bool
     default: no
   description:
@@ -49,6 +51,90 @@ options:
     description:
       - The display name to set for the service.
     type: str
+  error_control:
+    description:
+    - The severity of the error and action token if the service fails to start.
+    - A new service defaults to C(normal).
+    - C(critical) will log the error and restart the system with the last-known
+      good configuration. If the startup fails on reboot then the system will
+      fail to operate.
+    - C(ignore) ignores the error.
+    - C(normal) logs the error in the event log but continues.
+    - C(severe) is like C(critical) but a failure on the last-known good
+      configuration reboot startup will be ignored.
+    choices:
+    - critical
+    - ignore
+    - normal
+    - severe
+    type: str
+  failure_actions:
+    description:
+    - A list of failure actions the service controller should take on each
+      failure of a service.
+    - The service manager will run the actions from first to last defined until
+      the service starts. If I(failure_reset_period_sec) has been exceeded then
+      the failure actions will restart from the beginning.
+    - If all actions have been performed the the service manager will repeat
+      the last service defined.
+    - The existing actions will be replaced with the list defined in the task
+      if there is a mismatch with any of them.
+    - Set to an empty list to delete all failure actions on a service
+      otherwise an omitted or null value preserves the existing actions on the
+      service.
+    type: list
+    elements: dict
+    suboptions:
+      delay_ms:
+        description:
+        - The time to wait, in milliseconds, before performing the specified action.
+        default: 0
+        type: raw
+        aliases:
+        - delay
+      type:
+        description:
+        - The action to be performed.
+        - C(none) will perform no action, when used this should only be set as
+          the last action.
+        - C(reboot) will reboot the host, when used this should only be set as
+          the last action as the reboot will reset the action list back to the
+          beginning.
+        - C(restart) will restart the service.
+        - C(run_command) will run the command specified by I(failure_command).
+        required: yes
+        type: str
+        choices:
+        - none
+        - reboot
+        - restart
+        - run_command
+  failure_actions_on_non_crash_failure:
+    description:
+    - Controls whether failure actions will be performed on non crash failures
+      or not.
+    type: bool
+  failure_command:
+    description:
+    - The command to run for a C(run_command) failure action.
+    - Set to an empty string to remove the command.
+    type: str
+  failure_reboot_msg:
+    description:
+    - The message to be broadcast to users logged on the host for a C(reboot)
+      failure action.
+    - Set to an empty string to remove the message.
+    type: str
+  failure_reset_period_sec:
+    description:
+    - The time in seconds after which the failure action list begings from the
+      start if there are no failures.
+    - To set this value, I(failure_actions) must have at least 1 action
+      present.
+    - Specify C('0xFFFFFFFF') to set an infinite reset period.
+    type: raw
+    aliases:
+    - failure_reset_period
   force_dependent_services:
     description:
     - If C(yes), stopping or restarting a service with dependent services will
@@ -57,6 +143,12 @@ options:
       fail.
     type: bool
     default: no
+  load_order_group:
+    description:
+    - The name of the load ordering group of which this service is a member.
+    - Specify an empty string to remove the existing load order group of a
+      service.
+    type: str
   name:
     description:
     - Name of the service.
@@ -75,6 +167,53 @@ options:
     - If omitted then the password will continue to use the existing value password set.
     - If specifying C(LocalSystem), C(NetworkService), C(LocalService), the C(NT SERVICE), or a gMSA this field can be
       omitted as those accounts have no password.
+    type: str
+  pre_shutdown_timeout_ms:
+    description:
+    - The time in which the service manager waits after sending a preshutdown
+      notification to the service until it proceeds to continue with the other
+      shutdown actions.
+    aliases:
+    - pre_shutdown_timeout
+    type: raw
+  required_privileges:
+    description:
+    - A list of privileges the service must have when starting up.
+    - When set the service will only have the privileges specified on its
+      access token.
+    - The I(username) of the service must already have the privileges assigned.
+    - The existing privileges will be replace with the list defined in the task
+      if there is a mismatch with any of them.
+    - Set to an empty list to remove all required privileges, otherwise an
+      omitted or null value will keep the existing privileges.
+    - See L(privilege text constants,https://docs.microsoft.com/en-us/windows/win32/secauthz/privilege-constants)
+      for a list of privilege constants that can be used.
+    type: list
+    elements: str
+  service_type:
+    description:
+    - The type of service.
+    - The default type of a new service is C(win32_own_process).
+    - I(desktop_interact) can only be set if the service type is
+      C(win32_own_process) or C(win32_share_process).
+    choices:
+    - user_own_process
+    - user_share_process
+    - win32_own_process
+    - win32_share_process
+    type: str
+  sid_info:
+    description:
+    - Used to define the behaviour of the service's access token groups.
+    - C(none) will not add any groups to the token.
+    - C(restricted) will add the C(NT SERVICE\<service name>) SID to the access
+      token's groups and restricted groups.
+    - C(unrestricted) will add the C(NT SERVICE\<service name>) SID to the
+      access token's groups.
+    choices:
+    - none
+    - restricted
+    - unrestricted
     type: str
   start_mode:
     description:
@@ -246,6 +385,49 @@ EXAMPLES = r'''
     - service1
     - service2
     dependency_action: remove
+
+- name: Set required privileges for a service
+  win_service:
+    name: service name
+    username: NT SERVICE\LocalService
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+
+- name: Remove all required privileges for a service
+  win_service:
+    name: service name
+    username: NT SERVICE\LocalService
+    required_privileges: []
+
+- name: Set failure actions for a service with no reset period
+  win_service:
+    name: service name
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay_ms: 1000
+    - type: restart
+      delay_ms: 5000
+    - type: reboot
+    failure_command: C:\Windows\System32\cmd.exe /c mkdir C:\temp
+    failure_reboot_msg: Restarting host because service name has failed
+    failure_reset_period_sec: '0xFFFFFFFF'
+
+- name: Set only 1 failure action without a repeat of the last action
+  win_service:
+    name: service name
+    failure_actions:
+    - type: restart
+      delay_ms: 5000
+    - type: none
+
+- name: Remove failure action information
+  win_service:
+    name: service name
+    failure_actions: []
+    failure_command: ''  # removes the existing command
+    failure_reboot_msg: ''  # removes the existing reboot msg
 '''
 
 RETURN = r'''

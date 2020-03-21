@@ -1,0 +1,241 @@
+- name: set a failure action (check mode)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay_ms: 1000
+    - type: restart
+      delay: 0xFFFFFFFF
+    - type: reboot
+    failure_actions_on_non_crash_failure: yes
+    failure_command: fail command
+    failure_reboot_msg: fail reboot msg
+    failure_reset_period_sec: '0xFFFFFFFF'
+  register: set_actions_check
+  check_mode: yes
+
+- name: get result of set a failure action (check mode)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_actions_actual_check
+
+- name: assert set a failure action (check mode)
+  assert:
+    that:
+    - set_actions_check is changed
+    - set_actions_actual_check.services[0].failure_actions | length == 0
+    - set_actions_actual_check.services[0].failure_actions_on_non_crash_failure == False
+    - set_actions_actual_check.services[0].failure_command == None
+    - set_actions_actual_check.services[0].failure_reboot_msg == None
+    - set_actions_actual_check.services[0].failure_reset_period_sec == 0
+
+- name: set a failure action
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay_ms: 1000
+    - type: restart
+      delay: 0xFFFFFFFF
+    - type: reboot
+    failure_actions_on_non_crash_failure: yes
+    failure_command: fail command
+    failure_reboot_msg: fail reboot msg
+    failure_reset_period_sec: '0xFFFFFFFF'
+  register: set_actions
+
+- name: get result of set a failure action
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_actions_actual
+
+- name: assert set a failure action
+  assert:
+    that:
+    - set_actions is changed
+    - set_actions_actual.services[0].failure_actions | length == 4
+    - set_actions_actual.services[0].failure_actions[0].delay_ms == 0
+    - set_actions_actual.services[0].failure_actions[0].type == 'restart'
+    - set_actions_actual.services[0].failure_actions[1].delay_ms == 1000
+    - set_actions_actual.services[0].failure_actions[1].type == 'run_command'
+    - set_actions_actual.services[0].failure_actions[2].delay_ms == 4294967295
+    - set_actions_actual.services[0].failure_actions[2].type == 'restart'
+    - set_actions_actual.services[0].failure_actions[3].delay_ms == 0
+    - set_actions_actual.services[0].failure_actions[3].type == 'reboot'
+    - set_actions_actual.services[0].failure_actions_on_non_crash_failure == True
+    - set_actions_actual.services[0].failure_command == 'fail command'
+    - set_actions_actual.services[0].failure_reboot_msg == 'fail reboot msg'
+    - set_actions_actual.services[0].failure_reset_period_sec == 4294967295
+
+- name: set a failure action (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay_ms: 1000
+    - type: restart
+      delay: 0xFFFFFFFF
+    - type: reboot
+    failure_actions_on_non_crash_failure: yes
+    failure_command: fail command
+    failure_reboot_msg: fail reboot msg
+    failure_reset_period_sec: '0xFFFFFFFF'
+  register: set_actions_again
+
+- name: assert set a failure action (idempotent)
+  assert:
+    that:
+    - not set_actions_again is changed
+
+- name: set other failure info
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_command: fail command new
+  register: leave_actions
+
+- name: get result of set other failure info
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: leave_actions_actual
+
+- name: assert set other failure info
+  assert:
+    that:
+    - leave_actions is changed
+    - leave_actions_actual.services[0].failure_actions | length == 4
+    - leave_actions_actual.services[0].failure_actions[0].delay_ms == 0
+    - leave_actions_actual.services[0].failure_actions[0].type == 'restart'
+    - leave_actions_actual.services[0].failure_actions[1].delay_ms == 1000
+    - leave_actions_actual.services[0].failure_actions[1].type == 'run_command'
+    - leave_actions_actual.services[0].failure_actions[2].delay_ms == 4294967295
+    - leave_actions_actual.services[0].failure_actions[2].type == 'restart'
+    - leave_actions_actual.services[0].failure_actions[3].delay_ms == 0
+    - leave_actions_actual.services[0].failure_actions[3].type == 'reboot'
+    - leave_actions_actual.services[0].failure_actions_on_non_crash_failure == True
+    - leave_actions_actual.services[0].failure_command == 'fail command new'
+    - leave_actions_actual.services[0].failure_reboot_msg == 'fail reboot msg'
+    - leave_actions_actual.services[0].failure_reset_period_sec == 4294967295
+
+- name: edit a failure action
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay: 1000
+    - type: restart
+      delay: 0xFFFFFFFF
+    - type: none
+    failure_command: fail command 2
+  register: edit_action
+
+- name: get result of edit a failure action
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: edit_action_actual
+
+- name: assert edit a failure action
+  assert:
+    that:
+    - edit_action is changed
+    - edit_action_actual.services[0].failure_actions | length == 4
+    - edit_action_actual.services[0].failure_actions[0].delay_ms == 0
+    - edit_action_actual.services[0].failure_actions[0].type == 'restart'
+    - edit_action_actual.services[0].failure_actions[1].delay_ms == 1000
+    - edit_action_actual.services[0].failure_actions[1].type == 'run_command'
+    - edit_action_actual.services[0].failure_actions[2].delay_ms == 4294967295
+    - edit_action_actual.services[0].failure_actions[2].type == 'restart'
+    - edit_action_actual.services[0].failure_actions[3].delay_ms == 0
+    - edit_action_actual.services[0].failure_actions[3].type == 'none'
+    - edit_action_actual.services[0].failure_actions_on_non_crash_failure == True
+    - edit_action_actual.services[0].failure_command == 'fail command 2'
+    - edit_action_actual.services[0].failure_reboot_msg == 'fail reboot msg'
+    - edit_action_actual.services[0].failure_reset_period_sec == 4294967295
+
+- name: remove a failure action
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay: 1000
+    failure_reboot_msg: fail reboot msg 2
+    failure_reset_period_sec: 1234
+  register: remove_action
+
+- name: get result of remove a failure action
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: remove_action_actual
+
+- name: assert edit a failure action
+  assert:
+    that:
+    - remove_action is changed
+    - remove_action_actual.services[0].failure_actions | length == 2
+    - remove_action_actual.services[0].failure_actions[0].delay_ms == 0
+    - remove_action_actual.services[0].failure_actions[0].type == 'restart'
+    - remove_action_actual.services[0].failure_actions[1].delay_ms == 1000
+    - remove_action_actual.services[0].failure_actions[1].type == 'run_command'
+    - remove_action_actual.services[0].failure_actions_on_non_crash_failure == True
+    - remove_action_actual.services[0].failure_command == 'fail command 2'
+    - remove_action_actual.services[0].failure_reboot_msg == 'fail reboot msg 2'
+    - remove_action_actual.services[0].failure_reset_period_sec == 1234
+
+- name: add a failure action
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions:
+    - type: restart
+    - type: run_command
+      delay: 1000
+    - type: none
+    failure_actions_on_non_crash_failure: no
+    failure_reboot_msg: ''
+  register: add_action
+
+- name: get result of add a failure action
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: add_action_actual
+
+- name: assert add a failure action
+  assert:
+    that:
+    - add_action is changed
+    - add_action_actual.services[0].failure_actions | length == 3
+    - add_action_actual.services[0].failure_actions[0].delay_ms == 0
+    - add_action_actual.services[0].failure_actions[0].type == 'restart'
+    - add_action_actual.services[0].failure_actions[1].delay_ms == 1000
+    - add_action_actual.services[0].failure_actions[1].type == 'run_command'
+    - add_action_actual.services[0].failure_actions[2].delay_ms == 0
+    - add_action_actual.services[0].failure_actions[2].type == 'none'
+    - add_action_actual.services[0].failure_actions_on_non_crash_failure == False
+    - add_action_actual.services[0].failure_command == 'fail command 2'
+    - add_action_actual.services[0].failure_reboot_msg == None
+    - add_action_actual.services[0].failure_reset_period_sec == 1234
+
+- name: clear failure actions
+  win_service:
+    name: '{{ test_win_service_name }}'
+    failure_actions: []
+    failure_command: ''
+  register: clear_action
+
+- name: get result of clear failure actions
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: clear_action_actual
+
+- name: assert clear failure actions
+  assert:
+    that:
+    - clear_action is changed
+    - clear_action_actual.services[0].failure_actions | length == 0
+    - clear_action_actual.services[0].failure_actions_on_non_crash_failure == False
+    - clear_action_actual.services[0].failure_command == None
+    - clear_action_actual.services[0].failure_reboot_msg == None
+    - clear_action_actual.services[0].failure_reset_period_sec == 0

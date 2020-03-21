@@ -1,0 +1,45 @@
+- name: set service type (check)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    service_type: win32_share_process
+  register: set_type_check
+  check_mode: yes
+
+- name: get result of set service type (check)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_type_actual_check
+
+- name: assert set service type (check)
+  assert:
+    that:
+    - set_type_check is changed
+    - set_type_actual_check.services[0].service_type == 'win32_own_process'
+
+- name: set service type
+  win_service:
+    name: '{{ test_win_service_name }}'
+    service_type: win32_share_process
+  register: set_type
+
+- name: get result of set service type
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_type_actual
+
+- name: assert set service type
+  assert:
+    that:
+    - set_type is changed
+    - set_type_actual.services[0].service_type == 'win32_share_process'
+
+- name: set service type (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    service_type: win32_share_process
+  register: set_type_again
+
+- name: assert set service type (idempotent)
+  assert:
+    that:
+    - not set_type_again is changed

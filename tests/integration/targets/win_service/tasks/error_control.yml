@@ -1,0 +1,45 @@
+- name: set error control (check)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    error_control: ignore
+  register: set_error_control_check
+  check_mode: yes
+
+- name: get result of set error control (check)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_error_control_actual_check
+
+- name: assert set error control (check)
+  assert:
+    that:
+    - set_error_control_check is changed
+    - set_error_control_actual_check.services[0].error_control == 'normal'
+
+- name: set error control
+  win_service:
+    name: '{{ test_win_service_name }}'
+    error_control: ignore
+  register: set_type
+
+- name: get result of set error control
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_error_control_actual
+
+- name: assert set error control
+  assert:
+    that:
+    - set_type is changed
+    - set_error_control_actual.services[0].error_control == 'ignore'
+
+- name: set error control (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    error_control: ignore
+  register: set_error_control_again
+
+- name: assert set error control (idempotent)
+  assert:
+    that:
+    - not set_error_control_again is changed
