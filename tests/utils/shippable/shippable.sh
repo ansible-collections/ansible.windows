@@ -29,7 +29,7 @@ python -V
 command -v pip
 pip --version
 pip list --disable-pip-version-check
-pip install git+https://github.com/ansible/ansible@temp-2.10-devel
+pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 
 SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
 TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
