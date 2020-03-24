@@ -1,0 +1,46 @@
+- name: set pre shutdown timeout ms (check)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    pre_shutdown_timeout_ms: 0xFFFFFFFF
+  register: set_pre_shutdown_timeout_ms_check
+  check_mode: yes
+
+- name: get result of set pre shutdown timeout ms (check)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_pre_shutdown_timeout_ms_actual_check
+
+- name: assert set pre shutdown timeout ms (check)
+  assert:
+    that:
+    - set_pre_shutdown_timeout_ms_check is changed
+    # Different OS versions have different defaults, just make sure it didn't set our value in check mode
+    - set_pre_shutdown_timeout_ms_actual_check.services[0].pre_shutdown_timeout_ms != 4294967295
+
+- name: set pre shutdown timeout ms
+  win_service:
+    name: '{{ test_win_service_name }}'
+    pre_shutdown_timeout_ms: 0xFFFFFFFF
+  register: set_type
+
+- name: get result of set pre shutdown timeout ms
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_pre_shutdown_timeout_ms_actual
+
+- name: assert set pre shutdown timeout ms
+  assert:
+    that:
+    - set_type is changed
+    - set_pre_shutdown_timeout_ms_actual.services[0].pre_shutdown_timeout_ms == 4294967295
+
+- name: set pre shutdown timeout ms (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    pre_shutdown_timeout_ms: 0xFFFFFFFF
+  register: set_pre_shutdown_timeout_ms_again
+
+- name: assert set pre shutdown timeout ms (idempotent)
+  assert:
+    that:
+    - not set_pre_shutdown_timeout_ms_again is changed

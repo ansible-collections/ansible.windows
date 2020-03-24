@@ -104,31 +104,44 @@
     dependencies:
     - '{{ service_name2 }}'
 
-- name: edit basic settings for service 2
+- name: edit advanced settings for service 2
   win_service:
     dependencies:
     - '{{ service_name3 }}'
     description: Service description
+    desktop_interact: yes
     display_name: Ansible Service Display Name
+    error_control: ignore
+    failure_actions:
+    - type: run_command
+      delay_ms: 500
+    - type: run_command
+      delay_ms: 600
+    - type: restart
+      delay_ms: 700
+    - type: reboot
+      delay_ms: 800
+    failure_actions_on_non_crash_failure: yes
+    failure_command: Command line
+    failure_reboot_msg: Reboot msg
+    failure_reset_period_sec: 86400
+    load_order_group: My group
     name: '{{ service_name2 }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+    service_type: win32_share_process
+    sid_info: unrestricted
+    start_mode: delayed
     state: stopped
 
-# TODO: move this back into the above once win_service supports them
-- name: edit complex settings for service 2
-  win_command: sc.exe {{ item.action }} {{ service_name2 }} {{ item.args }}
-  with_items:
-  - action: config
-    args: type= share type= interact error= ignore group= "My group" start= delayed-auto
-  - action: failure
-    args: reset= 86400 reboot= "Reboot msg" command= "Command line" actions= run/500/run/600/restart/700/reboot/800
-  - action: failureflag
-    args: 1
-  - action: sidtype
-    args: unrestricted
-  - action: privs
-    args: SeBackupPrivilege/SeRestorePrivilege
-  - action: triggerinfo
-    args: start/namedpipe/abc start/namedpipe/def start/custom/0e0682e2-9951-4e6d-a36a-a0047e616f28/11223344/aabbccdd start/strcustom/c2961e88-c1f4-4d97-b581-219c852e1c7d/11223344/aabbccdd start/portopen/1234;tcp;imagepath;servicename
+# TODO: use win_service_trigger module once it has been created (or win_service if that's where it ends up)
+- name: add triggers for service 2
+  win_command: >-
+    sc.exe
+    triggerinfo
+    {{ service_name2 }}
+    start/namedpipe/abc start/namedpipe/def start/custom/0e0682e2-9951-4e6d-a36a-a0047e616f28/11223344/aabbccdd start/strcustom/c2961e88-c1f4-4d97-b581-219c852e1c7d/11223344/aabbccdd start/portopen/1234;tcp;imagepath;servicename
 
 - name: get info of advanced service using display name
   win_service_info:

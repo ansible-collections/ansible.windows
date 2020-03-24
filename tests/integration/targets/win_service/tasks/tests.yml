@@ -1,29 +1,4 @@
 ---
-- name: create new dummy test service
-  win_service:
-    name: "{{test_win_service_name}}"
-    path: "{{test_win_service_path}}"
-    display_name: "{{test_win_service_display_name}}"
-    description: "{{test_win_service_description}}"
-  register: win_service_added
-
-- name: check that creating a new service succeeds with a change
-  assert:
-    that:
-    - win_service_added is changed
-    - win_service_added.name == test_win_service_name
-    - win_service_added.can_pause_and_continue == False
-    - win_service_added.display_name == test_win_service_display_name
-    - win_service_added.description == test_win_service_description
-    - win_service_added.path == test_win_service_path
-    - win_service_added.state == 'stopped'
-    - win_service_added.start_mode == 'auto'
-    - win_service_added.username == 'LocalSystem'
-    - win_service_added.desktop_interact == False
-    - win_service_added.dependencies == []
-    - win_service_added.depended_by == []
-    - win_service_added.exists == True
-
 - name: test win_service module with short name
   win_service:
     name: "{{test_win_service_name}}"

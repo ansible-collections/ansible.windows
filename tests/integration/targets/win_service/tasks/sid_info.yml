@@ -1,0 +1,45 @@
+- name: set sid info (check)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    sid_info: restricted
+  register: set_sid_info_check
+  check_mode: yes
+
+- name: get result of set sid info (check)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_sid_info_actual_check
+
+- name: assert set sid info (check)
+  assert:
+    that:
+    - set_sid_info_check is changed
+    - set_sid_info_actual_check.services[0].sid_info == 'none'
+
+- name: set sid info
+  win_service:
+    name: '{{ test_win_service_name }}'
+    sid_info: restricted
+  register: set_type
+
+- name: get result of set sid info
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_sid_info_actual
+
+- name: assert set sid info
+  assert:
+    that:
+    - set_type is changed
+    - set_sid_info_actual.services[0].sid_info == 'restricted'
+
+- name: set sid info (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    sid_info: restricted
+  register: set_sid_info_again
+
+- name: assert set sid info (idempotent)
+  assert:
+    that:
+    - not set_sid_info_again is changed

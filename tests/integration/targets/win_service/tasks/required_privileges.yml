@@ -1,0 +1,126 @@
+- name: set required privileges (check mode)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+  register: set_privilege_check
+  check_mode: yes
+
+- name: get result of set required privileges (check mode)
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_privilege_actual_check
+
+- name: assert set required privileges (check mode)
+  assert:
+    that:
+    - set_privilege_check is changed
+    - set_privilege_actual_check.services[0].required_privileges == []
+
+- name: set required privileges
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+  register: set_privilege
+
+- name: get result of set required privileges
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: set_privilege_actual
+
+- name: assert set required privileges
+  assert:
+    that:
+    - set_privilege is changed
+    - set_privilege_actual.services[0].required_privileges == ['SeBackupPrivilege', 'SeRestorePrivilege']
+
+- name: set required privileges (idempotent)
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+  register: set_privilege_again
+
+- name: assert set required privileges (idempotent)
+  assert:
+    that:
+    - not set_privilege_again is changed
+
+- name: change without touching privilege
+  win_service:
+    name: '{{ test_win_service_name }}'
+    description: test
+  register: change_no_privilege
+
+- name: get result of change without touching privilege
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: change_no_privilege_actual
+
+- name: assert change without touching privilege
+  assert:
+    that:
+    - change_no_privilege is changed
+    - change_no_privilege_actual.services[0].required_privileges == set_privilege_actual.services[0].required_privileges
+
+- name: add a privilege
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+    - SeTakeOwnershipPrivilege
+  register: add_privilege
+
+- name: get result of add a privilege
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: add_privilege_actual
+
+- name: assert add a privilege
+  assert:
+    that:
+    - add_privilege is changed
+    - add_privilege_actual.services[0].required_privileges == ['SeBackupPrivilege', 'SeRestorePrivilege', 'SeTakeOwnershipPrivilege']
+
+- name: remove a privilege
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeRestorePrivilege
+  register: remove_privilege
+
+- name: get result of remove a privilege
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: remove_privilege_actual
+
+- name: assert remove a privilege
+  assert:
+    that:
+    - remove_privilege is changed
+    - remove_privilege_actual.services[0].required_privileges == ['SeBackupPrivilege', 'SeRestorePrivilege']
+
+- name: change a privilege
+  win_service:
+    name: '{{ test_win_service_name }}'
+    required_privileges:
+    - SeBackupPrivilege
+    - SeTakeOwnershipPrivilege
+  register: change_privilege
+
+- name: get result of change a privilege
+  win_service_info:
+    name: '{{ test_win_service_name }}'
+  register: change_privilege_actual
+
+- name: assert change a privilege
+  assert:
+    that:
+    - change_privilege is changed
+    - change_privilege_actual.services[0].required_privileges == ['SeBackupPrivilege', 'SeTakeOwnershipPrivilege']
