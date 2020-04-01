@@ -188,7 +188,7 @@ options:
       times out in seconds.
     - Set to C(0) to specify an infinite timeout.
 extends_documentation_fragment:
-- ansible.windows.url_windows
+- url_windows
 
 notes:
 - When C(state=absent) and the product is an exe, the path may be different

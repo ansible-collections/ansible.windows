@@ -82,7 +82,7 @@ options:
     aliases:
     - password
 extends_documentation_fragment:
-- ansible.windows.url_windows
+- url_windows
 
 seealso:
 - module: uri
