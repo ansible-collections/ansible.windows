@@ -93,7 +93,7 @@ notes:
   checksum is the same as the local local even when C(force=yes). This is to
   better align with M(get_url).
 extends_documentation_fragment:
-- ansible.windows.url_windows
+- url_windows
 
 seealso:
 - module: get_url
