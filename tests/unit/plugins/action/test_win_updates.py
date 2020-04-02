@@ -11,7 +11,7 @@ import pytest
 
 from ansible_collections.ansible.windows.tests.unit.compat.mock import patch, MagicMock
 from ansible_collections.ansible.windows.plugins.action.win_updates import ActionModule
-from ansible_collections.ansible.windows.plugins.become.runas import BecomeModule
+from ansible.plugins.become.runas import BecomeModule
 from ansible.playbook.task import Task
 
 
