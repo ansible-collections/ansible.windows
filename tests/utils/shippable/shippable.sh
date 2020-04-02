@@ -163,5 +163,5 @@ fi
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
-# "tests/utils/shippable/check_matrix.py"
+"tests/utils/shippable/check_matrix.py"
 "tests/utils/shippable/${script}.sh" "${test}"
