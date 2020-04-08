@@ -67,7 +67,7 @@ author:
 
 EXAMPLES = r'''
 - name: Install Windows ADK with DISM for Server 2008 R2
-  win_chocolatey:
+  chocolatey.chocolatey.win_chocolatey:
     name: windows-adk
     version: 8.100.26866.0
     state: present
