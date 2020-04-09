@@ -644,8 +644,12 @@ Function Invoke-Executable {
 
     $result = Run-Command @commandArgs
 
-    $module.Result.rc = $result.rc
-    if ($ReturnCodes -notcontains $result.rc) {
+    # Run-Command returns rc as a UInt32 but we need to compare it with a Int32, we get the byte equivalent Int32 value
+    # instead. https://github.com/ansible-collections/ansible.windows/issues/46
+    $rc = [BitConverter]::ToInt32([BitConverter]::GetBytes($result.rc), 0)
+
+    $module.Result.rc = $rc
+    if ($ReturnCodes -notcontains $rc) {
         $module.Result.stdout = $result.stdout
         $module.Result.stderr = $result.stderr
         if ($LogPath -and (Test-Path -LiteralPath $LogPath)) {
@@ -657,7 +661,7 @@ Function Invoke-Executable {
         $module.Result.failed = $false
     }
 
-    if ($result.rc -eq 3010) {
+    if ($rc -eq 3010) {
         $module.Result.reboot_required = $true
     }
 }

@@ -64,8 +64,11 @@ options:
     description:
     - One or more return codes from the package installation that indicates
       success.
-    - Before Ansible 2.4 this was just 0 but since Ansible 2.4 this is both C(0) and
-      C(3010).
+    - The return codes are read as a signed integer, any values greater than
+      2147483647 need to be represented as the signed equivalent, i.e.
+      C(4294967295) is C(-1).
+    - To convert a unsigned number to the signed equivalent you can run
+      "[Int32]("0x{0:X}" -f ([UInt32]3221225477))".
     - A return code of C(3010) usually means that a reboot is required, the
       C(reboot_required) return value is set if the return code is C(3010).
     - This is only used for the C(msi), C(msp), and C(registry) providers.
