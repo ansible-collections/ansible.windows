@@ -8,15 +8,21 @@ import re
 
 from ansible.errors import AnsibleFilterError
 from ansible.module_utils.common.collections import is_sequence
+from ansible.module_utils._text import to_text
 
-_UNSAFE_C = re.compile(r'[\s\t"]')
-_UNSAFE_CMD = re.compile(r'[\s\(\)\%\!^\"\<\>\&\|]')
+_UNSAFE_C = re.compile(u'[\\s\t"]')
+_UNSAFE_CMD = re.compile(u'[\\s\\(\\)\\^\\|%!"<>&]')
+
+# PowerShell has 5 characters it uses as a single quote, we need to double up on all of them.
+# https://github.com/PowerShell/PowerShell/blob/b7cb335f03fe2992d0cbd61699de9d9aafa1d7c1/src/System.Management.Automation/engine/parser/CharTraits.cs#L265-L272
+# https://github.com/PowerShell/PowerShell/blob/b7cb335f03fe2992d0cbd61699de9d9aafa1d7c1/src/System.Management.Automation/engine/parser/CharTraits.cs#L18-L21
+_UNSAFE_PWSH = re.compile(u"(['\u2018\u2019\u201a\u201b])")
 
 
 def _quote_c(s):
     # https://docs.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
     if not s:
-        return '""'
+        return u'""'
 
     if not _UNSAFE_C.search(s):
         return s
@@ -31,13 +37,13 @@ def _quote_c(s):
     s = re.sub(r'(\\+)$', r'\1\1', s)
 
     # Finally wrap the entire argument in double quotes now we've escaped the double quotes within.
-    return '"{0}"'.format(s)
+    return u'"{0}"'.format(s)
 
 
 def _quote_cmd(s):
     # https://docs.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way#a-better-method-of-quoting
     if not s:
-        return '""'
+        return u'""'
 
     if not _UNSAFE_CMD.search(s):
         return s
@@ -46,21 +52,22 @@ def _quote_cmd(s):
     # 'file &whoami.exe' would result in 'whoami.exe' being executed and then that output being used as the argument
     # instead of the literal string.
     # https://stackoverflow.com/questions/3411771/multiple-character-replace-with-python
-    for c in '^()%!"<>&|':  # '^' must be the first char that we scan and replace
+    for c in u'^()%!"<>&|':  # '^' must be the first char that we scan and replace
         if c in s:
-            s = s.replace(c, "^" + c)
+            # I can't find any docs that explicitly say this but to escape ", it needs to be prefixed with \^.
+            s = s.replace(c, (u"\\^" if c == u'"' else u"^") + c)
 
-    return '^"{0}^"'.format(s)
+    return u'^"{0}^"'.format(s)
 
 
 def _quote_pwsh(s):
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-5.1
     if not s:
-        return "''"
+        return u"''"
 
     # We should always quote values in PowerShell as it has conflicting rules where strings can and can't be quoted.
-    # This means we quote the entire arg with single quotes and escape the single quotes already in the arg.
-    return "'{0}'".format(s.replace("'", "''"))
+    # This means we quote the entire arg with single quotes and just double up on the single quote equivalent chars.
+    return u"'{0}'".format(_UNSAFE_PWSH.sub(u'\\1\\1', s))
 
 
 def quote(value, shell=None):
@@ -96,11 +103,13 @@ def quote(value, shell=None):
             # '[A-Z0-9_\.]' so we don't attempt to quote the key, only the value. If another format is desired then it
             # need to be done manually, i.e. '/KEY:{{ value | ansible.windows.quote }}'.
             for key, value in arg.items():
-                new_arguments.append('%s=%s' % (key, quote_func(value)))
+                k = to_text(key, errors='surrogate_or_strict')
+                v = quote_func(to_text(value, errors='surrogate_or_strict', nonstring='passthru'))
+                new_arguments.append(u'%s=%s' % (k, v))
         else:
-            new_arguments.append(quote_func(arg))
+            new_arguments.append(quote_func(to_text(arg, errors='surrogate_or_strict', nonstring='passthru')))
 
-    return " ".join(new_arguments)
+    return u" ".join(new_arguments)
 
 
 class FilterModule:

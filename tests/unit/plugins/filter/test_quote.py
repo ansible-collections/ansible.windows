@@ -1,5 +1,6 @@
 # Copyright (c) 2020 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
@@ -53,7 +54,7 @@ def test_quote_c(value, expected):
     (None, '""'),
     ('', '""'),
     ('arg1 and 2', '^"arg1 and 2^"'),
-    ('malicious argument\\"&whoami', '^"malicious argument\\^"^&whoami^"'),
+    ('malicious argument\\"&whoami', '^"malicious argument\\\\^"^&whoami^"'),
     ('C:\\temp\\some ^%file% > nul', '^"C:\\temp\\some ^^^%file^% ^> nul^"'),
 ])
 def test_quote_cmd(value, expected):
@@ -68,6 +69,7 @@ def test_quote_cmd(value, expected):
     ('Double " quotes', "'Double \" quotes'"),
     ("Single ' quotes", "'Single '' quotes'"),
     ("'Multiple '''' single '' quotes '", "'''Multiple '''''''' single '''' quotes '''"),
+    (u"a'b\u2018c\u2019d\u201ae\u201bf", u"'a''b\u2018\u2018c\u2019\u2019d\u201a\u201ae\u201b\u201bf'")
 ])
 def test_quote_powershell(value, expected):
     actual = quote(value, shell='powershell')
