@@ -236,8 +236,8 @@
   win_package:
     path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
     product_id: '{{ registry_id }}'
-    arguments: '-Command Remove-Item -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{ registry_id }}; exit 1'
-    expected_return_code: 1
+    arguments: '-Command Remove-Item -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{ registry_id }}; exit -1'
+    expected_return_code: -1
     state: absent
   register: registry_uninstall_explicit_path
 
@@ -250,7 +250,7 @@
   assert:
     that:
     - registry_uninstall_explicit_path is changed
-    - registry_uninstall_explicit_path.rc == 1
+    - registry_uninstall_explicit_path.rc == -1
     - not registry_uninstall_explicit_path.reboot_required
     - not registry_uninstall_explicit_path_actual.exists
 
