@@ -103,6 +103,7 @@ $domain_admin_password= Get-AnsibleParam -obj $params -name "domain_admin_passwo
 $local_admin_password= Get-AnsibleParam -obj $params -name "local_admin_password"
 $database_path = Get-AnsibleParam -obj $params -name "database_path" -type "path"
 $sysvol_path = Get-AnsibleParam -obj $params -name "sysvol_path" -type "path"
+$ifm_path = Get-AnsibleParam -obj $params -name "ifm_path" -type "path"
 $domain_log_path = Get-AnsibleParam -obj $params -name "domain_log_path" -type "path"  # TODO: Use log_path and alias domain_log_path once the log_path for debug logging option has been removed.
 $read_only = Get-AnsibleParam -obj $params -name "read_only" -type "bool" -default $false
 $site_name = Get-AnsibleParam -obj $params -name "site_name" -type "str" -failifempty $read_only
@@ -212,6 +213,9 @@ Try {
                 }
                 if ($sysvol_path) {
                     $install_params.SysvolPath = $sysvol_path
+                }
+                if ($ifm_path) {
+                    $install_params.InstallationMediaPath = $ifm_path
                 }
                 if ($read_only) {
                     # while this is a switch value, if we set on $false site_name is required
