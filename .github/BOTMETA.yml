@@ -1,0 +1,119 @@
+automerge: false
+files:
+  $actions/:
+    maintainers: $team_windows_core
+    labels: win windows
+  $doc_fragments/url_windows.py:
+  $module_utils/Ansible.Service.cs:
+    maintainers: $team_windows_core
+    labels: windows
+  $modules/:
+    notify: if-meaton
+    maintainers: $team_windows
+    ignore: georgefrank ryansb
+    keywords: credssp hyperv powershell psrp winrm
+  $modules/win_acl.py:
+    authors: h0nIg schwartzmx trondhindenes
+    ignore: georgefrank h0nIg
+  $modules/win_acl_inheritance.py:
+    authors: h0nIg
+    ignore: georgefrank h0nIg
+  $modules/win_certificate_store.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_command.py:
+    authors: nitzmahone
+  $modules/win_copy.py:
+    authors: jborean93 jhawkesworth
+    maintainers: ShachafGoldstein
+  $modules/win_dns_client.py:
+    authors: briantist nitzmahone
+  $modules/win_domain.py:
+    authors: nitzmahone
+  $modules/win_domain_controller.py:
+    authors: nitzmahone
+  $modules/win_domain_membership.py:
+    authors: nitzmahone
+  $modules/win_dsc.py:
+    authors: trondhindenes
+  $modules/win_environment.py:
+    authors: jhawkesworth
+    maintainers: ShachafGoldstein jborean93
+  $modules/win_feature.py:
+    authors: angstwad trondhindenes
+    ignore: angstwad h0nIg
+  $modules/win_file.py:
+    authors: jhawkesworth
+    maintainers: ShachafGoldstein jborean93
+  $modules/win_find.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_get_url.py:
+    authors: angstwad tksarah
+    ignore: angstwad h0nIg
+  $modules/win_group.py:
+    authors: chrishoffman
+  $modules/win_group_membership.py:
+    authors: andrewsaraceni
+  $modules/win_hostname.py:
+    authors: riponbanik
+  $modules/win_optional_feature.py:
+    authors: rcanderson23
+  $modules/win_owner.py:
+    authors: h0nIg
+    ignore: georgefrank h0nIg
+  $modules/win_package.py:
+    authors: jborean93 trondhindenes
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_path.py:
+    authors: nitzmahone
+  $modules/win_ping.py:
+    authors: cchurch
+  $modules/win_reboot.py:
+    authors: nitzmahone
+  $modules/win_reg_stat.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_regedit.py:
+    authors: jborean93 joshludwig smadam813
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_service.py:
+    authors: chrishoffman
+  $modules/win_service_info.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_share.py:
+    authors: Shachaf92 daBONDi h0nIg
+    ignore: georgefrank h0nIg
+  $modules/win_shell.py:
+    authors: nitzmahone
+  $modules/win_stat.py:
+    authors: cchurch
+  $modules/win_tempfile.py:
+    authors: dagwieers
+  $modules/win_template.py:
+    authors: jhawkesworth
+    maintainers: ShachafGoldstein jborean93
+  $modules/win_updates.py:
+    authors: nitzmahone
+  $modules/win_uri.py:
+    authors: blakfeld dagwieers
+  $modules/win_user.py:
+    authors: angstwad cchurch
+    ignore: angstwad h0nIg
+  $modules/win_user_right.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_wait_for.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+  $modules/win_whoami.py:
+    authors: jborean93
+    maintainers: ShachafGoldstein jhawkesworth
+macros:
+  actions: plugins/action
+  doc_fragments: plugins/doc_fragments
+  module_utils: plugins/module_utils
+  modules: plugins/modules
+  team_windows: ShachafGoldstein jborean93 jhawkesworth
+  team_windows_core: jborean93 nitzmahone
