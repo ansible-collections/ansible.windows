@@ -9,7 +9,7 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.FileUtil
-#Requires -Module Ansible.ModuleUtils.WebRequest
+#AnsibleRequires -PowerShell ..module_utils.WebRequest
 
 $spec = @{
     options = @{
@@ -20,29 +20,35 @@ $spec = @{
         checksum_algorithm = @{ type='str'; default='sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
         checksum_url = @{ type='str' }
 
-       # Defined for the alias backwards compatibility, remove once aliases are removed
-       url_username = @{
-           aliases = @("user", "username")
-           deprecated_aliases = @(
-               @{ name = "user"; version = "2.14" },
-               @{ name = "username"; version = "2.14" }
-           )
-       }
-       url_password = @{
-           aliases = @("password")
-           deprecated_aliases = @(
-               @{ name = "password"; version = "2.14" }
-           )
-       }
+        # Defined for ease of use and backwards compatibility
+        url_method = @{
+            aliases = "method"
+        }
+        url_timeout = @{
+            aliases = "timeout"
+        }
+
+        # Defined for the alias backwards compatibility, remove once aliases are removed
+        url_username = @{
+            aliases = @("user", "username")
+            deprecated_aliases = @(
+                @{ name = "user"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) },
+                @{ name = "username"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+            )
+        }
+        url_password = @{
+            aliases = @("password")
+            deprecated_aliases = @(
+                @{ name = "password"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+            )
+        }
     }
     mutually_exclusive = @(
         ,@('checksum', 'checksum_url')
     )
     supports_check_mode = $true
 }
-$spec = Merge-WebRequestSpec -ModuleSpec $spec
-
-$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
 
 $url = $module.Params.url
 $dest = $module.Params.dest
@@ -80,10 +86,10 @@ Function Get-ChecksumFromUri {
 
         Write-Output -InputObject $hash_from_file
     }
-    $web_request = Get-AnsibleWebRequest -Uri $Uri -Module $Module
+    $web_request = Get-AnsibleWindowsWebRequest -Uri $Uri -Module $Module
 
     try {
-        Invoke-WithWebRequest -Module $Module -Request $web_request -Script $script
+        Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $script
     } catch {
         $Module.FailJson("Error when getting the remote checksum from '$Uri'. $($_.Exception.Message)", $_)
     }
@@ -108,7 +114,7 @@ Function Compare-ModifiedFile {
     if ($Uri.IsFile) {
         $src_last_mod = (Get-AnsibleItem -Path $Uri.AbsolutePath).LastWriteTimeUtc
     } else {
-        $web_request = Get-AnsibleWebRequest -Uri $Uri -Module $Module
+        $web_request = Get-AnsibleWindowsWebRequest -Uri $Uri -Module $Module
         $web_request.Method = switch ($web_request.GetType().Name) {
             FtpWebRequest { [System.Net.WebRequestMethods+Ftp]::GetDateTimestamp }
             HttpWebRequest { [System.Net.WebRequestMethods+Http]::Head }
@@ -116,7 +122,7 @@ Function Compare-ModifiedFile {
         $script = { param($Response, $Stream); $Response.LastModified }
 
         try {
-            $src_last_mod = Invoke-WithWebRequest -Module $Module -Request $web_request -Script $script
+            $src_last_mod = Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $script
         } catch {
             $Module.FailJson("Error when requesting 'Last-Modified' date from '$Uri'. $($_.Exception.Message)", $_)
         }
@@ -204,10 +210,10 @@ Function Invoke-DownloadFile {
             $Module.Result.changed = $true
         }
     }
-    $web_request = Get-AnsibleWebRequest -Uri $Uri -Module $Module
+    $web_request = Get-AnsibleWindowsWebRequest -Uri $Uri -Module $Module
 
     try {
-        Invoke-WithWebRequest -Module $Module -Request $web_request -Script $download_script
+        Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $download_script
     } catch {
         $Module.FailJson("Error downloading '$Uri' to '$Dest': $($_.Exception.Message)", $_)
     }
@@ -274,4 +280,3 @@ if ((-not $module.Result.ContainsKey("checksum_dest")) -and (Test-Path -LiteralP
 }
 
 $module.ExitJson()
-

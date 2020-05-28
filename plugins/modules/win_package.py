@@ -30,10 +30,9 @@ options:
     - If the package is an MSI do not supply the C(/qn), C(/log) or
       C(/norestart) arguments.
     - This is only used for the C(msi), C(msp), and C(registry) providers.
-    - As of Ansible 2.5, this parameter can be a list of arguments and the
-      module will escape the arguments as necessary, it is recommended to use a
-      string when dealing with MSI packages due to the unique escaping issues
-      with msiexec.
+    - Can be a list of arguments and the module will escape the arguments as
+      necessary, it is recommended to use a string when dealing with MSI
+      packages due to the unique escaping issues with msiexec.
     type: raw
   chdir:
     description:
@@ -88,7 +87,8 @@ options:
     description:
     - The password for C(user_name), must be set when C(user_name) is.
     - This option is deprecated in favour of using become, see examples for
-      more information.
+      more information. Will be removed on the major release after
+      C(2022-07-01).
     type: str
     aliases: [ user_password ]
   path:
@@ -122,7 +122,8 @@ options:
     - This SHOULD be set when the package is an C(exe), or the path is a url
       or a network share and credential delegation is not being used. The
       C(creates_*) options can be used instead but is not recommended.
-    - The C(productid) alias will be removed in Ansible 2.14.
+    - The alias I(productid) is deprecated and will be removed on the major
+      release after C(2022-07-01).
     type: str
     aliases: [ productid ]
   provider:
@@ -131,8 +132,7 @@ options:
     - The C(auto) provider will select the proper provider if I(path)
       otherwise it scans all the other providers based on the I(product_id).
     - The C(msi) provider scans for MSI packages installed on a machine wide
-      and current user context based on the C(ProductCode) of the MSI. Before
-      Ansible 2.10 only the machine wide context was searched.
+      and current user context based on the C(ProductCode) of the MSI.
     - The C(msix) provider is used to install C(.appx), C(.msix),
       C(.appxbundle), or C(.msixbundle) packages. These packages are only
       installed or removed on the current use. The host must be set to allow
@@ -150,8 +150,6 @@ options:
       C(HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall),
       C(HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall), and
       C(HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall).
-      Before Ansible 2.10 only the C(HKLM) hive was searched.
-    - Before Ansible 2.10 only the C(msi) and C(registry) providers were used.
     choices:
     - auto
     - msi
@@ -167,7 +165,8 @@ options:
       installed or not.
     - For all providers but C(auto), the I(path) can be used for idempotency
       checks if it is locally accesible filesystem path.
-    - The C(ensure) alias will be removed in Ansible 2.14.
+    - The alias I(ensure) is deprecated and will be removed on the major
+      release after C(2022-07-01).
     type: str
     choices: [ absent, present ]
     default: present
@@ -180,18 +179,12 @@ options:
       does not support credential delegation like Basic or NTLM or become is
       not used.
     - This option is deprecated in favour of using become, see examples for
-      more information.
+      more information. Will be removed on the major release after
+      C(2022-07-01).
     type: str
     aliases: [ user_name ]
-
-  # Overrides the options in url_windows
-  timeout:
-    description:
-    - Specifies how long the web download request can be pending before it
-      times out in seconds.
-    - Set to C(0) to specify an infinite timeout.
 extends_documentation_fragment:
-- url_windows
+- ansible.windows.web_request
 
 notes:
 - When C(state=absent) and the product is an exe, the path may be different
@@ -203,9 +196,9 @@ notes:
 - All the installation checks under C(product_id) and C(creates_*) add
   together, if one fails then the program is considered to be absent.
 seealso:
-- module: win_chocolatey
-- module: win_hotfix
-- module: win_updates
+- module: chocolatey.chocolatey.win_chocolatey
+- module: community.windows.win_hotfix
+- module: ansible.windows.win_updates
 author:
 - Trond Hindenes (@trondhindenes)
 - Jordan Borean (@jborean93)
@@ -213,13 +206,13 @@ author:
 
 EXAMPLES = r'''
 - name: Install the Visual C thingy
-  win_package:
+  ansible.windows.win_package:
     path: http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe
     product_id: '{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'
     arguments: /install /passive /norestart
 
 - name: Install Visual C thingy with list of arguments instead of a string
-  win_package:
+  ansible.windows.win_package:
     path: http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe
     product_id: '{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'
     arguments:
@@ -228,30 +221,30 @@ EXAMPLES = r'''
     - /norestart
 
 - name: Install Remote Desktop Connection Manager from msi with a permanent log
-  win_package:
+  ansible.windows.win_package:
     path: https://download.microsoft.com/download/A/F/0/AF0071F3-B198-4A35-AA90-C68D103BDCCF/rdcman.msi
     product_id: '{0240359E-6A4C-4884-9E94-B397A02D893C}'
     state: present
     log_path: D:\logs\vcredist_x64-exe-{{lookup('pipe', 'date +%Y%m%dT%H%M%S')}}.log
 
 - name: Uninstall Remote Desktop Connection Manager
-  win_package:
+  ansible.windows.win_package:
     product_id: '{0240359E-6A4C-4884-9E94-B397A02D893C}'
     state: absent
 
 - name: Install Remote Desktop Connection Manager locally omitting the product_id
-  win_package:
+  ansible.windows.win_package:
     path: C:\temp\rdcman.msi
     state: present
 
 - name: Uninstall Remote Desktop Connection Manager from local MSI omitting the product_id
-  win_package:
+  ansible.windows.win_package:
     path: C:\temp\rdcman.msi
     state: absent
 
 # 7-Zip exe doesn't use a guid for the Product ID
 - name: Install 7zip from a network share with specific credentials
-  win_package:
+  ansible.windows.win_package:
     path: \\domain\programs\7z.exe
     product_id: 7-Zip
     arguments: /S
@@ -264,27 +257,27 @@ EXAMPLES = r'''
     ansible_become_password: Password
 
 - name: Install 7zip and use a file version for the installation check
-  win_package:
+  ansible.windows.win_package:
     path: C:\temp\7z.exe
     creates_path: C:\Program Files\7-Zip\7z.exe
     creates_version: 16.04
     state: present
 
 - name: Uninstall 7zip from the exe
-  win_package:
+  ansible.windows.win_package:
     path: C:\Program Files\7-Zip\Uninstall.exe
     product_id: 7-Zip
     arguments: /S
     state: absent
 
 - name: Uninstall 7zip without specifying the path
-  win_package:
+  ansible.windows.win_package:
     product_id: 7-Zip
     arguments: /S
     state: absent
 
 - name: Install application and override expected return codes
-  win_package:
+  ansible.windows.win_package:
     path: https://download.microsoft.com/download/1/6/7/167F0D79-9317-48AE-AEDB-17120579F8E2/NDP451-KB2858728-x86-x64-AllOS-ENU.exe
     product_id: '{7DEBE4EB-6B40-3766-BB35-5CBBC385DA37}'
     arguments: '/q /norestart'
@@ -292,17 +285,17 @@ EXAMPLES = r'''
     expected_return_code: [0, 666, 3010]
 
 - name: Install a .msp patch
-  win_package:
+  ansible.windows.win_package:
     path: C:\Patches\Product.msp
     state: present
 
 - name: Remove a .msp patch
-  win_package:
+  ansible.windows.win_package:
     product_id: '{AC76BA86-A440-FFFF-A440-0C13154E5D00}'
     state: absent
 
 - name: Enable installation of 3rd party MSIX packages
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock
     name: AllowAllTrustedApps
     data: 1
@@ -310,12 +303,12 @@ EXAMPLES = r'''
     state: present
 
 - name: Install an MSIX package for the current user
-  win_package:
+  ansible.windows.win_package:
     path: C:\Installers\Calculator.msix  # Can be .appx, .msixbundle, or .appxbundle
     state: present
 
 - name: Uninstall an MSIX package using the product_id
-  win_package:
+  ansible.windows.win_package:
     product_id: InputApp
     state: absent
 '''

@@ -23,11 +23,6 @@ options:
     - Supports FTP, HTTP or HTTPS URLs in the form of (ftp|http|https)://host.domain:port/path.
     type: str
     required: yes
-  method:
-    description:
-    - The HTTP Method of the request or response.
-    type: str
-    default: GET
   content_type:
     description:
     - Sets the "Content-Type" header.
@@ -63,30 +58,37 @@ options:
     type: list
     elements: int
     default: [ 200 ]
+
+  url_method:
+    default: GET
+    aliases:
+    - method
+  url_timeout:
+    aliases:
+    - timeout
+
+  # Following defined in the web_request fragment but the module contains deprecated aliases for backwards compatibility.
   url_username:
     description:
     - The username to use for authentication.
-    - Was originally called I(user) but was changed to I(url_username) in
-      Ansible 2.9.
-    - The aliases I(user) and I(username) are deprecated and will be removed in
-      Ansible 2.14.
+    - The alias I(user) and I(username) is deprecated and will be removed on
+      the major release after C(2022-07-01).
     aliases:
     - user
     - username
   url_password:
     description:
     - The password for I(url_username).
-    - Was originally called I(password) but was changed to I(url_password) in
-      Ansible 2.9.
-    - The alias I(password) is deprecated and will be removed in Ansible 2.14.
+    - The alias I(password) is deprecated and will be removed on the major
+      release after C(2022-07-01).
     aliases:
     - password
 extends_documentation_fragment:
-- url_windows
+- ansible.windows.web_request
 
 seealso:
 - module: uri
-- module: win_get_url
+- module: ansible.windows.win_get_url
 author:
 - Corwin Brown (@blakfeld)
 - Dag Wieers (@dagwieers)
@@ -94,25 +96,25 @@ author:
 
 EXAMPLES = r'''
 - name: Perform a GET and Store Output
-  win_uri:
+  ansible.windows.win_uri:
     url: http://example.com/endpoint
   register: http_output
 
 # Set a HOST header to hit an internal webserver:
 - name: Hit a Specific Host on the Server
-  win_uri:
+  ansible.windows.win_uri:
     url: http://example.com/
     method: GET
     headers:
       host: www.somesite.com
 
 - name: Perform a HEAD on an Endpoint
-  win_uri:
+  ansible.windows.win_uri:
     url: http://www.example.com/
     method: HEAD
 
 - name: POST a Body to an Endpoint
-  win_uri:
+  ansible.windows.win_uri:
     url: http://www.somesite.com/
     method: POST
     body: "{ 'some': 'json' }"

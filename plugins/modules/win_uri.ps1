@@ -8,43 +8,49 @@
 #Requires -Module Ansible.ModuleUtils.CamelConversion
 #Requires -Module Ansible.ModuleUtils.FileUtil
 #Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.WebRequest
+#AnsibleRequires -PowerShell ..module_utils.WebRequest
 
 $spec = @{
     options = @{
-       url = @{ type = "str"; required = $true }
-       content_type = @{ type = "str" }
-       body = @{ type = "raw" }
-       dest = @{ type = "path" }
-       creates = @{ type = "path" }
-       method = @{ default = "GET" }
-       removes = @{ type = "path" }
-       return_content = @{ type = "bool"; default = $false }
-       status_code = @{ type = "list"; elements = "int"; default = @(200) }
+        url = @{ type = "str"; required = $true }
+        content_type = @{ type = "str" }
+        body = @{ type = "raw" }
+        dest = @{ type = "path" }
+        creates = @{ type = "path" }
+        removes = @{ type = "path" }
+        return_content = @{ type = "bool"; default = $false }
+        status_code = @{ type = "list"; elements = "int"; default = @(200) }
 
-       # Defined for the alias backwards compatibility, remove once aliases are removed
-       url_username = @{
-           aliases = @("user", "username")
-           deprecated_aliases = @(
-               @{ name = "user"; version = "2.14" },
-               @{ name = "username"; version = "2.14" }
-           )
-       }
-       url_password = @{
-           aliases = @("password")
-           deprecated_aliases = @(
-               @{ name = "password"; version = "2.14" }
-           )
-       }
+        # Defined for ease of use and backwards compatibility
+        url_timeout = @{
+            aliases = "timeout"
+        }
+        url_method = @{
+            aliases = "method"
+            default = "GET"
+        }
+
+        # Defined for the alias backwards compatibility, remove once aliases are removed
+        url_username = @{
+            aliases = @("user", "username")
+            deprecated_aliases = @(
+                @{ name = "user"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) },
+                @{ name = "username"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+            )
+        }
+        url_password = @{
+            aliases = @("password")
+            deprecated_aliases = @(
+                @{ name = "password"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+            )
+        }
     }
     supports_check_mode = $true
 }
-$spec = Merge-WebRequestSpec -ModuleSpec $spec
-
-$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
 
 $url = $module.Params.url
-$method = $module.Params.method.ToUpper()
+$method = $module.Params.url_method.ToUpper()
 $content_type = $module.Params.content_type
 $body = $module.Params.body
 $dest = $module.Params.dest
@@ -74,7 +80,7 @@ if ($removes -and -not (Test-AnsiblePath -Path $removes)) {
     $module.ExitJson()
 }
 
-$client = Get-AnsibleWebRequest -Uri $url -Module $module
+$client = Get-AnsibleWindowsWebRequest -Uri $url -Module $module
 
 if ($null -ne $content_type) {
     $client.ContentType = $content_type
@@ -173,7 +179,7 @@ if ($null -ne $body) {
 }
 
 try {
-    Invoke-WithWebRequest -Module $module -Request $client -Script $response_script -Body $body_st -IgnoreBadResponse
+    Invoke-AnsibleWindowsWebRequest -Module $module -Request $client -Script $response_script -Body $body_st -IgnoreBadResponse
 } catch {
     $module.FailJson("Unhandled exception occurred when sending web request. Exception: $($_.Exception.Message)", $_)
 } finally {
