@@ -102,102 +102,102 @@ author:
 
 EXAMPLES = r'''
 - name: Find files in path
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
 
 - name: Find hidden files in path
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     hidden: yes
 
 - name: Find files in multiple paths
-  win_find:
+  ansible.windows.win_find:
     paths:
     - C:\Temp
     - D:\Temp
 
 - name: Find files in directory while searching recursively
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     recurse: yes
 
 - name: Find files in directory while following symlinks
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     recurse: yes
     follow: yes
 
 - name: Find files with .log and .out extension using powershell wildcards
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     patterns: [ '*.log', '*.out' ]
 
 - name: Find files in path based on regex pattern
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     patterns: out_\d{8}-\d{6}.log
 
 - name: Find files older than 1 day
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     age: 86400
 
 - name: Find files older than 1 day based on create time
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     age: 86400
     age_stamp: ctime
 
 - name: Find files older than 1 day with unit syntax
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     age: 1d
 
 - name: Find files newer than 1 hour
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     age: -3600
 
 - name: Find files newer than 1 hour with unit syntax
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     age: -1h
 
 - name: Find files larger than 1MB
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     size: 1048576
 
 - name: Find files larger than 1GB with unit syntax
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     size: 1g
 
 - name: Find files smaller than 1MB
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     size: -1048576
 
 - name: Find files smaller than 1GB with unit syntax
-  win_find:
+  ansible.windows.win_find:
     paths: D:\Temp
     size: -1g
 
 - name: Find folders/symlinks in multiple paths
-  win_find:
+  ansible.windows.win_find:
     paths:
     - C:\Temp
     - D:\Temp
     file_type: directory
 
 - name: Find files and return SHA256 checksum of files found
-  win_find:
+  ansible.windows.win_find:
     paths: C:\Temp
     get_checksum: yes
     checksum_algorithm: sha256
 
 - name: Find files and do not return the checksum
-  win_find:
+  ansible.windows.win_find:
     paths: C:\Temp
     get_checksum: no
 '''
@@ -235,7 +235,7 @@ files:
             type: float
             sample: 1477984205.15
         exists:
-            description: Whether the file exists, will always be true for M(win_find).
+            description: Whether the file exists, will always be true for M(ansible.windows.win_find).
             returned: success, path exists
             type: bool
             sample: true

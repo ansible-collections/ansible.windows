@@ -43,37 +43,37 @@ options:
       - Can either be C({driveletter}:\sources\sxs) or C(\\{IP}\share\sources\sxs).
     type: str
 seealso:
-- module: win_chocolatey
-- module: win_feature
-- module: win_package
+- module: chocolatey.chocolatey.win_chocolatey
+- module: ansible.windows.win_feature
+- module: ansible.windows.win_package
 author:
     - Carson Anderson (@rcanderson23)
 '''
 
 EXAMPLES = r'''
 - name: Install .Net 3.5
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
     name: NetFx3
     state: present
 
 - name: Install .Net 3.5 from source
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
     name: NetFx3
     source: \\share01\win10\sources\sxs
     state: present
 
 - name: Install Microsoft Subsystem for Linux
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
     name: Microsoft-Windows-Subsystem-Linux
     state: present
   register: wsl_status
 
 - name: Reboot if installing Linux Subsytem as feature requires it
-  win_reboot:
+  ansible.windows.win_reboot:
   when: wsl_status.reboot_required
 
 - name: Install multiple features in one task
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
     name:
     - NetFx3
     - Microsoft-Windows-Subsystem-Linux

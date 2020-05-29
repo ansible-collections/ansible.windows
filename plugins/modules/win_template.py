@@ -102,7 +102,6 @@ options:
     default: '{{'
 notes:
 - Including a string that uses a date in the template will result in the template being marked 'changed' each time.
-- Since Ansible 0.9, templates are loaded with C(trim_blocks=True).
 - >
   Also, you can override jinja2 settings by adding a special header to template file.
   i.e. C(#jinja2:variable_start_string:'[%', variable_end_string:'%]', trim_blocks: False)
@@ -114,11 +113,11 @@ notes:
   on Linux.
 - Beware fetching files from windows machines when creating templates because certain tools, such as Powershell ISE,
   and regedit's export facility add a Byte Order Mark as the first character of the file, which can cause tracebacks.
-- You can use the M(win_copy) module with the C(content:) option if you prefer the template inline, as part of the
+- You can use the M(ansible.windows.win_copy) module with the C(content:) option if you prefer the template inline, as part of the
   playbook.
 - For Linux you can use M(template) which uses '\\n' as C(newline_sequence) by default.
 seealso:
-- module: win_copy
+- module: ansible.windows.win_copy
 - module: copy
 - module: template
 author:
@@ -127,12 +126,12 @@ author:
 
 EXAMPLES = r'''
 - name: Create a file from a Jinja2 template
-  win_template:
+  ansible.windows.win_template:
     src: /mytemplates/file.conf.j2
     dest: C:\Temp\file.conf
 
 - name: Create a Unix-style file from a Jinja2 template
-  win_template:
+  ansible.windows.win_template:
     src: unix/config.conf.j2
     dest: C:\share\unix\config.conf
     newline_sequence: '\n'

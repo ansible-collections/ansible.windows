@@ -43,7 +43,7 @@ options:
         description:
         - Ansible will automatically reboot the remote host if it is required
           and continue to install updates after the reboot.
-        - This can be used instead of using a M(win_reboot) task after this one
+        - This can be used instead of using a M(ansible.windows.win_reboot) task after this one
           and ensures all updates for that category is installed in one go.
         - Async does not work when C(reboot=yes).
         type: bool
@@ -106,55 +106,55 @@ options:
         type: bool
         default: no
 notes:
-- C(win_updates) must be run by a user with membership in the local Administrators group.
-- C(win_updates) will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).
-- C(win_updates) will I(become) SYSTEM using I(runas) unless C(use_scheduled_task) is C(yes)
-- By default C(win_updates) does not manage reboots, but will signal when a
-  reboot is required with the I(reboot_required) return value, as of Ansible v2.5
-  C(reboot) can be used to reboot the host if required in the one task.
-- C(win_updates) can take a significant amount of time to complete (hours, in some cases).
+- M(ansible.windows.win_updates) must be run by a user with membership in the local Administrators group.
+- M(ansible.windows.win_updates) will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).
+- M(ansible.windows.win_updates) will I(become) SYSTEM using I(runas) unless C(use_scheduled_task) is C(yes)
+- By default M(ansible.windows.win_updates) does not manage reboots, but will signal when a
+  reboot is required with the I(reboot_required) return value.
+  M(reboot) can be used to reboot the host if required in the one task.
+- M(ansible.windows.win_updates) can take a significant amount of time to complete (hours, in some cases).
   Performance depends on many factors, including OS version, number of updates, system load, and update server load.
-- Beware that just after C(win_updates) reboots the system, the Windows system may not have settled yet
+- Beware that just after M(ansible.windows.win_updates) reboots the system, the Windows system may not have settled yet
   and some base services could be in limbo. This can result in unexpected behavior.
   Check the examples for ways to mitigate this.
 - More information about PowerShell and how it handles RegEx strings can be
   found at U(https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx).
 seealso:
-- module: win_chocolatey
-- module: win_feature
-- module: win_hotfix
-- module: win_package
+- module: chocolatey.chocolatey.win_chocolatey
+- module: ansible.windows.win_feature
+- module: community.windows.win_hotfix
+- module: ansible.windows.win_package
 author:
 - Matt Davis (@nitzmahone)
 '''
 
 EXAMPLES = r'''
 - name: Install all security, critical, and rollup updates without a scheduled task
-  win_updates:
+  ansible.windows.win_updates:
     category_names:
       - SecurityUpdates
       - CriticalUpdates
       - UpdateRollups
 
 - name: Install only security updates as a scheduled task for Server 2008
-  win_updates:
+  ansible.windows.win_updates:
     category_names: SecurityUpdates
     use_scheduled_task: yes
 
 - name: Search-only, return list of found updates (if any), log to C:\ansible_wu.txt
-  win_updates:
+  ansible.windows.win_updates:
     category_names: SecurityUpdates
     state: searched
     log_path: C:\ansible_wu.txt
 
 - name: Install all security updates with automatic reboots
-  win_updates:
+  ansible.windows.win_updates:
     category_names:
     - SecurityUpdates
     reboot: yes
 
 - name: Install only particular updates based on the KB numbers
-  win_updates:
+  ansible.windows.win_updates:
     category_name:
     - SecurityUpdates
     whitelist:
@@ -162,7 +162,7 @@ EXAMPLES = r'''
     - KB4073117
 
 - name: Exclude updates based on the update title
-  win_updates:
+  ansible.windows.win_updates:
     category_name:
     - SecurityUpdates
     - CriticalUpdates
@@ -172,19 +172,19 @@ EXAMPLES = r'''
 
 # One way to ensure the system is reliable just after a reboot, is to set WinRM to a delayed startup
 - name: Ensure WinRM starts when the system has settled and is ready to work reliably
-  win_service:
+  ansible.windows.win_service:
     name: WinRM
     start_mode: delayed
 
 # Optionally, you can increase the reboot_timeout to survive long updates during reboot
 - name: Ensure we wait long enough for the updates to be applied during reboot
-  win_updates:
+  ansible.windows.win_updates:
     reboot: yes
     reboot_timeout: 3600
 
 # Search and download Windows updates
 - name: Search and download Windows updates without installing them
-  win_updates:
+  ansible.windows.win_updates:
     state: downloaded
 '''
 

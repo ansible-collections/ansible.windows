@@ -13,14 +13,14 @@ DOCUMENTATION = r'''
 module: win_shell
 short_description: Execute shell commands on target hosts
 description:
-     - The C(win_shell) module takes the command name followed by a list of space-delimited arguments.
-       It is similar to the M(win_command) module, but runs
+     - The M(ansible.windows.win_shell) module takes the command name followed by a list of space-delimited arguments.
+       It is similar to the M(ansible.windows.win_command) module, but runs
        the command via a shell (defaults to PowerShell) on the target host.
      - For non-Windows targets, use the M(shell) module instead.
 options:
   free_form:
     description:
-      - The C(win_shell) module takes a free form command to run.
+      - The M(ansible.windows.win_shell) module takes a free form command to run.
       - There is no parameter actually named 'free form'. See the examples!
     type: str
     required: yes
@@ -61,47 +61,46 @@ options:
     type: str
 notes:
    -  If you want to run an executable securely and predictably, it may be
-      better to use the M(win_command) module instead. Best practices when writing
-      playbooks will follow the trend of using M(win_command) unless C(win_shell) is
+      better to use the M(ansible.windows.win_command) module instead. Best practices when writing
+      playbooks will follow the trend of using M(ansible.windows.win_command) unless C(win_shell) is
       explicitly required. When running ad-hoc commands, use your best judgement.
    -  WinRM will not return from a command execution until all child processes created have exited.
-      Thus, it is not possible to use C(win_shell) to spawn long-running child or background processes.
+      Thus, it is not possible to use M(ansible.windows.win_shell) to spawn long-running child or background processes.
       Consider creating a Windows service for managing background processes.
 seealso:
-- module: psexec
+- module: community.windows.psexec
 - module: raw
 - module: script
 - module: shell
-- module: win_command
-- module: win_psexec
+- module: ansible.windows.win_command
+- module: community.windows.win_psexec
 author:
     - Matt Davis (@nitzmahone)
 '''
 
 EXAMPLES = r'''
-# Execute a command in the remote shell; stdout goes to the specified
-# file on the remote.
-- win_shell: C:\somescript.ps1 >> C:\somelog.txt
+- name: Execute a comand in the remote shell, stdout goes to the specified file on the remote
+  ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
 
-# Change the working directory to somedir/ before executing the command.
-- win_shell: C:\somescript.ps1 >> C:\somelog.txt chdir=C:\somedir
+- name: Change the working directory to somedir/ before executing the command
+  ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
+  args:
+    chdir: C:\somedir
 
-# You can also use the 'args' form to provide the options. This command
-# will change the working directory to somedir/ and will only run when
-# somedir/somelog.txt doesn't exist.
-- win_shell: C:\somescript.ps1 >> C:\somelog.txt
+- name: Run a command with an idempotent check on what it creates, will only run when somedir/somelog.txt does not exist
+  ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
   args:
     chdir: C:\somedir
     creates: C:\somelog.txt
 
-# Run a command under a non-Powershell interpreter (cmd in this case)
-- win_shell: echo %HOMEDIR%
+- name: Run a command under a non-Powershell interpreter (cmd in this case)
+  ansible.windows.win_shell: echo %HOMEDIR%
   args:
     executable: cmd
   register: homedir_out
 
 - name: Run multi-lined shell commands
-  win_shell: |
+  ansible.windows.win_shell: |
     $value = Test-Path -Path C:\temp
     if ($value) {
         Remove-Item -Path C:\temp -Force
@@ -109,7 +108,7 @@ EXAMPLES = r'''
     New-Item -Path C:\temp -ItemType Directory
 
 - name: Retrieve the input based on stdin
-  win_shell: '$string = [Console]::In.ReadToEnd(); Write-Output $string.Trim()'
+  ansible.windows.win_shell: '$string = [Console]::In.ReadToEnd(); Write-Output $string.Trim()'
   args:
     stdin: Input message
 '''

@@ -38,32 +38,32 @@ options:
     choices: [ absent, directory, file, touch ]
 seealso:
 - module: file
-- module: win_acl
-- module: win_acl_inheritance
-- module: win_owner
-- module: win_stat
+- module: ansible.windows.win_acl
+- module: ansible.windows.win_acl_inheritance
+- module: ansible.windows.win_owner
+- module: ansible.windows.win_stat
 author:
 - Jon Hawkesworth (@jhawkesworth)
 '''
 
 EXAMPLES = r'''
 - name: Touch a file (creates if not present, updates modification time if present)
-  win_file:
+  ansible.windows.win_file:
     path: C:\Temp\foo.conf
     state: touch
 
 - name: Remove a file, if present
-  win_file:
+  ansible.windows.win_file:
     path: C:\Temp\foo.conf
     state: absent
 
 - name: Create directory structure
-  win_file:
+  ansible.windows.win_file:
     path: C:\Temp\folder\subfolder
     state: directory
 
 - name: Remove directory structure
-  win_file:
+  ansible.windows.win_file:
     path: C:\Temp
     state: absent
 '''

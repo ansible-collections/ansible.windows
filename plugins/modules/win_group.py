@@ -36,21 +36,21 @@ options:
     default: present
 seealso:
 - module: group
-- module: win_domain_group
-- module: win_group_membership
+- module: community.windows.win_domain_group
+- module: ansible.windows.win_group_membership
 author:
 - Chris Hoffman (@chrishoffman)
 '''
 
 EXAMPLES = r'''
 - name: Create a new group
-  win_group:
+  ansible.windows.win_group:
     name: deploy
     description: Deploy Group
     state: present
 
 - name: Remove a group
-  win_group:
+  ansible.windows.win_group:
     name: deploy
     state: absent
 '''

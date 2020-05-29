@@ -16,7 +16,7 @@ description:
      - The C(win_command) module takes the command name followed by a list of space-delimited arguments.
      - The given command will be executed on all selected nodes. It will not be
        processed through the shell, so variables like C($env:HOME) and operations
-       like C("<"), C(">"), C("|"), and C(";") will not work (use the M(win_shell)
+       like C("<"), C(">"), C("|"), and C(";") will not work (use the M(ansible.windows.win_shell)
        module if you need these features).
      - For non-Windows targets, use the M(command) module instead.
 options:
@@ -52,34 +52,34 @@ options:
     type: str
 notes:
     - If you want to run a command through a shell (say you are using C(<),
-      C(>), C(|), etc), you actually want the M(win_shell) module instead. The
-      C(win_command) module is much more secure as it's not affected by the user's
+      C(>), C(|), etc), you actually want the M(ansible.windows.win_shell) module instead. The
+      M(ansible.windows.win_command) module is much more secure as it's not affected by the user's
       environment.
     - C(creates), C(removes), and C(chdir) can be specified after the command. For instance, if you only want to run a command if a certain file does not
       exist, use this.
 seealso:
 - module: command
-- module: psexec
+- module: community.windows.psexec
 - module: raw
-- module: win_psexec
-- module: win_shell
+- module: community.windows.win_psexec
+- module: ansible.windows.win_shell
 author:
     - Matt Davis (@nitzmahone)
 '''
 
 EXAMPLES = r'''
 - name: Save the result of 'whoami' in 'whoami_out'
-  win_command: whoami
+  ansible.windows.win_command: whoami
   register: whoami_out
 
 - name: Run command that only runs if folder exists and runs from a specific folder
-  win_command: wbadmin -backupTarget:C:\backup\
+  ansible.windows.win_command: wbadmin -backupTarget:C:\backup\
   args:
     chdir: C:\somedir\
     creates: C:\backup\
 
 - name: Run an executable and send data to the stdin for the executable
-  win_command: powershell.exe -
+  ansible.windows.win_command: powershell.exe -
   args:
     stdin: Write-Host test
 '''

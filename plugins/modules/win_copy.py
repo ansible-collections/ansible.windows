@@ -93,12 +93,12 @@ notes:
   with remote paths.
 - Because win_copy runs over WinRM, it is not a very efficient transfer
   mechanism. If sending large files consider hosting them on a web service and
-  using M(win_get_url) instead.
+  using M(ansible.windows.win_get_url) instead.
 seealso:
 - module: community.general.assemble
 - module: copy
-- module: win_get_url
-- module: win_robocopy
+- module: ansible.windows.win_get_url
+- module: community.windows.win_robocopy
 author:
 - Jon Hawkesworth (@jhawkesworth)
 - Jordan Borean (@jborean93)
@@ -106,50 +106,50 @@ author:
 
 EXAMPLES = r'''
 - name: Copy a single file
-  win_copy:
+  ansible.windows.win_copy:
     src: /srv/myfiles/foo.conf
     dest: C:\Temp\renamed-foo.conf
 
 - name: Copy a single file, but keep a backup
-  win_copy:
+  ansible.windows.win_copy:
     src: /srv/myfiles/foo.conf
     dest: C:\Temp\renamed-foo.conf
     backup: yes
 
 - name: Copy a single file keeping the filename
-  win_copy:
+  ansible.windows.win_copy:
     src: /src/myfiles/foo.conf
     dest: C:\Temp\
 
 - name: Copy folder to C:\Temp (results in C:\Temp\temp_files)
-  win_copy:
+  ansible.windows.win_copy:
     src: files/temp_files
     dest: C:\Temp
 
 - name: Copy folder contents recursively
-  win_copy:
+  ansible.windows.win_copy:
     src: files/temp_files/
     dest: C:\Temp
 
 - name: Copy a single file where the source is on the remote host
-  win_copy:
+  ansible.windows.win_copy:
     src: C:\Temp\foo.txt
     dest: C:\ansible\foo.txt
     remote_src: yes
 
 - name: Copy a folder recursively where the source is on the remote host
-  win_copy:
+  ansible.windows.win_copy:
     src: C:\Temp
     dest: C:\ansible
     remote_src: yes
 
 - name: Set the contents of a file
-  win_copy:
+  ansible.windows.win_copy:
     content: abc123
     dest: C:\Temp\foo.txt
 
 - name: Copy a single file as another user
-  win_copy:
+  ansible.windows.win_copy:
     src: NuGet.config
     dest: '%AppData%\NuGet\NuGet.config'
   vars:

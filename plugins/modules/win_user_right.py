@@ -50,9 +50,9 @@ notes:
 - If the server is domain joined this module can change a right but if a GPO
   governs this right then the changes won't last.
 seealso:
-- module: win_group
-- module: win_group_membership
-- module: win_user
+- module: ansible.windows.win_group
+- module: ansible.windows.win_group_membership
+- module: ansible.windows.win_user
 author:
 - Jordan Borean (@jborean93)
 '''
@@ -60,7 +60,7 @@ author:
 EXAMPLES = r'''
 ---
 - name: Replace the entries of Deny log on locally
-  win_user_right:
+  ansible.windows.win_user_right:
     name: SeDenyInteractiveLogonRight
     users:
     - Guest
@@ -68,7 +68,7 @@ EXAMPLES = r'''
     action: set
 
 - name: Add account to Log on as a service
-  win_user_right:
+  ansible.windows.win_user_right:
     name: SeServiceLogonRight
     users:
     - .\Administrator
@@ -76,7 +76,7 @@ EXAMPLES = r'''
     action: add
 
 - name: Remove accounts who can create Symbolic links
-  win_user_right:
+  ansible.windows.win_user_right:
     name: SeCreateSymbolicLinkPrivilege
     users:
     - SYSTEM
@@ -86,7 +86,7 @@ EXAMPLES = r'''
     action: remove
 
 - name: Remove all accounts who cannot log on remote interactively
-  win_user_right:
+  ansible.windows.win_user_right:
     name: SeDenyRemoteInteractiveLogonRight
     users: []
 '''

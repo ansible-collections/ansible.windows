@@ -250,42 +250,42 @@ options:
     - Can also be set to C(LocalSystem) or C(SYSTEM) to use the SYSTEM account.
     - A newly created service will default to C(LocalSystem).
     - If using a custom user account, it must have the C(SeServiceLogonRight)
-      granted to be able to start up. You can use the M(win_user_right) module
+      granted to be able to start up. You can use the M(ansible.windows.win_user_right) module
       to grant this user right for you.
     - Set to C(NT SERVICE\service name) to run as the NT SERVICE account for that service.
     - This can also be a gMSA in the form C(DOMAIN\gMSA$).
     type: str
 notes:
 - This module historically returning information about the service in its return values. These should be avoided in
-  favour of the M(win_service_info) module.
+  favour of the M(ansible.windows.win_service_info) module.
 seealso:
 - module: service
-- module: win_nssm
-- module: win_service_info
-- module: win_user_right
+- module: community.windows.win_nssm
+- module: ansible.windows.win_service_info
+- module: ansible.windows.win_user_right
 author:
 - Chris Hoffman (@chrishoffman)
 '''
 
 EXAMPLES = r'''
 - name: Restart a service
-  win_service:
+  ansible.windows.win_service:
     name: spooler
     state: restarted
 
 - name: Set service startup mode to auto and ensure it is started
-  win_service:
+  ansible.windows.win_service:
     name: spooler
     start_mode: auto
     state: started
 
 - name: Pause a service
-  win_service:
+  ansible.windows.win_service:
     name: Netlogon
     state: paused
 
 - name: Ensure that WinRM is started when the system has settled
-  win_service:
+  ansible.windows.win_service:
     name: WinRM
     start_mode: delayed
 
@@ -294,92 +294,92 @@ EXAMPLES = r'''
 # - state: stopped
 # - start_mode: auto
 - name: Create a new service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     path: C:\temp\test.exe
 
 - name: Create a new service with extra details
-  win_service:
+  ansible.windows.win_service:
     name: service name
     path: C:\temp\test.exe
     display_name: Service Name
     description: A test service description
 
 - name: Remove a service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: absent
 
 # This is required to be set for non-service accounts that need to run as a service
 - name: Grant domain account the SeServiceLogonRight user right
-  win_user_right:
+  ansible.windows.win_user_right:
     name: SeServiceLogonRight
     users:
     - DOMAIN\User
     action: add
 
 - name: Set the log on user to a domain account
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: DOMAIN\User
     password: Password
 
 - name: Set the log on user to a local account
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: .\Administrator
     password: Password
 
 - name: Set the log on user to Local System
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: SYSTEM
 
 - name: Set the log on user to Local System and allow it to interact with the desktop
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: SYSTEM
     desktop_interact: yes
 
 - name: Set the log on user to Network Service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: NT AUTHORITY\NetworkService
 
 - name: Set the log on user to Local Service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     state: restarted
     username: NT AUTHORITY\LocalService
 
 - name: Set the log on user as the services' virtual account
-  win_service:
+  ansible.windows.win_service:
     name: service name
     username: NT SERVICE\service name
 
 - name: Set the log on user as a gMSA
-  win_service:
+  ansible.windows.win_service:
     name: service name
     username: DOMAIN\gMSA$  # The end $ is important and should be set for all gMSA
 
 - name: Set dependencies to ones only in the list
-  win_service:
+  ansible.windows.win_service:
     name: service name
     dependencies: [ service1, service2 ]
 
 - name: Add dependencies to existing dependencies
-  win_service:
+  ansible.windows.win_service:
     name: service name
     dependencies: [ service1, service2 ]
     dependency_action: add
 
 - name: Remove dependencies from existing dependencies
-  win_service:
+  ansible.windows.win_service:
     name: service name
     dependencies:
     - service1
@@ -387,7 +387,7 @@ EXAMPLES = r'''
     dependency_action: remove
 
 - name: Set required privileges for a service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     username: NT SERVICE\LocalService
     required_privileges:
@@ -395,13 +395,13 @@ EXAMPLES = r'''
     - SeRestorePrivilege
 
 - name: Remove all required privileges for a service
-  win_service:
+  ansible.windows.win_service:
     name: service name
     username: NT SERVICE\LocalService
     required_privileges: []
 
 - name: Set failure actions for a service with no reset period
-  win_service:
+  ansible.windows.win_service:
     name: service name
     failure_actions:
     - type: restart
@@ -415,7 +415,7 @@ EXAMPLES = r'''
     failure_reset_period_sec: '0xFFFFFFFF'
 
 - name: Set only 1 failure action without a repeat of the last action
-  win_service:
+  ansible.windows.win_service:
     name: service name
     failure_actions:
     - type: restart
@@ -423,7 +423,7 @@ EXAMPLES = r'''
     - type: none
 
 - name: Remove failure action information
-  win_service:
+  ansible.windows.win_service:
     name: service name
     failure_actions: []
     failure_command: ''  # removes the existing command

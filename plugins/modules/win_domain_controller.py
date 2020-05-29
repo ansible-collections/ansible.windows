@@ -14,7 +14,7 @@ module: win_domain_controller
 short_description: Manage domain controller/member server state for a Windows host
 description:
     - Ensure that a Windows Server 2012+ host is configured as a domain controller or demoted to member server.
-    - This module may require subsequent use of the M(win_reboot) action if changes are made.
+    - This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
 options:
   dns_domain_name:
     description:
@@ -83,11 +83,11 @@ options:
     - This does not relate to the C(-LogPath) paramter of the install controller cmdlet.
     type: str
 seealso:
-- module: win_domain
-- module: win_domain_computer
-- module: win_domain_group
-- module: win_domain_membership
-- module: win_domain_user
+- module: ansible.windows.win_domain
+- module: ansible.windows.win_domain_computer
+- module: community.windows.win_domain_group
+- module: ansible.windows.win_domain_membership
+- module: community.windows.win_domain_user
 author:
     - Matt Davis (@nitzmahone)
 '''
@@ -102,27 +102,27 @@ reboot_required:
 
 EXAMPLES = r'''
 - name: Ensure a server is a domain controller
-  win_domain_controller:
+  ansible.windows.win_domain_controller:
     dns_domain_name: ansible.vagrant
     domain_admin_user: testguy@ansible.vagrant
     domain_admin_password: password123!
     safe_mode_password: password123!
     state: domain_controller
 
-# ensure a server is not a domain controller
 # note that without an action wrapper, in the case where a DC is demoted,
 # the task will fail with a 401 Unauthorized, because the domain credential
 # becomes invalid to fetch the final output over WinRM. This requires win_async
 # with credential switching (or other clever credential-switching
 # mechanism to get the output and trigger the required reboot)
-- win_domain_controller:
+- name: Ensure a server is not a domain controller
+  ansible.windows.win_domain_controller:
     domain_admin_user: testguy@ansible.vagrant
     domain_admin_password: password123!
     local_admin_password: password123!
     state: member_server
 
 - name: Promote server as a read only domain controller
-  win_domain_controller:
+  ansible.windows.win_domain_controller:
     dns_domain_name: ansible.vagrant
     domain_admin_user: testguy@ansible.vagrant
     domain_admin_password: password123!
@@ -132,7 +132,7 @@ EXAMPLES = r'''
     site_name: London
 
 - name: Promote server with custom paths
-  win_domain_controller:
+  ansible.windows.win_domain_controller:
     dns_domain_name: ansible.vagrant
     domain_admin_user: testguy@ansible.vagrant
     domain_admin_password: password123!
@@ -144,6 +144,6 @@ EXAMPLES = r'''
   register: dc_promotion
 
 - name: Reboot after promotion
-  win_reboot:
+  ansible.windows.win_reboot:
   when: dc_promotion.reboot_required
 '''

@@ -51,8 +51,8 @@ options:
       - Can either be C({driveletter}:\sources\sxs) or C(\\{IP}\share\sources\sxs).
     type: str
 seealso:
-- module: win_chocolatey
-- module: win_package
+- module: chocolatey.chocolatey.win_chocolatey
+- module: ansible.windows.win_package
 author:
     - Paul Durivage (@angstwad)
     - Trond Hindenes (@trondhindenes)
@@ -60,25 +60,25 @@ author:
 
 EXAMPLES = r'''
 - name: Install IIS (Web-Server only)
-  win_feature:
+  ansible.windows.win_feature:
     name: Web-Server
     state: present
 
 - name: Install IIS (Web-Server and Web-Common-Http)
-  win_feature:
+  ansible.windows.win_feature:
     name:
     - Web-Server
     - Web-Common-Http
     state: present
 
 - name: Install NET-Framework-Core from file
-  win_feature:
+  ansible.windows.win_feature:
     name: NET-Framework-Core
     source: C:\Temp\iso\sources\sxs
     state: present
 
 - name: Install IIS Web-Server with sub features and management tools
-  win_feature:
+  ansible.windows.win_feature:
     name: Web-Server
     state: present
     include_sub_features: yes
@@ -86,7 +86,7 @@ EXAMPLES = r'''
   register: win_feature
 
 - name: Reboot if installing Web-Server feature requires it
-  win_reboot:
+  ansible.windows.win_reboot:
   when: win_feature.reboot_required
 '''
 

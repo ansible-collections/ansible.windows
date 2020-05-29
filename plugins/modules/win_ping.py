@@ -35,13 +35,13 @@ author:
 
 EXAMPLES = r'''
 # Test connectivity to a windows host
-# ansible winserver -m win_ping
+# ansible winserver -m ansible.windows.win_ping
 
 - name: Example from an Ansible Playbook
-  win_ping:
+  ansible.windows.win_ping:
 
 - name: Induce an exception to see what happens
-  win_ping:
+  ansible.windows.win_ping:
     data: crash
 '''
 

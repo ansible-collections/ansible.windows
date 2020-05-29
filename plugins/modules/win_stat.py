@@ -47,26 +47,26 @@ options:
         default: no
 seealso:
 - module: stat
-- module: win_acl
-- module: win_file
-- module: win_owner
+- module: ansible.windows.win_acl
+- module: ansible.windows.win_file
+- module: ansible.windows.win_owner
 author:
 - Chris Church (@cchurch)
 '''
 
 EXAMPLES = r'''
 - name: Obtain information about a file
-  win_stat:
+  ansible.windows.win_stat:
     path: C:\foo.ini
   register: file_info
 
 - name: Obtain information about a folder
-  win_stat:
+  ansible.windows.win_stat:
     path: C:\bar
   register: folder_info
 
 - name: Get MD5 checksum of a file
-  win_stat:
+  ansible.windows.win_stat:
     path: C:\foo.ini
     get_checksum: yes
     checksum_algorithm: md5
@@ -76,7 +76,7 @@ EXAMPLES = r'''
     var: md5_checksum.stat.checksum
 
 - name: Get SHA1 checksum of file
-  win_stat:
+  ansible.windows.win_stat:
     path: C:\foo.ini
     get_checksum: yes
   register: sha1_checksum
@@ -85,7 +85,7 @@ EXAMPLES = r'''
     var: sha1_checksum.stat.checksum
 
 - name: Get SHA256 checksum of file
-  win_stat:
+  ansible.windows.win_stat:
     path: C:\foo.ini
     get_checksum: yes
     checksum_algorithm: sha256

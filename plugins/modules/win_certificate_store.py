@@ -134,12 +134,12 @@ author:
 
 EXAMPLES = r'''
 - name: Import a certificate
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pem
     state: present
 
 - name: Import pfx certificate that is password protected
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pfx
     state: present
     password: VeryStrongPasswordHere!
@@ -147,7 +147,7 @@ EXAMPLES = r'''
   become_method: runas
 
 - name: Import pfx certificate without password and set private key as un-exportable
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pfx
     state: present
     key_exportable: no
@@ -156,30 +156,30 @@ EXAMPLES = r'''
     ansible_winrm_transport: credssp
 
 - name: Remove a certificate based on file thumbprint
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pem
     state: absent
 
 - name: Remove a certificate based on thumbprint
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     thumbprint: BD7AF104CF1872BDB518D95C9534EA941665FD27
     state: absent
 
 - name: Remove certificate based on thumbprint is CurrentUser/TrustedPublishers store
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     thumbprint: BD7AF104CF1872BDB518D95C9534EA941665FD27
     state: absent
     store_location: CurrentUser
     store_name: TrustedPublisher
 
 - name: Export certificate as der encoded file
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.cer
     state: exported
     file_type: der
 
 - name: Export certificate and key as pfx encoded file
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pfx
     state: exported
     file_type: pkcs12
@@ -189,7 +189,7 @@ EXAMPLES = r'''
   become_user: SYSTEM
 
 - name: Import certificate be used by IIS
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pfx
     file_type: pkcs12
     password: StrongPassword!

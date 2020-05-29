@@ -34,23 +34,22 @@ options:
   state:
     description:
       - Desired state of the members in the group.
-      - C(pure) was added in Ansible 2.8.
       - When C(state) is C(pure), only the members specified will exist,
         and all other existing members not specified are removed.
     type: str
     choices: [ absent, present, pure ]
     default: present
 seealso:
-- module: win_domain_group
-- module: win_domain_membership
-- module: win_group
+- module: community.windows.win_domain_group
+- module: ansible.windows.win_domain_membership
+- module: ansible.windows.win_group
 author:
     - Andrew Saraceni (@andrewsaraceni)
 '''
 
 EXAMPLES = r'''
 - name: Add a local and domain user to a local group
-  win_group_membership:
+  ansible.windows.win_group_membership:
     name: Remote Desktop Users
     members:
       - NewLocalAdmin
@@ -58,7 +57,7 @@ EXAMPLES = r'''
     state: present
 
 - name: Remove a domain group and service user from a local group
-  win_group_membership:
+  ansible.windows.win_group_membership:
     name: Backup Operators
     members:
       - DOMAIN\TestGroup
@@ -66,7 +65,7 @@ EXAMPLES = r'''
     state: absent
 
 - name: Ensure only a domain user exists in a local group
-  win_group_membership:
+  ansible.windows.win_group_membership:
     name: Remote Desktop Users
     members:
       - DOMAIN\TestUser
