@@ -4,10 +4,6 @@
 # Copyright: (c) 2016, Ansible, inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'core'}
-
 DOCUMENTATION = r'''
 ---
 module: win_shell
