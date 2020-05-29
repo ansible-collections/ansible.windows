@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
 import json
 
 from ansible_collections.ansible.windows.tests.unit.compat import unittest

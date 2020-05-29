@@ -4,13 +4,6 @@
 # Copyright: (c) 2014, Paul Durivage <paul.durivage@rackspace.com>, and others
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# This is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['stableinterface'],
-                    'supported_by': 'core'}
-
 DOCUMENTATION = r'''
 ---
 module: win_get_url
