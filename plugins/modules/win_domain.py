@@ -14,7 +14,7 @@ short_description: Ensures the existence of a Windows domain
 description:
 - Ensure that the domain named by C(dns_domain_name) exists and is reachable.
 - If the domain is not reachable, the domain is created in a new forest on the target Windows Server 2012R2+ host.
-- This module may require subsequent use of the M(win_reboot) action if changes are made.
+- This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
 options:
   dns_domain_name:
     description:
@@ -75,11 +75,11 @@ options:
     type: bool
     default: yes
 seealso:
-- module: win_domain_controller
-- module: win_domain_computer
-- module: win_domain_group
-- module: win_domain_membership
-- module: win_domain_user
+- module: ansible.windows.win_domain_controller
+- module: community.windows.win_domain_computer
+- module: community.windows.win_domain_group
+- module: ansible.windows.win_domain_membership
+- module: community.windows.win_domain_user
 author:
 - Matt Davis (@nitzmahone)
 '''
@@ -94,12 +94,12 @@ reboot_required:
 
 EXAMPLES = r'''
 - name: Create new domain in a new forest on the target host
-  win_domain:
+  ansible.windows.win_domain:
     dns_domain_name: ansible.vagrant
     safe_mode_password: password123!
 
 - name: Create new Windows domain in a new forest with specific parameters
-  win_domain:
+  ansible.windows.win_domain:
     create_dns_delegation: no
     database_path: C:\Windows\NTDS
     dns_domain_name: ansible.vagrant

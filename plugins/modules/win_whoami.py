@@ -24,16 +24,16 @@ notes:
   empty list as Administrator rights are required to query LSA for the
   information.
 seealso:
-- module: win_credential
-- module: win_group_membership
-- module: win_user_right
+- module: community.windows.win_credential
+- module: ansible.windows.win_group_membership
+- module: ansible.windows.win_user_right
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Get whoami information
-  win_whoami:
+  ansible.windows.win_whoami:
 '''
 
 RETURN = r'''

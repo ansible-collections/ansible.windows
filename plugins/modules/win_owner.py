@@ -31,22 +31,22 @@ options:
     type: bool
     default: no
 seealso:
-- module: win_acl
-- module: win_file
-- module: win_stat
+- module: ansible.windows.win_acl
+- module: ansible.windows.win_file
+- module: ansible.windows.win_stat
 author:
 - Hans-Joachim Kliemeck (@h0nIg)
 '''
 
 EXAMPLES = r'''
 - name: Change owner of path
-  win_owner:
+  ansible.windows.win_owner:
     path: C:\apache
     user: apache
     recurse: yes
 
 - name: Set the owner of root directory
-  win_owner:
+  ansible.windows.win_owner:
     path: C:\apache
     user: SYSTEM
     recurse: no

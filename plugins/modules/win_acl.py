@@ -70,13 +70,12 @@ options:
     choices: [ InheritOnly, None, NoPropagateInherit ]
     default: "None"
 notes:
-- If adding ACL's for AppPool identities (available since 2.3), the Windows
-  Feature "Web-Scripting-Tools" must be enabled.
+- If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
 seealso:
-- module: win_acl_inheritance
-- module: win_file
-- module: win_owner
-- module: win_stat
+- module: ansible.windows.win_acl_inheritance
+- module: ansible.windows.win_file
+- module: ansible.windows.win_owner
+- module: ansible.windows.win_stat
 author:
 - Phil Schwartz (@schwartzmx)
 - Trond Hindenes (@trondhindenes)
@@ -85,14 +84,14 @@ author:
 
 EXAMPLES = r'''
 - name: Restrict write and execute access to User Fed-Phil
-  win_acl:
+  ansible.windows.win_acl:
     user: Fed-Phil
     path: C:\Important\Executable.exe
     type: deny
     rights: ExecuteFile,Write
 
 - name: Add IIS_IUSRS allow rights
-  win_acl:
+  ansible.windows.win_acl:
     path: C:\inetpub\wwwroot\MySite
     user: IIS_IUSRS
     rights: FullControl
@@ -102,7 +101,7 @@ EXAMPLES = r'''
     propagation: 'None'
 
 - name: Set registry key right
-  win_acl:
+  ansible.windows.win_acl:
     path: HKCU:\Bovine\Key
     user: BUILTIN\Users
     rights: EnumerateSubKeys
@@ -112,7 +111,7 @@ EXAMPLES = r'''
     propagation: 'None'
 
 - name: Remove FullControl AccessRule for IIS_IUSRS
-  win_acl:
+  ansible.windows.win_acl:
     path: C:\inetpub\wwwroot\MySite
     user: IIS_IUSRS
     rights: FullControl
@@ -122,7 +121,7 @@ EXAMPLES = r'''
     propagation: 'None'
 
 - name: Deny Intern
-  win_acl:
+  ansible.windows.win_acl:
     path: C:\Administrator\Documents
     user: Intern
     rights: Read,Write,Modify,FullControl,Delete

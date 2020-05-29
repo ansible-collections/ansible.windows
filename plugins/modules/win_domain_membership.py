@@ -13,7 +13,7 @@ module: win_domain_membership
 short_description: Manage domain/workgroup membership for a Windows host
 description:
 - Manages domain membership or workgroup membership for a Windows host. Also supports hostname changes.
-- This module may require subsequent use of the M(win_reboot) action if changes are made.
+- This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
 options:
   dns_domain_name:
     description:
@@ -47,14 +47,14 @@ options:
       - When C(state) is C(workgroup), the name of the workgroup that the Windows host should be in.
     type: str
 seealso:
-- module: win_domain
-- module: win_domain_controller
-- module: win_domain_computer
-- module: win_domain_group
-- module: win_domain_user
-- module: win_group
-- module: win_group_membership
-- module: win_user
+- module: ansible.windows.win_domain
+- module: ansible.windows.win_domain_controller
+- module: community.windows.win_domain_computer
+- module: community.windows.win_domain_group
+- module: community.windows.win_domain_user
+- module: ansible.windows.win_group
+- module: ansible.windows.win_group_membership
+- module: ansible.windows.win_user
 author:
     - Matt Davis (@nitzmahone)
 '''
@@ -76,7 +76,7 @@ EXAMPLES = r'''
 - hosts: winclient
   gather_facts: no
   tasks:
-  - win_domain_membership:
+  - ansible.windows.win_domain_membership:
       dns_domain_name: ansible.vagrant
       hostname: mydomainclient
       domain_admin_user: testguy@ansible.vagrant
@@ -85,7 +85,7 @@ EXAMPLES = r'''
       state: domain
     register: domain_state
 
-  - win_reboot:
+  - ansible.windows.win_reboot:
     when: domain_state.reboot_required
 
 
@@ -96,7 +96,7 @@ EXAMPLES = r'''
 - hosts: winclient
   gather_facts: no
   tasks:
-  - win_domain_membership:
+  - ansible.windows.win_domain_membership:
       workgroup_name: mywg
       domain_admin_user: '{{ win_domain_admin_user }}'
       domain_admin_password: '{{ win_domain_admin_password }}'

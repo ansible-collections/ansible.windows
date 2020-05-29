@@ -16,7 +16,7 @@ DOCUMENTATION = r'''
 module: win_reg_stat
 short_description: Get information about Windows registry keys
 description:
-- Like M(win_file), M(win_reg_stat) will return whether the key/property exists.
+- Like M(ansible.windows.win_file), M(ansible.windows.win_reg_stat) will return whether the key/property exists.
 - It also returns the sub keys and properties of the key specified.
 - If specifying a property name through I(property), it will return the information specific for that property.
 options:
@@ -35,26 +35,26 @@ notes:
 - The C(properties) return value will contain an empty string key C("") that refers to the key's C(Default) value. If
   the value has not been set then this key is not returned.
 seealso:
-- module: win_regedit
-- module: win_regmerge
+- module: ansible.windows.win_regedit
+- module: ansible.windows.win_regmerge
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Obtain information about a registry key using short form
-  win_reg_stat:
+  ansible.windows.win_reg_stat:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
   register: current_version
 
 - name: Obtain information about a registry key property
-  win_reg_stat:
+  ansible.windows.win_reg_stat:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
     name: CommonFilesDir
   register: common_files_dir
 
 - name: Obtain the registry key's (Default) property
-  win_reg_stat:
+  ansible.windows.win_reg_stat:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
     name: ''
   register: current_version_default

@@ -94,11 +94,11 @@ options:
     default: present
 seealso:
 - module: user
-- module: win_domain_membership
-- module: win_domain_user
-- module: win_group
-- module: win_group_membership
-- module: win_user_profile
+- module: ansible.windows.win_domain_membership
+- module: community.windows.win_domain_user
+- module: ansible.windows.win_group
+- module: ansible.windows.win_group_membership
+- module: community.windows.win_user_profile
 author:
     - Paul Durivage (@angstwad)
     - Chris Church (@cchurch)
@@ -106,7 +106,7 @@ author:
 
 EXAMPLES = r'''
 - name: Ensure user bob is present
-  win_user:
+  ansible.windows.win_user:
     name: bob
     password: B0bP4ssw0rd
     state: present
@@ -114,7 +114,7 @@ EXAMPLES = r'''
       - Users
 
 - name: Ensure user bob is absent
-  win_user:
+  ansible.windows.win_user:
     name: bob
     state: absent
 '''

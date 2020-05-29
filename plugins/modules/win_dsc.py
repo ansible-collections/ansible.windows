@@ -18,7 +18,6 @@ description:
 - Requires PowerShell version 5.0 or newer.
 - Most of the options for this module are dynamic and will vary depending on
   the DSC Resource specified in I(resource_name).
-- See :doc:`/user_guide/windows_dsc` for more information on how to use this module.
 options:
   resource_name:
     description:
@@ -38,7 +37,7 @@ options:
     default: latest
   free_form:
     description:
-    - The M(win_dsc) module takes in multiple free form options based on the
+    - The M(ansible.windows.win_dsc) module takes in multiple free form options based on the
       DSC resource being invoked by I(resource_name).
     - There is no option actually named C(free_form) so see the examples.
     - This module will try and convert the option to the correct type required
@@ -56,16 +55,13 @@ options:
     - If the type of the DSC resource option is a C(DateTime), you should use
       a string in the form of an ISO 8901 string to ensure the exact date is
       used.
-    - Since Ansible 2.8, Ansible will now validate the input fields against the
-      DSC resource definition automatically. Older versions will silently
-      ignore invalid fields.
     type: str
     required: true
 notes:
 - By default there are a few builtin resources that come with PowerShell 5.0,
   see U(https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources) for
   more information on these resources.
-- Custom DSC resources can be installed with M(win_psmodule) using the I(name)
+- Custom DSC resources can be installed with M(community.windows.win_psmodule) using the I(name)
   option.
 - The DSC engine run's each task as the SYSTEM account, any resources that need
   to be accessed with a different account need to have C(PsDscRunAsCredential)
@@ -83,7 +79,7 @@ author:
 
 EXAMPLES = r'''
 - name: Verify the WSMan HTTP listener is active and configured correctly
-  win_shell: |
+  ansible.windows.win_shell: |
     $port = (Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP).Value
     $onlinePorts = @(Get-ChildItem -LiteralPath WSMan:\localhost\Listener |
         Where-Object { 'Transport=HTTP' -in $_.Keys } |
@@ -96,19 +92,19 @@ EXAMPLES = r'''
     }
 
 - name: Extract zip file
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: Archive
     Ensure: Present
     Path: C:\Temp\zipfile.zip
     Destination: C:\Temp\Temp2
 
 - name: Install a Windows feature with the WindowsFeature resource
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: WindowsFeature
     Name: telnet-client
 
 - name: Edit HKCU reg key under specific user
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: Registry
     Ensure: Present
     Key: HKEY_CURRENT_USER\ExampleKey
@@ -119,7 +115,7 @@ EXAMPLES = r'''
   no_log: true
 
 - name: Create file with multiple attributes
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: File
     DestinationPath: C:\ansible\dsc
     Attributes: # can also be a comma separated string, e.g. 'Hidden, System'
@@ -129,18 +125,18 @@ EXAMPLES = r'''
     Type: Directory
 
 - name: Call DSC resource with DateTime option
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: DateTimeResource
     DateTimeOption: '2019-02-22T13:57:31.2311892+00:00'
 
 # more complex example using custom DSC resource and dict values
 - name: Setup the xWebAdministration module
-  win_psmodule:
+  ansible.windows.win_psmodule:
     name: xWebAdministration
     state: present
 
 - name: Create IIS Website with Binding and Authentication options
-  win_dsc:
+  ansible.windows.win_dsc:
     resource_name: xWebsite
     Ensure: Present
     Name: DSC Website

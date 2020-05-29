@@ -49,7 +49,7 @@ options:
 notes:
    - This module is for modifying individual elements of path-like
      environment variables. For general-purpose management of other
-     environment vars, use the M(win_environment) module.
+     environment vars, use the M(ansible.windows.win_environment) module.
    - This module does not broadcast change events.
      This means that the minority of windows applications which can have
      their environment changed without restarting will not be notified and
@@ -57,20 +57,20 @@ notes:
    - User level environment variables will require an interactive user to
      log out and in again before they become available.
 seealso:
-- module: win_environment
+- module: ansible.windows.win_environment
 author:
 - Matt Davis (@nitzmahone)
 '''
 
 EXAMPLES = r'''
 - name: Ensure that system32 and Powershell are present on the global system path, and in the specified order
-  win_path:
+  ansible.windows.win_path:
     elements:
     - '%SystemRoot%\system32'
     - '%SystemRoot%\system32\WindowsPowerShell\v1.0'
 
 - name: Ensure that C:\Program Files\MyJavaThing is not on the current user's CLASSPATH
-  win_path:
+  ansible.windows.win_path:
     name: CLASSPATH
     elements: C:\Program Files\MyJavaThing
     scope: user

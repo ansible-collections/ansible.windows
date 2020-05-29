@@ -23,27 +23,27 @@ options:
     - If omitted then all services will returned.
     type: str
 seealso:
-- module: win_service
+- module: ansible.windows.win_service
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Get info for all installed services
-  win_service_info:
+  ansible.windows.win_service_info:
   register: service_info
 
 - name: Get info for a single service
-  win_service_info:
+  ansible.windows.win_service_info:
     name: WinRM
   register: service_info
 
 - name: Get info for a service using its display name
-  win_service_info:
+  ansible.windows.win_service_info:
     name: Windows Remote Management (WS-Management)
 
 - name: Find all services that start with 'win'
-  win_service_info:
+  ansible.windows.win_service_info:
     name: win*
 '''
 

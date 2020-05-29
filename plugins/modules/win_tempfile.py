@@ -47,12 +47,12 @@ author:
 
 EXAMPLES = r"""
 - name: Create temporary build directory
-  win_tempfile:
+  ansible.windows.win_tempfile:
     state: directory
     suffix: build
 
 - name: Create temporary file
-  win_tempfile:
+  ansible.windows.win_tempfile:
     state: file
     suffix: temp
 """

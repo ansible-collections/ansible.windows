@@ -84,11 +84,8 @@ author:
 '''
 
 EXAMPLES = r'''
-# Playbook example
-# Add share and set permissions
----
 - name: Add secret share
-  win_share:
+  ansible.windows.win_share:
     name: internal
     description: top secret share
     path: C:\shares\internal
@@ -98,7 +95,7 @@ EXAMPLES = r'''
     deny: HR-External
 
 - name: Add public company share
-  win_share:
+  ansible.windows.win_share:
     name: company
     description: top secret share
     path: C:\shares\company
@@ -107,7 +104,7 @@ EXAMPLES = r'''
     read: Global
 
 - name: Remove previously added share
-  win_share:
+  ansible.windows.win_share:
     name: internal
     state: absent
 '''

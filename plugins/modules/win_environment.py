@@ -46,7 +46,7 @@ options:
 notes:
 - This module is best-suited for setting the entire value of an
   environment variable. For safe element-based management of
-  path-like environment vars, use the M(win_path) module.
+  path-like environment vars, use the M(ansible.windows.win_path) module.
 - This module does not broadcast change events.
   This means that the minority of windows applications which can have
   their environment changed without restarting will not be notified and
@@ -54,21 +54,21 @@ notes:
   User level environment variables will require the user to log out
   and in again before they become available.
 seealso:
-- module: win_path
+- module: ansible.windows.win_path
 author:
 - Jon Hawkesworth (@jhawkesworth)
 '''
 
 EXAMPLES = r'''
 - name: Set an environment variable for all users
-  win_environment:
+  ansible.windows.win_environment:
     state: present
     name: TestVariable
     value: Test value
     level: machine
 
 - name: Remove an environment variable for the current user
-  win_environment:
+  ansible.windows.win_environment:
     state: absent
     name: TestVariable
     level: user

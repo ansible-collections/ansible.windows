@@ -24,19 +24,19 @@ options:
     type: str
     required: true
 seealso:
-- module: win_dns_client
+- module: ansible.windows.win_dns_client
 author:
 - Ripon Banik (@riponbanik)
 '''
 
 EXAMPLES = r'''
 - name: Change the hostname to sample-hostname
-  win_hostname:
+  ansible.windows.win_hostname:
     name: sample-hostname
   register: res
 
 - name: Reboot
-  win_reboot:
+  ansible.windows.win_reboot:
   when: res.reboot_required
 '''
 

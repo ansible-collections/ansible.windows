@@ -38,27 +38,27 @@ options:
     type: bool
     default: no
 seealso:
-- module: win_acl
-- module: win_file
-- module: win_stat
+- module: ansible.windows.win_acl
+- module: ansible.windows.win_file
+- module: ansible.windows.win_stat
 author:
 - Hans-Joachim Kliemeck (@h0nIg)
 '''
 
 EXAMPLES = r'''
 - name: Disable inherited ACE's
-  win_acl_inheritance:
+  ansible.windows.win_acl_inheritance:
     path: C:\apache
     state: absent
 
 - name: Disable and copy inherited ACE's
-  win_acl_inheritance:
+  ansible.windows.win_acl_inheritance:
     path: C:\apache
     state: absent
     reorganize: yes
 
 - name: Enable and remove dedicated ACE's
-  win_acl_inheritance:
+  ansible.windows.win_acl_inheritance:
     path: C:\apache
     state: present
     reorganize: yes

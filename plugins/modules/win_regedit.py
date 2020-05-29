@@ -88,10 +88,9 @@ notes:
 - Check-mode C(-C/--check) and diff output C(-D/--diff) are supported, so that you can test every change against the active configuration before
   applying changes.
 - Beware that some registry hives (C(HKEY_USERS) in particular) do not allow to create new registry paths in the root folder.
-- Since ansible 2.4, when checking if a string registry value has changed, a case-sensitive test is used. Previously the test was case-insensitive.
 seealso:
-- module: win_reg_stat
-- module: win_regmerge
+- module: ansible.windows.win_reg_stat
+- module: ansible.windows.win_regmerge
 author:
 - Adam Keech (@smadam813)
 - Josh Ludwig (@joshludwig)
@@ -100,91 +99,91 @@ author:
 
 EXAMPLES = r'''
 - name: Create registry path MyCompany
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
 
 - name: Add or update registry path MyCompany, with entry 'hello', and containing 'world'
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: world
 
 - name: Add or update registry path MyCompany, with dword entry 'hello', and containing 1337 as the decimal value
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: 1337
     type: dword
 
 - name: Add or update registry path MyCompany, with dword entry 'hello', and containing 0xff2500ae as the hex value
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: 0xff2500ae
     type: dword
 
 - name: Add or update registry path MyCompany, with binary entry 'hello', and containing binary data in hex-string format
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: hex:be,ef,be,ef,be,ef,be,ef,be,ef
     type: binary
 
 - name: Add or update registry path MyCompany, with binary entry 'hello', and containing binary data in yaml format
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: [0xbe,0xef,0xbe,0xef,0xbe,0xef,0xbe,0xef,0xbe,0xef]
     type: binary
 
 - name: Add or update registry path MyCompany, with expand string entry 'hello'
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: '%appdata%\local'
     type: expandstring
 
 - name: Add or update registry path MyCompany, with multi string entry 'hello'
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     data: ['hello', 'world']
     type: multistring
 
 - name: Disable keyboard layout hotkey for all users (changes existing)
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKU:\.DEFAULT\Keyboard Layout\Toggle
     name: Layout Hotkey
     data: 3
     type: dword
 
 - name: Disable language hotkey for current users (adds new)
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Keyboard Layout\Toggle
     name: Language Hotkey
     data: 3
     type: dword
 
 - name: Remove registry path MyCompany (including all entries it contains)
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     state: absent
     delete_key: yes
 
 - name: Clear the existing (Default) entry at path MyCompany
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     state: absent
     delete_key: no
 
 - name: Remove entry 'hello' from registry path MyCompany
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     name: hello
     state: absent
 
 - name: Change default mouse trailing settings for new users
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\ANSIBLE\Control Panel\Mouse
     name: MouseTrails
     data: 10
