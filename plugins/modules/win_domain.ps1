@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 
 # FUTURE: Consider action wrapper to manage reboots and credential changes
 
-Function Ensure-Prereqs {
+Function Install-Prereqs {
     $gwf = Get-WindowsFeature AD-Domain-Services
     if ($gwf.InstallState -ne "Installed") {
         $result.changed = $true
@@ -53,7 +53,7 @@ $result = @{
 }
 
 # FUTURE: Any sane way to do the detection under check-mode *without* installing the feature?
-$installed = Ensure-Prereqs
+$installed = Install-Prereqs
 
 # when in check mode and the prereq was "installed" we need to exit early as
 # the AD cmdlets weren't really installed

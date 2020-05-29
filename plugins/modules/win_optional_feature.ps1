@@ -7,7 +7,7 @@
 
 $spec = @{
     options = @{
-        name = @{ type = "list"; required = $true }
+        name = @{ type = "list"; elements = "str"; required = $true }
         state = @{ type = "str"; default = "present"; choices = @("absent", "present") }
         source = @{ type = "str" }
         include_parent = @{ type = "bool"; default = $false }

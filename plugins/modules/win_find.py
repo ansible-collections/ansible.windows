@@ -63,6 +63,7 @@ options:
             - List of paths of directories to search for files or folders in.
             - This can be supplied as a single path or a list of paths.
         type: list
+        elements: str
         required: yes
     patterns:
         description:
@@ -71,6 +72,7 @@ options:
             - The patterns restrict the list of files or folders to be returned based on the filenames.
             - For a file to be matched it only has to match with one pattern in a list provided.
         type: list
+        elements: str
         aliases: [ "regex", "regexp" ]
     recurse:
         description:

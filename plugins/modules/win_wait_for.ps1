@@ -116,7 +116,7 @@ if ($null -eq $path -and $null -eq $port -and $state -ne "drained") {
                     $complete = $true
                     break
                 } else {
-                    $file_contents = Get-Content -Path $path -Raw
+                    $file_contents = Get-Content -LiteralPath $path -Raw
                     if ($file_contents -match $regex) {
                         $complete = $true
                         break
@@ -143,7 +143,7 @@ if ($null -eq $path -and $null -eq $port -and $state -ne "drained") {
             $attempts += 1
             if (Test-AnsiblePath -Path $path) {
                 if ($null -ne $regex) {
-                    $file_contents = Get-Content -Path $path -Raw
+                    $file_contents = Get-Content -LiteralPath $path -Raw
                     if ($file_contents -notmatch $regex) {
                         $complete = $true
                         break

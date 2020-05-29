@@ -18,6 +18,7 @@ options:
       - This relates to C(FeatureName) in the Powershell cmdlet.
       - To list all available features use the PowerShell command C(Get-WindowsOptionalFeature).
     type: list
+    elements: str
     required: yes
   state:
     description:

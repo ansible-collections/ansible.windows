@@ -145,7 +145,7 @@ Function Get-FileSize($path) {
     $size
 }
 
-Function Extract-Zip($src, $dest) {
+Function Expand-Zip($src, $dest) {
     $archive = [System.IO.Compression.ZipFile]::Open($src, [System.IO.Compression.ZipArchiveMode]::Read, [System.Text.Encoding]::UTF8)
     foreach ($entry in $archive.Entries) {
         $archive_name = $entry.FullName
@@ -188,7 +188,7 @@ Function Extract-Zip($src, $dest) {
     $archive.Dispose()  # release the handle of the zip file
 }
 
-Function Extract-ZipLegacy($src, $dest) {
+Function Expand-ZipLegacy($src, $dest) {
     if (-not (Test-Path -LiteralPath $dest)) {
         New-Item -Path $dest -ItemType Directory -WhatIf:$check_mode | Out-Null
     }
@@ -296,9 +296,9 @@ if ($copy_mode -eq "query") {
         $use_legacy = $true
     }
     if ($use_legacy) {
-        Extract-ZipLegacy -src $src -dest $dest
+        Expand-ZipLegacy -src $src -dest $dest
     } else {
-        Extract-Zip -src $src -dest $dest
+        Expand-Zip -src $src -dest $dest
     }
 
     $result.changed = $true
