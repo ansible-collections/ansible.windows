@@ -11,7 +11,7 @@
 #Requires -Module Ansible.ModuleUtils.AddType
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.WebRequest
+#AnsibleRequires -PowerShell ..module_utils.WebRequest
 
 Function Import-PInvokeCode {
     param (
@@ -481,7 +481,8 @@ Function Get-UrlFile {
         $Url
     )
 
-    Invoke-WithWebRequest -Module $module -Request (Get-AnsibleWebRequest -Url $Url -Module $module) -Script {
+    $request = (Get-AnsibleWindowsWebRequest -Url $Url -Module $module)
+    Invoke-AnsibleWindowsWebRequest -Module $module -Request $request -Script {
         Param ([System.Net.WebResponse]$Response, [System.IO.Stream]$Stream)
 
         $tempPath = Join-Path -Path $module.Tmpdir -ChildPath $Response.ResponseUri.Segments[-1]
@@ -1250,7 +1251,7 @@ $spec = @{
             type = "str"
             aliases = @("productid")
             deprecated_aliases = @(
-                @{ name = "productid"; version = "2.14" }
+                @{ name = "productid"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
             )
         }
         state = @{
@@ -1259,11 +1260,20 @@ $spec = @{
             choices = "absent", "present"
             aliases = @(,"ensure")
             deprecated_aliases = @(
-                ,@{ name = "ensure"; version = "2.14" }
+                @{ name = "ensure"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
             )
         }
-        username = @{ type = "str"; aliases = @(,"user_name"); removed_in_version = "2.14" }
-        password = @{ type = "str"; no_log = $true; aliases = @(,"user_password"); removed_in_version = "2.14" }
+        username = @{
+            type = "str"
+            aliases = @(,"user_name")
+            removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
+        }
+        password = @{
+            type = "str"
+            no_log = $true
+            aliases = @(,"user_password")
+            removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
+        }
         creates_path = @{ type = "path" }
         creates_version = @{ type = "str" }
         creates_service = @{ type = "str" }
@@ -1280,9 +1290,7 @@ $spec = @{
     required_together = @(,@("username", "password"))
     supports_check_mode = $true
 }
-$spec = Merge-WebRequestSpec -ModuleSpec $spec
-
-$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
 
 $arguments = $module.Params.arguments
 $expectedReturnCode = $module.Params.expected_return_code

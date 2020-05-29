@@ -68,37 +68,40 @@ options:
         transfer.
       - This option cannot be set with I(checksum).
     type: str
+  url_method:
+    aliases:
+    - method
+  url_timeout:
+    aliases:
+    - timeout
+
+  # Following defined in the web_request fragment but the module contains deprecated aliases for backwards compatibility.
   url_username:
     description:
     - The username to use for authentication.
-    - The aliases I(user) and I(username) are deprecated and will be removed in
-      Ansible 2.14.
+    - The alias I(user) and I(username) is deprecated and will be removed on
+      the major release after C(2022-07-01).
     aliases:
     - user
     - username
   url_password:
     description:
     - The password for I(url_username).
-    - The alias I(password) is deprecated and will be removed in Ansible 2.14.
+    - The alias I(password) is deprecated and will be removed on the major
+      release after C(2022-07-01).
     aliases:
     - password
-  method:
-    description:
-    - This option is not for use with C(win_get_url) and should be ignored.
 notes:
 - If your URL includes an escaped slash character (%2F) this module will convert it to a real slash.
   This is a result of the behaviour of the System.Uri class as described in
   L(the documentation,https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/network/schemesettings-element-uri-settings#remarks).
-- Since Ansible 2.8, the module will skip reporting a change if the remote
-  checksum is the same as the local local even when C(force=yes). This is to
-  better align with M(get_url).
 extends_documentation_fragment:
-- url_windows
+- ansible.windows.web_request
 
 seealso:
 - module: get_url
 - module: uri
-- module: win_uri
+- module: ansible.windows.win_uri
 author:
 - Paul Durivage (@angstwad)
 - Takeshi Kuramochi (@tksarah)
@@ -106,18 +109,18 @@ author:
 
 EXAMPLES = r'''
 - name: Download earthrise.jpg to specified path
-  win_get_url:
+  ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\Users\RandomUser\earthrise.jpg
 
 - name: Download earthrise.jpg to specified path only if modified
-  win_get_url:
+  ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\Users\RandomUser\earthrise.jpg
     force: no
 
 - name: Download earthrise.jpg to specified path through a proxy server.
-  win_get_url:
+  ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\Users\RandomUser\earthrise.jpg
     proxy_url: http://10.0.0.1:8080
@@ -125,14 +128,14 @@ EXAMPLES = r'''
     proxy_password: password
 
 - name: Download file from FTP with authentication
-  win_get_url:
+  ansible.windows.win_get_url:
     url: ftp://server/file.txt
     dest: '%TEMP%\ftp-file.txt'
     url_username: ftp-user
     url_password: ftp-password
 
 - name: Download src with sha256 checksum url
-  win_get_url:
+  ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\temp\earthrise.jpg
     checksum_url: http://www.example.com/sha256sum.txt
@@ -140,7 +143,7 @@ EXAMPLES = r'''
     force: True
 
 - name: Download src with sha256 checksum url
-  win_get_url:
+  ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\temp\earthrise.jpg
     checksum: a97e6837f60cec6da4491bab387296bbcd72bdba
