@@ -37,7 +37,7 @@ Function Write-DebugLog {
 
     Write-Debug $msg
     if($log_path) {
-        Add-Content $log_path $msg
+        Add-Content -LiteralPath $log_path -Value $msg
     }
 }
 

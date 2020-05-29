@@ -41,7 +41,7 @@ $common_functions = {
 
         Write-Debug -Message $msg
         if ($null -ne $log_path -and (-not $check_mode)) {
-            Add-Content -Path $log_path -Value $msg
+            Add-Content -LiteralPath $log_path -Value $msg
         }
     }
 }

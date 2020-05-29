@@ -15,13 +15,13 @@ $async_dir = Get-AnsibleParam $parsed_args "_async_dir" -type "path" -failifempt
 
 $log_path = [System.IO.Path]::Combine($async_dir, $jid)
 
-If(-not $(Test-Path $log_path))
+If(-not $(Test-Path -LiteralPath $log_path))
 {
     Fail-Json @{ansible_job_id=$jid; started=1; finished=1} "could not find job at '$async_dir'"
 }
 
 If($mode -eq "cleanup") {
-    Remove-Item $log_path -Recurse
+    Remove-Item -LiteralPath $log_path -Recurse
     Exit-Json @{ansible_job_id=$jid; erased=$log_path}
 }
 
@@ -31,7 +31,7 @@ If($mode -eq "cleanup") {
 
 $data = $null
 Try {
-    $data_raw = Get-Content $log_path
+    $data_raw = Get-Content -LiteralPath $log_path
 
     # TODO: move this into module_utils/powershell.ps1?
     $jss = New-Object System.Web.Script.Serialization.JavaScriptSerializer

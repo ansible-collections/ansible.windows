@@ -24,7 +24,7 @@ Function Write-DebugLog {
 
     Write-Debug $msg
     if($log_path) {
-        Add-Content $log_path $msg
+        Add-Content -LiteralPath $log_path -Value $msg
     }
 }
 
@@ -44,7 +44,7 @@ Function Get-MissingFeatures {
     return ,$missing_features # no, the comma's not a typo- allows us to return an empty array
 }
 
-Function Ensure-FeatureInstallation {
+Function Install-FeatureInstallation {
     # ensure RSAT-ADDS and AD-Domain-Services features are installed
 
     Write-DebugLog "Ensuring required Windows features are installed..."
@@ -72,7 +72,7 @@ Function Get-DomainControllerDomain {
     }
 }
 
-Function Create-Credential {
+Function New-Credential {
     Param(
         [string] $cred_user,
         [string] $cred_password
@@ -167,10 +167,10 @@ Try {
             Exit-Json $result
         }
 
-        Ensure-FeatureInstallation | Out-Null
+        Install-FeatureInstallation | Out-Null
     }
 
-    $domain_admin_cred = Create-Credential -cred_user $domain_admin_user -cred_password $domain_admin_password
+    $domain_admin_cred = New-Credential -cred_user $domain_admin_user -cred_password $domain_admin_password
 
     switch($state) {
         domain_controller {

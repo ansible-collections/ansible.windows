@@ -463,7 +463,7 @@ try {
             Fail-Json -obj $result -message "failed to enable SeBackupPrivilege and SeRestorePrivilege for the current process: $($_.Exception.Message)"
         }
 
-        if (Test-Path -Path HKLM:\ANSIBLE) {
+        if (Test-Path -LiteralPath HKLM:\ANSIBLE) {
             Add-Warning -obj $result -message "hive already loaded at HKLM:\ANSIBLE, had to unload hive for win_regedit to continue"
             try {
                 [Ansible.WinRegedit.Hive]::UnloadHive("ANSIBLE")

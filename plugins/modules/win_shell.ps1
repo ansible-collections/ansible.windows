@@ -13,7 +13,7 @@ Set-StrictMode -Version 2
 $ErrorActionPreference = "Stop"
 
 # Cleanse CLIXML from stderr (sift out error stream data, discard others for now)
-Function Cleanse-Stderr($raw_stderr) {
+Function Format-Stderr($raw_stderr) {
     Try {
         # NB: this regex isn't perfect, but is decent at finding CLIXML amongst other stderr noise
         If($raw_stderr -match "(?s)(?<prenoise1>.*)#< CLIXML(?<prenoise2>.*)(?<clixml><Objs.+</Objs>)(?<postnoise>.*)") {
@@ -123,7 +123,7 @@ try {
 
 # TODO: decode CLIXML stderr output (and other streams?)
 $result.stdout = $command_result.stdout
-$result.stderr = Cleanse-Stderr $command_result.stderr
+$result.stderr = Format-Stderr $command_result.stderr
 $result.rc = $command_result.rc
 
 $end_datetime = [DateTime]::UtcNow

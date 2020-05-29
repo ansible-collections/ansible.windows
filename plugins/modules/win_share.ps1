@@ -78,12 +78,12 @@ If ($state -eq "absent") {
     $cachingMode = Get-AnsibleParam -obj $params -name "caching_mode" -type "str" -default "Manual" -validateSet "BranchCache","Documents","Manual","None","Programs","Unknown"
     $encrypt = Get-AnsibleParam -obj $params -name "encrypt" -type "bool" -default $false
 
-    If (-Not (Test-Path -Path $path)) {
+    If (-Not (Test-Path -LiteralPath $path)) {
         Fail-Json $result "$path directory does not exist on the host"
     }
 
     # normalize path and remove slash at the end
-    $path = (Get-Item $path).FullName -replace "\\$"
+    $path = (Get-Item -LiteralPath $path).FullName -replace "\\$"
     $path = "$path" -replace "\:$",":\"
 
     # need to (re-)create share

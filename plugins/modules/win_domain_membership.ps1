@@ -22,7 +22,7 @@ Function Write-DebugLog {
 
     Write-Debug $msg
     if($log_path) {
-        Add-Content $log_path $msg
+        Add-Content -LiteralPath $log_path -Value $msg
     }
 }
 
@@ -67,7 +67,7 @@ Function Get-DomainMembershipMatch {
     }
 }
 
-Function Create-Credential {
+Function New-Credential {
     Param(
         [string] $cred_user,
         [string] $cred_pass
@@ -91,7 +91,7 @@ Function Get-HostnameMatch {
     return $hostname_match
 }
 
-Function Is-DomainJoined {
+Function Test-DomainJoined {
     return (Get-CIMInstance Win32_ComputerSystem).PartOfDomain
 }
 
@@ -105,7 +105,7 @@ Function Join-Domain {
     )
 
     Write-DebugLog ("Creating credential for user {0}" -f $domain_admin_user)
-    $domain_cred = Create-Credential $domain_admin_user $domain_admin_password
+    $domain_cred = New-Credential $domain_admin_user $domain_admin_password
 
     $add_args = @{
         ComputerName="."
@@ -163,8 +163,8 @@ Function Join-Workgroup {
         [string] $domain_admin_password
     )
 
-    If(Is-DomainJoined) { # if we're on a domain, unjoin it (which forces us to join a workgroup)
-        $domain_cred = Create-Credential $domain_admin_user $domain_admin_password
+    If(Test-DomainJoined) { # if we're on a domain, unjoin it (which forces us to join a workgroup)
+        $domain_cred = New-Credential $domain_admin_user $domain_admin_password
 
         # 2012+ call the Workgroup arg WorkgroupName, but seem to accept
         try {
@@ -227,7 +227,7 @@ Try {
 
             If($result.changed -and -not $_ansible_check_mode) {
                 If(-not $domain_match) {
-                    If(Is-DomainJoined) {
+                    If(Test-DomainJoined) {
                         Write-DebugLog "domain doesn't match, and we're already joined to another domain"
                         throw "switching domains is not implemented"
                     }
@@ -259,8 +259,8 @@ Try {
 
                     $rename_args = @{NewName=$hostname}
 
-                    If (Is-DomainJoined) {
-                        $domain_cred = Create-Credential $domain_admin_user $domain_admin_password
+                    If (Test-DomainJoined) {
+                        $domain_cred = New-Credential $domain_admin_user $domain_admin_password
                         $rename_args.DomainCredential = $domain_cred
                     }
 
