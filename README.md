@@ -81,6 +81,25 @@ collections:
 
 If you want to develop new content for this collection or improve what's already here, the easiest way to work on the collection is ot clone it into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths), and work on it there.
 
+
+### Generating plugin docs
+
+Currently module documentation is generated manually using
+[add_docs.py](https://github.com/ansible-network/collection_prep/blob/master/add_docs.py). This should be run whenever
+there are any major doc changes or additional plugins have been added to ensure a docpage is viewable online in this
+repo. The following commands will run the doc generator and create the updated doc pages under [docs](docs).
+
+```bash
+# This is the path to the ansible.windows checkout
+COLLECTION_PATH=~/ansible_collections/ansible/windows
+
+cd /tmp
+git clone https://github.com/ansible-network/collection_prep.git
+cd collection_prep
+python add_docs.py -p "${COLLECTION_PATH}"
+```
+
+
 ### Testing with `ansible-test`
 
 The `tests` directory contains configuration for running sanity and integration tests using [`ansible-test`](https://docs.ansible.com/ansible/latest/dev_guide/testing_integration.html).
