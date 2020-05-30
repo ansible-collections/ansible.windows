@@ -71,11 +71,12 @@ def _quote_pwsh(s):
 
 
 def quote(value, shell=None):
-    """
-    Quotes argument(s) for the various shells in Windows command processing. Will default to escaping arguments based
-    on the Win32 C argv parsing rules that 'win_command' uses but shell='cmd' or shell='powershell' can be set to
-    escape arguments for those respective shells. Each value is escaped in a way to ensure the process gets the literal
-    argument passed in and meta chars escaped.
+    """Quotes argument(s) for the various shells in Windows command processing.
+
+    Quotes argument(s) for the various Windows command line shells. Default to escaping arguments based on the Win32 C
+    argv parsing rules that 'win_command' uses but shell='cmd' or shell='powershell' can be set to escape arguments for
+    those respective shells. Each value is escaped in a way to ensure the process gets the literal argument passed in
+    and meta chars escaped.
 
     When passing in a dict, the arguments will be in the form 'key={{ value | ansible.windows.quote }}' to match the
     MSI parameter format.
