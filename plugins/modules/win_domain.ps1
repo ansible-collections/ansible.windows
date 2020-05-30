@@ -12,8 +12,6 @@ $ErrorActionPreference = "Stop"
 $required_features = @("AD-Domain-Services","RSAT-ADDS", "RSAT-AD-AdminCenter")
 
 Function Get-MissingFeatures {
-    Write-DebugLog "Checking for missing Windows features..."
-
     $features = @(Get-WindowsFeature $required_features)
 
     If($features.Count -ne $required_features.Count) {
