@@ -28,7 +28,7 @@ Function Write-DebugLog {
     }
 }
 
-$required_features = @("AD-Domain-Services","RSAT-ADDS")
+$required_features = @("AD-Domain-Services","RSAT-ADDS", "RSAT-AD-AdminCenter")
 
 Function Get-MissingFeatures {
     Write-DebugLog "Checking for missing Windows features..."
@@ -45,14 +45,14 @@ Function Get-MissingFeatures {
 }
 
 Function Install-FeatureInstallation {
-    # ensure RSAT-ADDS and AD-Domain-Services features are installed
+    # Ensure required features are installed
 
     Write-DebugLog "Ensuring required Windows features are installed..."
     $feature_result = Install-WindowsFeature $required_features
     $result.reboot_required = $feature_result.RestartNeeded
 
     If(-not $feature_result.Success) {
-        Exit-Json -message ("Error installing AD-Domain-Services and RSAT-ADDS features: {0}" -f ($feature_result | Out-String))
+        Exit-Json -message ("Error installing AD-Domain-Services, RSAT-ADDS, and RSAT-AD-AdminCenter features: {0}" -f ($feature_result | Out-String))
     }
 }
 
