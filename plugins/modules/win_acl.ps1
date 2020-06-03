@@ -80,7 +80,7 @@ $result = @{
     changed = $false
 }
 
-$path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
+$path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true
 $user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
 $rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
 
