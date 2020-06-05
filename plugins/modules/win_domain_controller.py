@@ -70,7 +70,7 @@ options:
       Sysvol folder will be created.
     - If not set then the default path is C(%SYSTEMROOT%\SYSVOL).
     type: path
-  ifm_path:
+  installation_media_path:
     description:
     - The path to a directory on a fixed disk of the Windows host where the
       Install From Media (ifm) folder will be created.
