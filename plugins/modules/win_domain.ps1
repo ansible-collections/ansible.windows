@@ -9,23 +9,29 @@ $ErrorActionPreference = "Stop"
 
 # FUTURE: Consider action wrapper to manage reboots and credential changes
 
-$required_features = @("AD-Domain-Services","RSAT-ADDS", "RSAT-AD-AdminCenter")
+# Set of features required for a domain controller
+$dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
 
 Function Get-MissingFeatures {
+    Param(
+        [string[]]$required_features
+    )
     $features = @(Get-WindowsFeature $required_features)
+    # Check for $required_features that are not in $features
+    $unavailable_features = @(Compare-Object -ReferenceObject $required_features -DifferenceObject ($features | select -ExpandProperty Name) -PassThru)
 
-    If($features.Count -ne $required_features.Count) {
-        Throw "One or more Windows features required for a domain controller are unavailable"
+    if ($unavailable_features) {
+        Throw "The following features required for a domain controller are unavailable: $($unavailable_features -join ',')"
     }
 
     $missing_features = @($features | Where-Object InstallState -ne Installed)
 
-    return ,$missing_features # no, the comma's not a typo- allows us to return an empty array
+    return @($missing_features)
 }
 
 Function Install-Prereqs {
-    $missing_features = Get-MissingFeatures
-    if ($missing_features.Count -gt 0) {
+    $missing_features = Get-MissingFeatures $dc_required_features
+    if ($missing_features) {
         $result.changed = $true
 
         $awf = Add-WindowsFeature $missing_features -WhatIf:$check_mode
