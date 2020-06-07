@@ -18,7 +18,7 @@ Function Get-MissingFeatures {
     )
     $features = @(Get-WindowsFeature $required_features)
     # Check for $required_features that are not in $features
-    $unavailable_features = @(Compare-Object -ReferenceObject $required_features -DifferenceObject ($features | select -ExpandProperty Name) -PassThru)
+    $unavailable_features = @(Compare-Object -ReferenceObject $required_features -DifferenceObject ($features | Select-Object -ExpandProperty Name) -PassThru)
 
     if ($unavailable_features) {
         Throw "The following features required for a domain controller are unavailable: $($unavailable_features -join ',')"
