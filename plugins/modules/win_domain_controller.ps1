@@ -214,8 +214,8 @@ Try {
                 if ($sysvol_path) {
                     $install_params.SysvolPath = $sysvol_path
                 }
-                if ($ifm_path) {
-                    $install_params.InstallationMediaPath = $installation_media_path
+                if ($install_media_path) {
+                    $install_params.InstallationMediaPath = $install_media_path
                 }
                 if ($read_only) {
                     # while this is a switch value, if we set on $false site_name is required
