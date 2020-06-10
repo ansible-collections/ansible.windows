@@ -31,7 +31,7 @@ $override =  Get-AnsibleParam -obj $params -name "override" -type "bool" -defaul
 $removeAll = Get-AnsibleParam -obj $params -name "remove_all" -type "bool" -default $false
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "query" -validateset "present","absent","query"
 $systemManaged = Get-AnsibleParam -obj $params -name "system_managed" -type "bool" -default $false
-$testPath = Get-AnsibleParam -obj $params -name "test_path" -type "bool" -default $true
+$test_path = Get-AnsibleParam -obj $params -name "test_path" -type "bool" -default $true
 
 $result = @{
     changed = $false
@@ -90,7 +90,7 @@ if ($state -eq "absent") {
     }
 
     # Make sure drive is accessible
-    if (($test_path) -and (-not (Test-Path "${drive}:"))) {
+    if (($test_path) -and (-not (Test-Path -LiteralPath "${drive}:"))) {
         Fail-Json $result "Unable to access '${drive}:' drive"
     }
 
@@ -115,7 +115,7 @@ if ($state -eq "absent") {
                     Fail-Json $result "Failed to remove pagefile before workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
                 try {
-                    $pagingFilesValues = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
+                    $pagingFilesValues = (Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
                 } catch {
                     Fail-Json $result "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
@@ -149,7 +149,7 @@ if ($state -eq "absent") {
                     Fail-Json $result "Failed to remove pagefile before workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
                 try {
-                    $pagingFilesValues = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
+                    $pagingFilesValues = (Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
                 } catch {
                     Fail-Json $result "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
