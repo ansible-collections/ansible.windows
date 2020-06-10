@@ -22,7 +22,7 @@ try {
 if (-not $product_key) {
     # Else try to get it from the registry instead
     try {
-        $data = Get-ItemPropertyValue -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion" -Name DigitalProductId
+        $data = Get-ItemPropertyValue -LiteralPath "HKLM:\Software\Microsoft\Windows NT\CurrentVersion" -Name DigitalProductId
     } catch {
         $data = $null
     }
@@ -30,7 +30,7 @@ if (-not $product_key) {
     # And for Windows 2008 R2
     if (-not $data) {
         try {
-            $data = Get-ItemPropertyValue -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion" -Name DigitalProductId4
+            $data = Get-ItemPropertyValue -LiteralPath "HKLM:\Software\Microsoft\Windows NT\CurrentVersion" -Name DigitalProductId4
         } catch {
             $data = $null
         }
