@@ -3,25 +3,12 @@
 # Copyright: (c) 2019, Brant Evans <bevans@redhat.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = '''
 ---
 module: win_initialize_disk
-
 short_description: Initializes disks on Windows Server
-
-
 description:
-    - "The M(win_initialize_disk) module initializes disks"
-
+    - "The M(community.windows.win_initialize_disk) module initializes disks"
 options:
     disk_number:
         description:
@@ -58,9 +45,9 @@ notes:
     - This module is idempotent if I(force) is not specified.
 
 seealso:
-    - module: win_disk_facts
-    - module: win_partition
-    - module: win_format
+    - module: community.windows.win_disk_facts
+    - module: community.windows.win_partition
+    - module: community.windows.win_format
 
 author:
     - Brant Evans (@branic)
@@ -68,16 +55,16 @@ author:
 
 EXAMPLES = '''
 - name: Initialize a disk
-  win_initialize_disk:
+  community.windows.win_initialize_disk:
     disk_number: 1
 
 - name: Initialize a disk with an MBR partition style
-  win_initialize_disk:
+  community.windows.win_initialize_disk:
     disk_number: 1
     style: mbr
 
 - name: Forcefully initiallize a disk
-  win_initialize_disk:
+  community.windows.win_initialize_disk:
     disk_number: 2
     force: yes
 '''
