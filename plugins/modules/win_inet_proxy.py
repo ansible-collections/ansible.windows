@@ -4,9 +4,6 @@
 # Copyright: (c) 2019, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
 
 DOCUMENTATION = r'''
 ---
@@ -71,18 +68,18 @@ options:
     - Omit, set to null or an empty string to remove the proxy settings.
 notes:
 - This is not the same as the proxy settings set in WinHTTP through the
-  C(netsh) command. Use the M(win_http_proxy) module to manage that instead.
+  C(netsh) command. Use the M(community.windows.win_http_proxy) module to manage that instead.
 - These settings are by default set per user and not system wide. A registry
   property must be set independently from this module if you wish to apply the
   proxy for all users. See examples for more detail.
 - If per user proxy settings are desired, use I(become) to become any local
   user on the host. No password is needed to be set for this to work.
 - If the proxy requires authentication, set the credentials using the
-  M(win_credential) module. This requires I(become) to be used so the
+  M(community.windows.win_credential) module. This requires I(become) to be used so the
   credential store can be accessed.
 seealso:
-- module: win_http_proxy
-- module: win_credential
+- module: community.windows.win_http_proxy
+- module: community.windows.win_credential
 author:
 - Jordan Borean (@jborean93)
 '''
