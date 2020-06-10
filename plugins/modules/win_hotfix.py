@@ -3,13 +3,6 @@
 
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub, actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_hotfix
@@ -59,8 +52,8 @@ notes:
   see examples to see how to do it with chocolatey.
 - You can download hotfixes from U(https://www.catalog.update.microsoft.com/Home.aspx).
 seealso:
-- module: win_package
-- module: win_updates
+- module: ansible.windows.win_package
+- module: ansible.windows.win_updates
 author:
 - Jordan Borean (@jborean93)
 '''
@@ -74,7 +67,7 @@ EXAMPLES = r'''
     install_args: /features OptionId.DeploymentTools
 
 - name: Install hotfix without validating the KB and Identifier
-  win_hotfix:
+  community.windows.win_hotfix:
     source: C:\temp\windows8.1-kb3172729-x64_e8003822a7ef4705cbb65623b72fd3cec73fe222.msu
     state: present
   register: hotfix_install
@@ -83,7 +76,7 @@ EXAMPLES = r'''
   when: hotfix_install.reboot_required
 
 - name: Install hotfix validating KB
-  win_hotfix:
+  community.windows.win_hotfix:
     hotfix_kb: KB3172729
     source: C:\temp\windows8.1-kb3172729-x64_e8003822a7ef4705cbb65623b72fd3cec73fe222.msu
     state: present
@@ -93,7 +86,7 @@ EXAMPLES = r'''
   when: hotfix_install.reboot_required
 
 - name: Install hotfix validating Identifier
-  win_hotfix:
+  community.windows.win_hotfix:
     hotfix_identifier: Package_for_KB3172729~31bf3856ad364e35~amd64~~6.3.1.0
     source: C:\temp\windows8.1-kb3172729-x64_e8003822a7ef4705cbb65623b72fd3cec73fe222.msu
     state: present
@@ -103,7 +96,7 @@ EXAMPLES = r'''
   when: hotfix_install.reboot_required
 
 - name: Uninstall hotfix with Identifier
-  win_hotfix:
+  community.windows.win_hotfix:
     hotfix_identifier: Package_for_KB3172729~31bf3856ad364e35~amd64~~6.3.1.0
     state: absent
   register: hotfix_uninstall
@@ -112,7 +105,7 @@ EXAMPLES = r'''
   when: hotfix_uninstall.reboot_required
 
 - name: Uninstall hotfix with KB (not recommended)
-  win_hotfix:
+  community.windows.win_hotfix:
     hotfix_kb: KB3172729
     state: absent
   register: hotfix_uninstall
