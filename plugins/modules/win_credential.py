@@ -4,10 +4,6 @@
 # Copyright: (c) 2018, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_credential
@@ -144,15 +140,15 @@ notes:
   defined that uses the same host and type, then the original credential is
   overwritten.
 seealso:
-- module: win_user_right
-- module: win_whoami
+- module: ansible.windows.win_user_right
+- module: ansible.windows.win_whoami
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Create a local only credential
-  win_credential:
+  community.windows.win_credential:
     name: server.domain.com
     type: domain_password
     username: DOMAIN\username
@@ -160,13 +156,13 @@ EXAMPLES = r'''
     state: present
 
 - name: Remove a credential
-  win_credential:
+  community.windows.win_credential:
     name: server.domain.com
     type: domain_password
     state: absent
 
 - name: Create a credential with full values
-  win_credential:
+  community.windows.win_credential:
     name: server.domain.com
     type: domain_password
     alias: server
@@ -182,14 +178,14 @@ EXAMPLES = r'''
       data_format: base64
 
 - name: Create a certificate credential
-  win_credential:
+  community.windows.win_credential:
     name: '*.domain.com'
     type: domain_certificate
     username: 0074CC4F200D27DC3877C24A92BA8EA21E6C7AF4
     state: present
 
 - name: Create a generic credential
-  win_credential:
+  community.windows.win_credential:
     name: smbhost
     type: generic_password
     username: smbuser
@@ -197,7 +193,7 @@ EXAMPLES = r'''
     state: present
 
 - name: Remove a generic credential
-  win_credential:
+  community.windows.win_credential:
     name: smbhost
     type: generic_password
     state: absent
