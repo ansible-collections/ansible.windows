@@ -4,13 +4,6 @@
 # Copyright: (c) 2017, Michael Eaton <meaton@iforium.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_firewall
@@ -32,14 +25,14 @@ options:
     type: str
     choices: [ disabled, enabled ]
 seealso:
-- module: win_firewall_rule
+- module: community.windows.win_firewall_rule
 author:
 - Michael Eaton (@michaeldeaton)
 '''
 
 EXAMPLES = r'''
 - name: Enable firewall for Domain, Public and Private profiles
-  win_firewall:
+  community.windows.win_firewall:
     state: enabled
     profiles:
     - Domain
@@ -48,7 +41,7 @@ EXAMPLES = r'''
   tags: enable_firewall
 
 - name: Disable Domain firewall
-  win_firewall:
+  community.windows.win_firewall:
     state: disabled
     profiles:
     - Domain
