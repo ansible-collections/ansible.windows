@@ -9,13 +9,32 @@ $ErrorActionPreference = "Stop"
 
 # FUTURE: Consider action wrapper to manage reboots and credential changes
 
+# Set of features required for a domain controller
+$dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
+
+Function Get-MissingFeatures {
+    Param(
+        [string[]]$required_features
+    )
+    $features = @(Get-WindowsFeature $required_features)
+    # Check for $required_features that are not in $features
+    $unavailable_features = @(Compare-Object -ReferenceObject $required_features -DifferenceObject ($features | Select-Object -ExpandProperty Name) -PassThru)
+
+    if ($unavailable_features) {
+        Throw "The following features required for a domain controller are unavailable: $($unavailable_features -join ',')"
+    }
+
+    $missing_features = @($features | Where-Object InstallState -ne Installed)
+
+    return @($missing_features)
+}
+
 Function Install-Prereqs {
-    $gwf = Get-WindowsFeature AD-Domain-Services
-    if ($gwf.InstallState -ne "Installed") {
+    $missing_features = Get-MissingFeatures $dc_required_features
+    if ($missing_features) {
         $result.changed = $true
 
-        # NOTE: AD-Domain-Services includes: RSAT-AD-AdminCenter, RSAT-AD-Powershell and RSAT-ADDS-Tools
-        $awf = Add-WindowsFeature AD-Domain-Services -WhatIf:$check_mode
+        $awf = Add-WindowsFeature $missing_features -WhatIf:$check_mode
         $result.reboot_required = $awf.RestartNeeded
         # FUTURE: Check if reboot necessary
 

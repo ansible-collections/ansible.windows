@@ -12,6 +12,9 @@ $ConfirmPreference = "None"
 
 $log_path = $null
 
+# Set of features required for a domain controller
+$dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
+
 Function Write-DebugLog {
     Param(
         [string]$msg
@@ -28,31 +31,37 @@ Function Write-DebugLog {
     }
 }
 
-$required_features = @("AD-Domain-Services","RSAT-ADDS")
-
 Function Get-MissingFeatures {
+    Param(
+        [string[]]$required_features
+    )
     Write-DebugLog "Checking for missing Windows features..."
 
     $features = @(Get-WindowsFeature $required_features)
+    # Check for $required_features that are not in $features
+    $unavailable_features = @(Compare-Object -ReferenceObject $required_features -DifferenceObject ($features | Select-Object -ExpandProperty Name) -PassThru)
 
-    If($features.Count -ne $required_features.Count) {
-        Throw "One or more Windows features required for a domain controller are unavailable"
+    if ($unavailable_features) {
+        Throw "The following features required for a domain controller are unavailable: $($unavailable_features -join ',')"
     }
 
     $missing_features = @($features | Where-Object InstallState -ne Installed)
 
-    return ,$missing_features # no, the comma's not a typo- allows us to return an empty array
+    return ,$missing_features # comma needed to force array type output
 }
 
 Function Install-FeatureInstallation {
-    # ensure RSAT-ADDS and AD-Domain-Services features are installed
+    Param(
+        [string[]]$required_features
+    )
+    # Ensure required features are installed
 
     Write-DebugLog "Ensuring required Windows features are installed..."
     $feature_result = Install-WindowsFeature $required_features
     $result.reboot_required = $feature_result.RestartNeeded
 
     If(-not $feature_result.Success) {
-        Exit-Json -message ("Error installing AD-Domain-Services and RSAT-ADDS features: {0}" -f ($feature_result | Out-String))
+        Exit-Json -message ("Error installing AD-Domain-Services, RSAT-ADDS, and RSAT-AD-AdminCenter features: {0}" -f ($feature_result | Out-String))
     }
 }
 
@@ -156,7 +165,7 @@ Try {
 
     # all other operations will require the AD-DS and RSAT-ADDS features...
 
-    $missing_features = Get-MissingFeatures
+    $missing_features = Get-MissingFeatures $dc_required_features
 
     If($missing_features.Count -gt 0) {
         Write-DebugLog ("Missing Windows features ({0}), need to install" -f ($missing_features -join ", "))
@@ -167,7 +176,7 @@ Try {
             Exit-Json $result
         }
 
-        Install-FeatureInstallation | Out-Null
+        Install-FeatureInstallation $dc_required_features | Out-Null
     }
 
     $domain_admin_cred = New-Credential -cred_user $domain_admin_user -cred_password $domain_admin_password
