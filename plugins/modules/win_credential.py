@@ -25,6 +25,8 @@ options:
       credential.
     - When set, existing attributes will be compared to the list as a whole,
       any differences means all attributes will be replaced.
+    type: list
+    elements: dict
     suboptions:
       name:
         description:
