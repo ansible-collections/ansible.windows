@@ -4,10 +4,6 @@
 # Copyright: (c) 2017, Marc Tschapek <marc.tschapek@itelligence.de>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_disk_facts
@@ -26,7 +22,7 @@ author:
 
 EXAMPLES = r'''
 - name: Get disk facts
-  win_disk_facts:
+  community.windows.win_disk_facts:
 
 - name: Output first disk size
   debug:
