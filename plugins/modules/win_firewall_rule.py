@@ -5,10 +5,6 @@
 # Copyright: (c) 2017, Artem Zinenko <zinenkoartem@gmail.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_firewall_rule
@@ -115,7 +111,7 @@ options:
         for a list of ICMP types and the codes that apply to them.
     type: list
 seealso:
-- module: win_firewall
+- module: community.windows.win_firewall
 author:
   - Artem Zinenko (@ar7z1)
   - Timothy Vandenbrande (@TimothyVandenbrande)
@@ -123,7 +119,7 @@ author:
 
 EXAMPLES = r'''
 - name: Firewall rule to allow SMTP on TCP port 25
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: SMTP
     localport: 25
     action: allow
@@ -133,7 +129,7 @@ EXAMPLES = r'''
     enabled: yes
 
 - name: Firewall rule to allow RDP on TCP port 3389
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: Remote Desktop
     localport: 3389
     action: allow
@@ -144,7 +140,7 @@ EXAMPLES = r'''
     enabled: yes
 
 - name: Firewall rule to be created for application group
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: SMTP
     group: application
     localport: 25
@@ -155,7 +151,7 @@ EXAMPLES = r'''
     enabled: yes
 
 - name: Firewall rule to allow port range
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: Sample port range
     localport: 5000-5010
     action: allow
@@ -165,7 +161,7 @@ EXAMPLES = r'''
     enabled: yes
 
 - name: Firewall rule to allow ICMP v4 echo (ping)
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: ICMP Allow incoming V4 echo request
     enabled: yes
     state: present
@@ -177,7 +173,7 @@ EXAMPLES = r'''
     - '8:*'
 
 - name: Firewall rule to alloc ICMP v4 on all type codes
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: ICMP Allow incoming V4 echo request
     enabled: yes
     state: present
