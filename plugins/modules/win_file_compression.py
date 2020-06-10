@@ -4,13 +4,6 @@
 # Copyright: (c) 2019, Micah Hunsberger (@mhunsber)
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_file_compression
@@ -55,23 +48,24 @@ options:
 author:
   - Micah Hunsberger (@mhunsber)
 notes:
-  - C(win_file_compression) sets the file system's compression state, it does not create a zip archive file.
+  - M(community.windows.win_file_compression) sets the file system's compression state, it does not create a zip
+    archive file.
   - For more about NTFS Compression, see U(http://www.ntfs.com/ntfs-compressed.htm)
 '''
 
 EXAMPLES = r'''
 - name: Compress log files directory
-  win_file_compression:
+  community.windows.win_file_compression:
     path: C:\Logs
     state: present
 
 - name: Decompress log files directory
-  win_file_compression:
+  community.windows.win_file_compression:
     path: C:\Logs
     state: absent
 
 - name: Compress reports directory and all subdirectories
-  win_file_compression:
+  community.windows.win_file_compression:
     path: C:\business\reports
     state: present
     recurse: yes
@@ -81,7 +75,7 @@ EXAMPLES = r'''
 # even if one of the child items is uncompressed
 
 - name: Compress reports directory and all subdirectories (quick)
-  win_file_compression:
+  community.windows.win_file_compression:
     path: C:\business\reports
     compressed: yes
     recurse: yes
