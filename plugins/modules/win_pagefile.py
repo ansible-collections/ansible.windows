@@ -4,13 +4,6 @@
 # Copyright: (c) 2017, Liran Nisanov <lirannis@gmail.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_pagefile
@@ -73,14 +66,14 @@ author:
 
 EXAMPLES = r'''
 - name: Query pagefiles configuration
-  win_pagefile:
+  community.windows.win_pagefile:
 
 - name: Query C pagefile
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: C
 
 - name: Set C pagefile, don't override if exists
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
@@ -88,24 +81,24 @@ EXAMPLES = r'''
     state: present
 
 - name: Set C pagefile, override if exists
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
     state: present
 
 - name: Remove C pagefile
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: C
     state: absent
 
 - name: Remove all current pagefiles, enable AutomaticManagedPagefile and query at the end
-  win_pagefile:
+  community.windows.win_pagefile:
     remove_all: yes
     automatic: yes
 
 - name: Remove all pagefiles disable AutomaticManagedPagefile and set C pagefile
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: C
     initial_size: 2048
     maximum_size: 2048
@@ -114,7 +107,7 @@ EXAMPLES = r'''
     state: present
 
 - name: Set D pagefile, override if exists
-  win_pagefile:
+  community.windows.win_pagefile:
     drive: d
     initial_size: 1024
     maximum_size: 1024
