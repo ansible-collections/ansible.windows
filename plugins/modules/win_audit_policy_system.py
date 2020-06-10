@@ -5,10 +5,6 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_audit_policy_system
@@ -38,24 +34,24 @@ notes:
   - It is recommended to take a backup of the policies before adjusting them for the first time.
   - See this page for in depth information U(https://technet.microsoft.com/en-us/library/cc766468.aspx).
 seealso:
-- module: win_audit_rule
+- module: community.windows.win_audit_rule
 author:
   - Noah Sparks (@nwsparks)
 '''
 
 EXAMPLES = r'''
 - name: Enable failure auditing for the subcategory "File System"
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
     subcategory: File System
     audit_type: failure
 
 - name: Enable all auditing types for the category "Account logon events"
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
     category: Account logon events
     audit_type: success, failure
 
 - name: Disable auditing for the subcategory "File System"
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
     subcategory: File System
     audit_type: none
 '''
