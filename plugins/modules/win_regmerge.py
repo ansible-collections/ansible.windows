@@ -4,25 +4,18 @@
 # Copyright: (c) 2015, Jon Hawkesworth (@jhawkesworth) <figs@unity.demon.co.uk>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_regmerge
 short_description: Merges the contents of a registry file into the Windows registry
 description:
     - Wraps the reg.exe command to import the contents of a registry file.
-    - Suitable for use with registry files created using M(win_template).
+    - Suitable for use with registry files created using M(ansible.windows.win_template).
     - Windows registry files have a specific format and must be constructed correctly with carriage return and line feed line endings otherwise they will not
       be merged.
-    - Exported registry files often start with a Byte Order Mark which must be removed if the file is to templated using M(win_template).
+    - Exported registry files often start with a Byte Order Mark which must be removed if the file is to templated using M(ansible.windows.win_template).
     - Registry file format is described at U(https://support.microsoft.com/en-us/kb/310516)
-    - See also M(win_template), M(win_regedit)
+    - See also M(ansible.windows.win_template), M(ansible.windows.win_regedit)
 options:
   path:
     description:
@@ -42,22 +35,22 @@ notes:
      described in the file.  If registry settings have been modified externally
      the module will merge the contents of the file but continue to report
      differences on subsequent runs.
-   - To force registry change, use M(win_regedit) with C(state=absent) before
-     using C(win_regmerge).
+   - To force registry change, use M(ansible.windows.win_regedit) with C(state=absent) before
+     using C(community.windows.win_regmerge).
 seealso:
-- module: win_reg_stat
-- module: win_regedit
+- module: ansible.windows.win_reg_stat
+- module: ansible.windows.win_regedit
 author:
 - Jon Hawkesworth (@jhawkesworth)
 '''
 
 EXAMPLES = r'''
 - name: Merge in a registry file without comparing to current registry
-  win_regmerge:
+  community.windows.win_regmerge:
     path: C:\autodeploy\myCompany-settings.reg
 
 - name: Compare and merge registry file
-  win_regmerge:
+  community.windows.win_regmerge:
     path: C:\autodeploy\myCompany-settings.reg
     compare_to: HKLM:\SOFTWARE\myCompany
 '''
