@@ -131,7 +131,7 @@ Function Get-ValidGeoIds($cultures) {
 }
 
 Function Test-RegistryProperty($reg_key, $property) {
-    $type = Get-ItemProperty $reg_key -Name $property -ErrorAction SilentlyContinue
+    $type = Get-ItemProperty -LiteralPath $reg_key -Name $property -ErrorAction SilentlyContinue
     if ($null -eq $type) {
         $false
     } else {
@@ -141,11 +141,11 @@ Function Test-RegistryProperty($reg_key, $property) {
 
 Function Copy-RegistryKey($source, $target) {
     # Using Copy-Item -Recurse is giving me weird results, doing it recursively
-    Copy-Item -Path $source -Destination $target -WhatIf:$check_mode
+    Copy-Item -LiteralPath $source -Destination $target -WhatIf:$check_mode
 
-    foreach($key in Get-ChildItem $source) {
+    foreach($key in Get-ChildItem -LiteralPath $source) {
         $sourceKey = "$source\$($key.PSChildName)"
-        $targetKey = (Get-Item $source).PSChildName
+        $targetKey = (Get-Item -LiteralPath $source).PSChildName
         Copy-RegistryKey -source "$sourceKey" -target "$target\$targetKey"
     }
 }
@@ -203,7 +203,7 @@ Function Set-UserLocale($culture) {
         $wanted_values.sShortTime = $lookup.GetValueFromType(0x00000079)
     }
 
-    $properties = Get-ItemProperty $reg_key
+    $properties = Get-ItemProperty -LiteralPath $reg_key
     foreach($property in $properties.PSObject.Properties) {
         if (Test-RegistryProperty -reg_key $reg_key -property $property.Name) {
             $name = $property.Name
@@ -211,7 +211,7 @@ Function Set-UserLocale($culture) {
             $new_value = $wanted_values.$name
 
             if ($new_value -ne $old_value) {
-                Set-ItemProperty -Path $reg_key -Name $name -Value $new_value -WhatIf:$check_mode
+                Set-ItemProperty -LiteralPath $reg_key -Name $name -Value $new_value -WhatIf:$check_mode
                 $result.changed = $true
             }
         }
@@ -220,16 +220,16 @@ Function Set-UserLocale($culture) {
 
 Function Set-SystemLocaleLegacy($unicode_language) {
     # For when Get/Set-WinSystemLocale is not available (Pre Windows 8 and Server 2012)
-    $current_language_value = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language').Default
+    $current_language_value = (Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language').Default
     $wanted_language_value = '{0:x4}' -f ([System.Globalization.CultureInfo]$unicode_language).LCID
     if ($current_language_value -ne $wanted_language_value) {
-        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language' -Name 'Default' -Value $wanted_language_value -WhatIf:$check_mode
+        Set-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language' -Name 'Default' -Value $wanted_language_value -WhatIf:$check_mode
         $result.changed = $true
         $result.restart_required = $true
     }
 
     # This reads from the non registry (Default) key, the extra prop called (Default) see below for more details
-    $current_locale_value = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Locale')."(Default)"
+    $current_locale_value = (Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Locale')."(Default)"
     $wanted_locale_value = '{0:x8}' -f ([System.Globalization.CultureInfo]$unicode_language).LCID
     if ($current_locale_value -ne $wanted_locale_value) {
         # Need to use .net to write property value, Locale has 2 (Default) properties
@@ -245,7 +245,7 @@ Function Set-SystemLocaleLegacy($unicode_language) {
     }
 
     $codepage_path = 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage'
-    $current_codepage_info = Get-ItemProperty $codepage_path
+    $current_codepage_info = Get-ItemProperty -LiteralPath $codepage_path
     $wanted_codepage_info = ([System.Globalization.CultureInfo]::GetCultureInfo($unicode_language)).TextInfo
 
     $current_a_cp = $current_codepage_info.ACP
@@ -256,17 +256,17 @@ Function Set-SystemLocaleLegacy($unicode_language) {
     $wanted_mac_cp = $wanted_codepage_info.MacCodePage
 
     if ($current_a_cp -ne $wanted_a_cp) {
-        Set-ItemProperty -Path $codepage_path -Name 'ACP' -Value $wanted_a_cp -WhatIf:$check_mode
+        Set-ItemProperty -LiteralPath $codepage_path -Name 'ACP' -Value $wanted_a_cp -WhatIf:$check_mode
         $result.changed = $true
         $result.restart_required = $true
     }
     if ($current_oem_cp -ne $wanted_oem_cp) {
-        Set-ItemProperty -Path $codepage_path -Name 'OEMCP' -Value $wanted_oem_cp -WhatIf:$check_mode
+        Set-ItemProperty -LiteralPath $codepage_path -Name 'OEMCP' -Value $wanted_oem_cp -WhatIf:$check_mode
         $result.changed = $true
         $result.restart_required = $true
     }
     if ($current_mac_cp -ne $wanted_mac_cp) {
-        Set-ItemProperty -Path $codepage_path -Name 'MACCP' -Value $wanted_mac_cp -WhatIf:$check_mode
+        Set-ItemProperty -LiteralPath $codepage_path -Name 'MACCP' -Value $wanted_mac_cp -WhatIf:$check_mode
         $result.changed = $true
         $result.restart_required = $true
     }
@@ -309,9 +309,9 @@ if ($null -ne $location) {
             $result.changed = $true
         }
     } else {
-        $current_location = (Get-ItemProperty -Path 'HKCU:\Control Panel\International\Geo').Nation
+        $current_location = (Get-ItemProperty -LiteralPath 'HKCU:\Control Panel\International\Geo').Nation
         if ($current_location -ne $location) {
-            Set-ItemProperty -Path 'HKCU:\Control Panel\International\Geo' -Name 'Nation' -Value $location -WhatIf:$check_mode
+            Set-ItemProperty -LiteralPath 'HKCU:\Control Panel\International\Geo' -Name 'Nation' -Value $location -WhatIf:$check_mode
             $result.changed = $true
         }
     }
