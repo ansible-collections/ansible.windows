@@ -4,10 +4,6 @@
 # Copyright: (c) 2016, Ansible, inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 module: win_region
 short_description: Set the region and format settings
@@ -50,28 +46,28 @@ options:
         type: bool
         default: no
 seealso:
-- module: win_timezone
+- module: community.windows.win_timezone
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Set the region format to English United States
-  win_region:
+  community.windows.win_region:
     format: en-US
 
 - name: Set the region format to English Australia and copy settings to new profiles
-  win_region:
+  community.windows.win_region:
     format: en-AU
     copy_settings: yes
 
 - name: Set the location to United States
-  win_region:
+  community.windows.win_region:
     location: 244
 
 # Reboot when region settings change
 - name: Set the unicode language to English Great Britain, reboot if required
-  win_region:
+  community.windows.win_region:
     unicode_language: en-GB
   register: result
 
@@ -80,7 +76,7 @@ EXAMPLES = r'''
 
 # Reboot when format, location or unicode has changed
 - name: Set format, location and unicode to English Australia and copy settings, reboot if required
-  win_region:
+  community.windows.win_region:
     location: 12
     format: en-AU
     unicode_language: en-AU
