@@ -4,10 +4,6 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_scheduled_task
@@ -254,7 +250,7 @@ options:
     - Will default to the current user under an interactive token if not
       specified during creation.
     - The user account specified must have the C(SeBatchLogonRight) logon right
-      which can be added with M(win_user_right).
+      which can be added with M(ansible.windows.win_user_right).
     type: str
     aliases: [ user ]
   password:
@@ -397,8 +393,6 @@ options:
     - Whether the task will wake the computer when it is time to run the task.
     type: bool
 notes:
-- In Ansible 2.4 and earlier, this could only be run on Server 2012/Windows 8
-  or newer. Since Ansible 2.5 this restriction has been lifted.
 - The option names and structure for actions and triggers of a service follow
   the C(RegisteredTask) naming standard and requirements, it would be useful to
   read up on this guide if coming across any issues U(https://msdn.microsoft.com/en-us/library/windows/desktop/aa382542.aspx).
@@ -406,8 +400,8 @@ notes:
   and omitting the password parameter. For more information on gMSAs,
   see U(https://techcommunity.microsoft.com/t5/Core-Infrastructure-and-Security/Windows-Server-2012-Group-Managed-Service-Accounts/ba-p/255910)
 seealso:
-- module: win_scheduled_task_stat
-- module: win_user_right
+- module: community.windows.win_scheduled_task_stat
+- module: ansible.windows.win_user_right
 author:
 - Peter Mounce (@petemounce)
 - Jordan Borean (@jborean93)
@@ -415,7 +409,7 @@ author:
 
 EXAMPLES = r'''
 - name: Create a task to open 2 command prompts as SYSTEM
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskName
     description: open command prompt
     actions:
@@ -431,7 +425,7 @@ EXAMPLES = r'''
     enabled: yes
 
 - name: Create task to run a PS script as NETWORK service on boot
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskName2
     description: Run a PowerShell script
     actions:
@@ -452,26 +446,26 @@ EXAMPLES = r'''
     action: add
 
 - name: Change above task to run under a domain user account, storing the passwords
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\User
     password: Password
     logon_type: password
 
 - name: Change the above task again, choosing not to store the password
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\User
     logon_type: s4u
 
 - name: Change above task to use a gMSA, where the password is managed automatically
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\gMsaSvcAcct$
     logon_type: password
 
 - name: Create task with multiple triggers
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
@@ -482,7 +476,7 @@ EXAMPLES = r'''
     username: SYSTEM
 
 - name: Set logon type to password but don't force update the password
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
@@ -492,12 +486,12 @@ EXAMPLES = r'''
     update_password: no
 
 - name: Disable a task that already exists
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: TaskToDisable
     enabled: no
 
 - name: Create a task that will be repeated every minute for five minutes
-  win_scheduled_task:
+  community.windows.win_scheduled_task:
     name: RepeatedTask
     description: open command prompt
     actions:
