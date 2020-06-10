@@ -4,17 +4,8 @@
 # Copyright: (c) 2019, RusoSova
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# this is a windows documentation stub.  actual code lives in the .ps1
-# file of the same name
-
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
 
 DOCUMENTATION = r'''
 ---
@@ -45,24 +36,24 @@ author:
 
 EXAMPLES = r'''
 - name: Set Windows description, owner and organization
-  win_computer_description:
+  community.windows.win_computer_description:
    description: Best Box
    owner: RusoSova
    organization: MyOrg
   register: result
 
 - name: Set Windows description only
-  win_computer_description:
+  community.windows.win_computer_description:
    description: This is my Windows machine
   register: result
 
 - name: Set organization and clear owner field
-  win_computer_description:
+  community.windows.win_computer_description:
    owner: ''
    organization: Black Mesa
 
 - name: Clear organization, description and owner
-  win_computer_description:
+  community.windows.win_computer_description:
    organization: ""
    owner: ""
    description: ""
