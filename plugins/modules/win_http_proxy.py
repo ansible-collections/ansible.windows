@@ -23,6 +23,7 @@ options:
     - Omit, set to null or an empty string/list to remove the bypass list.
     - If this is set then I(proxy) must also be set.
     type: list
+    elements: str
   proxy:
     description:
     - A string or dict that specifies the proxy to be set.
@@ -34,6 +35,7 @@ options:
       be the hostname and/or port for that protocol.
     - Valid protocols are C(http), C(https), C(ftp), and C(socks).
     - Omit, set to null or an empty string to remove the proxy settings.
+    type: raw
   source:
     description:
     - Instead of manually specifying the I(proxy) and/or I(bypass), set this to

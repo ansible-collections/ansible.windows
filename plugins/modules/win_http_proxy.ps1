@@ -8,7 +8,7 @@
 
 $spec = @{
     options = @{
-        bypass = @{ type = "list" }
+        bypass = @{ type = "list"; elements = "str" }
         proxy = @{ type = "raw" }
         source = @{ type = "str"; choices = @("ie") }
     }
