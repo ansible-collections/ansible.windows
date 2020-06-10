@@ -4,10 +4,6 @@
 # Copyright: (c) 2019, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_http_proxy
@@ -54,22 +50,22 @@ options:
     type: str
 notes:
 - This is not the same as the proxy settings set in Internet Explorer, also
-  known as C(WinINet); use the M(win_inet_proxy) module to manage that instead.
+  known as C(WinINet); use the M(community.windows.win_inet_proxy) module to manage that instead.
 - These settings are set system wide and not per user, it will require
   Administrative privileges to run.
 seealso:
-- module: win_inet_proxy
+- module: community.windows.win_inet_proxy
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Set a proxy to use for all protocols
-  win_http_proxy:
+  community.windows.win_http_proxy:
     proxy: hostname
 
 - name: Set a proxy with a specific port with a bypass list
-  win_http_proxy:
+  community.windows.win_http_proxy:
     proxy: hostname:8080
     bypass:
     - server1
@@ -77,22 +73,22 @@ EXAMPLES = r'''
     - <local>
 
 - name: Set the proxy based on the IE proxy settings
-  win_http_proxy:
+  community.windows.win_http_proxy:
     source: ie
 
 - name: Set a proxy for specific protocols
-  win_http_proxy:
+  community.windows.win_http_proxy:
     proxy:
       http: hostname:8080
       https: hostname:8443
 
 - name: Set a proxy for specific protocols using a string
-  win_http_proxy:
+  community.windows.win_http_proxy:
     proxy: http=hostname:8080;https=hostname:8443
     bypass: server1,server2,<local>
 
 - name: Remove any proxy settings
-  win_http_proxy:
+  community.windows.win_http_proxy:
     proxy: ''
     bypass: ''
 '''
