@@ -6,7 +6,7 @@
 
 #Requires -Module Ansible.ModuleUtils.Legacy
 
-function Parse-ProtocolType {
+function ConvertTo-ProtocolType {
     param($protocol)
 
     $protocolNumber = $protocol -as [int]
@@ -24,7 +24,7 @@ function Parse-ProtocolType {
 }
 
 # See 'Direction' constants here: https://msdn.microsoft.com/en-us/library/windows/desktop/aa364724(v=vs.85).aspx
-function Parse-Direction {
+function ConvertTo-Direction {
     param($directionStr)
 
     switch ($directionStr) {
@@ -35,7 +35,7 @@ function Parse-Direction {
 }
 
 # See 'Action' constants here: https://msdn.microsoft.com/en-us/library/windows/desktop/aa364724(v=vs.85).aspx
-function Parse-Action {
+function ConvertTo-Action {
     param($actionStr)
 
     switch ($actionStr) {
@@ -46,7 +46,7 @@ function Parse-Action {
 }
 
 # Profile enum values: https://msdn.microsoft.com/en-us/library/windows/desktop/aa366303(v=vs.85).aspx
-function Parse-Profiles
+function ConvertTo-Profiles
 {
     param($profilesList)
 
@@ -63,7 +63,7 @@ function Parse-Profiles
     return $profiles
 }
 
-function Parse-InterfaceTypes
+function ConvertTo-InterfaceTypes
 {
     param($interfaceTypes)
 
@@ -77,7 +77,7 @@ function Parse-InterfaceTypes
     }) -Join ","
 }
 
-function Parse-EdgeTraversalOptions
+function ConvertTo-EdgeTraversalOptions
 {
     param($edgeTraversalOptionsStr)
 
@@ -89,7 +89,7 @@ function Parse-EdgeTraversalOptions
     }
 }
 
-function Parse-SecureFlags
+function ConvertTo-SecureFlags
 {
     param($secureFlagsStr)
 
@@ -161,27 +161,27 @@ try {
     if ($null -ne $group) { $new_rule.Grouping = $group }
     if ($null -ne $program -and $program -ne "any") { $new_rule.ApplicationName = [System.Environment]::ExpandEnvironmentVariables($program) }
     if ($null -ne $service -and $program -ne "any") { $new_rule.ServiceName = $service }
-    if ($null -ne $protocol -and $protocol -ne "any") { $new_rule.Protocol = Parse-ProtocolType -protocol $protocol }
+    if ($null -ne $protocol -and $protocol -ne "any") { $new_rule.Protocol = ConvertTo-ProtocolType -protocol $protocol }
     if ($null -ne $localport -and $localport -ne "any") { $new_rule.LocalPorts = $localport }
     if ($null -ne $remoteport -and $remoteport -ne "any") { $new_rule.RemotePorts = $remoteport }
     if ($null -ne $localip -and $localip -ne "any") { $new_rule.LocalAddresses = $localip }
     if ($null -ne $remoteip -and $remoteip -ne "any") { $new_rule.RemoteAddresses = $remoteip }
     if ($null -ne $icmp_type_code -and $icmp_type_code -ne "any") { $new_rule.IcmpTypesAndCodes = $icmp_type_code }
-    if ($null -ne $direction) { $new_rule.Direction = Parse-Direction -directionStr $direction }
-    if ($null -ne $action) { $new_rule.Action = Parse-Action -actionStr $action }
+    if ($null -ne $direction) { $new_rule.Direction = ConvertTo-Direction -directionStr $direction }
+    if ($null -ne $action) { $new_rule.Action = ConvertTo-Action -actionStr $action }
     # Profiles value cannot be a uint32, but the "all profiles" value (0x7FFFFFFF) will often become a uint32, so must cast to [int]
-    if ($null -ne $profiles) { $new_rule.Profiles = [int](Parse-Profiles -profilesList $profiles) }
-    if ($null -ne $interfacetypes -and @(Compare-Object -ReferenceObject $interfacetypes -DifferenceObject @("any")).Count -ne 0) { $new_rule.InterfaceTypes = Parse-InterfaceTypes -interfaceTypes $interfacetypes }
+    if ($null -ne $profiles) { $new_rule.Profiles = [int](ConvertTo-Profiles -profilesList $profiles) }
+    if ($null -ne $interfacetypes -and @(Compare-Object -ReferenceObject $interfacetypes -DifferenceObject @("any")).Count -ne 0) { $new_rule.InterfaceTypes = ConvertTo-InterfaceTypes -interfaceTypes $interfacetypes }
     if ($null -ne $edge -and $edge -ne "no") {
         # EdgeTraversalOptions property exists only from Windows 7/Windows Server 2008 R2: https://msdn.microsoft.com/en-us/library/windows/desktop/dd607256(v=vs.85).aspx
         if ($new_rule | Get-Member -Name 'EdgeTraversalOptions') {
-            $new_rule.EdgeTraversalOptions = Parse-EdgeTraversalOptions -edgeTraversalOptionsStr $edge
+            $new_rule.EdgeTraversalOptions = ConvertTo-EdgeTraversalOptions -edgeTraversalOptionsStr $edge
         }
     }
     if ($null -ne $security -and $security -ne "notrequired") {
         # SecureFlags property exists only from Windows 8/Windows Server 2012: https://msdn.microsoft.com/en-us/library/windows/desktop/hh447465(v=vs.85).aspx
         if ($new_rule | Get-Member -Name 'SecureFlags') {
-            $new_rule.SecureFlags = Parse-SecureFlags -secureFlagsStr $security
+            $new_rule.SecureFlags = ConvertTo-SecureFlags -secureFlagsStr $security
         }
     }
 
