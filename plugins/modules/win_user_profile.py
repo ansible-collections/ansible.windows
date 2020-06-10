@@ -4,10 +4,6 @@
 # Copyright: (c) 2019, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_user_profile
@@ -62,41 +58,41 @@ options:
     - When I(state) is C(absent) then this must still be a valid account number
       but the SID can be a deleted user's SID.
 seealso:
-- module: win_user
-- module: win_domain_user
+- module: ansible.windows.win_user
+- module: community.windows.win_domain_user
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Create a profile for an account
-  win_user_profile:
+  community.windows.win_user_profile:
     username: ansible-account
     state: present
 
 - name: Create a profile for an account at C:\Users\ansible
-  win_user_profile:
+  community.windows.win_user_profile:
     username: ansible-account
     name: ansible
     state: present
 
 - name: Remove a profile for a still valid account
-  win_user_profile:
+  community.windows.win_user_profile:
     username: ansible-account
     state: absent
 
 - name: Remove a profile for a deleted account
-  win_user_profile:
+  community.windows.win_user_profile:
     name: ansible
     state: absent
 
 - name: Remove a profile for a deleted account based on the SID
-  win_user_profile:
+  community.windows.win_user_profile:
     username: S-1-5-21-3233007181-2234767541-1895602582-1305
     state: absent
 
 - name: Remove multiple profiles that exist at the basename path
-  win_user_profile:
+  community.windows.win_user_profile:
     name: ansible
     state: absent
     remove_multiple: yes
