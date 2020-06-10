@@ -4,18 +4,12 @@
 # Copyright: (c) 2018, Varun Chopra (@chopraaa) <v@chopraaa.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = r'''
 ---
 module: win_partition
 short_description: Creates, changes and removes partitions on Windows Server
 description:
-  - The M(win_partition) module can create, modify or delete a partition on a disk
+  - The M(community.windows.win_partition) module can create, modify or delete a partition on a disk
 options:
   state:
     description:
@@ -92,20 +86,20 @@ author:
 
 EXAMPLES = r'''
 - name: Create a partition with drive letter D and size 5 GiB
-  win_partition:
+  community.windows.win_partition:
     drive_letter: D
     partition_size: 5 GiB
     disk_number: 1
 
 - name: Resize previously created partition to it's maximum size and change it's drive letter to E
-  win_partition:
+  community.windows.win_partition:
     drive_letter: E
     partition_size: -1
     partition_number: 1
     disk_number: 1
 
 - name: Delete partition
-  win_partition:
+  community.windows.win_partition:
     disk_number: 1
     partition_number: 1
     state: absent
