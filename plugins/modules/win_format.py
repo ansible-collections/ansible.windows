@@ -4,17 +4,11 @@
 # Copyright: (c) 2019, Varun Chopra (@chopraaa) <v@chopraaa.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = r'''
 module: win_format
 short_description: Formats an existing volume or a new volume on an existing partition on Windows
 description:
-  - The M(win_format) module formats an existing volume or a new volume on an existing partition on Windows
+  - The M(community.windows.win_format) module formats an existing volume or a new volume on an existing partition on Windows
 options:
   drive_letter:
     description:
@@ -76,21 +70,21 @@ notes:
   - This module is idempotent if I(force) is not specified and file system labels remain preserved.
   - For more information, see U(https://docs.microsoft.com/en-us/previous-versions/windows/desktop/stormgmt/format-msft-volume)
 seealso:
-  - module: win_disk_facts
-  - module: win_partition
+  - module: community.windows.win_disk_facts
+  - module: community.windows.win_partition
 author:
   - Varun Chopra (@chopraaa) <v@chopraaa.com>
 '''
 
 EXAMPLES = r'''
 - name: Create a partition with drive letter D and size 5 GiB
-  win_partition:
+  community.windows.win_partition:
     drive_letter: D
     partition_size: 5 GiB
     disk_number: 1
 
 - name: Full format the newly created partition as NTFS and label it
-  win_format:
+  community.windows.win_format:
     drive_letter: D
     file_system: NTFS
     new_label: Formatted
