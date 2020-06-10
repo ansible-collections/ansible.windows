@@ -4,10 +4,6 @@
 # Copyright: (c) 2017, Noah Sparks <nsparks@outlook.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_audit_rule
@@ -74,14 +70,14 @@ options:
     choices: [ absent, present ]
     default: present
 seealso:
-- module: win_audit_policy_system
+- module: community.windows.win_audit_policy_system
 author:
   - Noah Sparks (@nwsparks)
 '''
 
 EXAMPLES = r'''
 - name: Add filesystem audit rule for a folder
-  win_audit_rule:
+  community.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website
     user: BUILTIN\Users
     rights: write,delete,changepermissions
@@ -89,7 +85,7 @@ EXAMPLES = r'''
     inheritance_flags: ContainerInherit,ObjectInherit
 
 - name: Add filesystem audit rule for a file
-  win_audit_rule:
+  community.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website\web.config
     user: BUILTIN\Users
     rights: write,delete,changepermissions
@@ -97,20 +93,20 @@ EXAMPLES = r'''
     inheritance_flags: None
 
 - name: Add registry audit rule
-  win_audit_rule:
+  community.windows.win_audit_rule:
     path: HKLM:\software
     user: BUILTIN\Users
     rights: delete
     audit_flags: 'success'
 
 - name: Remove filesystem audit rule
-  win_audit_rule:
+  community.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website
     user: BUILTIN\Users
     state: absent
 
 - name: Remove registry audit rule
-  win_audit_rule:
+  community.windows.win_audit_rule:
     path: HKLM:\software
     user: BUILTIN\Users
     state: absent
