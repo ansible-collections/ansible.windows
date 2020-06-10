@@ -4,13 +4,6 @@
 # Copyright: (c) 2017, Daniele Lazzari <lazzari@mailup.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# This is a windows documentation stub.  Actual code lives in the .ps1
-# file of the same name.
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = r'''
 ---
 module: win_route
@@ -49,14 +42,14 @@ author:
 EXAMPLES = r'''
 ---
 - name: Add a network static route
-  win_route:
+  community.windows.win_route:
     destination: 192.168.2.10/32
     gateway: 192.168.1.1
     metric: 1
     state: present
 
 - name: Remove a network static route
-  win_route:
+  community.windows.win_route:
     destination: 192.168.2.10/32
     state: absent
 '''
