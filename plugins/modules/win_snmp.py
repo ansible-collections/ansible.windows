@@ -4,12 +4,6 @@
 # Copyright: (c) 2018, Ansible, inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = r'''
 ---
 module: win_snmp
@@ -40,25 +34,20 @@ author:
 '''
 
 EXAMPLES = r'''
----
-  - hosts: Windows
-    tasks:
-      - name: Replace SNMP communities and managers
-        win_snmp:
-          community_strings:
-            - public
-          permitted_managers:
-            - 192.168.1.2
-          action: set
+- name: Replace SNMP communities and managers
+  community.windows.win_snmp:
+    community_strings:
+    - public
+    permitted_managers:
+    - 192.168.1.2
+    action: set
 
-  - hosts: Windows
-    tasks:
-      - name: Replace SNMP communities and clear managers
-        win_snmp:
-          community_strings:
-            - public
-          permitted_managers: []
-          action: set
+- name: Replace SNMP communities and clear managers
+  community.windows.win_snmp:
+    community_strings:
+    - public
+    permitted_managers: []
+    action: set
 '''
 
 RETURN = r'''
