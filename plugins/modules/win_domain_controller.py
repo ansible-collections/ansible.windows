@@ -72,9 +72,8 @@ options:
     type: path
   install_media_path:
     description:
-    - The path to a directory on a fixed disk of the Windows host where the
-      Install From Media (ifm) data will be used. 
-      More info: U(https://social.technet.microsoft.com/wiki/contents/articles/8630.active-directory-step-by-step-guide-to-install-an-additional-domain-controller-using-ifm.aspx)
+    - The path to a directory on a fixed disk of the Windows host where the Install From Media C(IFC) data will be used.
+    - See the L(Install using IFM guide,https://social.technet.microsoft.com/wiki/contents/articles/8630.active-directory-step-by-step-guide-to-install-an-additional-domain-controller-using-ifm.aspx) for more information. # noqa
     type: path
   install_dns:
     description:
