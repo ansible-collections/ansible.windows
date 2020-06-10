@@ -66,6 +66,11 @@ options:
       Sysvol folder will be created.
     - If not set then the default path is C(%SYSTEMROOT%\SYSVOL).
     type: path
+  install_media_path:
+    description:
+    - The path to a directory on a fixed disk of the Windows host where the Install From Media C(IFC) data will be used.
+    - See the L(Install using IFM guide,https://social.technet.microsoft.com/wiki/contents/articles/8630.active-directory-step-by-step-guide-to-install-an-additional-domain-controller-using-ifm.aspx) for more information. # noqa
+    type: path
   install_dns:
     description:
     - Whether to install the DNS service when creating the domain controller.
