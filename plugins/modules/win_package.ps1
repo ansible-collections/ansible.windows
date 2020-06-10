@@ -1251,7 +1251,7 @@ $spec = @{
             type = "str"
             aliases = @("productid")
             deprecated_aliases = @(
-                @{ name = "productid"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+                @{ name = "productid"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
             )
         }
         state = @{
@@ -1260,19 +1260,21 @@ $spec = @{
             choices = "absent", "present"
             aliases = @(,"ensure")
             deprecated_aliases = @(
-                @{ name = "ensure"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null) }
+                @{ name = "ensure"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
             )
         }
         username = @{
             type = "str"
             aliases = @(,"user_name")
             removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
+            removed_from_collection = 'ansible.windows'
         }
         password = @{
             type = "str"
             no_log = $true
             aliases = @(,"user_password")
             removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
+            removed_from_collection = 'ansible.windows'
         }
         creates_path = @{ type = "path" }
         creates_version = @{ type = "str" }
