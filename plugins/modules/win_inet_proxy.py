@@ -48,6 +48,7 @@ options:
     - Omit, set to null or an empty string/list to remove the bypass list.
     - If this is set then I(proxy) must also be set.
     type: list
+    elements: str
   connection:
     description:
     - The name of the IE connection to set the proxy settings for.
@@ -66,6 +67,7 @@ options:
       be the hostname and/or port for that protocol.
     - Valid protocols are C(http), C(https), C(ftp), and C(socks).
     - Omit, set to null or an empty string to remove the proxy settings.
+    type: raw
 notes:
 - This is not the same as the proxy settings set in WinHTTP through the
   C(netsh) command. Use the M(community.windows.win_http_proxy) module to manage that instead.
