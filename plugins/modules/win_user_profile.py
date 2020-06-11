@@ -57,6 +57,7 @@ options:
       or the SID of a valid account.
     - When I(state) is C(absent) then this must still be a valid account number
       but the SID can be a deleted user's SID.
+    type: sid
 seealso:
 - module: ansible.windows.win_user
 - module: community.windows.win_domain_user
