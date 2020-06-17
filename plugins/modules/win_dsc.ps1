@@ -362,11 +362,19 @@ if (-not $params.ContainsKey("resource_name")) {
 }
 $resource_name = $params.resource_name
 
+$module_params = @{ Name = $resource_name }
 if ($params.ContainsKey("module_version")) {
     $module_version = $params.module_version
+    $module_params.RequiredVersion = $params.module_version
 } else {
     $module_version = "latest"
 }
+
+# For DSC class based resources we may need to ensure the module was loaded normally so the 'RequiredAssemblies' part
+# of the manifest is run. This is important as classes have their types validated during parse time before the
+# assemblies are loaded and this will fail if the assembly isn't already there.
+# https://github.com/ansible-collections/ansible.windows/issues/66
+Import-Module @module_params -ErrorAction SilentlyContinue
 
 $module_versions = (Get-DscResource -Name $resource_name -ErrorAction SilentlyContinue | Sort-Object -Property Version)
 $resource = $null
