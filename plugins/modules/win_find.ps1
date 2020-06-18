@@ -124,6 +124,7 @@ Function Assert-FileSize {
 }
 
 Function Get-FileChecksum {
+    [CmdletBinding()]
     Param (
         [System.String]$Path,
         [System.String]$Algorithm
@@ -139,15 +140,17 @@ Function Get-FileChecksum {
 
     $fp = [System.IO.File]::Open($Path, [System.IO.Filemode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
     try {
-        $hash = [System.BitConverter]::ToString($sp.ComputeHash($fp)).Replace("-", "").ToLower()
+        [System.BitConverter]::ToString($sp.ComputeHash($fp)).Replace("-", "").ToLower()
+    } catch {
+        Write-Error -Message "Failed to get $Algorithm hash for '$Path': $($_.Exception.Message)" -Exception $_.Exception
     } finally {
         $fp.Dispose()
     }
-
-    return $hash
 }
 
 Function Search-Path {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
+        Justification="We purposefully ignore certain exceptions when failing to access files we don't have permissions to")]
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$true)]
@@ -277,7 +280,10 @@ Function Search-Path {
 
         try {
             $file_info.owner = $dir_child.GetAccessControl().Owner
-        } catch {}  # May not have rights to get the Owner, historical behaviour is to ignore.
+        } catch {
+            # May not have the rights to get the Owner, historical behaviour is to ignore but we will at least warn.
+            $module.Warn("Failed to get the owner for '$($dir_child.FullName)': $($_.Exception.Message)")
+        }
 
         if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
             $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($dir_child.FullName -replace '\\', '\\')'"
@@ -291,9 +297,7 @@ Function Search-Path {
             $file_info.size = $dir_child.Length
 
             if ($GetChecksum) {
-                try {
-                    $file_info.checksum = Get-FileChecksum -Path $dir_child.FullName -Algorithm $checksum_algorithm
-                } catch {}  # Just keep the checksum as $null in the case of a failure.
+                $file_info.checksum = Get-FileChecksum -Path $dir_child.FullName -Algorithm $checksum_algorithm -ErrorAction SilentlyContinue
             }
         }
 

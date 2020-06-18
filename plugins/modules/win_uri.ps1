@@ -64,6 +64,35 @@ $JSON_CANDIDATES = @('text', 'json', 'javascript')
 $module.Result.elapsed = 0
 $module.Result.url = $url
 
+Function ConvertFrom-SafeJson {
+    <#
+    .SYNOPSIS
+    Safely convert a JSON string to an object, this is like ConvertFrom-Json except it respect -ErrorAction.
+
+    .PAREMTER InputObject
+    The input object string to convert from.
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [String]
+        $InputObject
+    )
+
+    if (-not $InputObject) {
+        return
+    }
+
+    try {
+        # Make sure we output the actual object without unpacking with the unary comma
+        ,[Ansible.Basic.AnsibleModule]::FromJson($InputObject)
+    } catch [System.ArgumentException] {
+        Write-Error -Message "Invalid json string as input object: $($_.Exception.Message)" -Exception $_.Exception
+    }
+}
+
 if (-not ($method -cmatch '^[A-Z]+$')) {
     $module.FailJson("Parameter 'method' needs to be a single word in uppercase, like GET or POST.")
 }
@@ -119,10 +148,9 @@ $response_script = {
                 $content_bytes = $memory_st.ToArray()
                 $module.Result.content = [System.Text.Encoding]::UTF8.GetString($content_bytes)
                 if ($module.Result.ContainsKey("content_type") -and $module.Result.content_type -Match ($JSON_CANDIDATES -join '|')) {
-                    try {
-                        $module.Result.json = ([Ansible.Basic.AnsibleModule]::FromJson($module.Result.content))
-                    } catch [System.ArgumentException] {
-                        # Simply continue, since 'text' might be anything
+                    $json = ConvertFrom-SafeJson -InputObject $module.Result.content -ErrorAction SilentlyContinue
+                    if ($json) {
+                        $module.Result.json = $json
                     }
                 }
             }

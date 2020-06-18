@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
+- name: set Unix and DOS expectations
+  set_fact:
+    expected_unix: "BEGIN\ntemplated_var_loaded\nEND\n"
+    expected_dos: "BEGIN\r\ntemplated_var_loaded\r\nEND\r\n"
+
 # DOS TEMPLATE
 - name: fill in a basic template (DOS)
   win_template:
@@ -23,10 +28,16 @@
     dest: '{{ remote_tmp_dir }}/foo.dos.templated'
   register: template_result
 
+- name: get result of fill in a basic template (DOS)
+  slurp:
+    path: '{{ remote_tmp_dir }}\foo.dos.templated'
+  register: template_dos_actual
+
 - name: verify that the file was marked as changed (DOS)
   assert:
     that:
       - 'template_result is changed'
+      - 'template_dos_actual.content|b64decode == expected_dos'
 
 - name: fill in a basic template again (DOS)
   win_template:
@@ -39,25 +50,6 @@
     that:
       - 'template_result2 is not changed'
 
-# VERIFY DOS CONTENTS
-- name: copy known good into place (DOS)
-  win_copy:
-    src: foo.dos.txt
-    dest: '{{ remote_tmp_dir }}\\foo.dos.txt'
-
-- name: compare templated file to known good (DOS)
-  raw: fc.exe {{ remote_tmp_dir }}\\foo.dos.templated {{ remote_tmp_dir }}\\foo.dos.txt
-  register: diff_result
-
-- debug:
-    var: diff_result
-
-- name: verify templated file matches known good (DOS)
-  assert:
-    that:
-        - '"FC: no differences encountered" in diff_result.stdout'
-        - "diff_result.rc == 0"
-
 # UNIX TEMPLATE
 - name: fill in a basic template (Unix)
   win_template:
@@ -66,10 +58,16 @@
     newline_sequence: '\n'
   register: template_result
 
+- name: get result of fill in basic template (Unix)
+  slurp:
+    path: '{{ remote_tmp_dir }}\foo.unix.templated'
+  register: template_unix_actual
+
 - name: verify that the file was marked as changed (Unix)
   assert:
     that:
       - 'template_result is changed'
+      - 'template_unix_actual.content|b64decode == expected_unix'
 
 - name: fill in a basic template again (Unix)
   win_template:
@@ -82,42 +80,6 @@
   assert:
     that:
       - 'template_result2 is not changed'
-
-# VERIFY UNIX CONTENTS
-- name: copy known good into place (Unix)
-  win_copy:
-    src: foo.unix.txt
-    dest: '{{ remote_tmp_dir }}\\foo.unix.txt'
-
-- name: compare templated file to known good (Unix)
-  raw: fc.exe {{ remote_tmp_dir }}\\foo.unix.templated {{ remote_tmp_dir }}\\foo.unix.txt
-  register: diff_result
-
-- debug:
-    var: diff_result
-
-- name: verify templated file matches known good (Unix)
-  assert:
-    that:
-        - '"FC: no differences encountered" in diff_result.stdout'
-
-# VERIFY DOS CONTENTS
-- name: copy known good into place (DOS)
-  win_copy:
-    src: foo.dos.txt
-    dest: '{{ remote_tmp_dir }}\\foo.dos.txt'
-
-- name: compare templated file to known good (DOS)
-  raw: fc.exe {{ remote_tmp_dir }}\\foo.dos.templated {{ remote_tmp_dir }}\\foo.dos.txt
-  register: diff_result
-
-- debug:
-    var: diff_result
-
-- name: verify templated file matches known good (DOS)
-  assert:
-    that:
-        - '"FC: no differences encountered" in diff_result.stdout'
 
 # TEST BACKUP
 - name: test backup (check_mode)

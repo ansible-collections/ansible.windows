@@ -306,6 +306,28 @@ Function Invoke-DscMethod {
     return $result
 }
 
+Function Invoke-SafeDscResource {
+    <#
+    .SYNOPSIS
+    Calls Invoke-DscResource but respects the value of -ErrorAction from the caller
+
+    .PARAMETER Parameters
+    The parameters to pass onto Invoke-DscResource
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [System.Collections.IDictionary]
+        $Parameters
+    )
+
+    try {
+        Invoke-DscResource @Parameters
+    } catch {
+        Write-Error -Message $_.Exception.Message -Exception $_.Exception
+    }
+}
+
 # DSC requires the default HTTP WSMan listener to be active and cannot be configured by Invoke-DscResource so we check
 # if it is active and present a better error message to the caller if it isn't. The only alternative is to invoke the
 # CIM method manually in our own CimSession but that would mean we need to compile the MOF ourselves which is not
@@ -385,9 +407,10 @@ if ($resource.Module) {
 
 # To ensure the class registered with CIM is the one based on our version, we want to run the Get method so the DSC
 # engine updates the metadata propery. We don't care about any errors here
-try {
-    Invoke-DscResource -Method Get -Property @{Fake="Fake"} @dsc_args > $null
-} catch {}
+$get_args = $dsc_args.Clone()
+$get_args.Method = 'Get'
+$get_args.Property = @{Fake = 'Fake'}
+$null = Invoke-SafeDscResource -Parameters $get_args -ErrorAction SilentlyContinue
 
 # Dynamically build the option spec based on the resource_name specified and create the module object
 $spec = Get-OptionSpec -ClassName $resource.ResourceType

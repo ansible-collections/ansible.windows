@@ -7,7 +7,7 @@
     Description = 'Test DSC Resource for Ansible integration tests'
     PowerShellVersion = '5.0'
     CLRVersion = '4.0'
-    FunctionsToExport = '*'
-    CmdletsToExport = '*'
+    FunctionsToExport = @()
+    CmdletsToExport = @()
 }
 

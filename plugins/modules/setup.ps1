@@ -6,6 +6,9 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 
 Function Get-CustomFacts {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSCustomUseLiteralPath", "",
+        Justification="Wildcards can be specified for the fact path to run mutliple fact scripts")]
+    [CmdletBinding()]
   [cmdletBinding()]
   param (
     [Parameter(mandatory=$false)]
@@ -56,6 +59,23 @@ Function Get-MachineSid {
     }
 
     return $machine_sid
+}
+
+Function Get-WinRMCertificate {
+    <#
+    .SYNOPSIS
+    Gets all the certificates that are bound to a WinRM HTTPS listener.
+    #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSCustomUseLiteralPath", "",
+        Justification="Need to use wildcard in gci to get all the child listeners")]
+    [CmdletBinding()]
+    param ()
+
+    Get-ChildItem -Path WSMan:\localhost\Listener\* -ErrorAction SilentlyContinue | Where-Object {
+        'Transport=HTTPS' -in $_.Keys
+    } | Get-ChildItem | Where-Object Name -eq 'CertificateThumbprint' | ForEach-Object {
+        Get-Item -LiteralPath Cert:\LocalMachine\My\$($_.Value)
+    }
 }
 
 $cim_instances = @{}
@@ -235,7 +255,7 @@ if($gather_subset.Contains('distribution')) {
 
 if($gather_subset.Contains('env')) {
     $env_vars = @{ }
-    foreach ($item in Get-ChildItem Env:) {
+    foreach ($item in Get-ChildItem -LiteralPath Env:) {
         $name = $item | Select-Object -ExpandProperty Name
         # Powershell ConvertTo-Json fails if string ends with \
         $value = ($item | Select-Object -ExpandProperty Value).TrimEnd("\")
@@ -438,41 +458,16 @@ if($gather_subset.Contains('windows_domain')) {
 }
 
 if($gather_subset.Contains('winrm')) {
-
-    $winrm_https_listener_parent_paths = Get-ChildItem -Path WSMan:\localhost\Listener -Recurse -ErrorAction SilentlyContinue | `
-        Where-Object {$_.PSChildName -eq "Transport" -and $_.Value -eq "HTTPS"} | Select-Object PSParentPath
-    if ($winrm_https_listener_parent_paths -isnot [array]) {
-       $winrm_https_listener_parent_paths = @($winrm_https_listener_parent_paths)
+    try {
+        $certs = @(Get-WinRMCertificate -ErrorAction Stop)
+    } catch {
+        $certs = @()
+        Add-Warning -obj $result -message "Error during certificate expiration retrieval: $($_.Exception.Message)"
     }
 
-    $winrm_https_listener_paths = @()
-    foreach ($winrm_https_listener_parent_path in $winrm_https_listener_parent_paths) {
-        $winrm_https_listener_paths += $winrm_https_listener_parent_path.PSParentPath.Substring($winrm_https_listener_parent_path.PSParentPath.LastIndexOf("\"))
-    }
-
-    $https_listeners = @()
-    foreach ($winrm_https_listener_path in $winrm_https_listener_paths) {
-        $https_listeners += Get-ChildItem -Path "WSMan:\localhost\Listener$winrm_https_listener_path"
-    }
-
-    $winrm_cert_thumbprints = @()
-    foreach ($https_listener in $https_listeners) {
-        $winrm_cert_thumbprints += $https_listener | Where-Object {$_.Name -EQ "CertificateThumbprint" } | Select-Object Value
-    }
-
-    $winrm_cert_expiry = @()
-    foreach ($winrm_cert_thumbprint in $winrm_cert_thumbprints) {
-        Try {
-            $winrm_cert_expiry += Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object Thumbprint -EQ $winrm_cert_thumbprint.Value.ToString().ToUpper() | Select-Object NotAfter
-        } Catch {
-            Add-Warning -obj $result -message "Error during certificate expiration retrieval: $($_.Exception.Message)"
-        }
-    }
-
-    $winrm_cert_expirations = $winrm_cert_expiry | Sort-Object NotAfter
-    if ($winrm_cert_expirations) {
+    $certs | Sort-Object -Property NotAfter | Select-Object -First 1 | ForEach-Object -Process {
         # this fact was renamed from ansible_winrm_certificate_expires due to collision with ansible_winrm_X connection var pattern
-        $ansible_facts.Add("ansible_win_rm_certificate_expires", $winrm_cert_expirations[0].NotAfter.ToString("yyyy-MM-dd HH:mm:ss"))
+        $ansible_facts.Add('ansible_win_rm_certificate_expires', $_.NotAfter.ToString('yyyy-MM-dd HH:mm:ss'))
     }
 }
 

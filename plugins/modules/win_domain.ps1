@@ -43,6 +43,32 @@ Function Install-Prereqs {
     return $false
 }
 
+Function Get-DomainForest {
+    <#
+    .SYNOPSIS
+    Gets the domain forest similar to Get-ADForest but without requiring credential delegation.
+
+    .PARAMETER DnsName
+    The DNS name of the forest, for example 'sales.corp.fabrikam.com'.
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [String]$DnsName
+    )
+
+    try {
+        $forest_context = New-Object -TypeName System.DirectoryServices.ActiveDirectory.DirectoryContext -ArgumentList @(
+            'Forest', $DnsName
+        )
+        [System.DirectoryServices.ActiveDirectory.Forest]::GetForest($forest_context)
+    } catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryObjectNotFoundException] {
+        Write-Error -Message "AD Object not found: $($_.Exception.Message)" -Exception $_.Exception
+    } catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryOperationException] {
+        Write-Error -Message "AD Operation Exception: $($_.Exception.Message)" -Exception $_.Exception
+    }
+}
+
 $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 $dns_domain_name = Get-AnsibleParam -obj $params -name "dns_domain_name" -failifempty $true
@@ -92,14 +118,7 @@ if (($null -ne $forest_mode) -and -not ($forest_mode -in $valid_forest_modes)) {
     Fail-Json -obj $result -message "The parameter 'forest_mode' does not accept '$forest_mode', please use one of: $valid_forest_modes"
 }
 
-$forest = $null
-try {
-    # Cannot use Get-ADForest as that requires credential delegation, the below does not
-    $forest_context = New-Object -TypeName System.DirectoryServices.ActiveDirectory.DirectoryContext -ArgumentList Forest, $dns_domain_name
-    $forest = [System.DirectoryServices.ActiveDirectory.Forest]::GetForest($forest_context)
-} catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryObjectNotFoundException] {
-} catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryOperationException] { }
-
+$forest = Get-DomainForest -DnsName $dns_domain_name -ErrorAction SilentlyContinue
 if (-not $forest) {
     $result.changed = $true
 
