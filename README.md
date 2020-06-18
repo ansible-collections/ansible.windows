@@ -114,10 +114,13 @@ You can run the collection's test suites with the commands:
 
 The current process for publishing new versions of the Windows Core Collection is manual, and requires a user who has access to the `ansible` namespace on Ansible Galaxy and Automation Hub to publish the build artifact.
 
-  1. Ensure `CHANGELOG.md` contains all the latest changes.
-  2. Update `galaxy.yml` with the new `version` for the collection.
-  3. Create a release in GitHub to tag the commit at the version to build.
-  4. Run the following commands to build and release the new version on Galaxy:
+  1. Update the CHANGELOG:
+    1. Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
+    1. Make sure there are fragments for all known changes in `changelogs/fragments`.
+    1. Run `antsibull-changelog release`
+  1. Update `galaxy.yml` with the new `version` for the collection.
+  1. Create a release in GitHub to tag the commit at the version to build.
+  1. Run the following commands to build and release the new version on Galaxy:
 
      ```
      ansible-galaxy collection build
