@@ -74,11 +74,6 @@ collections:
 - name: ansible.windows
 ```
 
-<<<<<<< HEAD
-=======
-**NOTE**: For Ansible 2.9, you may not see deprecation warnings when you run your playbooks with this collection. Use this documentation to track when a module is deprecated.
-
->>>>>>> 8a74d12... add 2.9 note
 ### Contributing to this collection
 
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Ansible Windows collection repository](https://github.com/ansible-collections/ansible.windows). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for details.
