@@ -8,15 +8,11 @@ matrix:
   exclude:
     - env: T=none
   include:
-    - env: T=sanity/1
+    - env: T=sanity/devel
+    - env: T=sanity/stable-2.10
 
-    - env: T=units/2.6/1
-    - env: T=units/2.7/1
-    - env: T=units/3.5/1
-    - env: T=units/3.6/1
-    - env: T=units/3.7/1
-    - env: T=units/3.8/1
-    - env: T=units/3.9/1
+    - env: T=units/devel
+    - env: T=units/stable-2.10
 
     - env: T=windows/2012/1
     - env: T=windows/2012-R2/1
