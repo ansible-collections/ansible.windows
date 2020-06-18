@@ -1,3 +1,7 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscExamplesPresent", "")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscTestsPresent", "")]
+param()
+
 #Requires -Version 5.0 -Modules CimCmdlets
 
 Function Get-TargetResource
@@ -9,7 +13,8 @@ Function Get-TargetResource
         [ValidateNotNullOrEmpty()]
         [String]$KeyParam
     )
-    return @{Value = [bool]$global:DSCMachineStatus}
+    Write-Verbose -Message "In Get-TargetResource"
+    @{ Value = [bool](Get-Variable -Name DSCMachineStatus -Scope Global -ValueOnly) }
 }
 
 Function Set-TargetResource
@@ -21,7 +26,8 @@ Function Set-TargetResource
         [String]$KeyParam,
         [Bool]$Value = $true
     )
-    $global:DSCMachineStatus = [int]$Value
+    Write-Verbose -Message "In Set-TargetResource"
+    Set-Variable -Name DSCMachineStatus -Scope Global -Value ([int]$Value)
 }
 
 Function Test-TargetResource
@@ -34,6 +40,7 @@ Function Test-TargetResource
         [String]$KeyParam,
         [Bool]$Value = $true
     )
+    Write-Verbose -Message "In Test-TargetResource"
     $false
 }
 

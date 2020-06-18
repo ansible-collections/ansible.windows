@@ -10,8 +10,6 @@ Set-StrictMode -Version 2
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
-$log_path = $null
-
 # Set of features required for a domain controller
 $dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
 
@@ -26,6 +24,7 @@ Function Write-DebugLog {
     $msg = "$date_str $msg"
 
     Write-Debug $msg
+    $log_path = Get-Variable -Name log_path -Scope Global -ValueOnly -ErrorAction SilentlyContinue
     if($log_path) {
         Add-Content -LiteralPath $log_path -Value $msg
     }
@@ -127,7 +126,7 @@ if ($log_path) {
 }
 $_ansible_check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 
-$global:log_path = $log_path
+Set-Variable -Name log_path -Scope Global -Value $log_path
 
 Try {
     # ensure target OS support; < 2012 doesn't have cmdlet support for DC promotion

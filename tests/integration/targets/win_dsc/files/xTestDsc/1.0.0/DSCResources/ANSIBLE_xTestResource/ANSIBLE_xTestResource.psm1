@@ -1,3 +1,7 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscExamplesPresent", "")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscTestsPresent", "")]
+param()
+
 #Requires -Version 5.0 -Modules CimCmdlets
 
 Function ConvertFrom-CimInstance {
@@ -56,12 +60,13 @@ Function Get-TargetResource
     param(
         [Parameter(Mandatory = $true)]
         [ValidateSet("Present", "Absent")]
-        [String] $Ensure = "Present",
+        [String] $Ensure,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String] $Path
     )
+    Write-Verbose -Message "In Get-TargetResource"
     return @{
         Ensure = $Ensure
         Path = $Path
@@ -75,7 +80,7 @@ Function Set-TargetResource
     (
         [Parameter(Mandatory = $true)]
         [ValidateSet("Present", "Absent")]
-        [String] $Ensure = "Present",
+        [String] $Ensure,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -141,11 +146,11 @@ Function Set-TargetResource
         }
     }
 
-    if (Test-Path -Path $Path) {
-        Remove-Item -Path $Path -Force > $null
+    if (Test-Path -LiteralPath $Path) {
+        Remove-Item -LiteralPath $Path -Force > $null
     }
     New-Item -Path $Path -ItemType File > $null
-    Set-Content -Path $Path -Value (ConvertTo-Json -InputObject $info -Depth 10) > $null
+    Set-Content -LiteralPath $Path -Value (ConvertTo-Json -InputObject $info -Depth 10) > $null
     Write-Verbose -Message "set verbose"
     Write-Warning -Message "set warning"
 }
@@ -158,7 +163,7 @@ Function Test-TargetResource
     (
         [Parameter(Mandatory = $true)]
         [ValidateSet("Present", "Absent")]
-        [String] $Ensure = "Present",
+        [String] $Ensure,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

@@ -9,8 +9,6 @@ Set-StrictMode -Version 2
 
 $ErrorActionPreference = "Stop"
 
-$log_path = $null
-
 Function Write-DebugLog {
     Param(
         [string]$msg
@@ -21,6 +19,7 @@ Function Write-DebugLog {
     $msg = "$date_str $msg"
 
     Write-Debug $msg
+    $log_path = Get-Variable -Name log_path -Scope Global -ValueOnly -ErrorAction SilentlyContinue
     if($log_path) {
         Add-Content -LiteralPath $log_path -Value $msg
     }
@@ -211,7 +210,7 @@ Else { # workgroup
     }
 }
 
-$global:log_path = $log_path
+Set-Variable -Name log_path -Scope Global -Value $log_path
 
 Try {
 
