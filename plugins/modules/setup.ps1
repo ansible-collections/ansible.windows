@@ -6,27 +6,24 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 
 Function Get-CustomFacts {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSCustomUseLiteralPath", "",
-        Justification="Wildcards can be specified for the fact path to run mutliple fact scripts")]
     [CmdletBinding()]
-  [cmdletBinding()]
-  param (
-    [Parameter(mandatory=$false)]
-    $factpath = $null
-  )
+    param (
+        [Parameter(mandatory=$false)]
+        $factpath = $null
+    )
 
-  if (Test-Path -Path $factpath) {
-    $FactsFiles = Get-ChildItem -Path $factpath | Where-Object -FilterScript {($PSItem.PSIsContainer -eq $false) -and ($PSItem.Extension -eq '.ps1')}
+    if (Test-Path -Path $factpath) {
+        $FactsFiles = Get-ChildItem -Path $factpath | Where-Object -FilterScript {($PSItem.PSIsContainer -eq $false) -and ($PSItem.Extension -eq '.ps1')}
 
-    foreach ($FactsFile in $FactsFiles) {
-        $out = & $($FactsFile.FullName)
-        $result.ansible_facts.Add("ansible_$(($FactsFile.Name).Split('.')[0])", $out)
+        foreach ($FactsFile in $FactsFiles) {
+            $out = & $($FactsFile.FullName)
+            $result.ansible_facts.Add("ansible_$(($FactsFile.Name).Split('.')[0])", $out)
+        }
     }
-  }
-  else
-  {
+    else
+    {
         Add-Warning $result "Non existing path was set for local facts - $factpath"
-  }
+    }
 }
 
 Function Get-MachineSid {
@@ -66,8 +63,6 @@ Function Get-WinRMCertificate {
     .SYNOPSIS
     Gets all the certificates that are bound to a WinRM HTTPS listener.
     #>
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSCustomUseLiteralPath", "",
-        Justification="Need to use wildcard in gci to get all the child listeners")]
     [CmdletBinding()]
     param ()
 

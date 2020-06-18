@@ -1,2 +1,3 @@
+plugins/modules/setup.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore custom rules in the version of PSSA in ansible-test docker
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
