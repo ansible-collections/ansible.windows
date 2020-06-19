@@ -3,11 +3,7 @@
 [![Run Status](https://api.shippable.com/projects/5e4d952ef7b7100007bcf1a1/badge?branch=master)](https://app.shippable.com/github/ansible-collections/ansible.windows/dashboard/jobs)
 [![codecov](https://codecov.io/gh/ansible-collections/ansible.windows/branch/master/graph/badge.svg)](https://codecov.io/gh/ansible-collections/ansible.windows)
 
-
-This repo hosts the `ansible.windows` Ansible Collection.
-
-The collection includes the core plugins supported by Ansible to help the management of Windows hosts.
-
+The `ansible.windows` collection includes the core plugins supported by Ansible to help the management of Windows hosts.
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -89,10 +85,23 @@ collections:
 - name: ansible.windows
 ```
 
+## Contributing to this collection
 
-## Testing and Development
+We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Ansible Windows collection repository](https://github.com/ansible-collections/ansible.windows). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for details.
 
-If you want to develop new content for this collection or improve what's already here, the easiest way to work on the collection is ot clone it into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths), and work on it there.
+See [Developing modules for Windows](https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_general_windows.html#developing-modules-general-windows) for specifics on Windows modules.
+
+You can also join us on:
+
+Freenode IRC - ``#ansible-windows`` Freenode channel
+
+See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
+
+
+### Code of Conduct
+This collection follows the Ansible project's
+[Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html).
+Please read and familiarize yourself with this document.
 
 
 ### Generating plugin docs
@@ -130,7 +139,7 @@ The current process for publishing new versions of the Windows Core Collection i
 * Update the CHANGELOG:
   * Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
   * Make sure there are fragments for all known changes in `changelogs/fragments`.
-  * Run `antsibull-changelog release`
+  * Run `antsibull-changelog release`.
 * Update `galaxy.yml` with the new `version` for the collection.
 * Create a release in GitHub to tag the commit at the version to build.
 * Run the following commands to build and release the new version on Galaxy:
@@ -145,6 +154,11 @@ After the version is published, verify it exists on the [Windows Core Collection
 ## More Information
 
 For more information about Ansible's Windows integration, join the `#ansible-windows` channel on Freenode IRC, and browse the resources in the [Windows Working Group](https://github.com/ansible/community/wiki/Windows) Community wiki page.
+
+- [Ansible Collection overview](https://github.com/ansible-collections/overview)
+- [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
+- [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
+- [Ansible Community code of conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html)
 
 
 ## License
