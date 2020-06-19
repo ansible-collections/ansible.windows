@@ -5,34 +5,42 @@
 # Copyright: (c) 2017, Jordan Borean <jborean93@gmail.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#Requires -Module Ansible.ModuleUtils.AddType
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-$diff_mode = Get-AnsibleParam -obj $params -name "_ansible_diff" -type "bool" -default $false
-$_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
-
-$path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true -aliases "key"
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -aliases "entry","value"
-$data = Get-AnsibleParam -obj $params -name "data"
-$type = Get-AnsibleParam -obj $params -name "type" -type "str" -default "string" -validateset "none","binary","dword","expandstring","multistring","string","qword" -aliases "datatype"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present","absent"
-$delete_key = Get-AnsibleParam -obj $params -name "delete_key" -type "bool" -default $true
-$hive = Get-AnsibleParam -obj $params -name "hive" -type "path"
-
-$result = @{
-    changed = $false
-    data_changed = $false
-    data_type_changed = $false
-}
-
-if ($diff_mode) {
-    $result.diff = @{
-        before = ""
-        after = ""
+$spec = @{
+    options = @{
+        path = @{ type = 'str'; required = $true; aliases = 'key' }
+        name = @{ type = 'str'; aliases = 'entry', 'value' }
+        data = @{ type = 'raw' }
+        type = @{
+            type = 'str'
+            default = 'string'
+            choices = 'none', 'binary', 'dword', 'expandstring', 'multistring', 'string', 'qword'
+            aliases = 'datatype'
+        }
+        state = @{ type = 'str'; default = 'present'; choices = 'present', 'absent' }
+        delete_key = @{ type = 'bool'; default = $true }
+        hive = @{ type = 'path' }
     }
+    supports_check_mode = $true
 }
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$path = $module.Params.path
+$name = $module.Params.name
+$data = $module.Params.data
+$type = $module.Params.type
+$state = $module.Params.state
+$delete_key = $module.Params.delete_key
+$hive = $module.Params.hive
+
+$module.Result.data_changed = $false
+$module.Result.data_type_changed = $false
+
+$module.Diff.before = ""
+$module.Diff.after = ""
 
 $registry_util = @'
 using System;
@@ -109,13 +117,13 @@ namespace Ansible.WinRegedit
 
 # fire a warning if the property name isn't specified, the (Default) key ($null) can only be a string
 if ($null -eq $name -and $type -ne "string") {
-    Add-Warning -obj $result -message "the data type when name is not specified can only be 'string', the type has automatically been converted"
+    $module.Warn("the data type when name is not specified can only be 'string', the type has automatically been converted")
     $type = "string"
 }
 
 # Check that the registry path is in PSDrive format: HKCC, HKCR, HKCU, HKLM, HKU
 if ($path -notmatch "^HK(CC|CR|CU|LM|U):\\") {
-    Fail-Json $result "path: $path is not a valid powershell path, see module documentation for examples."
+    $module.FailJson("path: $path is not a valid powershell path, see module documentation for examples.")
 }
 
 # Add a warning if the path does not contains a \ and is not the leaf path
@@ -123,7 +131,7 @@ $registry_path = (Split-Path -Path $path -NoQualifier).Substring(1)  # removes t
 $registry_leaf = Split-Path -Path $path -Leaf
 if ($registry_path -ne $registry_leaf -and -not $registry_path.Contains('\')) {
     $msg = "path is not using '\' as a separator, support for '/' as a separator will be removed in a future Ansible version"
-    Add-DeprecationWarning -obj $result -message $msg -version 2.12
+    $module.Deprecate($msg, [DateTime]::ParseExact("2021-07-01", "yyyy-MM-dd", $null))
     $registry_path = $registry_path.Replace('/', '\')
 }
 
@@ -170,7 +178,7 @@ Function Compare-RegistryProperties($existing, $new) {
 
 Function Get-DiffValue {
     param(
-        [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryValueKind]$Type,
+        [Parameter(Mandatory=$true)][Object]$Type,
         [Parameter(Mandatory=$true)][Object]$Value
     )
 
@@ -197,6 +205,7 @@ Function Set-StateAbsent {
         [Parameter(Mandatory=$true)][String]$PrintPath,
         [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryKey]$Hive,
         [Parameter(Mandatory=$true)][String]$Path,
+        [Parameter(Mandatory=$true)]$Module,
         [String]$Name,
         [Switch]$DeleteKey
     )
@@ -212,19 +221,17 @@ Function Set-StateAbsent {
             # delete_key=yes is set and name is null/empty, so delete the entire key
             $key.Dispose()
             $key = $null
-            if (-not $check_mode) {
+            if (-not $Module.CheckMode) {
                 try {
                     $Hive.DeleteSubKeyTree($Path, $false)
                 } catch {
-                    Fail-Json -obj $result -message "failed to delete registry key at $($PrintPath): $($_.Exception.Message)"
+                    $Module.FailJson("failed to delete registry key at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
-            $result.changed = $true
+            $Module.Result.changed = $true
 
-            if ($diff_mode) {
-                $result.diff.before = @{$PrintPath = @{}}
-                $result.diff.after = @{}
-            }
+            $Module.Diff.before = @{$PrintPath = @{}}
+            $Module.Diff.after = @{}
         } else {
             # delete_key=no or name is not null/empty, delete the property not the full key
             $property = $key.GetValue($Name)
@@ -234,20 +241,18 @@ Function Set-StateAbsent {
             }
             $property_type = $key.GetValueKind($Name)  # used for the diff
 
-            if (-not $check_mode) {
+            if (-not $Module.CheckMode) {
                 try {
                     $key.DeleteValue($Name)
                 } catch {
-                    Fail-Json -obj $result -message "failed to delete registry property '$Name' at $($PrintPath): $($_.Exception.Message)"
+                    $Module.FailJson("failed to delete registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
 
-            $result.changed = $true
-            if ($diff_mode) {
-                $diff_value = Get-DiffValue -Type $property_type -Value $property
-                $result.diff.before = @{ $PrintPath = @{ $Name = $diff_value } }
-                $result.diff.after = @{ $PrintPath = @{} }
-            }
+            $Module.Result.changed = $true
+            $diff_value = Get-DiffValue -Type $property_type -Value $property
+            $Module.Diff.before = @{ $PrintPath = @{ $Name = $diff_value } }
+            $Module.Diff.after = @{ $PrintPath = @{} }
         }
     } finally {
         if ($key) {
@@ -261,32 +266,31 @@ Function Set-StatePresent {
         [Parameter(Mandatory=$true)][String]$PrintPath,
         [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryKey]$Hive,
         [Parameter(Mandatory=$true)][String]$Path,
+        [Parameter(Mandatory=$true)]$Module,
         [String]$Name,
         [Object]$Data,
-        [Microsoft.Win32.RegistryValueKind]$Type
+        [Object]$Type
     )
 
     $key = $Hive.OpenSubKey($Path, $true)
     try {
         if ($null -eq $key) {
             # the key does not exist, create it so the next steps work
-            if (-not $check_mode) {
+            if (-not $Module.CheckMode) {
                 try {
                     $key = $Hive.CreateSubKey($Path)
                 } catch {
-                    Fail-Json -obj $result -message "failed to create registry key at $($PrintPath): $($_.Exception.Message)"
+                    $Module.FailJson("failed to create registry key at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
-            $result.changed = $true
+            $Module.Result.changed = $true
 
-            if ($diff_mode) {
-                $result.diff.before = @{}
-                $result.diff.after = @{$PrintPath = @{}}
-            }
-        } elseif ($diff_mode) {
+            $Module.Diff.before = @{}
+            $Module.Diff.after = @{$PrintPath = @{}}
+        } else {
             # Make sure the diff is in an expected state for the key
-            $result.diff.before = @{$PrintPath = @{}}
-            $result.diff.after = @{$PrintPath = @{}}
+            $Module.Diff.before = @{$PrintPath = @{}}
+            $Module.Diff.after = @{$PrintPath = @{}}
         }
 
         if ($null -eq $key -or $null -eq $Data) {
@@ -303,52 +307,48 @@ Function Set-StatePresent {
 
             if ($Type -ne $existing_type) {
                 $change_value = $true
-                $result.data_type_changed = $true
+                $Module.Result.data_type_changed = $true
                 $data_mismatch = Compare-RegistryProperties -existing $property -new $Data
                 if ($data_mismatch) {
-                    $result.data_changed = $true
+                    $Module.Result.data_changed = $true
                 }
             } else {
                 $data_mismatch = Compare-RegistryProperties -existing $property -new $Data
                 if ($data_mismatch) {
                     $change_value = $true
-                    $result.data_changed = $true
+                    $Module.Result.data_changed = $true
                 }
             }
 
             if ($change_value) {
-                if (-not $check_mode) {
+                if (-not $Module.CheckMode) {
                     try {
                         $key.SetValue($Name, $Data, $Type)
                     } catch {
-                        Fail-Json -obj $result -message "failed to change registry property '$Name' at $($PrintPath): $($_.Exception.Message)"
+                        $Module.FailJson("failed to change registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                     }
                 }
-                $result.changed = $true
+                $Module.Result.changed = $true
 
-                if ($diff_mode) {
-                    $result.diff.before.$PrintPath.$Name = Get-DiffValue -Type $existing_type -Value $property
-                    $result.diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
-                }
-            } elseif ($diff_mode) {
+                $Module.Diff.before.$PrintPath.$Name = Get-DiffValue -Type $existing_type -Value $property
+                $Module.Diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
+            } else {
                 $diff_value = Get-DiffValue -Type $existing_type -Value $property
-                $result.diff.before.$PrintPath.$Name = $diff_value
-                $result.diff.after.$PrintPath.$Name = $diff_value
+                $Module.Diff.before.$PrintPath.$Name = $diff_value
+                $Module.Diff.after.$PrintPath.$Name = $diff_value
             }
         } else {
             # property doesn't exist just create a new one
-            if (-not $check_mode) {
+            if (-not $Module.CheckMode) {
                 try {
                     $key.SetValue($Name, $Data, $Type)
                 } catch {
-                    Fail-Json -obj $result -message "failed to create registry property '$Name' at $($PrintPath): $($_.Exception.Message)"
+                    $Module.FailJson("failed to create registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
-            $result.changed = $true
+            $Module.Result.changed = $true
 
-            if ($diff_mode) {
-                $result.diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
-            }
+            $Module.Diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
         }
     } finally {
         if ($key) {
@@ -373,7 +373,7 @@ if ($type -in @("binary", "none")) {
         $data = [byte[]](Convert-RegExportHexStringToByteArray -string $data)
     } elseif ($data -is [Int]) {
         if ($data -gt 255) {
-            Fail-Json $result "cannot convert binary data '$data' to byte array, please specify this value as a yaml byte array or a comma separated hex value string"
+            $module.FailJson("cannot convert binary data '$data' to byte array, please specify this value as a yaml byte array or a comma separated hex value string")
         }
         $data = [byte[]]@([byte]$data)
     } elseif ($data -is [Array]) {
@@ -395,7 +395,7 @@ if ($type -in @("binary", "none")) {
 
     if ($type -eq "dword") {
         if ($data -gt [UInt32]::MaxValue) {
-            Fail-Json $result "data cannot be larger than 0xffffffff when type is dword"
+            $module.FailJson("data cannot be larger than 0xffffffff when type is dword")
         } elseif ($data -gt [Int32]::MaxValue) {
             # when dealing with larger int32 (> 2147483647 or 0x7FFFFFFF) powershell
             # automatically converts it to a signed int64. We need to convert this to
@@ -405,7 +405,7 @@ if ($type -in @("binary", "none")) {
         $data = [Int32]$data
     } else {
         if ($data -gt [UInt64]::MaxValue) {
-            Fail-Json $result "data cannot be larger than 0xffffffffffffffff when type is qword"
+            $module.FailJson("data cannot be larger than 0xffffffffffffffff when type is qword")
         } elseif ($data -gt [Int64]::MaxValue) {
             $data = "0x$("{0:x}" -f $data)"
         }
@@ -420,69 +420,71 @@ if ($type -in @("binary", "none")) {
 } elseif ($type -eq "multistring") {
     # convert the data for a multistring to a String[] array
     if ($null -eq $data) {
-        $data = [String[]]@()
-    } elseif ($data -isnot [Array]) {
-        $new_data = New-Object -TypeName String[] -ArgumentList 1
-        $new_data[0] = $data.ToString([CultureInfo]::InvariantCulture)
-        $data = $new_data
-    } else {
-        $new_data = New-Object -TypeName String[] -ArgumentList $data.Count
-        foreach ($entry in $data) {
-            $new_data[$data.IndexOf($entry)] = $entry.ToString([CultureInfo]::InvariantCulture)
+        [string[]]$data = @()
+    } elseif ($data -is [System.Collections.IList]) {
+        [string[]]$data = foreach ($entry in $data) {
+            $entry.ToString([CultureInfo]::InvariantCulture)
         }
-        $data = $new_data
+    } else {
+        [string[]]$data = @($data.ToString([CultureInfo]::InvariantCulture))
     }
 }
 
 # convert the type string to the .NET class
 $type = [System.Enum]::Parse([Microsoft.Win32.RegistryValueKind], $type, $true)
 
+# Cannot get field from switch as it causes issues with PSScriptAnalyzer parsing the module on linux
 $registry_hive = switch(Split-Path -Path $path -Qualifier) {
-    "HKCR:" { [Microsoft.Win32.Registry]::ClassesRoot }
-    "HKCC:" { [Microsoft.Win32.Registry]::CurrentConfig }
-    "HKCU:" { [Microsoft.Win32.Registry]::CurrentUser }
-    "HKLM:" { [Microsoft.Win32.Registry]::LocalMachine }
-    "HKU:" { [Microsoft.Win32.Registry]::Users }
+    "HKCR:" { 'ClassesRoot' }
+    "HKCC:" { 'CurrentConfig' }
+    "HKCU:" { 'CurrentUser' }
+    "HKLM:" { 'LocalMachine' }
+    "HKU:" { 'Users' }
 }
+$registry_hive = [Microsoft.Win32.Registry]::"$registry_hive"
 $loaded_hive = $null
 try {
     if ($hive) {
         if (-not (Test-Path -LiteralPath $hive)) {
-            Fail-Json -obj $result -message "hive at path '$hive' is not valid or accessible, cannot load hive"
+            $module.FailJson("hive at path '$hive' is not valid or accessible, cannot load hive")
         }
 
-        $original_tmp = $env:TMP
-        $env:TMP = $_remote_tmp
-        Add-Type -TypeDefinition $registry_util
-        $env:TMP = $original_tmp
+        Add-CSharpType -References $registry_util -AnsibleModule $module
 
         try {
             Set-AnsiblePrivilege -Name SeBackupPrivilege -Value $true
             Set-AnsiblePrivilege -Name SeRestorePrivilege -Value $true
         } catch [System.ComponentModel.Win32Exception] {
-            Fail-Json -obj $result -message "failed to enable SeBackupPrivilege and SeRestorePrivilege for the current process: $($_.Exception.Message)"
+            $module.FailJson("failed to enable SeBackupPrivilege and SeRestorePrivilege for the current process: $($_.Exception.Message)", $_)
         }
 
         if (Test-Path -LiteralPath HKLM:\ANSIBLE) {
-            Add-Warning -obj $result -message "hive already loaded at HKLM:\ANSIBLE, had to unload hive for win_regedit to continue"
+            $module.Warn("hive already loaded at HKLM:\ANSIBLE, had to unload hive for win_regedit to continue")
             try {
                 [Ansible.WinRegedit.Hive]::UnloadHive("ANSIBLE")
             } catch [System.ComponentModel.Win32Exception] {
-                Fail-Json -obj $result -message "failed to unload registry hive HKLM:\ANSIBLE from $($hive): $($_.Exception.Message)"
+                $module.FailJson("failed to unload registry hive HKLM:\ANSIBLE from $($hive): $($_.Exception.Message)", $_)
             }
         }
 
         try {
             $loaded_hive = New-Object -TypeName Ansible.WinRegedit.Hive -ArgumentList "ANSIBLE", $hive
         } catch [System.ComponentModel.Win32Exception] {
-            Fail-Json -obj $result -message "failed to load registry hive from '$hive' to HKLM:\ANSIBLE: $($_.Exception.Message)"
+            $module.FailJson("failed to load registry hive from '$hive' to HKLM:\ANSIBLE: $($_.Exception.Message)", $_)
         }
     }
 
+    $set_params = @{
+        PrintPath = $path
+        Hive = $registry_hive
+        Path = $registry_path
+        Module = $module
+        Name = $name
+    }
     if ($state -eq "present") {
-        Set-StatePresent -PrintPath $path -Hive $registry_hive -Path $registry_path -Name $name -Data $data -Type $type
+        Set-StatePresent @set_params -Data $data -Type $type
     } else {
-        Set-StateAbsent -PrintPath $path -Hive $registry_hive -Path $registry_path -Name $name -DeleteKey:$delete_key
+        Set-StateAbsent @set_params -DeleteKey:$delete_key
     }
 } finally {
     $registry_hive.Dispose()
@@ -491,5 +493,4 @@ try {
     }
 }
 
-Exit-Json $result
-
+$module.ExitJson()

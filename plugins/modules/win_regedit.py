@@ -49,7 +49,7 @@ options:
     description:
     - The registry value data type.
     type: str
-    choices: [ binary, dword, expandstring, multistring, string, qword ]
+    choices: [ none, binary, dword, expandstring, multistring, string, qword ]
     default: string
     aliases: [ datatype ]
   state:

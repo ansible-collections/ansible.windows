@@ -10,7 +10,7 @@
     that:
     - forward_separator_warn.deprecations|length == 1
     - forward_separator_warn.deprecations[0].msg == "path is not using '\\' as a separator, support for '/' as a separator will be removed in a future Ansible version"
-    - forward_separator_warn.deprecations[0].version == 2.12
+    - forward_separator_warn.deprecations[0].date == '2021-07-01'
 
 - name: fail run win_regedit with larger dword
   win_regedit:

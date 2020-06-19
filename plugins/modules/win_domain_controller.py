@@ -49,6 +49,7 @@ options:
       - Whether the target host should be a domain controller or a member server.
     type: str
     choices: [ domain_controller, member_server ]
+    required: yes
   database_path:
     description:
     - The path to a directory on a fixed disk of the Windows host where the
@@ -80,7 +81,7 @@ options:
   log_path:
     description:
     - The path to log any debug information when running the module.
-    - This option is deprecated and should not be used, it will be removed in Ansible 2.14.
+    - This option is deprecated and should not be used, it will be removed on the major release after C(2022-07-01).
     - This does not relate to the C(-LogPath) paramter of the install controller cmdlet.
     type: str
 seealso:
