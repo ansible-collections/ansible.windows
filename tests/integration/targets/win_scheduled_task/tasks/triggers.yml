@@ -315,7 +315,7 @@
     that:
     - create_trigger_repetition_check is changed
     - create_trigger_repetition_check.deprecations|count == 1
-    - create_trigger_repetition_check.deprecations[0].version == "2.12"
+    - create_trigger_repetition_check.deprecations[0].date == "2021-07-01"
     - create_trigger_repetition_check.deprecations[0].msg == "repetition is a list, should be defined as a dict"
     - create_trigger_repetition_result_check.task_exists == True
     - create_trigger_repetition_result_check.triggers|count == 1
