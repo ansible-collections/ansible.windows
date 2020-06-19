@@ -44,12 +44,12 @@ options:
       or a hex value.
     - Multistring values should be passed in as a list.
     - See the examples for more details on how to format this data.
-    type: str
+    type: raw
   type:
     description:
     - The registry value data type.
     type: str
-    choices: [ binary, dword, expandstring, multistring, string, qword ]
+    choices: [ none, binary, dword, expandstring, multistring, string, qword ]
     default: string
     aliases: [ datatype ]
   state:

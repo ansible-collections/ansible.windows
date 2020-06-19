@@ -3,12 +3,58 @@
 # Copyright: (c) 2017, Red Hat, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
 Set-StrictMode -Version 2
-
-$ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
+
+$spec = @{
+    options = @{
+        database_path = @{ type = 'path' }
+        dns_domain_name = @{ type = 'str' }
+        domain_admin_password = @{ type = 'str'; required = $true; no_log = $true }
+        domain_admin_user = @{ type = 'str'; required = $true }
+        domain_log_path = @{ type = 'path' }  # TODO: Add alias for log_path once log_path has been deprecated.
+        install_dns = @{ type = 'bool' }
+        install_media_path = @{ type = 'path' }
+        local_admin_password = @{ type = 'str'; no_log = $true }
+        log_path = @{
+            type = 'str'
+            removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
+            removed_from_collection = 'ansible.windows'
+        }
+        read_only = @{ type = 'bool'; default = $false}
+        site_name = @{ type = 'str' }
+        state = @{ type = 'str'; required = $true; choices = 'domain_controller', 'member_server' }
+        sysvol_path = @{ type = 'path' }
+        safe_mode_password = @{ type = 'str'; no_log = $true }
+    }
+    required_if = @(
+        ,@('state', 'domain_controller', @('dns_domain_name', 'safe_mode_password'))
+        ,@('state', 'member_server', @(,'local_admin_password'))
+    )
+    supports_check_mode = $true
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$database_path = $module.Params.database_path
+$dns_domain_name = $module.Params.dns_domain_name
+$domain_admin_password = $module.Params.domain_admin_password
+$domain_admin_user = $module.Params.domain_admin_user
+$domain_log_path = $module.Params.domain_log_path
+$install_dns = $module.Params.install_dns
+$install_media_path = $module.Params.install_media_path
+$local_admin_password = $module.Params.local_admin_password
+$read_only = $module.Params.read_only
+$site_name = $module.Params.site_name
+$state = $module.Params.state
+$sysvol_path = $module.Params.sysvol_path
+$safe_mode_password = $module.Params.safe_mode_password
+
+# Used by Write-DebugLog - is deprecated.
+Set-Variable -Name log_path -Scope Global -Value $module.Params.log_path
+
+$module.Result.reboot_required = $false
 
 # Set of features required for a domain controller
 $dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
@@ -51,16 +97,17 @@ Function Get-MissingFeatures {
 
 Function Install-FeatureInstallation {
     Param(
-        [string[]]$required_features
+        [string[]]$required_features,
+        [Object]$module
     )
     # Ensure required features are installed
 
     Write-DebugLog "Ensuring required Windows features are installed..."
     $feature_result = Install-WindowsFeature $required_features
-    $result.reboot_required = $feature_result.RestartNeeded
+    $module.Result.reboot_required = $feature_result.RestartNeeded
 
     If(-not $feature_result.Success) {
-        Exit-Json -message ("Error installing AD-Domain-Services, RSAT-ADDS, and RSAT-AD-AdminCenter features: {0}" -f ($feature_result | Out-String))
+        $module.FailJson("Error installing AD-Domain-Services, RSAT-ADDS, and RSAT-AD-AdminCenter features: {0}" -f ($feature_result | Out-String))
     }
 }
 
@@ -97,62 +144,10 @@ Function Get-OperationMasterRoles {
     Return ,$assigned_roles # no, the comma's not a typo- allows us to return an empty array
 }
 
-$result = @{
-    changed = $false
-    reboot_required = $false
-}
-
-$params = Parse-Args -arguments $args -supports_check_mode $true
-
-$dns_domain_name = Get-AnsibleParam -obj $params -name "dns_domain_name"
-$safe_mode_password= Get-AnsibleParam -obj $params -name "safe_mode_password"
-$domain_admin_user = Get-AnsibleParam -obj $params -name "domain_admin_user" -failifempty $result
-$domain_admin_password= Get-AnsibleParam -obj $params -name "domain_admin_password" -failifempty $result
-$local_admin_password= Get-AnsibleParam -obj $params -name "local_admin_password"
-$database_path = Get-AnsibleParam -obj $params -name "database_path" -type "path"
-$sysvol_path = Get-AnsibleParam -obj $params -name "sysvol_path" -type "path"
-$install_media_path = Get-AnsibleParam -obj $params -name "install_media_path" -type "path"
-$domain_log_path = Get-AnsibleParam -obj $params -name "domain_log_path" -type "path"  # TODO: Use log_path and alias domain_log_path once the log_path for debug logging option has been removed.
-$read_only = Get-AnsibleParam -obj $params -name "read_only" -type "bool" -default $false
-$site_name = Get-AnsibleParam -obj $params -name "site_name" -type "str" -failifempty $read_only
-$install_dns = Get-AnsibleParam -obj $params -name "install_dns" -type "bool"
-
-$state = Get-AnsibleParam -obj $params -name "state" -validateset ("domain_controller", "member_server") -failifempty $result
-
-$log_path = Get-AnsibleParam -obj $params -name "log_path"
-if ($log_path) {
-    $msg = "Param 'log_path' is deprecated. See the module docs for more information"
-    Add-DeprecationWarning -obj $result -message $msg -version "2.14"
-}
-$_ansible_check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
-
-Set-Variable -Name log_path -Scope Global -Value $log_path
-
 Try {
     # ensure target OS support; < 2012 doesn't have cmdlet support for DC promotion
     If(-not (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue)) {
-        Fail-Json -message "win_domain_controller requires at least Windows Server 2012"
-    }
-
-    # validate args
-    If($state -eq "domain_controller") {
-        If(-not $dns_domain_name) {
-            Fail-Json -message "dns_domain_name is required when desired state is 'domain_controller'"
-        }
-
-        If(-not $safe_mode_password) {
-            Fail-Json -message "safe_mode_password is required when desired state is 'domain_controller'"
-        }
-
-        # ensure that domain admin user is in UPN or down-level domain format (prevent hang from https://support.microsoft.com/en-us/kb/2737935)
-        If(-not $domain_admin_user.Contains("\") -and -not $domain_admin_user.Contains("@")) {
-            Fail-Json -message "domain_admin_user must be in domain\user or user@domain.com format"
-        }
-    }
-    Else { # member_server
-        If(-not $local_admin_password) {
-            Fail-Json -message "local_admin_password is required when desired state is 'member_server'"
-        }
+        $module.FailJson("win_domain_controller requires at least Windows Server 2012")
     }
 
     # short-circuit "member server" check, since we don't need feature checks for this...
@@ -160,7 +155,7 @@ Try {
     $current_dc_domain = Get-DomainControllerDomain
 
     If($state -eq "member_server" -and -not $current_dc_domain) {
-        Exit-Json $result
+        $module.ExitJson()
     }
 
     # all other operations will require the AD-DS and RSAT-ADDS features...
@@ -169,42 +164,43 @@ Try {
 
     If($missing_features.Count -gt 0) {
         Write-DebugLog ("Missing Windows features ({0}), need to install" -f ($missing_features -join ", "))
-        $result.changed = $true # we need to install features
-        If($_ansible_check_mode) {
+        $module.Result.changed = $true # we need to install features
+        If($module.CheckMode) {
             # bail out here- we can't proceed without knowing the features are installed
             Write-DebugLog "check-mode, exiting early"
-            Exit-Json $result
+            $module.ExitJson()
         }
 
-        Install-FeatureInstallation $dc_required_features | Out-Null
+        Install-FeatureInstallation $dc_required_features $module | Out-Null
     }
 
     $domain_admin_cred = New-Credential -cred_user $domain_admin_user -cred_password $domain_admin_password
 
     switch($state) {
         domain_controller {
-            If(-not $safe_mode_password) {
-                Fail-Json -message "safe_mode_password is required for state=domain_controller"
+            # ensure that domain admin user is in UPN or down-level domain format (prevent hang from https://support.microsoft.com/en-us/kb/2737935)
+            If(-not $domain_admin_user.Contains("\") -and -not $domain_admin_user.Contains("@")) {
+                $module.FailJson("domain_admin_user must be in domain\user or user@domain.com format")
             }
 
             If($current_dc_domain) {
                 # FUTURE: implement managed Remove/Add to change domains?
 
                 If($current_dc_domain -ne $dns_domain_name) {
-                    Fail-Json "$(hostname) is a domain controller for domain $current_dc_domain; changing DC domains is not implemented"
+                    $module.FailJson("$(hostname) is a domain controller for domain $current_dc_domain; changing DC domains is not implemented")
                 }
             }
 
             # need to promote to DC
             If(-not $current_dc_domain) {
                 Write-DebugLog "Not currently a domain controller; needs promotion"
-                $result.changed = $true
-                If($_ansible_check_mode) {
+                $module.Result.changed = $true
+                If($module.CheckMode) {
                     Write-DebugLog "check-mode, exiting early"
-                    Fail-Json -message $result
+                    $module.ExitJson()
                 }
 
-                $result.reboot_required = $true
+                $module.Result.reboot_required = $true
 
                 $safe_mode_secure = $safe_mode_password | ConvertTo-SecureString -AsPlainText -Force
                 Write-DebugLog "Installing domain controller..."
@@ -243,9 +239,9 @@ Try {
                     # ExitCode 15 == 'Role change is in progress or this computer needs to be restarted.'
                     # DCPromo exit codes details can be found at https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/troubleshooting-domain-controller-deployment
                     if ($_.Exception.ExitCode -eq 15) {
-                        $result.reboot_required = $true
+                        $module.Result.reboot_required = $true
                     } else {
-                        Fail-Json -obj $result -message "Failed to install ADDSDomainController with DCPromo: $($_.Exception.Message)"
+                        $module.FailJson("Failed to install ADDSDomainController with DCPromo: $($_.Exception.Message)", $_)
                     }
                 }
                 # If $_.FullyQualifiedErrorId -eq 'Test.VerifyUserCredentialPermissions.DCPromo.General.25,Microsoft.DirectoryServices.Deployment.PowerShell.Commands.InstallADDSDomainControllerCommand'
@@ -261,19 +257,16 @@ Try {
                     Start-Service -Name Netlogon
                 } catch {
                     Write-DebugLog "Failed to start the Netlogon service: $($_.Exception.Message)"
-                    Add-Warning -obj $result -message "Failed to start the Netlogon service after promoting the host, Ansible may be unable to connect until the host is manually rebooting: $($_.Exception.Message)"
+                    $module.Warn("Failed to start the Netlogon service after promoting the host, Ansible may be unable to connect until the host is manually rebooting: $($_.Exception.Message)")
                 }
 
                 Write-DebugLog "Domain Controller setup completed, needs reboot..."
             }
         }
         member_server {
-            If(-not $local_admin_password) {
-                Fail-Json -message "local_admin_password is required for state=domain_controller"
-            }
             # at this point we already know we're a DC and shouldn't be...
             Write-DebugLog "Need to uninstall domain controller..."
-            $result.changed = $true
+            $module.Result.changed = $true
 
             Write-DebugLog "Checking for operation master roles assigned to this DC..."
 
@@ -281,15 +274,15 @@ Try {
 
             # FUTURE: figure out a sane way to hand off roles automatically (designated recipient server, randomly look one up?)
             If($assigned_roles.Count -gt 0) {
-                Fail-Json -message ("This domain controller has operation master role(s) ({0}) assigned; they must be moved to other DCs before demotion (see Move-ADDirectoryServerOperationMasterRole)" -f ($assigned_roles -join ", "))
+                $module.FailJson("This domain controller has operation master role(s) ({0}) assigned; they must be moved to other DCs before demotion (see Move-ADDirectoryServerOperationMasterRole)" -f ($assigned_roles -join ", "))
             }
 
-            If($_ansible_check_mode) {
+            If($module.CheckMode) {
                 Write-DebugLog "check-mode, exiting early"
-                Exit-Json $result
+                $module.ExitJson()
             }
 
-            $result.reboot_required = $true
+            $module.Result.reboot_required = $true
 
             $local_admin_secure = $local_admin_password | ConvertTo-SecureString -AsPlainText -Force
 
@@ -300,7 +293,7 @@ Try {
         default { throw ("invalid state {0}" -f $state) }
     }
 
-    Exit-Json $result
+    $module.ExitJson()
 }
 Catch {
     $excep = $_
