@@ -762,7 +762,15 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
 
     if ($trigger.ContainsKey("repetition")) {
         if ($trigger.repetition -is [Array]) {
-            Add-DeprecationWarning -obj $result -message "repetition is a list, should be defined as a dict" -version "2.12"
+            # Legacy doesn't natively support deprecate by date, need to do this manually until we use Ansible.Basic
+            if (-not $result.ContainsKey('deprecations')) {
+                $result.deprecations = @()
+            }
+            $result.deprecations += @{
+                msg = "repetition is a list, should be defined as a dict"
+                date = "2021-07-01"
+                collection_name = "community.windows"
+            }
             $trigger.repetition = $trigger.repetition[0]
         }
 
