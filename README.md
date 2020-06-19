@@ -95,8 +95,8 @@ You can also join us on:
 
 Freenode IRC - ``#ansible-windows`` Freenode channel
 
-
 See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
+
 
 ### Code of Conduct
 This collection follows the Ansible project's
@@ -137,9 +137,11 @@ You can run the collection's test suites with the commands:
 The current process for publishing new versions of the Windows Core Collection is manual, and requires a user who has access to the `ansible` namespace on Ansible Galaxy and Automation Hub to publish the build artifact.
 
 1. Update the CHANGELOG:
+
   1. Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
   1. Make sure there are fragments for all known changes in `changelogs/fragments`.
-  1. Run `antsibull-changelog release`
+  1. Run `antsibull-changelog release`.
+
 1. Update `galaxy.yml` with the new `version` for the collection.
 1. Create a release in GitHub to tag the commit at the version to build.
 1. Run the following commands to build and release the new version on Galaxy:
@@ -159,7 +161,6 @@ For more information about Ansible's Windows integration, join the `#ansible-win
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 - [Ansible Community code of conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html)
-
 
 
 ## License
