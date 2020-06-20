@@ -130,11 +130,11 @@ if ($state -eq "absent") {
         $result.changed = $true
     }else
     {
-        $CurPageFileSystemManaged = (Get-CimInstance -ClassName win32_Pagefile -Property 'System' -Filter "name='$($fullPath.Replace('\','\\'))'").System
         if ((-not $check_mode) -and
-            -not ($systemManaged -or $CurPageFileSystemManaged) -and
-            (   ($curPagefile.InitialSize -ne $initialSize) -or
-                ($curPagefile.maximumSize -ne $maximumSize)))
+            -not ($systemManaged) -and
+            -not ( ($curPagefile.InitialSize -eq 0) -and ($curPagefile.maximumSize -eq 0) ) -and
+            ( ($curPagefile.InitialSize -ne $initialSize) -or ($curPagefile.maximumSize -ne $maximumSize) )
+           )
         {
             $curPagefile.InitialSize = $initialSize
             $curPagefile.MaximumSize = $maximumSize

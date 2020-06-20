@@ -5,6 +5,12 @@
     state: query
   register: original_pagefile_settings
 
+# Remove all original pagefiles
+- name: Remove all original pagefiles
+  win_pagefile:
+    remove_all: true
+  register: remove_all_pagefiles
+
 # Test 1: Set c pagefile with inital and maximum size
 - name: Set C pagefile as 1024-2048MB
   win_pagefile:
