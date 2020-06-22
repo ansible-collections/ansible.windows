@@ -207,9 +207,7 @@
     - not create_file.reboot_required
 
 - name: get SID of the current Ansible user
-  win_shell: |
-    Add-Type -AssemblyName System.DirectoryServices.AccountManagement
-    [System.DirectoryServices.AccountManagement.UserPrincipal]::Current.Sid.Value
+  win_shell: '[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'
   register: actual_sid
 
 - name: run DSC process as another user
@@ -217,8 +215,7 @@
     resource_name: Script
     GetScript: '@{ Result= "" }'
     SetScript: |
-      Add-Type -AssemblyName System.DirectoryServices.AccountManagement
-      $sid = [System.DirectoryServices.AccountManagement.UserPrincipal]::Current.Sid.Value
+      $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
       Set-Content -Path "{{ remote_tmp_dir }}\runas.txt" -Value $sid
     TestScript: $false
     PsDscRunAsCredential_username: '{{ ansible_user }}'
@@ -560,3 +557,15 @@
     - dsc_types_old_actual.CimInstanceArrayParam.Value[0].StringArrayValue == ['zyx', 'wvu']
     - dsc_types_old_actual.CimInstanceArrayParam.Value[0].StringValue == 'string old 1'
     - dsc_types_old_actual.CimInstanceArrayParam.Value[0]._cim_instance == 'ANSIBLE_xTestClass'
+
+- name: invoke class based DSC resource with loaded assembly
+  win_dsc:
+    resource_name: xTestClassDsc
+    Ensure: Present
+  register: class_resource
+
+- name: assert invoke class based DSC resource with loaded assembly
+  assert:
+    that:
+    - not class_resource is changed
+    - class_resource.module_version == '1.0.0'

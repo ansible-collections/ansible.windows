@@ -23,7 +23,7 @@
 
   - name: copy custom DSC resources to remote temp dir
     win_copy:
-      src: xTestDsc
+      src: files/
       dest: '{{ remote_tmp_dir }}'
 
   - name: run tests
