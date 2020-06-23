@@ -3,77 +3,76 @@
 # Copyright: (c) 2018, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-Function Get-CustomFacts {
-    [CmdletBinding()]
-    param (
-        [Parameter(mandatory=$false)]
-        $factpath = $null
-    )
-
-    if (Test-Path -Path $factpath) {
-        $FactsFiles = Get-ChildItem -Path $factpath | Where-Object -FilterScript {($PSItem.PSIsContainer -eq $false) -and ($PSItem.Extension -eq '.ps1')}
-
-        foreach ($FactsFile in $FactsFiles) {
-            $out = & $($FactsFile.FullName)
-            $result.ansible_facts.Add("ansible_$(($FactsFile.Name).Split('.')[0])", $out)
-        }
+$spec = @{
+    options = @{
+        fact_path = @{ type = 'path' }
+        gather_subset = @{ type = 'list'; elements = 'str'; default = 'all' }
+        gather_timeout = @{ type = 'int'; default = 10 }
     }
-    else
-    {
-        Add-Warning $result "Non existing path was set for local facts - $factpath"
-    }
+    supports_check_mode = $true
 }
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-Function Get-MachineSid {
-    # The Machine SID is stored in HKLM:\SECURITY\SAM\Domains\Account and is
-    # only accessible by the Local System account. This method get's the local
-    # admin account (ends with -500) and lops it off to get the machine sid.
+$factPath = $module.Params.fact_path
+$gatherSubset = $module.Params.gather_subset
+$gatherTimeout = $module.Params.gather_timeout
 
-    $machine_sid = $null
+$cimInstances = [Hashtable]::Synchronized(@{})
 
-    try {
-        $admins_sid = "S-1-5-32-544"
-    $admin_group = ([Security.Principal.SecurityIdentifier]$admins_sid).Translate([Security.Principal.NTAccount]).Value
+$initialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+$initialSessionState.Variables.Add((New-SessionStateVariable -Name gatherTimeout -Value $gatherTimeout))
+$pool = [RunspaceFactory]::CreateRunspacePool(1, 4, $initialSessionState)
 
-        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
-        $principal_context = New-Object -TypeName System.DirectoryServices.AccountManagement.PrincipalContext([System.DirectoryServices.AccountManagement.ContextType]::Machine)
-        $group_principal = New-Object -TypeName System.DirectoryServices.AccountManagement.GroupPrincipal($principal_context, $admin_group)
-        $searcher = New-Object -TypeName System.DirectoryServices.AccountManagement.PrincipalSearcher($group_principal)
-        $groups = $searcher.FindOne()
-
-        foreach ($user in $groups.Members) {
-            $user_sid = $user.Sid
-            if ($user_sid.Value.EndsWith("-500")) {
-                $machine_sid = $user_sid.AccountDomainSid.Value
-                break
-            }
-        }
-    } catch {
-        #can fail for any number of reasons, if it does just return the original null
-        Add-Warning -obj $result -message "Error during machine sid retrieval: $($_.Exception.Message)"
-    }
-
-    return $machine_sid
-}
-
-Function Get-WinRMCertificate {
+Function New-SessionStateVariable {
     <#
     .SYNOPSIS
-    Gets all the certificates that are bound to a WinRM HTTPS listener.
+    Create a variable entry for the initial session state proxy of a runspace pool.
     #>
     [CmdletBinding()]
-    param ()
+    param (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $Name,
 
-    Get-ChildItem -Path WSMan:\localhost\Listener\* -ErrorAction SilentlyContinue | Where-Object {
-        'Transport=HTTPS' -in $_.Keys
-    } | Get-ChildItem | Where-Object Name -eq 'CertificateThumbprint' | ForEach-Object {
-        Get-Item -LiteralPath Cert:\LocalMachine\My\$($_.Value)
-    }
+        [Object]
+        $Value
+    )
+
+    New-Object -TypeName System.Management.Automation.Runspaces.SessionStateVariableEntry -ArgumentList @(
+        $Name, $Value, $null
+    )
 }
 
-$cim_instances = @{}
+Function New-FactJob {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [System.Management.Automation.Runspaces.RunspacePool]
+        $Pool,
+
+        [Parameter(Mandatory=$true)]
+        [ScriptBlock]
+        $ScriptBlock
+    )
+
+    $ps = [PowerShell]::Create()
+    $ps.RunspacePool = $Pool
+    $ps.AddScript({
+        $ps = [PowerShell]::Create()
+        $null = $ps.AddScript($args[0])
+
+        $asyncResult = $ps.BeginInvoke()
+        $null = $asyncResult.AsyncWaitHandle.WaitOne($gatherTimeout * 1000)
+        $ps.EndInvoke($asyncResult)
+
+        # This is a best effort stop, cannot do .Stop() in case something blocks us from stopping the actual pipeline.
+        $null = $ps.BeginStop($null, $null)
+    }).AddArguments($ScriptBlock).Invoke()
+}
+
+
 
 Function Get-LazyCimInstance([string]$instance_name, [string]$namespace="Root\CIMV2") {
     if(-not $cim_instances.ContainsKey($instance_name)) {
@@ -159,8 +158,63 @@ if ($osversion.Version -lt [version]"6.2") {
     # Server 2008, 2008 R2, and Windows 7 are not tested in CI and we want to let customers know about it before
     # removing support altogether.
     $version_string = "{0}.{1}" -f ($osversion.Version.Major, $osversion.Version.Minor)
-    $msg = "The Windows version '$version_string' will no longer be supported or tested in future releases"
-    Add-Warning -obj $result -message $msg
+    $msg = "Windows version '$version_string' will no longer be supported or tested in the next Ansible release"
+    Add-DeprecationWarning -obj $result -message $msg -version "2.11"
+}
+
+
+
+Function Get-CustomFacts {
+  [cmdletBinding()]
+  param (
+    [Parameter(mandatory=$false)]
+    $factpath = $null
+  )
+
+  if (Test-Path -Path $factpath) {
+    $FactsFiles = Get-ChildItem -Path $factpath | Where-Object -FilterScript {($PSItem.PSIsContainer -eq $false) -and ($PSItem.Extension -eq '.ps1')}
+
+    foreach ($FactsFile in $FactsFiles) {
+        $out = & $($FactsFile.FullName)
+        $result.ansible_facts.Add("ansible_$(($FactsFile.Name).Split('.')[0])", $out)
+    }
+  }
+  else
+  {
+        Add-Warning $result "Non existing path was set for local facts - $factpath"
+  }
+}
+
+Function Get-MachineSid {
+    # The Machine SID is stored in HKLM:\SECURITY\SAM\Domains\Account and is
+    # only accessible by the Local System account. This method get's the local
+    # admin account (ends with -500) and lops it off to get the machine sid.
+
+    $machine_sid = $null
+
+    try {
+        $admins_sid = "S-1-5-32-544"
+    $admin_group = ([Security.Principal.SecurityIdentifier]$admins_sid).Translate([Security.Principal.NTAccount]).Value
+
+        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+        $principal_context = New-Object -TypeName System.DirectoryServices.AccountManagement.PrincipalContext([System.DirectoryServices.AccountManagement.ContextType]::Machine)
+        $group_principal = New-Object -TypeName System.DirectoryServices.AccountManagement.GroupPrincipal($principal_context, $admin_group)
+        $searcher = New-Object -TypeName System.DirectoryServices.AccountManagement.PrincipalSearcher($group_principal)
+        $groups = $searcher.FindOne()
+
+        foreach ($user in $groups.Members) {
+            $user_sid = $user.Sid
+            if ($user_sid.Value.EndsWith("-500")) {
+                $machine_sid = $user_sid.AccountDomainSid.Value
+                break
+            }
+        }
+    } catch {
+        #can fail for any number of reasons, if it does just return the original null
+        Add-Warning -obj $result -message "Error during machine sid retrieval: $($_.Exception.Message)"
+    }
+
+    return $machine_sid
 }
 
 if($gather_subset.Contains('all_ipv4_addresses') -or $gather_subset.Contains('all_ipv6_addresses')) {
@@ -250,7 +304,7 @@ if($gather_subset.Contains('distribution')) {
 
 if($gather_subset.Contains('env')) {
     $env_vars = @{ }
-    foreach ($item in Get-ChildItem -LiteralPath Env:) {
+    foreach ($item in Get-ChildItem Env:) {
         $name = $item | Select-Object -ExpandProperty Name
         # Powershell ConvertTo-Json fails if string ends with \
         $value = ($item | Select-Object -ExpandProperty Value).TrimEnd("\")
@@ -453,16 +507,41 @@ if($gather_subset.Contains('windows_domain')) {
 }
 
 if($gather_subset.Contains('winrm')) {
-    try {
-        $certs = @(Get-WinRMCertificate -ErrorAction Stop)
-    } catch {
-        $certs = @()
-        Add-Warning -obj $result -message "Error during certificate expiration retrieval: $($_.Exception.Message)"
+
+    $winrm_https_listener_parent_paths = Get-ChildItem -Path WSMan:\localhost\Listener -Recurse -ErrorAction SilentlyContinue | `
+        Where-Object {$_.PSChildName -eq "Transport" -and $_.Value -eq "HTTPS"} | Select-Object PSParentPath
+    if ($winrm_https_listener_parent_paths -isnot [array]) {
+       $winrm_https_listener_parent_paths = @($winrm_https_listener_parent_paths)
     }
 
-    $certs | Sort-Object -Property NotAfter | Select-Object -First 1 | ForEach-Object -Process {
+    $winrm_https_listener_paths = @()
+    foreach ($winrm_https_listener_parent_path in $winrm_https_listener_parent_paths) {
+        $winrm_https_listener_paths += $winrm_https_listener_parent_path.PSParentPath.Substring($winrm_https_listener_parent_path.PSParentPath.LastIndexOf("\"))
+    }
+
+    $https_listeners = @()
+    foreach ($winrm_https_listener_path in $winrm_https_listener_paths) {
+        $https_listeners += Get-ChildItem -Path "WSMan:\localhost\Listener$winrm_https_listener_path"
+    }
+
+    $winrm_cert_thumbprints = @()
+    foreach ($https_listener in $https_listeners) {
+        $winrm_cert_thumbprints += $https_listener | Where-Object {$_.Name -EQ "CertificateThumbprint" } | Select-Object Value
+    }
+
+    $winrm_cert_expiry = @()
+    foreach ($winrm_cert_thumbprint in $winrm_cert_thumbprints) {
+        Try {
+            $winrm_cert_expiry += Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object Thumbprint -EQ $winrm_cert_thumbprint.Value.ToString().ToUpper() | Select-Object NotAfter
+        } Catch {
+            Add-Warning -obj $result -message "Error during certificate expiration retrieval: $($_.Exception.Message)"
+        }
+    }
+
+    $winrm_cert_expirations = $winrm_cert_expiry | Sort-Object NotAfter
+    if ($winrm_cert_expirations) {
         # this fact was renamed from ansible_winrm_certificate_expires due to collision with ansible_winrm_X connection var pattern
-        $ansible_facts.Add('ansible_win_rm_certificate_expires', $_.NotAfter.ToString('yyyy-MM-dd HH:mm:ss'))
+        $ansible_facts.Add("ansible_win_rm_certificate_expires", $winrm_cert_expirations[0].NotAfter.ToString("yyyy-MM-dd HH:mm:ss"))
     }
 }
 
