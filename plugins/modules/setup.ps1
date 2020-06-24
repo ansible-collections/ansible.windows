@@ -3,6 +3,7 @@
 # Copyright: (c) 2018, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+#Requires -Module Ansible.ModuleUtils.AddType
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
 $spec = @{
@@ -13,6 +14,21 @@ $spec = @{
     }
     supports_check_mode = $true
 }
+
+# This module can be called by the gather_facts action plugin in ansible-base. While it shouldn't add any new options
+# we need to make sure the module doesn't break if it does. To do this we need to add any options in the input args
+if ($args.Length -gt 0) {
+    $params = Get-Content -LiteralPath $args[0] | ConvertFrom-AnsibleJson
+} else {
+    $params = $complex_args
+}
+foreach ($param in $params.GetEnumerator()) {
+    if ($param.Key.StartsWith('_') -or $spec.options.ContainsKey($param.Key)) {
+        continue
+    }
+    $spec.options."$($param.Key)" = @{ type = 'raw' }
+}
+
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 $factPath = $module.Params.fact_path
@@ -25,52 +41,6 @@ if ($osversion -lt [version]"6.2") {
     # removing support altogether.
     $versionString = "{0}.{1}" -f ($osversion.Major, $osversion.Minor)
     $module.Warn("The Windows version '$versionString' will no longer be supported or tested in future releases")
-}
-
-Function Get-LazyCimInstance {
-    <#
-    .SYNOPSIS
-    Like Get-CimInstance but it caches the result so it is only retrieved once. Needs to be thread safe.
-    #>
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true)]
-        [String]
-        $ClassName,
-
-        [String]
-        $Namespace = 'Root\CIMV2'
-    )
-    # We don't want 2 threads to call Get-CimInstance at once so we have a mutex per class that only allows one get/set
-    # to occur at the same time. Without this we could be wasting cycles trying to get the same instance due to a race
-    # condition.
-    $null = $cimMutex.$ClassName.WaitOne()
-    try {
-        if (-not $cimInstances.ContainsKey($ClassName)) {
-            $cimInstances.$ClassName = Get-CimInstance -ClassName $ClassName -Namespace $Namespace
-        }
-
-        $cimInstances.$ClassName
-    } finally {
-        $cimMutex.$ClassName.ReleaseMutex()
-    }
-}
-
-Function New-SessionStateFunction {
-    <#
-    .SYNOPSIS
-    Create a session state function object that is loadable into a runspace pool.
-    #>
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true)]
-        [String]
-        $Name
-    )
-
-    New-Object -TypeName System.Management.Automation.Runspaces.SessionStateFunctionEntry -ArgumentList @(
-        $Name, (Get-Content -LiteralPath Function:\$Name)
-    )
 }
 
 Function New-SessionStateVariable {
@@ -90,12 +60,508 @@ Function New-SessionStateVariable {
     )
 }
 
+Add-CSharpType -AnsibleModule $module -References @'
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace Ansible.Windows.Setup
+{
+    public class NativeHelpers
+    {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DSROLE_PRIMARY_DOMAIN_INFO_BASIC
+        {
+            public Int32 MachineRole;
+            public UInt32 Flags;
+            public string DomainNameFlat;
+            public string DomainNameDns;
+            public string DomainForestName;
+            public Guid DomainGuid;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MEMORYSTATUSEX
+        {
+            public Int32 dwLength;
+            public UInt32 dwMemoryLoad;
+            public UInt64 ullTotalPhys;
+            public UInt64 ullAvailPhys;
+            public UInt64 ullTotalPageFile;
+            public UInt64 ullAvailPageFile;
+            public UInt64 ullTotalVirtual;
+            public UInt64 ullAvailVirtual;
+            public UInt64 ullAvailExtendedVirtual;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct OSVERSIONINFOEXW
+        {
+            public Int32 dwOSVersionInfoSize;
+            public UInt32 dwMajorVersion;
+            public UInt32 dwMinorVersion;
+            public UInt32 dwBuildNumber;
+            public UInt32 dwPlatformId;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string szCSDVersion;
+            public UInt16 wServicePackMajor;
+            public UInt16 wServicePackMinor;
+            public UInt16 wSuiteMask;
+            public byte wProductType;
+            public byte wReserved;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RawSMBIOSData
+        {
+            public byte Used20CallingMethod;
+            public byte SMBIOSMajorVersion;
+            public byte SMBIOSMinorVersion;
+            public byte DmiRevision;
+            public Int32 Length;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SMBIOSHeader
+        {
+            public byte Type;
+            public byte Length;
+            public UInt16 Handle;
+        }
+
+        // Both BIOSData and SystemInformation is defined in the standard below.
+        // https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.3.0.pdf
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct BIOSData
+        {
+            public byte Vendor;
+            public byte Version;
+            public UInt16 StartingAddressSegment;
+            public byte ReleaseDate;
+            // There are more fields but we only need up to ReleaseDate.
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SystemInformation
+        {
+            public byte Manufacturer;
+            public byte ProductName;
+            public byte Version;
+            public byte SerialNumber;
+            // There are more fields but we only need up to SerialNumber.
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct ProcessorInformation
+        {
+            public byte SocketDesignation;
+            public byte ProcessorType;
+            public byte ProcessorFamily;
+            public byte ProcessorManufacturer;
+            public UInt64 ProcessorId;
+            public byte ProcessorVersion;
+            public byte Voltage;
+            public UInt16 ExternalClock;
+            public UInt16 MaxSpeed;
+            public UInt16 CurrentSpeed;
+            public byte Status;
+            public byte ProcessorUpgrade;
+            public UInt16 L1CacheHandle;
+            public UInt16 L2CacheHandle;
+            public UInt16 L3CacheHandle;
+            public byte SerialNumber;
+            public byte AssetTag;
+            public byte PartNumber;
+            public byte CoreCount;
+            public byte CoreEnabled;
+            public byte ThreadCount;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SYSTEM_INFO
+        {
+            public UInt16 wProcessorArchitecture;
+            public UInt16 wReserved;
+            public UInt32 dwPageSize;
+            public IntPtr lpMinimumApplicationAddress;
+            public IntPtr lpMaximumApplicationAddress;
+            public UIntPtr dwActiveProcessorMask;
+            public UInt32 dwNumberOfProcessors;
+            public UInt32 dwProcessorType;
+            public UInt32 dwAllocationGranularity;
+            public UInt16 wProcessorLevel;
+            public UInt16 wProcessorRevision;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct WKSTA_INFO_100
+        {
+            public UInt32 wki100_platform_id;
+            public string wki100_computername;
+            public string wki100_langroup;
+            public UInt32 wki100_ver_major;
+            public UInt32 wki100_ver_minor;
+        }
+    }
+
+    public class NativeMethods
+    {
+        [DllImport("Netapi32.dll")]
+        public static extern void DsRoleFreeMemory(
+            IntPtr Buffer);
+
+        [DllImport("Netapi32.dll")]
+        public static extern Int32 DsRoleGetPrimaryDomainInformation(
+            [MarshalAs(UnmanagedType.LPWStr)] string lpServer,
+            UInt32 InfoLevel,
+            out SafeDsMemoryBuffer Buffer);
+
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool GetComputerNameExW(
+            UInt32 NameType,
+            [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpBuffer,
+            ref Int32 nSize);
+
+        [DllImport("Kernel32.dll")]
+        public static extern void GetNativeSystemInfo(
+            ref NativeHelpers.SYSTEM_INFO lpSystemInfo);
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern Int32 GetSystemFirmwareTable(
+            FirmwareProvider FirmwareTableProviderSignature,
+            UInt32 FirmwareTableID,
+            IntPtr pFirmwareTableBuffer,
+            Int32 BufferSize);
+
+        [DllImport("Kernel32.dll")]
+        public static extern Int64 GetTickCount64();
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool GetVersionExW(
+            ref NativeHelpers.OSVERSIONINFOEXW lpVersionInformation);
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool GlobalMemoryStatusEx(
+            ref NativeHelpers.MEMORYSTATUSEX lpBuffer);
+
+        [DllImport("Netapi32.dll")]
+        public static extern UInt32 NetApiBufferFree(
+            IntPtr Buffer);
+
+        [DllImport("Netapi32.dll", CharSet = CharSet.Unicode)]
+        public static extern Int32 NetWkstaGetInfo(
+            string servername,
+            UInt32 level,
+            out SafeNetAPIBuffer bufptr);
+    }
+
+    public class SafeMemoryBuffer : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        public SafeMemoryBuffer(int cb) : base(true)
+        {
+            base.SetHandle(Marshal.AllocHGlobal(cb));
+        }
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+        protected override bool ReleaseHandle()
+        {
+            Marshal.FreeHGlobal(handle);
+            return true;
+        }
+    }
+
+    public class SafeDsMemoryBuffer : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        public SafeDsMemoryBuffer() : base(true) { }
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+        protected override bool ReleaseHandle()
+        {
+            NativeMethods.DsRoleFreeMemory(this.handle);
+            return true;
+        }
+    }
+
+    public class SafeNetAPIBuffer : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        public SafeNetAPIBuffer() : base(true) { }
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+        protected override bool ReleaseHandle()
+        {
+            NativeMethods.NetApiBufferFree(this.handle);
+            return true;
+        }
+    }
+
+    public class Win32Exception : System.ComponentModel.Win32Exception
+    {
+        private string _msg;
+
+        public Win32Exception(string message) : this(Marshal.GetLastWin32Error(), message) { }
+        public Win32Exception(int errorCode, string message) : base(errorCode)
+        {
+            _msg = String.Format("{0} ({1}, Win32ErrorCode {2} - 0x{2:X8})", message, base.Message, errorCode);
+        }
+
+        public override string Message { get { return _msg; } }
+        public static explicit operator Win32Exception(string message) { return new Win32Exception(message); }
+    }
+
+    public enum FirmwareProvider : uint
+    {
+        ACPI = 0x41435049,
+        FIRM = 0x4649524D,
+        RSMB = 0x52534D42
+    }
+
+    public class DomainInfo
+    {
+        public string Domain;
+        public Int32 DomainRole;
+        public bool PartOfDomain;
+
+        public DomainInfo()
+        {
+            SafeDsMemoryBuffer dsBuffer;
+            // 1 == DsRolePrimaryDomainInfoBasic
+            int res = NativeMethods.DsRoleGetPrimaryDomainInformation(null, 1, out dsBuffer);
+            if (res != 0)
+                throw new Win32Exception(res, "Failed to get domain information");
+
+            using (dsBuffer)
+            {
+                var domainInfo = (NativeHelpers.DSROLE_PRIMARY_DOMAIN_INFO_BASIC)Marshal.PtrToStructure(
+                    dsBuffer.DangerousGetHandle(), typeof(NativeHelpers.DSROLE_PRIMARY_DOMAIN_INFO_BASIC));
+
+                Domain = domainInfo.DomainNameDns;
+                DomainRole = domainInfo.MachineRole;
+                PartOfDomain = !String.IsNullOrEmpty(Domain);
+            }
+
+
+            if (!PartOfDomain)
+            {
+                SafeNetAPIBuffer netBuffer;
+                res = NativeMethods.NetWkstaGetInfo(null, 100, out netBuffer);
+                if (res != 0)
+                    throw new Win32Exception(res, "Failed to get workstation information");
+
+                using (netBuffer)
+                {
+                    var netInfo = (NativeHelpers.WKSTA_INFO_100)Marshal.PtrToStructure(
+                        netBuffer.DangerousGetHandle(), typeof(NativeHelpers.WKSTA_INFO_100));
+
+                    Domain = netInfo.wki100_langroup;
+                }
+            }
+        }
+    }
+
+    public class MemoryInfo
+    {
+        public UInt64 TotalPhysical;
+        public UInt64 AvailablePhysical;
+
+        public MemoryInfo()
+        {
+            var memoryInfo = new NativeHelpers.MEMORYSTATUSEX();
+            memoryInfo.dwLength = Marshal.SizeOf(memoryInfo);
+
+            if (!NativeMethods.GlobalMemoryStatusEx(ref memoryInfo))
+                throw new Win32Exception("Failed to get memory info");
+
+            TotalPhysical = memoryInfo.ullTotalPhys;
+            AvailablePhysical = memoryInfo.ullAvailPhys;
+        }
+    }
+
+    public class OSVersionInfo
+    {
+        public byte ProductType;
+
+        public OSVersionInfo()
+        {
+            var versionInfo = new NativeHelpers.OSVERSIONINFOEXW() { };
+            versionInfo.dwOSVersionInfoSize = Marshal.SizeOf(versionInfo);
+
+            if (!NativeMethods.GetVersionExW(ref versionInfo))
+                throw new Win32Exception("Failed to get version info");
+
+            ProductType = versionInfo.wProductType;
+        }
+    }
+
+    public class SMBIOSInfo
+    {
+        public DateTime? ReleaseDate;
+        public string SMBIOSBIOSVersion;
+        public string Manufacturer;
+        public string Model;
+        public string SerialNumber;
+        public List<Tuple<byte, byte>> ProcessorInfo = new List<Tuple<byte, byte>>();
+
+        public SMBIOSInfo()
+        {
+            using (SafeMemoryBuffer buffer = GetSMBIOSBuffer())
+            {
+                var rawData = (NativeHelpers.RawSMBIOSData)Marshal.PtrToStructure(buffer.DangerousGetHandle(),
+                    typeof(NativeHelpers.RawSMBIOSData));
+
+                IntPtr tablePtr = IntPtr.Add(buffer.DangerousGetHandle(), Marshal.SizeOf(rawData));
+                int headerSize = Marshal.SizeOf(typeof(NativeHelpers.SMBIOSHeader));
+                int offset = 0;
+
+                while (offset < rawData.Length)
+                {
+                    var header = (NativeHelpers.SMBIOSHeader)Marshal.PtrToStructure(tablePtr,
+                        typeof(NativeHelpers.SMBIOSHeader));
+                    IntPtr headerDataPtr = IntPtr.Add(tablePtr, headerSize);
+
+                    tablePtr = IntPtr.Add(tablePtr, header.Length);
+                    offset += header.Length;
+                    List<string> stringTable = ExtractStringTable(ref tablePtr, ref offset);
+
+                    // We only care about the BIOS (0) or System Information (1) values.
+                    if (header.Type == 0)
+                    {
+                        var biosInfo = (NativeHelpers.BIOSData)Marshal.PtrToStructure(headerDataPtr,
+                            typeof(NativeHelpers.BIOSData));
+
+                        ReleaseDate = ParseDateString(ExtractFromStringTable(stringTable, biosInfo.ReleaseDate));
+                        SMBIOSBIOSVersion = ExtractFromStringTable(stringTable, biosInfo.Version);
+                    }
+                    else if (header.Type == 1)
+                    {
+                        var systemInfo = (NativeHelpers.SystemInformation)Marshal.PtrToStructure(headerDataPtr,
+                            typeof(NativeHelpers.SystemInformation));
+
+                        Manufacturer = ExtractFromStringTable(stringTable, systemInfo.Manufacturer);
+                        Model = ExtractFromStringTable(stringTable, systemInfo.ProductName);
+                        SerialNumber = ExtractFromStringTable(stringTable, systemInfo.SerialNumber);
+                    }
+                    else if (header.Type == 4)
+                    {
+                        var processorInfo = (NativeHelpers.ProcessorInformation)Marshal.PtrToStructure(headerDataPtr,
+                            typeof(NativeHelpers.ProcessorInformation));
+
+                        // TODO: Technically if CoreCount or ThreadCount == 255 then we should look at another field
+                        // but the chances of that happening are slim compared to the complexity of the checks required.
+                        ProcessorInfo.Add(Tuple.Create(processorInfo.CoreCount, processorInfo.ThreadCount));
+                    }
+                    else
+                        continue;
+                }
+            }
+        }
+
+        private SafeMemoryBuffer GetSMBIOSBuffer()
+        {
+            Int32 size = NativeMethods.GetSystemFirmwareTable(FirmwareProvider.RSMB, 0, IntPtr.Zero, 0);
+            SafeMemoryBuffer buffer = new SafeMemoryBuffer(size);
+
+            NativeMethods.GetSystemFirmwareTable(FirmwareProvider.RSMB, 0, buffer.DangerousGetHandle(), size);
+            int res = Marshal.GetLastWin32Error();
+            if (res != 0)
+                throw new Win32Exception(res, "Failed to get SMBIOS buffer information");
+
+            return buffer;
+        }
+
+        private List<string> ExtractStringTable(ref IntPtr ptr, ref int offset)
+        {
+            // The string table is a list of null-terminated ASCII encoded strings right after the header.
+            List<string> stringTable = new List<string>();
+
+            while (true)
+            {
+                string stringValue = Marshal.PtrToStringAnsi(ptr);
+                ptr = IntPtr.Add(ptr, stringValue.Length + 1);
+                offset += stringValue.Length + 1;
+
+                if (String.IsNullOrEmpty(stringValue))
+                {
+                    // If there were no string we still need to account for another null char.
+                    if (stringTable.Count == 0)
+                    {
+                        ptr = IntPtr.Add(ptr, 1);
+                        offset++;
+                    }
+                    break;
+                }
+                else
+                    stringTable.Add(stringValue);
+            }
+
+            return stringTable;
+        }
+
+        private string ExtractFromStringTable(List<string> stringTable, byte index)
+        {
+            // StringTable indexes are 1 based, if the value is 0 then there is no value.
+            if (index == 0)
+                return null;
+
+            return stringTable[index - 1].Trim();
+        }
+
+        private DateTime? ParseDateString(string date)
+        {
+            if (String.IsNullOrEmpty(date))
+                return null;
+
+            // Older standards could use a 2 digit year that indicates 19yy.
+            string dateFormat = date.Length == 10 ? "MM/dd/yyyy" : "MM/dd/yy";
+
+            DateTime rawDateTime = DateTime.ParseExact(date, dateFormat, null);
+            return DateTime.SpecifyKind(rawDateTime, DateTimeKind.Utc);
+        }
+    }
+
+    public class SystemInfo
+    {
+        public string NetBIOSName;
+        public UInt32 NumberOfProcessors;
+        public UInt32 ProcessorArchitecture;
+
+        public SystemInfo()
+        {
+            var systemInfo = new NativeHelpers.SYSTEM_INFO();
+            NativeMethods.GetNativeSystemInfo(ref systemInfo);
+
+            NumberOfProcessors = systemInfo.dwNumberOfProcessors;
+            ProcessorArchitecture = systemInfo.wProcessorArchitecture;
+
+            StringBuilder buffer = new StringBuilder(0);
+            int size = 0;
+
+            // 0 == ComputerNameNetBIOS
+            NativeMethods.GetComputerNameExW(0, buffer, ref size);
+            buffer.EnsureCapacity(size);
+
+            if (!NativeMethods.GetComputerNameExW(0, buffer, ref size))
+                throw new Win32Exception("Failed to get ComputerName");
+            NetBIOSName = buffer.ToString();
+        }
+    }
+}
+'@
+
 $factMeta = @(
     @{
         Subsets = 'all_ipv4_addresses', 'all_ipv6_addresses'
         Code = {
-            $netcfg = Get-LazyCimInstance -ClassName Win32_NetworkAdapterConfiguration
-            $ips = @($netcfg.IPAddress | Where-Object { $_ })
+            $interfaces = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()
+            $ips = @(foreach($interface in $interfaces) {
+                # Win32_NetworkAdapterConfiguration did not return the local IPs so we replicate that here.
+                $interface.GetIPProperties().UnicastAddresses | Where-Object {
+                    $_.Address.ToString() -notin @('::1', '127.0.0.1')
+                } | ForEach-Object -Process {
+                    $_.Address.ToString()
+                }
+            })
 
             $ansibleFacts.ansible_ip_addresses = $ips
         }
@@ -103,13 +569,15 @@ $factMeta = @(
     @{
         Subsets = 'bios'
         Code = {
-            $win32Bios = Get-LazyCimInstance -ClassName Win32_Bios
-            $win32CS = Get-LazyCimInstance -ClassName Win32_ComputerSystem
+            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
 
-            $ansibleFacts.ansible_bios_date = $win32Bios.ReleaseDate.ToString("MM/dd/yyyy")
-            $ansibleFacts.ansible_bios_version = $win32Bios.SMBIOSBIOSVersion
-            $ansibleFacts.ansible_product_name = $win32CS.Model.Trim()
-            $ansibleFacts.ansible_product_serial = $win32Bios.SerialNumber
+            $releaseDate = if ($bios.ReleaseDate) {
+                $bios.ReleaseDate.ToUniversalTime().ToString('MM/dd/yyyy')
+            }
+            $ansibleFacts.ansible_bios_date = $releaseDate
+            $ansibleFacts.ansible_bios_version = $bios.SMBIOSBIOSVersion
+            $ansibleFacts.ansible_product_name = $bios.Model
+            $ansibleFacts.ansible_product_serial = $bios.SerialNumber
         }
     },
     @{
@@ -121,7 +589,7 @@ $factMeta = @(
             $ansibleFacts.ansible_date_time = @{
                 date = $datetime.ToString("yyyy-MM-dd")
                 day = $datetime.ToString("dd")
-                epoch = (Get-Date -UFormat "%s")
+                epoch = (Get-Date ($datetimeUtc) -UFormat '+%s')
                 hour = $datetime.ToString("HH")
                 iso8601 = $datetimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ")
                 iso8601_basic = $datetime.ToString("yyyyMMddTHHmmssffffff")
@@ -144,29 +612,41 @@ $factMeta = @(
     @{
         Subsets = 'distribution'
         Code = {
-            $win32OS = Get-LazyCimInstance -ClassName Win32_OperatingSystem
             $osversion = [Environment]::OSVersion.Version
 
-            $productType = switch($win32OS.ProductType) {
+            $osProductType = (New-Object -TypeName Ansible.Windows.Setup.OSVersionInfo).ProductType
+            $productType = switch($osProductType) {
                 1 { "workstation" }
                 2 { "domain_controller" }
                 3 { "server" }
                 default { "unknown" }
             }
 
-            $currentVersionPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-            $installationType = if (Test-Path -LiteralPath $currentVersionPath) {
-                $installTypeProp = Get-ItemProperty -LiteralPath $currentVersionPath -ErrorAction SilentlyContinue
-                [String]$installTypeProp.InstallationType
+            $osInfoParams = @{
+                LiteralPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+                Name = 'InstallationType'
+                ErrorAction = 'SilentlyContinue'
             }
+            $osInfo = Get-ItemProperty @osInfoParams
 
-            $ansibleFacts.ansible_distribution = $win32OS.Caption
+            $ansibleFacts.ansible_distribution = $null
             $ansibleFacts.ansible_distribution_version = $osversion.ToString()
             $ansibleFacts.ansible_distribution_major_version = $osversion.Major.ToString()
             $ansibleFacts.ansible_os_family = "Windows"
-            $ansibleFacts.ansible_os_name = ($win32OS.Name.Split('|')[0]).Trim()
+            $ansibleFacts.ansible_os_name = $null
             $ansibleFacts.ansible_os_product_type = $productType
-            $ansibleFacts.ansible_os_installation_type = $installationType
+            $ansibleFacts.ansible_os_installation_type = $osInfo.InstallationType
+
+            # We cannot call WMI if we aren't an admin (on a network logon), conditionally set these facts.
+            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                # These values are localized and I cannot find where they are sourced, we just need to continue
+                # returning them for backwards compatibility.
+                $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property Caption, Name
+
+                $ansibleFacts.ansible_distribution = $win32OS.Caption
+                $ansibleFacts.ansible_os_name = ($win32OS.Name.Split('|')[0]).Trim()
+            }
         }
     },
     @{
@@ -201,39 +681,49 @@ $factMeta = @(
     @{
         Subsets = 'interfaces'
         Code = {
-            $netcfg = @(Get-LazyCimInstance -ClassName Win32_NetworkAdapterConfiguration |
-                Where-Object { $null-ne $_.IPAddress })
+            $interfaces = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()
 
-            $namespaces = Get-LazyCimInstance -ClassName __Namespace -Namespace root
-            if ($namespaces | Where-Object { $_.Name -eq "StandardCimv" }) {
-                $netAdapters = Get-LazyCimInstance -ClassName MSFT_NetAdapter -Namespace Root\StandardCimv2
-            } else {
-                $netAdapters = Get-LazyCimInstance -ClassName Win32_NetworkAdapter | Select-Object -Property @(
-                    @{ N = 'InterfaceGUID'; E = { $_.GUID }},
-                    @{ N = 'Name'; E = { $_.NetConnectionID }}
-                )
-            }
+            $formattedNetCfg = @(foreach($interface in $interfaces) {
+                $ipProps = $interface.GetIPProperties()
 
-            $formattedNetCfg = @(foreach ($adapter in $netcfg) {
-                $thisAdapter = @{
-                    default_gateway = $null
-                    connection_name = $null
-                    dns_domain = $adapter.dnsdomain
-                    interface_index = $adapter.InterfaceIndex
-                    interface_name = $adapter.description
-                    macaddress = $adapter.macaddress
+                try {
+                    $ipv4 = $ipProps.GetIPv4Properties()
+                } catch [System.Net.NetworkInformation.NetworkInformationException] {
+                    $ipv4 = $null
+                }
+                try {
+                    $ipv6 = $ipProps.GetIPv6Properties()
+                } catch [System.Net.NetworkInformation.NetworkInformationException] {
+                    $ipv6 = $null
                 }
 
-                if ($adapter.defaultIPGateway) {
-                    $thisadapter.default_gateway = $adapter.DefaultIPGateway[0].ToString()
+                # Do not repo on either the loopback interface or any interfaces that did not have an IP address.
+                if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -eq 'Loopback') {
+                    continue
                 }
 
-                $netAdapter = $netAdapters | Where-Object { $_.InterfaceGUID -eq $adapter.SettingID }
-                if ($netAdapter) {
-                    $thisadapter.connection_name = $netAdapter.Name
+                $defaultGateway = if ($ipProps.GatewayAddresses) {
+                    $ipProps.GatewayAddresses[0].Address.IPAddressToString
                 }
+                $dnsDomain = $null
+                if ($ipProps.DnsSuffix) {
+                    $dnsDomain = $ipProps.DnsSuffix
+                }
+                $index = if ($ipv4) {
+                    $ipv4.Index
+                } elseif ($ipv6) {
+                    $ipv6.Index
+                }
+                $mac = ($interface.GetPhysicalAddress() -replace '(..)','$1:').ToUpperInvariant().Trim(':')
 
-                $thisAdapter
+                @{
+                    connection_name = $interface.Name
+                    default_gateway = $defaultGateway
+                    dns_domain = $dnsDomain
+                    interface_index = $index
+                    interface_name = $interface.Description
+                    macaddress = $mac
+                }
             })
 
             $ansibleFacts.ansible_interfaces = $formattedNetCfg
@@ -263,31 +753,34 @@ $factMeta = @(
     @{
         Subsets = 'memory'
         Code = {
-            $win32CS = Get-LazyCimInstance -ClassName Win32_ComputerSystem
-            $win32OS = Get-LazyCimInstance -ClassName Win32_OperatingSystem
+            $mem = New-Object -TypeName Ansible.Windows.Setup.MemoryInfo
 
-            # Win32_PhysicalMemory is empty on some virtual platforms
-            $ansibleFacts.ansible_memtotal_mb = ([math]::ceiling($win32CS.TotalPhysicalMemory / 1024 / 1024))
-            $ansibleFacts.ansible_memfree_mb = ([math]::ceiling($win32OS.FreePhysicalMemory / 1024))
-            $ansibleFacts.ansible_swaptotal_mb = ([math]::round($win32OS.TotalSwapSpaceSize / 1024))
-            $ansibleFacts.ansible_pagefiletotal_mb = ([math]::round($win32OS.SizeStoredInPagingFiles / 1024))
-            $ansibleFacts.ansible_pagefilefree_mb = ([math]::round($win32OS.FreeSpaceInPagingFiles / 1024))
+            $ansibleFacts.ansible_memtotal_mb = ([Math]::Ceiling($mem.TotalPhysical / 1024 / 1024))
+            $ansibleFacts.ansible_memfree_mb = ([Math]::Ceiling($mem.AvailablePhysical / 1024 / 1024))
+            $ansibleFacts.ansible_swaptotal_mb = 0  # Swap memory does not apply to Windows
+
+            # Cannot figure out how to get this info outside of WMI. That means we can only run this when we are an
+            # an admin to avoid a 5 second execution time hit on a standard user logon.
+            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property @(
+                    'FreeSpaceInPagingFiles', 'SizeStoredInPagingFiles'
+                )
+                $ansibleFacts.ansible_pagefiletotal_mb = ([Math]::Round($win32OS.SizeStoredInPagingFiles / 1024))
+                $ansibleFacts.ansible_pagefilefree_mb = ([Math]::Round($win32OS.FreeSpaceInPagingFiles / 1024))
+            } else {
+                $ansibleFacts.ansible_pagefiletotal_mb = $null
+                $ansibleFacts.ansible_pagefilefree_mb = $null
+            }
         }
     },
     @{
         Subsets = 'platform'
         Code = {
-            $win32CS = Get-LazyCimInstance -ClassName Win32_ComputerSystem
-            $win32OS = Get-LazyCimInstance -ClassName Win32_OperatingSystem
-            $osversion = [Environment]::OSVersion
-
-            $domainSuffix = $win32CS.Domain.Substring($win32CS.Workgroup.length)
-            $ipProps = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
-            $fqdn = $ipProps.HostName
-
-            if ($ipProps.DomainName) {
-                $fqdn = "$($fqdn).$($ipProps.DomainName)"
-            }
+            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            $domainInfo = New-Object -TypeName Ansible.Windows.Setup.DomainInfo
+            $systemInfo = New-Object -TypeName Ansible.Windows.Setup.SystemInfo
+            $osVersion = [Environment]::OSVersion
 
             # The Machine SID is stored in HKLM:\SECURITY\SAM\Domains\Account and is
             # only accessible by the Local System account. This method get's the local
@@ -316,39 +809,91 @@ $factMeta = @(
                 $module.Warn("Error during machine sid retrieval: $($_.Exception.Message)")
             }
 
-            # Check if a reboot is pending, this is legacy behaviour from Legacy.psm1
-            $serverFeatureParams = @{
-                ClassName = 'MSFT_ServerManagerTasks'
-                Namespace = 'root\microsoft\windows\servermanager'
-                MethodName = 'GetServerFeature'
+            $ipProps = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
+            $fqdn = $ipProps.HostName
+            if ($ipProps.DomainName) {
+                $fqdn = "$($fqdn).$($ipProps.DomainName)"
+            }
+            $domainSuffix = if ($domainInfo.PartOfDomain) { [string]$domainInfo.Domain } else { "" }
+
+            $ownerParams = @{
+                LiteralPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+                Name = 'RegisteredOwner'
                 ErrorAction = 'SilentlyContinue'
             }
-            $featureData = Invoke-CimMethod @serverFeatureParams
+            $ownerName = [String](Get-ItemProperty @ownerParams)."$($ownerParams.Name)"
 
-            $pendingRenamePath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager'
-            $pendingRenameName = 'PendingFileRenameOperations'
-            $pendingRenames = if (Test-Path -LiteralPath $pendingRenamePath) {
-                Get-ItemProperty -LiteralPath $pendingRenamePath -Name $pendingRenameName -ErrorAction SilentlyContinue
+            $descriptionParams = @{
+                LiteralPath = 'HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters'
+                Name = 'srvcomment'
+                ErrorAction = 'SilentlyContinue'
             }
+            $description = [string](Get-ItemProperty @descriptionParams)."$($descriptionParams.Name)"
 
-            $cbsReboot = Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'
-            $rebootPending = ($featureData -and $featureData.RequiresReboot) -or $pendingRenames -or $cbsReboot
+            $ansibleFacts.ansible_domain = [String]$domainSuffix
+            $ansibleFacts.ansible_fqdn = $fqdn
+            $ansibleFacts.ansible_hostname = $ipProps.HostName
+            $ansibleFacts.ansible_netbios_name = $systemInfo.NetBIOSName
+            $ansibleFacts.ansible_kernel = $osVersion.Version.ToString()
+            $ansibleFacts.ansible_nodename = $fqdn
+            $ansibleFacts.ansible_machine_id = $machineSid
+            $ansibleFacts.ansible_owner_name = $ownerName
+            $ansibleFacts.ansible_system = $osVersion.Platform.ToString()
+            $ansibleFacts.ansible_system_description = $description
+            $ansibleFacts.ansible_system_vendor = $bios.Manufacturer
 
-            $ansiblefacts.ansible_architecture = $win32OS.OSArchitecture
-            $ansiblefacts.ansible_domain = $domainSuffix
-            $ansiblefacts.ansible_fqdn = $fqdn
-            $ansiblefacts.ansible_hostname = $ipProps.HostName
-            $ansiblefacts.ansible_netbios_name = $win32CS.Name
-            $ansiblefacts.ansible_kernel = $osversion.Version.ToString()
-            $ansiblefacts.ansible_nodename = $fqdn
-            $ansiblefacts.ansible_machine_id = $machineSid
-            $ansiblefacts.ansible_owner_contact = ([string] $win32CS.PrimaryOwnerContact)
-            $ansiblefacts.ansible_owner_name = ([string] $win32CS.PrimaryOwnerName)
-            # FUTURE: should this live in its own subset?
-            $ansiblefacts.ansible_reboot_pending = $rebootPending
-            $ansiblefacts.ansible_system = $osversion.Platform.ToString()
-            $ansiblefacts.ansible_system_description = ([string] $win32OS.Description)
-            $ansiblefacts.ansible_system_vendor = $win32CS.Manufacturer
+            # Check if a reboot is pending, this is legacy behaviour from Legacy.psm1
+            $pendingParams = @{
+                LiteralPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager'
+                Name = 'PendingFileRenameOperations'
+                ErrorAction = 'SilentlyContinue'
+            }
+            $pendingRenames = (Get-ItemProperty @pendingParams)."$($pendingParams.Name)"
+
+            $cbsPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'
+            $cbsReboot = Test-Path -LiteralPath $cbsPath
+            $rebootPending = $pendingRenames -or $cbsReboot
+
+            # Cannot run Get-CimInstance on non-admin account as it takes 5 seconds to come back with an access denied
+            # error. Set the original value to $null and use 'ansible_architecture2' instead.
+            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                $win32CS = Get-CimInstance -ClassName Win32_ComputerSystem -Property PrimaryOwnerContact
+                $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property OSArchitecture
+
+                $ansibleFacts.ansible_architecture = $win32OS.OSArchitecture
+
+                # I don't even know if this even returns anything on Windows, cannot find any documentation for it.
+                $ansibleFacts.ansible_owner_contact = ([string]$win32CS.PrimaryOwnerContact)
+
+                # Only do the CIM check to save time if the rebootPending is not already set.
+                if (-not $rebootPending) {
+                    $serverFeatureParams = @{
+                        ClassName = 'MSFT_ServerManagerTasks'
+                        Namespace = 'root\microsoft\windows\servermanager'
+                        MethodName = 'GetServerFeature'
+                        ErrorAction = 'SilentlyContinue'
+                    }
+                    $featureData = Invoke-CimMethod @serverFeatureParams
+                    $rebootPending = $featureData -and $featureData.RequiresReboot
+                }
+            } else {
+                $ansibleFacts.ansible_architecture = $null
+                $ansibleFacts.ansible_owner_contact = ""
+            }
+            $ansibleFacts.ansible_reboot_pending = $rebootPending
+
+            # This is a non-localized value that tries to match the POSIX setup.py values. We cannot replace
+            # ansible_architecture without a deprecation period so have both side by side. When we can deprecate facts
+            # returned by a module we should deprecate the format and rename this.
+            $ansibleFacts.ansible_architecture2 = switch($systemInfo.ProcessorArchitecture) {
+                0 { 'i386' }  # PROCESSOR_ARCHITECTURE_INTEL (x86)
+                5 { 'arm' }  # PROCESSOR_ARCHITECTURE_ARM (ARM)
+                6 { 'ia64' }  # PROCESSOR_ARCHITECTURE_IA64 (Intel Ithanium-based)
+                9 { 'x86_64' }  # PROCESSOR_ARCHITECTURE_AMD64 (x64 (AMD or Intel))
+                12 { 'arm64' }  # PROCESSOR_ARCHITECTURE_ARM64 (ARM664)
+                default { 'unknown' }
+            }
         }
     },
     @{
@@ -360,29 +905,38 @@ $factMeta = @(
     @{
         Subsets = 'processor'
         Code = {
-            $win32CS = Get-LazyCimInstance -ClassName Win32_ComputerSystem
-            # Make sure we pick the first CPU in a multi-socket configuration.
-            $win32CPU = @(Get-LazyCimInstance -ClassName Win32_Processor)[0]
+            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            $systemInfo = New-Object -TypeName Ansible.Windows.Setup.SystemInfo
 
-            $cpuList = for ($i=1; $i -le $win32CS.NumberOfLogicalProcessors; $i++) {
-                $win32CPU.Manufacturer
-                $win32CPU.Name
+            $getParams = @{
+                LiteralPath = 'HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor'
+                ErrorAction = 'SilentlyContinue'
             }
+            $processorKeys = Get-ChildItem @getParams | Select-Object -Property @(
+                'PSPath', @{ N = 'ID'; E = { [int]$_.PSChildName } }
+             ) | Sort-Object -Property Id
 
-            $ansibleFacts.ansible_processor = $cpuList
-            $ansibleFacts.ansible_processor_cores = $win32CPU.NumberOfCores
-            $ansibleFacts.ansible_processor_count = $win32CS.NumberOfProcessors
-            $ansibleFacts.ansible_processor_threads_per_core = ($win32CPU.NumberOfLogicalProcessors / $win32CPU.NumberofCores)
-            $ansibleFacts.ansible_processor_vcpus = $win32CS.NumberOfLogicalProcessors
+             $processors = @(foreach ($proc in $processorKeys) {
+                 $info = Get-ItemProperty -LiteralPath $proc.PSPath -ErrorAction SilentlyContinue
+                 [string]$proc.ID
+                 $info.VendorIdentifier
+                 $info.ProcessorNameString
+             })
+
+             $ansibleFacts.ansible_processor = $processors
+             $ansibleFacts.ansible_processor_cores = $bios.ProcessorInfo[0].Item1
+             $ansibleFacts.ansible_processor_count = $bios.ProcessorInfo.Count
+             $ansibleFacts.ansible_processor_threads_per_core = $bios.ProcessorInfo[0].Item2
+             $ansibleFacts.ansible_processor_vcpus = $systemInfo.NumberOfProcessors
         }
     },
     @{
         Subsets = 'uptime'
         Code = {
-            $win32OS = Get-LazyCimInstance -ClassName Win32_OperatingSystem
+            $ticks = [Ansible.Windows.Setup.NativeMethods]::GetTickCount64()
 
-            $ansibleFacts.ansible_lastboot = $win32OS.lastbootuptime.ToString("u")
-            $ansibleFacts.ansible_uptime_seconds = $([System.Convert]::ToInt64($(Get-Date).Subtract($win32OS.lastbootuptime).TotalSeconds))
+            $ansibleFacts.ansible_lastboot = [DateTime]::Now.AddMilliseconds($ticks * -1).ToString('u')
+            $ansibleFacts.ansible_uptime_seconds = [Math]::Round($ticks / 1000)
         }
     },
     @{
@@ -400,20 +954,20 @@ $factMeta = @(
     @{
         Subsets = 'windows_domain'
         Code = {
-            $win32CS = Get-LazyCimInstance -ClassName Win32_ComputerSystem
+            $domainInfo = New-Object -TypeName Ansible.Windows.Setup.DomainInfo
 
-            $domainRoles = @{
-                0 = "Stand-alone workstation"
-                1 = "Member workstation"
-                2 = "Stand-alone server"
-                3 = "Member server"
-                4 = "Backup domain controller"
-                5 = "Primary domain controller"
+            $domainRole = switch($domainInfo.DomainRole) {
+                0 { "Stand-alone workstation" }
+                1 { "Member workstation" }
+                2 { "Stand-alone server" }
+                3 { "Member server" }
+                4 { "Backup domain controller" }
+                5 { "Primary domain controller" }
+                default { "Unknown DomainRole $_" }
             }
-            $domainRole = $domainRoles.Get_Item([Int32]$win32CS.DomainRole)
 
-            $ansibleFacts.ansible_windows_domain = $win32CS.Domain
-            $ansibleFacts.ansible_windows_domain_member = $win32CS.PartOfDomain
+            $ansibleFacts.ansible_windows_domain = $domainInfo.Domain
+            $ansibleFacts.ansible_windows_domain_member = $domainInfo.PartOfDomain
             $ansibleFacts.ansible_windows_domain_role = $domainRole
         }
     },
@@ -441,9 +995,9 @@ $factMeta = @(
     @{
         Subsets = 'virtual'
         Code = {
-            $machineInfo = Get-LazyCimInstance -ClassName Win32_ComputerSystem
+            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
 
-            $machineType, $machineRole = switch ($machineInfo.model) {
+            $machineType, $machineRole = switch ($bios.Model) {
                 "Virtual Machine" { "Hyper-V", "guest" }
                 "VMware Virtual Platform" { "VMware", "guest" }
                 "VirtualBox" { "VirtualBox", "guest" }
@@ -459,30 +1013,11 @@ $factMeta = @(
 
 $ansibleFacts = [Hashtable]::Synchronized(@{})
 
-# Holds a lock for each CIM class so the Get-LazyCimInstance only get/sets once in a thread safe fashion. This list
-# needs to be updated whenever we add another CIM class to retrieve in the facts.
-$cimMutex = [Hashtable]::Synchronized(@{})
-$cimInstances = [Hashtable]::Synchronized(@{})
-@(
-    '__Namespace',
-    'MSFT_NetAdapter',
-    'Win32_Bios',
-    'Win32_ComputerSystem',
-    'Win32_NetworkAdapter',
-    'Win32_NetworkAdapterConfiguration',
-    'Win32_OperatingSystem',
-    'Win32_Processor'
-) | ForEach-Object -Process {$cimMutex.$_ = New-Object -TypeName System.Threading.Mutex -ArgumentList @($false, $_)}
-
 $initialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-$initialSessionState.Commands.Add((New-SessionStateFunction -Name 'Get-LazyCimInstance'))
 $initialSessionState.Variables.Add((New-SessionStateVariable -Name ansibleFacts))
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name cimInstances))
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name cimMutex))
 $initialSessionState.Variables.Add((New-SessionStateVariable -Name factPath))
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name gatherTimeout))
 $initialSessionState.Variables.Add((New-SessionStateVariable -Name module))
-$pool = [RunspaceFactory]::CreateRunspacePool(1, 4, $initialSessionState, $Host)
+$pool = [RunspaceFactory]::CreateRunspacePool(1, $env:NUMBER_OF_PROCESSORS, $initialSessionState, $Host)
 
 $groupedSubsets = @{
     min = [System.Collections.Generic.List[string]]@('date_time','distribution','dns','env','local','platform','powershell_version','user')
@@ -514,10 +1049,10 @@ foreach ($item in $gatherSubset) {
             $null = $allMinusMin.ExceptWith($groupedSubsets.min)
             $null = $excludeSubset.UnionWith($allMinusMin)
 
-        } elseif($groupedSubsets.ContainsKey($item)) {
-            $null = $excludeSubset.UnionWith($grouped_subsets[$item])
+        } elseif ($groupedSubsets.ContainsKey($item)) {
+            $null = $excludeSubset.UnionWith($groupedSubsets[$item])
 
-        } elseif($all_set.Contains($item)) {
+        } elseif ($allSet.Contains($item)) {
             $null = $excludeSubset.Add($item)
         }
         # NB: invalid exclude values are ignored, since that's what posix setup does
@@ -580,16 +1115,24 @@ try {
 
         if ($job.AsyncResult.IsCompleted) {
             # We don't care about any actual output as each scriptblock sets the ansibleFacts hashtable in the code.
-            $null = $job.PowerShell.EndInvoke($job.AsyncResult)
+            try {
+                $null = $job.PowerShell.EndInvoke($job.AsyncResult)
+            } catch {
+                # We want to inner error record not the outer error from .EndInvoke()
+                $errorRecord = $_.Exception.InnerException.ErrorRecord
+                $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
+                $module.Warn("Error when collecting $($job.Name) facts: $err")
+            }
             $job.PowerShell.Dispose()
 
             # Make sure we warn on any errors that may have occurred.
             foreach ($errorRecord in $job.PowerShell.Streams.Error) {
-                $module.Warn("Error when collectiong $($job.Name): $($errorRecord | Out-String)")
+                $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
+                $module.Warn("Error when collecting $($job.Name) facts: $err")
             }
         } else {
             # Give a best effort chance to stop it, we can't call .Stop() in case it blocks.
-            $null = $job.PowerShell.BeginStop()
+            $null = $job.PowerShell.BeginStop($null, $null)
             $module.Warn("Failed to collection $($job.Name) due to timeout")
         }
     }
