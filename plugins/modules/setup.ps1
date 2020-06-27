@@ -22,11 +22,13 @@ if ($args.Length -gt 0) {
 } else {
     $params = $complex_args
 }
-foreach ($param in $params.GetEnumerator()) {
-    if ($param.Key.StartsWith('_') -or $spec.options.ContainsKey($param.Key)) {
-        continue
+if ($params) {
+    foreach ($param in $params.GetEnumerator()) {
+        if ($param.Key.StartsWith('_') -or $spec.options.ContainsKey($param.Key)) {
+            continue
+        }
+        $spec.options."$($param.Key)" = @{ type = 'raw' }
     }
-    $spec.options."$($param.Key)" = @{ type = 'raw' }
 }
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
