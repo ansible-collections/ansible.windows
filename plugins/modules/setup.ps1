@@ -8,6 +8,9 @@
 
 $spec = @{
     options = @{
+        # This is not meant to be publicly used, only for debugging how long it takes to capture a subset.
+        _measure_subset = @{ type = 'bool'; default = $false }
+
         fact_path = @{ type = 'path' }
         gather_subset = @{ type = 'list'; elements = 'str'; default = 'all' }
         gather_timeout = @{ type = 'int'; default = 10 }
@@ -33,6 +36,7 @@ if ($params) {
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
+$measureSubset = $module.Params._measure_subset
 $factPath = $module.Params.fact_path
 $gatherSubset = $module.Params.gather_subset
 $gatherTimeout = $module.Params.gather_timeout
@@ -591,6 +595,7 @@ $factMeta = @(
             $ansibleFacts.ansible_date_time = @{
                 date = $datetime.ToString("yyyy-MM-dd")
                 day = $datetime.ToString("dd")
+                epoch_local = (Get-Date ($datetime) -UFormat '+%s')
                 epoch = (Get-Date ($datetimeUtc) -UFormat '+%s')
                 hour = $datetime.ToString("HH")
                 iso8601 = $datetimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -1078,6 +1083,10 @@ $null = $actualSubset.UnionWith($explicitSubset)
 
 $ansibleFacts.gather_subset = $gatherSubset
 $ansibleFacts.module_setup = $true
+if ($measureSubset) {
+    $ansibleFacts.measure_info = @{}
+}
+
 $module.Result.ansible_facts = $ansibleFacts
 
 $pool.Open()
@@ -1099,10 +1108,21 @@ try {
 
         $ps = [PowerShell]::Create()
         $ps.RunspacePool = $pool
-        $null = $ps.AddScript($meta.Code)
+
+        $name = $metaSubsets -join ', '
+        if ($measureSubset) {
+            $null = $ps.AddScript('$subset = $args[0]; $time = Get-Date').AddArgument($name)
+            $null = $ps.AddScript($meta.Code)
+            $null = $ps.AddScript(@'
+$end = (Get-Date) - $time
+$ansibleFacts.measure_info.$subset = $end.TotalSeconds
+'@)
+        } else {
+            $null = $ps.AddScript($meta.Code)
+        }
 
         [PSCustomObject]@{
-            Name = $metaSubsets -join ', '
+            Name = $name
             AsyncResult = $ps.BeginInvoke()
             PowerShell = $ps
             Timer = [System.Diagnostics.StopWatch]::StartNew()  # Keeps track of how long left to wait for.
