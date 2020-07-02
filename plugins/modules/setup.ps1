@@ -693,7 +693,7 @@ $factMeta = @(
                 }
 
                 # Do not repo on either the loopback interface or any interfaces that did not have an IP address.
-                if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -eq 'Loopback') {
+                if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -in @('Loopback', 'Tunnel')) {
                     continue
                 }
 
