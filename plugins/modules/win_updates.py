@@ -103,7 +103,7 @@ notes:
 - M(ansible.windows.win_updates) will I(become) SYSTEM using I(runas) unless C(use_scheduled_task) is C(yes)
 - By default M(ansible.windows.win_updates) does not manage reboots, but will signal when a
   reboot is required with the I(reboot_required) return value.
-  M(reboot) can be used to reboot the host if required in the one task.
+  I(reboot) can be used to reboot the host if required in the one task.
 - M(ansible.windows.win_updates) can take a significant amount of time to complete (hours, in some cases).
   Performance depends on many factors, including OS version, number of updates, system load, and update server load.
 - Beware that just after M(ansible.windows.win_updates) reboots the system, the Windows system may not have settled yet

@@ -12,7 +12,7 @@ short_description: Interacts with webservices
 description:
 - Interacts with FTP, HTTP and HTTPS web services.
 - Supports Digest, Basic and WSSE HTTP authentication mechanisms.
-- For non-Windows targets, use the M(uri) module instead.
+- For non-Windows targets, use the M(ansible.builtin.uri) module instead.
 options:
   url:
     description:
@@ -83,7 +83,7 @@ extends_documentation_fragment:
 - ansible.windows.web_request
 
 seealso:
-- module: uri
+- module: ansible.builtin.uri
 - module: ansible.windows.win_get_url
 author:
 - Corwin Brown (@blakfeld)

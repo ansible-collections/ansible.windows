@@ -9,7 +9,7 @@ module: win_reboot
 short_description: Reboot a windows machine
 description:
 - Reboot a Windows machine, wait for it to go down, come back up, and respond to commands.
-- For non-Windows targets, use the M(reboot) module instead.
+- For non-Windows targets, use the M(ansible.builtin.reboot) module instead.
 options:
   pre_reboot_delay:
     description:
@@ -61,7 +61,7 @@ notes:
   U(https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/force-shutdown-from-a-remote-system)
   for more information.
 seealso:
-- module: reboot
+- module: ansible.builtin.reboot
 author:
 - Matt Davis (@nitzmahone)
 '''

@@ -109,11 +109,11 @@ notes:
   and regedit's export facility add a Byte Order Mark as the first character of the file, which can cause tracebacks.
 - You can use the M(ansible.windows.win_copy) module with the C(content:) option if you prefer the template inline, as part of the
   playbook.
-- For Linux you can use M(template) which uses '\\n' as C(newline_sequence) by default.
+- For Linux you can use M(ansible.builtin.template) which uses '\\n' as C(newline_sequence) by default.
 seealso:
 - module: ansible.windows.win_copy
-- module: copy
-- module: template
+- module: ansible.builtin.copy
+- module: ansible.builtin.template
 author:
 - Jon Hawkesworth (@jhawkesworth)
 '''

@@ -14,7 +14,7 @@ description:
        processed through the shell, so variables like C($env:HOME) and operations
        like C("<"), C(">"), C("|"), and C(";") will not work (use the M(ansible.windows.win_shell)
        module if you need these features).
-     - For non-Windows targets, use the M(command) module instead.
+     - For non-Windows targets, use the M(ansible.builtin.command) module instead.
 options:
   free_form:
     description:
@@ -54,9 +54,9 @@ notes:
     - C(creates), C(removes), and C(chdir) can be specified after the command. For instance, if you only want to run a command if a certain file does not
       exist, use this.
 seealso:
-- module: command
+- module: ansible.builtin.command
 - module: community.windows.psexec
-- module: raw
+- module: ansible.builtin.raw
 - module: community.windows.win_psexec
 - module: ansible.windows.win_shell
 author:

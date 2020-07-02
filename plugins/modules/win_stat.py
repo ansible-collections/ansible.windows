@@ -10,7 +10,7 @@ module: win_stat
 short_description: Get information about Windows files
 description:
      - Returns information about a Windows file.
-     - For non-Windows targets, use the M(stat) module instead.
+     - For non-Windows targets, use the M(ansible.builtin.stat) module instead.
 options:
     path:
         description:
@@ -39,7 +39,7 @@ options:
         type: bool
         default: no
 seealso:
-- module: stat
+- module: ansible.builtin.stat
 - module: ansible.windows.win_acl
 - module: ansible.windows.win_file
 - module: ansible.windows.win_owner

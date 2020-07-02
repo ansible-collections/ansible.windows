@@ -84,7 +84,7 @@ options:
     type: int
     default: 300
 seealso:
-- module: wait_for
+- module: ansible.builtin.wait_for
 - module: community.windows.win_wait_for_process
 author:
 - Jordan Borean (@jborean93)

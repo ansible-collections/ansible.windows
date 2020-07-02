@@ -12,7 +12,7 @@ description:
      - The M(ansible.windows.win_shell) module takes the command name followed by a list of space-delimited arguments.
        It is similar to the M(ansible.windows.win_command) module, but runs
        the command via a shell (defaults to PowerShell) on the target host.
-     - For non-Windows targets, use the M(shell) module instead.
+     - For non-Windows targets, use the M(ansible.builtin.shell) module instead.
 options:
   free_form:
     description:
@@ -65,9 +65,9 @@ notes:
       Consider creating a Windows service for managing background processes.
 seealso:
 - module: community.windows.psexec
-- module: raw
-- module: script
-- module: shell
+- module: ansible.builtin.raw
+- module: ansible.builtin.script
+- module: ansible.builtin.shell
 - module: ansible.windows.win_command
 - module: community.windows.win_psexec
 author:
