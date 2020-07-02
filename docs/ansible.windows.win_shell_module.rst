@@ -198,7 +198,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
+
     - name: Execute a comand in the remote shell, stdout goes to the specified file on the remote
       ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
 
@@ -261,7 +261,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                                                                         <div>The command executed by the task.</div>
                                                                 <br/>
                                             <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">rabbitmqctl join_cluster rabbit@master</div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">rabbitmqctl join_cluster rabbit@main</div>
                                     </td>
             </tr>
                                 <tr>
@@ -378,7 +378,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                                                                         <div>The command standard output.</div>
                                                                 <br/>
                                             <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Clustering node rabbit@slave1 with rabbit@master ...</div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Clustering node rabbit@slave1 with rabbit@main ...</div>
                                     </td>
             </tr>
                                 <tr>
@@ -395,7 +395,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                                                                         <div>The command standard output split in lines.</div>
                                                                 <br/>
                                             <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;u&#x27;Clustering node rabbit@slave1 with rabbit@master ...&#x27;&quot;]</div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;u&#x27;Clustering node rabbit@slave1 with rabbit@main ...&#x27;&quot;]</div>
                                     </td>
             </tr>
                         </table>
