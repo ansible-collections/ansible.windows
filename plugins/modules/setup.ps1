@@ -907,7 +907,8 @@ $factMeta = @(
              ) | Sort-Object -Property Id
 
              $processors = @(foreach ($proc in $processorKeys) {
-                 $info = Get-ItemProperty -LiteralPath $proc.PSPath -ErrorAction SilentlyContinue
+                 $names = 'ProcessorNameString', 'VendorIdentifier'
+                 $info = Get-ItemProperty -LiteralPath $proc.PSPath -Name $names -ErrorAction SilentlyContinue
                  [string]$proc.ID
                  $info.VendorIdentifier
                  $info.ProcessorNameString
