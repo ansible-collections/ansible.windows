@@ -11,7 +11,7 @@ short_description: Downloads file from HTTP, HTTPS, or FTP to node
 description:
 - Downloads files from HTTP, HTTPS, or FTP to the remote server.
 - The remote server I(must) have direct access to the remote resource.
-- For non-Windows targets, use the M(get_url) module instead.
+- For non-Windows targets, use the M(ansible.builtin.get_url) module instead.
 options:
   url:
     description:
@@ -92,8 +92,8 @@ extends_documentation_fragment:
 - ansible.windows.web_request
 
 seealso:
-- module: get_url
-- module: uri
+- module: ansible.builtin.get_url
+- module: ansible.builtin.uri
 - module: ansible.windows.win_uri
 author:
 - Paul Durivage (@angstwad)

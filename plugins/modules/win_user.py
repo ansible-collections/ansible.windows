@@ -10,7 +10,7 @@ module: win_user
 short_description: Manages local Windows user accounts
 description:
      - Manages local Windows user accounts.
-     - For non-Windows targets, use the M(user) module instead.
+     - For non-Windows targets, use the M(ansible.builtin.user) module instead.
 options:
   name:
     description:
@@ -86,7 +86,7 @@ options:
     choices: [ absent, present, query ]
     default: present
 seealso:
-- module: user
+- module: ansible.builtin.user
 - module: ansible.windows.win_domain_membership
 - module: community.windows.win_domain_user
 - module: ansible.windows.win_group

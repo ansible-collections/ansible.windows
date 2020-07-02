@@ -10,7 +10,7 @@ module: win_group
 short_description: Add and remove local groups
 description:
     - Add and remove local groups.
-    - For non-Windows targets, please use the M(group) module instead.
+    - For non-Windows targets, please use the M(ansible.builtin.group) module instead.
 options:
   name:
     description:
@@ -28,7 +28,7 @@ options:
     choices: [ absent, present ]
     default: present
 seealso:
-- module: group
+- module: ansible.builtin.group
 - module: community.windows.win_domain_group
 - module: ansible.windows.win_group_membership
 author:

@@ -10,7 +10,7 @@ module: win_service
 short_description: Manage and query Windows services
 description:
 - Manage and query Windows services.
-- For non-Windows targets, use the M(service) module instead.
+- For non-Windows targets, use the M(ansible.builtin.service) module instead.
 options:
   dependencies:
     description:
@@ -255,7 +255,7 @@ notes:
 - This module historically returning information about the service in its return values. These should be avoided in
   favour of the M(ansible.windows.win_service_info) module.
 seealso:
-- module: service
+- module: ansible.builtin.service
 - module: community.windows.win_nssm
 - module: ansible.windows.win_service_info
 - module: ansible.windows.win_user_right

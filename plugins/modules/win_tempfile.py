@@ -10,7 +10,7 @@ module: win_tempfile
 short_description: Creates temporary files and directories
 description:
   - Creates temporary files and directories.
-  - For non-Windows targets, please use the M(tempfile) module instead.
+  - For non-Windows targets, please use the M(ansible.builtin.tempfile) module instead.
 options:
   state:
     description:
@@ -36,7 +36,7 @@ options:
     type: str
     default: ''
 seealso:
-- module: tempfile
+- module: ansible.builtin.tempfile
 author:
 - Dag Wieers (@dagwieers)
 '''

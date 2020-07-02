@@ -11,14 +11,14 @@ module: win_copy
 short_description: Copies files to remote locations on windows hosts
 description:
 - The C(win_copy) module copies a file on the local box to remote windows locations.
-- For non-Windows targets, use the M(copy) module instead.
+- For non-Windows targets, use the M(ansible.builtin.copy) module instead.
 options:
   content:
     description:
     - When used instead of C(src), sets the contents of a file directly to the
       specified value.
     - This is for simple values, for anything complex or with formatting please
-      switch to the M(template) module.
+      switch to the M(ansible.windows.win_template) module.
     type: str
   decrypt:
     description:
@@ -92,7 +92,7 @@ notes:
   using M(ansible.windows.win_get_url) instead.
 seealso:
 - module: community.general.assemble
-- module: copy
+- module: ansible.builtin.copy
 - module: ansible.windows.win_get_url
 - module: community.windows.win_robocopy
 author:
