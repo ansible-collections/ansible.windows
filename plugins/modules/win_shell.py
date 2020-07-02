@@ -134,7 +134,7 @@ stdout:
     description: The command standard output.
     returned: always
     type: str
-    sample: 'Clustering node rabbit@slave1 with rabbit@master ...'
+    sample: 'Clustering node rabbit@slave1 with rabbit@main ...'
 stderr:
     description: The command standard error.
     returned: always
@@ -144,7 +144,7 @@ cmd:
     description: The command executed by the task.
     returned: always
     type: str
-    sample: 'rabbitmqctl join_cluster rabbit@master'
+    sample: 'rabbitmqctl join_cluster rabbit@main'
 rc:
     description: The command return code (0 means success).
     returned: always
@@ -154,5 +154,5 @@ stdout_lines:
     description: The command standard output split in lines.
     returned: always
     type: list
-    sample: [u'Clustering node rabbit@slave1 with rabbit@master ...']
+    sample: [u'Clustering node rabbit@slave1 with rabbit@main ...']
 '''

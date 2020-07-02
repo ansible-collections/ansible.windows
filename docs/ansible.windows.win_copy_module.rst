@@ -165,7 +165,7 @@ Parameters
                                                                                     </ul>
                                                                             </td>
                                                                 <td>
-                                            <div>If <code>no</code>, it will search for src at originating/master machine.</div>
+                                            <div>If <code>no</code>, it will search for src at originating/controller machine.</div>
                                             <div>If <code>yes</code>, it will go to the remote/target machine for the src.</div>
                                                         </td>
             </tr>
@@ -221,7 +221,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
+
     - name: Copy a single file
       ansible.windows.win_copy:
         src: /srv/myfiles/foo.conf
