@@ -1,0 +1,16 @@
+breaking_changes:
+- setup - Will now add the IPv6 scope on link local addresses for ``ansible_ip_addresses``
+- setup - ``ansible_processor`` will now return the index before the other values to match the POSIX fact behaviour
+- >-
+    setup - Make sure ``ansible_date_time.epoch`` is seconds since EPOCH in UTC to mirror the POSIX facts.
+    The ``ansible_date_time.epoch_local`` contains seconds since EPOCH in the local timezone for backwards compatibility
+
+minor_changes:
+- setup - Refactor to speed up the time taken to run the module
+- setup - Implemented the ``gather_timeout`` option to restrict how long each subset can run for
+- >-
+    setup - Added `ansible_architecture2`` to match the same format that setup on POSIX hosts return.
+    Unlike ``ansible_architecture`` this value is not localized to the host's language settings.
+
+bugfixes:
+- setup - Remove usage of WMI to speed up execution time and work with standard user accounts
