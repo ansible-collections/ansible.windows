@@ -49,23 +49,6 @@ if ($osversion -lt [version]"6.2") {
     $module.Warn("The Windows version '$versionString' will no longer be supported or tested in future releases")
 }
 
-Function New-SessionStateVariable {
-    <#
-    .SYNOPSIS
-    Create a session state variable object that is loadable into a runspace pool.
-    #>
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true)]
-        [String]
-        $Name
-    )
-
-    New-Object -TypeName System.Management.Automation.Runspaces.SessionStateVariableEntry -ArgumentList @(
-        $Name, (Get-Variable -Name $Name -ValueOnly), $null
-    )
-}
-
 Add-CSharpType -AnsibleModule $module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
@@ -672,11 +655,16 @@ $factMeta = @(
     @{
         Subsets = 'facter'
         Code = {
-            $facter = Get-Command -Name facter -CommandType Application -ErrorAction SilentlyContinue
+            # Get-Command can be slow to enumerate the paths, do this ourselves
+            $facterDir = $env:PATH -split ([IO.Path]::PathSeparator) | Where-Object {
+                $facterPath = Join-Path -Path $_ -ChildPath facter.exe
+                Test-Path -LiteralPath $facterPath
+            } | Select-Object -First 1
 
-            if ($facter) {
+            if ($facterDir) {
                 # Get JSON from Facter, and parse it out.
-                $facterOutput = &facter -j
+                $facter = Join-Path -Path $facterDir -ChildPath facter.exe
+                $facterOutput = &$facter -j
                 $facts = "$facterOutput" | ConvertFrom-Json
 
                 ForEach($fact in $facts.PSObject.Properties) {
@@ -859,7 +847,14 @@ $factMeta = @(
 
             $cbsPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'
             $cbsReboot = Test-Path -LiteralPath $cbsPath
-            $rebootPending = $pendingRenames -or $cbsReboot
+
+            $smParams = @{
+                LiteralPath = 'HKLM:\SOFTWARE\Microsoft\ServerManager\ServicingStorage\ServerComponentCache'
+                Name = 'RestartRequired'
+                ErrorAction = 'SilentlyContinue'
+            }
+            $smRestart = (Get-ItemProperty @smParams)."$($smParams.Name)"
+            $rebootPending = $pendingRenames -or $cbsReboot -or $smRestart
 
             # Cannot run Get-CimInstance on non-admin account as it takes 5 seconds to come back with an access denied
             # error. Set the original value to $null and use 'ansible_architecture2' instead.
@@ -872,18 +867,6 @@ $factMeta = @(
 
                 # I don't even know if this even returns anything on Windows, cannot find any documentation for it.
                 $ansibleFacts.ansible_owner_contact = ([string]$win32CS.PrimaryOwnerContact)
-
-                # Only do the CIM check to save time if the rebootPending is not already set.
-                if (-not $rebootPending) {
-                    $serverFeatureParams = @{
-                        ClassName = 'MSFT_ServerManagerTasks'
-                        Namespace = 'root\microsoft\windows\servermanager'
-                        MethodName = 'GetServerFeature'
-                        ErrorAction = 'SilentlyContinue'
-                    }
-                    $featureData = Invoke-CimMethod @serverFeatureParams
-                    $rebootPending = $featureData -and $featureData.RequiresReboot
-                }
             } else {
                 $ansibleFacts.ansible_architecture = $null
                 $ansibleFacts.ansible_owner_contact = ""
@@ -1018,14 +1001,6 @@ $factMeta = @(
     }
 )
 
-$ansibleFacts = [Hashtable]::Synchronized(@{})
-
-$initialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name ansibleFacts))
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name factPath))
-$initialSessionState.Variables.Add((New-SessionStateVariable -Name module))
-$pool = [RunspaceFactory]::CreateRunspacePool(1, $env:NUMBER_OF_PROCESSORS, $initialSessionState, $Host)
-
 $groupedSubsets = @{
     min = [System.Collections.Generic.List[string]]@('date_time','distribution','dns','env','local','platform','powershell_version','user')
     network = [System.Collections.Generic.List[string]]@('all_ipv4_addresses','all_ipv6_addresses','interfaces','windows_domain', 'winrm')
@@ -1081,85 +1056,77 @@ foreach ($item in $gatherSubset) {
 $null = $actualSubset.ExceptWith($excludeSubset)
 $null = $actualSubset.UnionWith($explicitSubset)
 
-$ansibleFacts.gather_subset = $gatherSubset
-$ansibleFacts.module_setup = $true
+$ansibleFacts = @{
+    gather_subset = $gatherSubset
+    module_setup = $true
+}
 if ($measureSubset) {
     $ansibleFacts.measure_info = @{}
 }
-
 $module.Result.ansible_facts = $ansibleFacts
 
-$pool.Open()
-try {
-    $jobs = @(foreach ($meta in $factMeta.GetEnumerator()) {
-        $metaSubsets = [System.Collections.Generic.HashSet[String]]@($meta.Subsets)
+foreach ($meta in $factMeta.GetEnumerator()) {
+    $metaSubsets = [System.Collections.Generic.HashSet[String]]@($meta.Subsets)
 
-        $skip = $true
-        foreach ($subset in $metaSubsets) {
-            if ($actualSubset.Contains($subset)) {
-                $skip = $false
-                break
-            }
+    $skip = $true
+    foreach ($subset in $metaSubsets) {
+        if ($actualSubset.Contains($subset)) {
+            $skip = $false
+            break
         }
+    }
 
-        if ($skip) {
-            continue
-        }
+    if ($skip) {
+        continue
+    }
 
-        $ps = [PowerShell]::Create()
-        $ps.RunspacePool = $pool
+    # Originally tried running in parallel with a runspace pool, it didn't reduce the execution time and just added
+    # more complexity. Keep running each fact sequentially.
+    $ps = [PowerShell]::Create()
 
-        $name = $metaSubsets -join ', '
-        if ($measureSubset) {
-            $null = $ps.AddScript('$subset = $args[0]; $time = Get-Date').AddArgument($name)
-            $null = $ps.AddScript($meta.Code)
-            $null = $ps.AddScript(@'
+    foreach ($varName in @('ansibleFacts', 'factPath', 'module')) {
+        $val = Get-Variable -Name $varName -ValueOnly
+        $null = $ps.AddCommand('Set-Variable').AddParameters(@{Name = $varName; Value = $val})
+    }
+
+    $name = $metaSubsets -join ', '
+    if ($measureSubset) {
+        $null = $ps.AddScript('$subset = $args[0]; $time = Get-Date').AddArgument($name)
+        $null = $ps.AddScript($meta.Code)
+        $null = $ps.AddScript(@'
 $end = (Get-Date) - $time
 $ansibleFacts.measure_info.$subset = $end.TotalSeconds
 '@)
-        } else {
-            $null = $ps.AddScript($meta.Code)
-        }
-
-        [PSCustomObject]@{
-            Name = $name
-            AsyncResult = $ps.BeginInvoke()
-            PowerShell = $ps
-            Timer = [System.Diagnostics.StopWatch]::StartNew()  # Keeps track of how long left to wait for.
-        }
-    })
-
-    foreach ($job in $jobs) {
-        # We need to wait for the timeout specified minus the total time it has currently run for.
-        $waitTime = ($gatherTimeout * 1000) - $job.Timer.Elapsed.TotalMilliseconds
-        $null = $job.AsyncResult.AsyncWaitHandle.WaitOne((0, $waitTime | Measure-Object -Maximum).Maximum)
-        $job.Timer.Stop()
-
-        if ($job.AsyncResult.IsCompleted) {
-            # We don't care about any actual output as each scriptblock sets the ansibleFacts hashtable in the code.
-            try {
-                $null = $job.PowerShell.EndInvoke($job.AsyncResult)
-            } catch {
-                # We want to inner error record not the outer error from .EndInvoke()
-                $errorRecord = $_.Exception.InnerException.ErrorRecord
-                $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
-                $module.Warn("Error when collecting $($job.Name) facts: $err")
-            }
-            $job.PowerShell.Dispose()
-
-            # Make sure we warn on any errors that may have occurred.
-            foreach ($errorRecord in $job.PowerShell.Streams.Error) {
-                $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
-                $module.Warn("Error when collecting $($job.Name) facts: $err")
-            }
-        } else {
-            # Give a best effort chance to stop it, we can't call .Stop() in case it blocks.
-            $null = $job.PowerShell.BeginStop($null, $null)
-            $module.Warn("Failed to collection $($job.Name) due to timeout")
-        }
+    } else {
+        $null = $ps.AddScript($meta.Code)
     }
-} finally {
-    $pool.Dispose()
+
+    $asyncResult = $ps.BeginInvoke()
+    $null = $asyncResult.AsyncWaitHandle.WaitOne($gatherTimeout * 1000)
+
+    if ($asyncResult.IsCompleted) {
+        # We don't care about any actual output as each scriptblock sets the ansibleFacts hashtable in the code.
+        try {
+            $null = $ps.EndInvoke($asyncResult)
+        } catch {
+            # We want to inner error record not the outer error from .EndInvoke()
+            $errorRecord = $_.Exception.InnerException.ErrorRecord
+            $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
+            $module.Warn("Error when collecting $($name) facts: $err")
+        }
+
+        # Make sure we warn on any errors that may have occurred.
+        foreach ($errorRecord in $ps.Streams.Error) {
+            $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
+            $module.Warn("Error when collecting $($name) facts: $err")
+        }
+
+        $ps.Dispose()
+    } else {
+        # Give a best effort chance to stop it, we can't call .Stop() in case it blocks.
+        $null = $ps.BeginStop($null, $null)
+        $module.Warn("Failed to collection $($name) due to timeout")
+    }
 }
 
 $module.ExitJson()
