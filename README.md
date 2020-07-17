@@ -136,17 +136,25 @@ You can run the collection's test suites with the commands:
 
 The current process for publishing new versions of the Windows Core Collection is manual, and requires a user who has access to the `ansible` namespace on Ansible Galaxy and Automation Hub to publish the build artifact.
 
-* Update the CHANGELOG:
-  * Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
+* Update `galaxy.yml` with the new version for the collection.
+* Rebuild the plugin docs:
+    ```bash
+    git clone https://github.com/ansible-network/collection_prep.git /tmp/collection_prep
+    python /tmp/collection_prep/add_docs.py --path ./ --branch-name main
+    rm -rf /tmp/collection_prep
+    ```
+* Update the `CHANGELOG`:
+  * Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed `pip install antsibull-changelog`.
   * Make sure there are fragments for all known changes in `changelogs/fragments`.
+  * Add a new fragment with the header `release_summary` to give a summary on the release.
   * Run `antsibull-changelog release`.
-* Update `galaxy.yml` with the new `version` for the collection.
-* Create a release in GitHub to tag the commit at the version to build.
-* Run the following commands to build and release the new version on Galaxy:
-     ```
-     ansible-galaxy collection build
-     ansible-galaxy collection publish ./ansible-windows-$VERSION_HERE.tar.gz
-     ```
+* Commit the changes and wait for CI to be green
+* Build and publish the collection to Galaxy:
+    ```bash
+    git clone https://github.com/ansible-collections/ansible.windows.git /tmp/ansible.windows
+    ansible-galaxy collection build /tmp/ansible.windows --output-path /tmp/ansible.windows
+    ansible-galaxy collection publish $(find /tmp/ansible.windows -maxdepth 1 -name 'ansible-windows-*.tar.gz') --token <API_KEY>
+    ```
 
 After the version is published, verify it exists on the [Windows Core Collection Galaxy page](https://galaxy.ansible.com/ansible/windows).
 
