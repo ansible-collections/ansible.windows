@@ -9,8 +9,9 @@ releases:
       - setup - Will now add the IPv6 scope on link local addresses for ``ansible_ip_addresses``
       - setup - ``ansible_processor`` will now return the index before the other values
         to match the POSIX fact behaviour
-      - win_find - No longer filters by size on directories, this feature had a lot of bugs,
-        slowed down the module, and not a supported scenario with the ``find`` module.
+      - win_find - No longer filters by size on directories, this feature had a lot
+        of bugs, slowed down the module, and not a supported scenario with the ``find``
+        module.
       bugfixes:
       - Fix detection of DHCP setting so that resetting to DHCP doesn't cause ``CHANGED``
         status on every run. See https://github.com/ansible/ansible/issues/66450
@@ -72,6 +73,13 @@ releases:
       - win_share - Implement append parameter for access rules (https://github.com/ansible/ansible/issues/59237)
       - windows setup - Added ``ansible_os_installation_type`` to denote the type
         of Windows installation the remote host is.
+      release_summary: 'This is the first proper release of the ``ansible.windows``
+        collection on 2020-07-18.
+
+        The changelog describes all changes made to the modules and plugins included
+        in this collection since Ansible 2.9.0.
+
+        '
     fragments:
     - 57804-win_acl-no-longer-needs-SeSecurityPrivilege.yml
     - 58466-FIX_win_find-Bug-Get-FileStat_fails_on_large_files.yml
@@ -81,6 +89,7 @@ releases:
     - server2008-dep.yaml
     - setup-refactor.yml
     - setup.ps1-parity-with-linux-regarding-missing-local-facts-path.yml
+    - summary-0.2.0.yml
     - win_command-encoding.yaml
     - win_dns_client-ipenabled.yaml
     - win_dns_client_ipv6.yaml

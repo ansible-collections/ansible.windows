@@ -8,6 +8,13 @@ Ansible Windows Release Notes
 v0.2.0
 ======
 
+Release Summary
+---------------
+
+This is the first proper release of the ``ansible.windows`` collection on 2020-07-18.
+The changelog describes all changes made to the modules and plugins included in this collection since Ansible 2.9.0.
+
+
 Minor Changes
 -------------
 
