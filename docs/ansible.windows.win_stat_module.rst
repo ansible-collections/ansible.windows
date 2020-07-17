@@ -17,7 +17,7 @@ ansible.windows.win_stat
 Synopsis
 --------
 - Returns information about a Windows file.
-- For non-Windows targets, use the :ref:`stat <stat_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.stat <ansible.builtin.stat_module>` module instead.
 
 
 
@@ -121,8 +121,8 @@ See Also
 
 .. seealso::
 
-   :ref:`stat_module`
-      The official documentation on the **stat** module.
+   :ref:`ansible.builtin.stat_module`
+      The official documentation on the **ansible.builtin.stat** module.
    :ref:`ansible.windows.win_acl_module`
       The official documentation on the **ansible.windows.win_acl** module.
    :ref:`ansible.windows.win_file_module`
@@ -670,5 +670,3 @@ Authors
 - Chris Church (@cchurch)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

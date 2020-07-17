@@ -18,7 +18,7 @@ Synopsis
 --------
 - Downloads files from HTTP, HTTPS, or FTP to the remote server.
 - The remote server *must* have direct access to the remote resource.
-- For non-Windows targets, use the :ref:`get_url <get_url_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.get_url <ansible.builtin.get_url_module>` module instead.
 
 
 
@@ -479,10 +479,10 @@ See Also
 
 .. seealso::
 
-   :ref:`get_url_module`
-      The official documentation on the **get_url** module.
-   :ref:`uri_module`
-      The official documentation on the **uri** module.
+   :ref:`ansible.builtin.get_url_module`
+      The official documentation on the **ansible.builtin.get_url** module.
+   :ref:`ansible.builtin.uri_module`
+      The official documentation on the **ansible.builtin.uri** module.
    :ref:`ansible.windows.win_uri_module`
       The official documentation on the **ansible.windows.win_uri** module.
    :ref:`community.windows.win_inet_proxy_module`
@@ -703,5 +703,3 @@ Authors
 - Takeshi Kuramochi (@tksarah)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

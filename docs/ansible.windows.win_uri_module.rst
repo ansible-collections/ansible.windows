@@ -18,7 +18,7 @@ Synopsis
 --------
 - Interacts with FTP, HTTP and HTTPS web services.
 - Supports Digest, Basic and WSSE HTTP authentication mechanisms.
-- For non-Windows targets, use the :ref:`uri <uri_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.uri <ansible.builtin.uri_module>` module instead.
 
 
 
@@ -494,8 +494,8 @@ See Also
 
 .. seealso::
 
-   :ref:`uri_module`
-      The official documentation on the **uri** module.
+   :ref:`ansible.builtin.uri_module`
+      The official documentation on the **ansible.builtin.uri** module.
    :ref:`ansible.windows.win_get_url_module`
       The official documentation on the **ansible.windows.win_get_url** module.
    :ref:`community.windows.win_inet_proxy_module`
@@ -681,5 +681,3 @@ Authors
 - Dag Wieers (@dagwieers)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

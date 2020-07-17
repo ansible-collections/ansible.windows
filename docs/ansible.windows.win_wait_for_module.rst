@@ -215,8 +215,8 @@ See Also
 
 .. seealso::
 
-   :ref:`wait_for_module`
-      The official documentation on the **wait_for** module.
+   :ref:`ansible.builtin.wait_for_module`
+      The official documentation on the **ansible.builtin.wait_for** module.
    :ref:`community.windows.win_wait_for_process_module`
       The official documentation on the **community.windows.win_wait_for_process** module.
 
@@ -329,5 +329,3 @@ Authors
 - Jordan Borean (@jborean93)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

@@ -18,7 +18,7 @@ Synopsis
 --------
 - The ``win_command`` module takes the command name followed by a list of space-delimited arguments.
 - The given command will be executed on all selected nodes. It will not be processed through the shell, so variables like ``$env:HOME`` and operations like ``"<"``, ``">"``, ``"|"``, and ``";"`` will not work (use the :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` module if you need these features).
-- For non-Windows targets, use the :ref:`command <command_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.command <ansible.builtin.command_module>` module instead.
 
 
 
@@ -145,12 +145,12 @@ See Also
 
 .. seealso::
 
-   :ref:`command_module`
-      The official documentation on the **command** module.
+   :ref:`ansible.builtin.command_module`
+      The official documentation on the **ansible.builtin.command** module.
    :ref:`community.windows.psexec_module`
       The official documentation on the **community.windows.psexec** module.
-   :ref:`raw_module`
-      The official documentation on the **raw** module.
+   :ref:`ansible.builtin.raw_module`
+      The official documentation on the **ansible.builtin.raw** module.
    :ref:`community.windows.win_psexec_module`
       The official documentation on the **community.windows.win_psexec** module.
    :ref:`ansible.windows.win_shell_module`
@@ -162,7 +162,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-
+    
     - name: Save the result of 'whoami' in 'whoami_out'
       ansible.windows.win_command: whoami
       register: whoami_out
@@ -358,5 +358,3 @@ Authors
 - Matt Davis (@nitzmahone)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

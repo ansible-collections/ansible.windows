@@ -17,7 +17,7 @@ ansible.windows.win_tempfile
 Synopsis
 --------
 - Creates temporary files and directories.
-- For non-Windows targets, please use the :ref:`tempfile <tempfile_module>` module instead.
+- For non-Windows targets, please use the :ref:`ansible.builtin.tempfile <ansible.builtin.tempfile_module>` module instead.
 
 
 
@@ -112,8 +112,8 @@ See Also
 
 .. seealso::
 
-   :ref:`tempfile_module`
-      The official documentation on the **tempfile** module.
+   :ref:`ansible.builtin.tempfile_module`
+      The official documentation on the **ansible.builtin.tempfile** module.
 
 
 Examples
@@ -178,5 +178,3 @@ Authors
 - Dag Wieers (@dagwieers)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

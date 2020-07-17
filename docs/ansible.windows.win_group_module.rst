@@ -17,7 +17,7 @@ ansible.windows.win_group
 Synopsis
 --------
 - Add and remove local groups.
-- For non-Windows targets, please use the :ref:`group <group_module>` module instead.
+- For non-Windows targets, please use the :ref:`ansible.builtin.group <ansible.builtin.group_module>` module instead.
 
 
 
@@ -92,8 +92,8 @@ See Also
 
 .. seealso::
 
-   :ref:`group_module`
-      The official documentation on the **group** module.
+   :ref:`ansible.builtin.group_module`
+      The official documentation on the **ansible.builtin.group** module.
    :ref:`community.windows.win_domain_group_module`
       The official documentation on the **community.windows.win_domain_group** module.
    :ref:`ansible.windows.win_group_membership_module`
@@ -131,5 +131,3 @@ Authors
 - Chris Hoffman (@chrishoffman)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

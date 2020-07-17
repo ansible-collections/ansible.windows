@@ -17,7 +17,7 @@ ansible.windows.win_service
 Synopsis
 --------
 - Manage and query Windows services.
-- For non-Windows targets, use the :ref:`service <service_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.service <ansible.builtin.service_module>` module instead.
 
 
 
@@ -556,8 +556,8 @@ See Also
 
 .. seealso::
 
-   :ref:`service_module`
-      The official documentation on the **service** module.
+   :ref:`ansible.builtin.service_module`
+      The official documentation on the **ansible.builtin.service** module.
    :ref:`community.windows.win_nssm_module`
       The official documentation on the **community.windows.win_nssm** module.
    :ref:`ansible.windows.win_service_info_module`
@@ -960,5 +960,3 @@ Authors
 - Chris Hoffman (@chrishoffman)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

@@ -1,8 +1,0 @@
-minor_changes:
-- win_regedit - Use new Ansible.Basic wrapper for better invocation reporting
-
-deprecated_features:
-- >-
-    win_regedit - Deprecated using forward slashes as a path separator, use backslashes to avoid ambiguity between a
-    forward slash in the key name or a forward slash as a path separator. This feature will be removed in a major
-    release after ``2021-07-01``.

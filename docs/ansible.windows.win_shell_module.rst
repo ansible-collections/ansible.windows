@@ -17,7 +17,7 @@ ansible.windows.win_shell
 Synopsis
 --------
 - The :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` module takes the command name followed by a list of space-delimited arguments. It is similar to the :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` module, but runs the command via a shell (defaults to PowerShell) on the target host.
-- For non-Windows targets, use the :ref:`shell <shell_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.shell <ansible.builtin.shell_module>` module instead.
 
 
 
@@ -181,12 +181,12 @@ See Also
 
    :ref:`community.windows.psexec_module`
       The official documentation on the **community.windows.psexec** module.
-   :ref:`raw_module`
-      The official documentation on the **raw** module.
-   :ref:`script_module`
-      The official documentation on the **script** module.
-   :ref:`shell_module`
-      The official documentation on the **shell** module.
+   :ref:`ansible.builtin.raw_module`
+      The official documentation on the **ansible.builtin.raw** module.
+   :ref:`ansible.builtin.script_module`
+      The official documentation on the **ansible.builtin.script** module.
+   :ref:`ansible.builtin.shell_module`
+      The official documentation on the **ansible.builtin.shell** module.
    :ref:`ansible.windows.win_command_module`
       The official documentation on the **ansible.windows.win_command** module.
    :ref:`community.windows.win_psexec_module`
@@ -198,7 +198,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-
+    
     - name: Execute a comand in the remote shell, stdout goes to the specified file on the remote
       ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
 
@@ -412,5 +412,3 @@ Authors
 - Matt Davis (@nitzmahone)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

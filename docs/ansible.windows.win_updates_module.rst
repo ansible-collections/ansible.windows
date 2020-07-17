@@ -213,7 +213,7 @@ Notes
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` must be run by a user with membership in the local Administrators group.
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` will *become* SYSTEM using *runas* unless ``use_scheduled_task`` is ``yes``
-   - By default :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` does not manage reboots, but will signal when a reboot is required with the *reboot_required* return value. :ref:`reboot <reboot_module>` can be used to reboot the host if required in the one task.
+   - By default :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` does not manage reboots, but will signal when a reboot is required with the *reboot_required* return value. *reboot* can be used to reboot the host if required in the one task.
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` can take a significant amount of time to complete (hours, in some cases). Performance depends on many factors, including OS version, number of updates, system load, and update server load.
    - Beware that just after :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` reboots the system, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.
    - More information about PowerShell and how it handles RegEx strings can be found at https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx.
@@ -553,5 +553,3 @@ Authors
 - Matt Davis (@nitzmahone)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

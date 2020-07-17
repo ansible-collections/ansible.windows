@@ -17,8 +17,8 @@ ansible.windows.win_file
 Synopsis
 --------
 - Creates (empty) files, updates file modification stamps of existing files, and can create or remove directories.
-- Unlike :ref:`file <file_module>`, does not modify ownership, permissions or manipulate links.
-- For non-Windows targets, use the :ref:`file <file_module>` module instead.
+- Unlike :ref:`ansible.builtin.file <ansible.builtin.file_module>`, does not modify ownership, permissions or manipulate links.
+- For non-Windows targets, use the :ref:`ansible.builtin.file <ansible.builtin.file_module>` module instead.
 
 
 
@@ -69,7 +69,7 @@ Parameters
                                                                             </td>
                                                                 <td>
                                             <div>If <code>directory</code>, all immediate subdirectories will be created if they do not exist.</div>
-                                            <div>If <code>file</code>, the file will NOT be created if it does not exist, see the <span class='module'>copy</span> or <span class='module'>template</span> module if you want that behavior.</div>
+                                            <div>If <code>file</code>, the file will NOT be created if it does not exist, see the <span class='module'>ansible.windows.win_copy</span> or <span class='module'>ansible.windows.win_template</span> module if you want that behavior.</div>
                                             <div>If <code>absent</code>, directories will be recursively deleted, and files will be removed.</div>
                                             <div>If <code>touch</code>, an empty file will be created if the <code>path</code> does not exist, while an existing file or directory will receive updated file access and modification times (similar to the way <code>touch</code> works from the command line).</div>
                                                         </td>
@@ -84,8 +84,8 @@ See Also
 
 .. seealso::
 
-   :ref:`file_module`
-      The official documentation on the **file** module.
+   :ref:`ansible.builtin.file_module`
+      The official documentation on the **ansible.builtin.file** module.
    :ref:`ansible.windows.win_acl_module`
       The official documentation on the **ansible.windows.win_acl** module.
    :ref:`ansible.windows.win_acl_inheritance_module`
@@ -136,5 +136,3 @@ Authors
 - Jon Hawkesworth (@jhawkesworth)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

@@ -17,7 +17,7 @@ ansible.windows.win_copy
 Synopsis
 --------
 - The ``win_copy`` module copies a file on the local box to remote windows locations.
-- For non-Windows targets, use the :ref:`copy <copy_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.copy <ansible.builtin.copy_module>` module instead.
 
 
 
@@ -67,7 +67,7 @@ Parameters
                                                                                                                                                             </td>
                                                                 <td>
                                             <div>When used instead of <code>src</code>, sets the contents of a file directly to the specified value.</div>
-                                            <div>This is for simple values, for anything complex or with formatting please switch to the <span class='module'>template</span> module.</div>
+                                            <div>This is for simple values, for anything complex or with formatting please switch to the <span class='module'>ansible.windows.win_template</span> module.</div>
                                                         </td>
             </tr>
                                 <tr>
@@ -208,8 +208,8 @@ See Also
 
    :ref:`community.general.assemble_module`
       The official documentation on the **community.general.assemble** module.
-   :ref:`copy_module`
-      The official documentation on the **copy** module.
+   :ref:`ansible.builtin.copy_module`
+      The official documentation on the **ansible.builtin.copy** module.
    :ref:`ansible.windows.win_get_url_module`
       The official documentation on the **ansible.windows.win_get_url** module.
    :ref:`community.windows.win_robocopy_module`
@@ -221,7 +221,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-
+    
     - name: Copy a single file
       ansible.windows.win_copy:
         src: /srv/myfiles/foo.conf
@@ -426,5 +426,3 @@ Authors
 - Jordan Borean (@jborean93)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

@@ -272,7 +272,7 @@ Notes
    - To find Byte Order Marks in files, use ``Format-Hex <file> -Count 16`` on Windows, and use ``od -a -t x1 -N 16 <file>`` on Linux.
    - Beware fetching files from windows machines when creating templates because certain tools, such as Powershell ISE, and regedit's export facility add a Byte Order Mark as the first character of the file, which can cause tracebacks.
    - You can use the :ref:`ansible.windows.win_copy <ansible.windows.win_copy_module>` module with the ``content:`` option if you prefer the template inline, as part of the playbook.
-   - For Linux you can use :ref:`template <template_module>` which uses '\\n' as ``newline_sequence`` by default.
+   - For Linux you can use :ref:`ansible.builtin.template <ansible.builtin.template_module>` which uses '\\n' as ``newline_sequence`` by default.
 
 
 See Also
@@ -282,10 +282,10 @@ See Also
 
    :ref:`ansible.windows.win_copy_module`
       The official documentation on the **ansible.windows.win_copy** module.
-   :ref:`copy_module`
-      The official documentation on the **copy** module.
-   :ref:`template_module`
-      The official documentation on the **template** module.
+   :ref:`ansible.builtin.copy_module`
+      The official documentation on the **ansible.builtin.copy** module.
+   :ref:`ansible.builtin.template_module`
+      The official documentation on the **ansible.builtin.template** module.
 
 
 Examples
@@ -352,5 +352,3 @@ Authors
 - Jon Hawkesworth (@jhawkesworth)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

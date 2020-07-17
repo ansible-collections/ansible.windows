@@ -17,7 +17,7 @@ ansible.windows.win_user
 Synopsis
 --------
 - Manages local Windows user accounts.
-- For non-Windows targets, use the :ref:`user <user_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.user <ansible.builtin.user_module>` module instead.
 
 
 
@@ -280,8 +280,8 @@ See Also
 
 .. seealso::
 
-   :ref:`user_module`
-      The official documentation on the **user** module.
+   :ref:`ansible.builtin.user_module`
+      The official documentation on the **ansible.builtin.user** module.
    :ref:`ansible.windows.win_domain_membership_module`
       The official documentation on the **ansible.windows.win_domain_membership** module.
    :ref:`community.windows.win_domain_user_module`
@@ -522,5 +522,3 @@ Authors
 - Chris Church (@cchurch)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

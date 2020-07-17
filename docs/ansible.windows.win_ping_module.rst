@@ -18,8 +18,7 @@ Synopsis
 --------
 - Checks management connectivity of a windows host.
 - This is NOT ICMP ping, this is just a trivial test module.
-- For non-Windows targets, use the :ref:`ping <ping_module>` module instead.
-- For Network targets, use the :ref:`net_ping <net_ping_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.ping <ansible.builtin.ping_module>` module instead.
 
 
 
@@ -62,8 +61,8 @@ See Also
 
 .. seealso::
 
-   :ref:`ping_module`
-      The official documentation on the **ping** module.
+   :ref:`ansible.builtin.ping_module`
+      The official documentation on the **ansible.builtin.ping** module.
 
 
 Examples
@@ -128,5 +127,3 @@ Authors
 - Chris Church (@cchurch)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

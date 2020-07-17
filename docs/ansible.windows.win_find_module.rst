@@ -18,7 +18,7 @@ Synopsis
 --------
 - Return a list of files based on specified criteria.
 - Multiple criteria are AND'd together.
-- For non-Windows targets, use the :ref:`find <find_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.find <ansible.builtin.find_module>` module instead.
 
 
 
@@ -886,5 +886,3 @@ Authors
 - Jordan Borean (@jborean93)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

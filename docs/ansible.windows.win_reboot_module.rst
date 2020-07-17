@@ -17,7 +17,7 @@ ansible.windows.win_reboot
 Synopsis
 --------
 - Reboot a Windows machine, wait for it to go down, come back up, and respond to commands.
-- For non-Windows targets, use the :ref:`reboot <reboot_module>` module instead.
+- For non-Windows targets, use the :ref:`ansible.builtin.reboot <ansible.builtin.reboot_module>` module instead.
 
 
 
@@ -170,8 +170,8 @@ See Also
 
 .. seealso::
 
-   :ref:`reboot_module`
-      The official documentation on the **reboot** module.
+   :ref:`ansible.builtin.reboot_module`
+      The official documentation on the **ansible.builtin.reboot** module.
 
 
 Examples
@@ -277,5 +277,3 @@ Authors
 - Matt Davis (@nitzmahone)
 
 
-.. hint::
-    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.

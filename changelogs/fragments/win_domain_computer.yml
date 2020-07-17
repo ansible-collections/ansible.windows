@@ -1,7 +1,0 @@
-minor_changes:
-- win_domain_computer - Use new Ansible.Basic wrapper for better invocation reporting
-
-deprecated_features:
-- >-
-    win_domain_computer - Deprecated the undocumented ``log_path`` option. This option will be removed in a major
-    release after ``2022-07-01``.
