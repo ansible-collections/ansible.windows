@@ -19,7 +19,7 @@
     name: '{{test_win_user_right_name}}'
     users: FakeUser
   register: fail_invalid_user
-  failed_when: "'account_name FakeUser is not a valid account, cannot get SID' not in fail_invalid_user.msg"
+  failed_when: fail_invalid_user.msg != "Failed to translate the account 'FakeUser' to a SID"
 
 - name: remove from empty right check
   win_user_right:
@@ -388,3 +388,42 @@
     - set_on_existing_again is not changed
     - set_on_existing_again.removed == []
     - set_on_existing_again.added == []
+
+- name: create test account
+  win_user:
+    name: test ansible
+    password: Password123!
+    state: present
+    groups:
+    - Users
+  register: test_user
+
+- block:
+  - name: add test account to right
+    win_user_right:
+      name: '{{ test_win_user_right_name }}'
+      users:
+      - test ansible
+      action: add
+
+  always:
+  - name: remove test account
+    win_user:
+      name: test ansible
+      state: absent
+
+- name: test that orphaned accounts can be manipulated without a failure
+  win_user_right:
+    name: '{{ test_win_user_right_name }}'
+    users:
+    - Administrators
+    - SYSTEM
+    - Backup Operators
+  register: remove_orphaned_account
+
+- name: assert orphaned account was removed
+  assert:
+    that:
+    - remove_orphaned_account is changed
+    - remove_orphaned_account.added == []
+    - remove_orphaned_account.removed == [ test_user.sid ]

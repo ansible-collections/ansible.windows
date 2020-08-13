@@ -30,6 +30,7 @@ options:
     - Can be set to an empty list with I(action=set) to remove all accounts
       from the right.
     type: list
+    elements: str
     required: yes
   action:
     description:

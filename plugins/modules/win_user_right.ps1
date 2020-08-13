@@ -3,31 +3,30 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.SID
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#Requires -Module Ansible.ModuleUtils.AddType
 
-$ErrorActionPreference = 'Stop'
-
-$params = Parse-Args $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-$diff_mode = Get-AnsibleParam -obj $params -name "_ansible_diff" -type "bool" -default $false
-$_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
-
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$users = Get-AnsibleParam -obj $params -name "users" -type "list" -failifempty $true
-$action = Get-AnsibleParam -obj $params -name "action" -type "str" -default "set" -validateset "add","remove","set"
-
-$result = @{
-    changed = $false
-    added = @()
-    removed = @()
+$spec = @{
+    options = @{
+        name = @{ type = 'str'; required = $true }
+        users = @{ type = 'list'; elements = 'str'; required = $true }
+        action = @{ type = 'str'; choices = 'add', 'remove', 'set'; default = 'set' }
+    }
+    supports_check_mode = $true
 }
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-if ($diff_mode) {
-    $result.diff = @{}
-}
+$name = $module.Params.name
+$users = $module.Params.users
+$action = $module.Params.action
 
-$sec_helper_util = @"
+$module.Result.added = [System.Collections.Generic.List[String]]@()
+$module.Result.removed = [System.Collections.Generic.List[String]]@()
+
+$module.Diff.before = ""
+$module.Diff.after = ""
+
+Add-CSharpType -AnsibleModule $module -References @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -264,86 +263,150 @@ namespace Ansible
         ~LsaRightHelper() { Dispose(); }
     }
 }
-"@
+'@
 
-$original_tmp = $env:TMP
-$env:TMP = $_remote_tmp
-Add-Type -TypeDefinition $sec_helper_util
-$env:TMP = $original_tmp
+Function ConvertFrom-SecurityIdentifier {
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [String]
+        $InputObject
+    )
 
-Function Compare-UserList($existing_users, $new_users) {
-    $added_users = [String[]]@()
-    $removed_users = [String[]]@()
-    if ($action -eq "add") {
-        $added_users = [Linq.Enumerable]::Except($new_users, $existing_users)
-    } elseif ($action -eq "remove") {
-        $removed_users = [Linq.Enumerable]::Intersect($new_users, $existing_users)
-    } else {
-        $added_users = [Linq.Enumerable]::Except($new_users, $existing_users)
-        $removed_users = [Linq.Enumerable]::Except($existing_users, $new_users)
+    process {
+        $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
+
+        try {
+            $sid.Translate([System.Security.Principal.NTAccount]).Value
+        } catch [System.Security.Principal.IdentityNotMappedException] {
+            # The SID isn't valid, just return the raw SID back
+            $sid.Value
+        }
     }
+}
 
-    $change_result = @{
-        added = $added_users
-        removed = $removed_users
+Function ConvertTo-SecurityIdentifier {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
+        Justification="We don't care if converting to a SID fails, just that it failed or not")]
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [String]
+        $InputObject
+    )
+
+    process {
+        # Try parse the raw string as a SID string first.
+        try {
+            $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
+            return $sid
+        } catch {}
+
+        # In the Netlogon form (DOMAIN\user). Check if the domain part is . and convert it to the current hostname.
+        # Otherwise just treat the value as the full username and let Windows parse it.
+        if ($InputObject.Contains('\')) {
+            $nameSplit = $InputObject -split '\\', 2
+            if ($nameSplit[0] -eq '.') {
+                $domain = $env:COMPUTERNAME
+            } else {
+                $domain = $nameSplit[0]
+            }
+            $account = $nameSplit[1]
+
+            # NTAccount fails to find a local group when used with the domain part. First check if the value references
+            # a local group or not
+            if ($domain -eq $env:COMPUTERNAME) {
+                $adsi = [ADSI]("WinNT://$env:COMPUTERNAME,computer")
+                $group = $adsi.psbase.children | Where-Object {
+                    $_.schemaClassName -eq "group" -and $_.Name -eq $account
+                }
+                if ($group) {
+                    $domain = $null
+                }
+            }
+        } else {
+            $domain = $null
+            $account = $InputObject
+        }
+
+        if ($domain) {
+            $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $domain, $account
+        } else {
+            $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $account
+        }
+
+        try {
+            $account.Translate([System.Security.Principal.SecurityIdentifier])
+        } catch [System.Security.Principal.IdentityNotMappedException] {
+            $module.FailJson("Failed to translate the account '$InputObject' to a SID", $_)
+        }
     }
-
-    return $change_result
 }
 
 # C# class we can use to enumerate/add/remove rights
-$lsa_helper = New-Object -TypeName Ansible.LsaRightHelper
+$lsaHelper = New-Object -TypeName Ansible.LsaRightHelper
+$userSids = [String[]]@($users | ConvertTo-SecurityIdentifier | ForEach-Object { $_.Value })
 
-$new_users = [System.Collections.ArrayList]@()
-foreach ($user in $users) {
-    $user_sid = Convert-ToSID -account_name $user
-    $new_users.Add($user_sid) > $null
-}
-$new_users = [String[]]$new_users.ToArray()
 try {
-    $existing_users = $lsa_helper.EnumerateAccountsWithUserRight($name)
+    $existingSids = $lsaHelper.EnumerateAccountsWithUserRight($name)
 } catch [ArgumentException] {
-    Fail-Json -obj $result -message "the specified right $name is not a valid right"
+    $module.FailJson("the specified right $name is not a valid right", $_)
 } catch {
-    Fail-Json -obj $result -message "failed to enumerate existing accounts with right: $($_.Exception.Message)"
+    $module.FailJson("failed to enumerate eixsting accounts with the right $($name): $($_.Exception.Message)", $_)
 }
 
-$change_result = Compare-UserList -existing_users $existing_users -new_user $new_users
-if (($change_result.added.Length -gt 0) -or ($change_result.removed.Length -gt 0)) {
-    $result.changed = $true
-    $diff_text = "[$name]`n"
-
-    # used in diff mode calculation
-    $new_user_list = [System.Collections.ArrayList]$existing_users
-    foreach ($user in $change_result.removed) {
-        if (-not $check_mode) {
-            $lsa_helper.RemovePrivilege($user, $name)
-        }
-        $user_name = Convert-FromSID -sid $user
-        $result.removed += $user_name
-        $diff_text += "-$user_name`n"
-        $new_user_list.Remove($user) > $null
-    }
-    foreach ($user in $change_result.added) {
-        if (-not $check_mode) {
-            $lsa_helper.AddPrivilege($user, $name)
-        }
-        $user_name = Convert-FromSID -sid $user
-        $result.added += $user_name
-        $diff_text += "+$user_name`n"
-        $new_user_list.Add($user) > $null
-    }
-
-    if ($diff_mode) {
-        if ($new_user_list.Count -eq 0) {
-            $diff_text = "-$diff_text"
-        } else {
-            if ($existing_users.Count -eq 0) {
-                $diff_text = "+$diff_text"
-            }
-        }
-        $result.diff.prepared = $diff_text
-    }
+$module.Diff.before = @{
+    $name = @($existingSids | ConvertFrom-SecurityIdentifier)
 }
 
-Exit-Json $result
+$toAdd = [String[]]@()
+$toRemove = [String[]]@()
+if ($action -eq 'add') {
+    $toAdd = [Linq.Enumerable]::Except($userSids, $existingSids)
+
+} elseif ($action -eq 'remove') {
+    $toRemove = [Linq.Enumerable]::Intersect($userSids, $existingSids)
+
+} else {
+    $toAdd = [Linq.Enumerable]::Except($userSids, $existingSids)
+    $toRemove = [Linq.Enumerable]::Except($existingSids, $userSids)
+}
+
+$newSids = [System.Collections.Generic.List[String]]@($existingSids | ConvertFrom-SecurityIdentifier)
+foreach ($sid in $toAdd) {
+    $sidName = ConvertFrom-SecurityIdentifier -InputObject $sid
+
+    if (-not $module.CheckMode) {
+        try {
+            $lsaHelper.AddPrivilege($sid, $name)
+        } catch [System.ComponentModel.Win32Exception] {
+            $msg = "Failed to add account $sidName to right $name"
+            $module.FailJson("$($msg): $($_.Exception.Message)", $_)
+        }
+    }
+
+    $module.Result.added.Add($sidName)
+    $newSids.Add($sidName)
+    $module.Result.changed = $true
+}
+
+foreach ($sid in $toRemove) {
+    $sidName = ConvertFrom-SecurityIdentifier -InputObject $sid
+
+    if (-not $module.CheckMode) {
+        try {
+            $lsaHelper.RemovePrivilege($sid, $name)
+        } catch [System.ComponentModel.Win32Exception] {
+            $msg = "Failed to remove account $sidName from right $name"
+            $module.FailJson("$($msg): $($_.Exception.Message)", $_)
+        }
+    }
+
+    $module.Result.removed.Add($sidName)
+    $null = $newSids.Remove($sidName)
+    $module.Result.changed = $true
+}
+
+$module.Diff.after = @{
+    $name = $newSids
+}
+
+$module.ExitJson()
