@@ -9,82 +9,98 @@ DOCUMENTATION = r'''
 module: win_user
 short_description: Manages local Windows user accounts
 description:
-     - Manages local Windows user accounts.
-     - For non-Windows targets, use the M(ansible.builtin.user) module instead.
+- Manages local Windows user accounts.
+- For non-Windows targets, use the M(ansible.builtin.user) module instead.
 options:
-  name:
-    description:
-      - Name of the user to create, remove or modify.
-    type: str
-    required: yes
-  fullname:
-    description:
-      - Full name of the user.
-    type: str
-  description:
-    description:
-      - Description of the user.
-    type: str
-  password:
-    description:
-      - Optionally set the user's password to this (plain text) value.
-    type: str
-  update_password:
-    description:
-      - C(always) will update passwords if they differ.  C(on_create) will
-        only set the password for newly created users.
-    type: str
-    choices: [ always, on_create ]
-    default: always
-  password_expired:
-    description:
-      - C(yes) will require the user to change their password at next login.
-      - C(no) will clear the expired password flag.
-    type: bool
-  password_never_expires:
-    description:
-      - C(yes) will set the password to never expire.
-      - C(no) will allow the password to expire.
-    type: bool
-  user_cannot_change_password:
-    description:
-      - C(yes) will prevent the user from changing their password.
-      - C(no) will allow the user to change their password.
-    type: bool
   account_disabled:
     description:
-      - C(yes) will disable the user account.
-      - C(no) will clear the disabled flag.
+    - C(yes) will disable the user account.
+    - C(no) will clear the disabled flag.
     type: bool
   account_locked:
     description:
-      - C(no) will unlock the user account if locked.
-    choices: [ 'no' ]
+    - Only C(no) can be set and it will unlock the user account if locked.
+    type: bool
+  description:
+    description:
+    - Description of the user.
+    type: str
+  fullname:
+    description:
+    - Full name of the user.
+    type: str
   groups:
     description:
-      - Adds or removes the user from this comma-separated list of groups,
-        depending on the value of I(groups_action).
-      - When I(groups_action) is C(replace) and I(groups) is set to the empty
-        string ('groups='), the user is removed from all groups.
+    - Adds or removes the user from this comma-separated list of groups, depending on the value of I(groups_action).
+    - When I(groups_action) is C(replace) and I(groups) is set to the empty string ('groups='), the user is removed
+      from all groups.
+    type: list
+    elements: str
   groups_action:
     description:
-      - If C(add), the user is added to each group in I(groups) where not
-        already a member.
-      - If C(replace), the user is added as a member of each group in
-        I(groups) and removed from any other groups.
-      - If C(remove), the user is removed from each group in I(groups).
+    - If C(add), the user is added to each group in I(groups) where not already a member.
+    - If C(replace), the user is added as a member of each group in I(groups) and removed from any other groups.
+    - If C(remove), the user is removed from each group in I(groups).
     type: str
     choices: [ add, replace, remove ]
     default: replace
+  home_directory:
+    description:
+    - The designated home directory of the user.
+    type: str
+    version_added: 1.0.0
+  login_script:
+    description:
+    - The login script of the user.
+    type: str
+    version_added: 1.0.0
+  name:
+    description:
+    - Name of the user to create, remove or modify.
+    type: str
+    required: yes
+  password:
+    description:
+    - Optionally set the user's password to this (plain text) value.
+    type: str
+  password_expired:
+    description:
+    - C(yes) will require the user to change their password at next login.
+    - C(no) will clear the expired password flag.
+    type: bool
+  password_never_expires:
+    description:
+    - C(yes) will set the password to never expire.
+    - C(no) will allow the password to expire.
+    type: bool
+  profile:
+    description:
+    - The profile path of the user.
+    type: str
+    version_added: 1.0.0
   state:
     description:
-      - When C(absent), removes the user account if it exists.
-      - When C(present), creates or updates the user account.
-      - When C(query) (new in 1.9), retrieves the user account details
-        without making any changes.
+    - When C(absent), removes the user account if it exists.
+    - When C(present), creates or updates the user account.
+    - When C(query), retrieves the user account details without making any changes.
     type: str
     choices: [ absent, present, query ]
     default: present
+  update_password:
+    description:
+    - C(always) will update passwords if they differ.
+    - C(on_create) will only set the password for newly created users.
+    type: str
+    choices: [ always, on_create ]
+    default: always
+  user_cannot_change_password:
+    description:
+    - C(yes) will prevent the user from changing their password.
+    - C(no) will allow the user to change their password.
+    type: bool
+notes:
+- The return values are based on the user object after the module options have been set. When running in check mode
+  the values will still reflect the existing user settings and not what they would have been changed to.
 seealso:
 - module: ansible.builtin.user
 - module: ansible.windows.win_domain_membership
@@ -93,8 +109,8 @@ seealso:
 - module: ansible.windows.win_group_membership
 - module: community.windows.win_user_profile
 author:
-    - Paul Durivage (@angstwad)
-    - Chris Church (@cchurch)
+- Paul Durivage (@angstwad)
+- Chris Church (@cchurch)
 '''
 
 EXAMPLES = r'''

@@ -1,54 +1,20 @@
-# test code for the win_user module
 # (c) 2014, Chris Church <chris@ninemoreminutes.com>
 
-# This file is part of Ansible
-#
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+- name: test create user (check mode)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    password: '{{ test_win_user_password }}'
+    fullname: Test User
+    description: Test user account
+    groups: Guests
+  check_mode: yes
+  register: win_user_create_result_check
 
-- name: remove existing test user if present
-  win_user: name="{{ test_win_user_name }}" state="absent"
-  register: win_user_remove_result
-
-- name: check user removal result
+- name: assert test create user (check mode)
   assert:
     that:
-      - "win_user_remove_result.name"
-      - "win_user_remove_result.state == 'absent'"
-
-- name: try to remove test user again
-  win_user: name="{{ test_win_user_name }}" state="absent"
-  register: win_user_remove_result_again
-
-- name: check user removal result again
-  assert:
-    that:
-      - "win_user_remove_result_again is not changed"
-      - "win_user_remove_result_again.name"
-      - "win_user_remove_result_again.msg"
-      - "win_user_remove_result.state == 'absent'"
-
-- name: test missing user with query state
-  win_user: name="{{ test_win_user_name }}" state="query"
-  register: win_user_missing_query_result
-
-- name: check missing query result
-  assert:
-    that:
-      - "win_user_missing_query_result is not changed"
-      - "win_user_missing_query_result.name"
-      - "win_user_missing_query_result.msg"
-      - "win_user_missing_query_result.state == 'absent'"
+    - win_user_create_result_check is changed
+    - win_user_create_result_check.state == 'present'
 
 - name: test create user
   win_user: name="{{ test_win_user_name }}" password="{{ test_win_user_password }}" fullname="Test User" description="Test user account" groups="Guests"
@@ -64,27 +30,52 @@
       - "win_user_create_result.path"
       - "win_user_create_result.state == 'present'"
 
+- name: test create user (idempotent)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    password: '{{ test_win_user_password }}'
+    fullname: Test User
+    description: Test user account
+    groups: Guests
+  register: win_user_create_result_again
+
+- name: assert test create user (idempotent)
+  assert:
+    that:
+    - not win_user_create_result_again is changed
+
+- name: update user full name and description (check mode)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    fullname: Test user
+    description: Test User Account
+    groups: []
+  check_mode: yes
+  register: win_user_update_result_check
+
+- name: assert update user full name and description (check mode)
+  assert:
+    that:
+    - win_user_update_result_check is changed
+    - win_user_update_result_check.fullname == 'Test User'
+    - win_user_update_result_check.description == 'Test user account'
+    - win_user_update_result_check.groups | length == 1
+
 - name: update user full name and description
-  win_user: name="{{ test_win_user_name }}" fullname="Test Ansible User" description="Test user account created by Ansible" groups=""
+  win_user:
+    name: '{{ test_win_user_name }}'
+    fullname: Test user
+    description: Test User Account
+    groups: []
   register: win_user_update_result
 
 - name: check full name and description update result
   assert:
     that:
-      - "win_user_update_result is changed"
-      - "win_user_update_result.fullname == 'Test Ansible User'"
-      - "win_user_update_result.description == 'Test user account created by Ansible'"
-
-- name: update user full name and description again with same values
-  win_user: name="{{ test_win_user_name }}" fullname="Test Ansible User" description="Test user account created by Ansible"
-  register: win_user_update_result_again
-
-- name: check full name and description result again
-  assert:
-    that:
-      - "win_user_update_result_again is not changed"
-      - "win_user_update_result_again.fullname == 'Test Ansible User'"
-      - "win_user_update_result_again.description == 'Test user account created by Ansible'"
+    - win_user_update_result is changed
+    - win_user_update_result.fullname == 'Test user'
+    - win_user_update_result.description == 'Test User Account'
+    - win_user_update_result.groups == []
 
 - name: test again with no options or changes
   win_user: name="{{ test_win_user_name }}"
@@ -105,11 +96,23 @@
       - "win_user_query_result is not changed"
       - "win_user_query_result.state == 'present'"
       - "win_user_query_result.name == '{{ test_win_user_name }}'"
-      - "win_user_query_result.fullname == 'Test Ansible User'"
-      - "win_user_query_result.description == 'Test user account created by Ansible'"
+      - "win_user_query_result.fullname == 'Test user'"
+      - "win_user_query_result.description == 'Test User Account'"
       - "win_user_query_result.path"
       - "win_user_query_result.sid"
       - "win_user_query_result.groups == []"
+
+- name: change user password (check mode)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    password: '{{ test_win_user_password2 }}'
+  check_mode: yes
+  register: win_user_password_result_check
+
+- name: assert change user password (check mode)
+  assert:
+    that:
+    - win_user_password_result_check is changed
 
 - name: change user password
   win_user: name="{{ test_win_user_name }}" password="{{ test_win_user_password2 }}"
@@ -277,6 +280,20 @@
       - "not win_user_clear_account_locked_result.account_locked"
   when: "win_user_account_locked_result.account_locked"
 
+- name: assign test user to a group (check mode)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    groups:
+    - Users
+  check_mode: yes
+  register: win_user_replace_group_result_check
+
+- name: assert assign test user to a group (check mode)
+  assert:
+    that:
+    - win_user_replace_group_result_check is changed
+    - win_user_replace_group_result_check.groups == []
+
 - name: assign test user to a group
   win_user: name="{{ test_win_user_name }}" groups="Users"
   register: win_user_replace_groups_result
@@ -406,17 +423,53 @@
       - "win_user_invalid_group_result.msg"
       - win_user_invalid_group_result.msg is match("group 'Userz' not found")
 
-- name: remove test user when finished
-  win_user: name="{{ test_win_user_name }}" state="absent"
-  register: win_user_final_remove_result
+- name: remove existing test user if present (check mode)
+  win_user:
+    name: '{{ test_win_user_name }}'
+    state: absent
+  check_mode: yes
+  register: win_user_remove_result_check
 
-- name: check final user removal result
+- name: assert remove existing test user if present (check mode)
   assert:
     that:
-      - "win_user_final_remove_result is changed"
-      - "win_user_final_remove_result.name"
-      - "win_user_final_remove_result.msg"
-      - "win_user_final_remove_result.state == 'absent'"
+    - win_user_remove_result_check is changed
+    - win_user_remove_result_check.state == 'absent'
+
+- name: remove existing test user if present
+  win_user: name="{{ test_win_user_name }}" state="absent"
+  register: win_user_remove_result
+
+- name: check user removal result
+  assert:
+    that:
+      - win_user_remove_result is changed
+      - "win_user_remove_result.name"
+      - "win_user_remove_result.state == 'absent'"
+
+- name: try to remove test user again
+  win_user: name="{{ test_win_user_name }}" state="absent"
+  register: win_user_remove_result_again
+
+- name: check user removal result again
+  assert:
+    that:
+      - "win_user_remove_result_again is not changed"
+      - "win_user_remove_result_again.name"
+      - "win_user_remove_result_again.msg"
+      - "win_user_remove_result.state == 'absent'"
+
+- name: test missing user with query state
+  win_user: name="{{ test_win_user_name }}" state="query"
+  register: win_user_missing_query_result
+
+- name: check missing query result
+  assert:
+    that:
+      - "win_user_missing_query_result is not changed"
+      - "win_user_missing_query_result.name"
+      - "win_user_missing_query_result.msg"
+      - "win_user_missing_query_result.state == 'absent'"
 
 - name: test removed user with query state
   win_user: name="{{ test_win_user_name }}" state="query"
