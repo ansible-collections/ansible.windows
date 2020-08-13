@@ -1,0 +1,3 @@
+minor_changes:
+- win_user_right - Refactored to use ``Ansible.Basic.AnsibleModule`` for better module invocation reporting
+- win_user_right - Improved error messages to show what right and account an operation failed on
