@@ -1,0 +1,11 @@
+minor_changes:
+- win_user - Added check mode support
+- win_user - Added diff mode support
+- win_user - Use new ``Ansible.Basic.AnsibleModule`` wrapper for better invocation reporting
+- win_user - Added the ``home_directory`` option
+- win_user - Added the ``login_script`` option
+- win_user - Added the ``profile`` option
+
+breaking_changes:
+- win_user - Change idempotency checks for ``fullname`` to be case sensitive
+- win_user - Change idempotency checks for ``description`` to be case sensitive

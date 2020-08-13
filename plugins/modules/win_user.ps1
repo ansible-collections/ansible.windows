@@ -4,52 +4,163 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.AccessToken
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-########
+$spec = @{
+    options = @{
+        account_disabled = @{ type = 'bool' }
+        account_locked = @{ type = 'bool' }
+        description = @{ type = 'str' }
+        fullname = @{ type = 'str' }
+        groups = @{ type = 'list'; elements = 'str' }
+        groups_action = @{ type = 'str'; choices = 'add', 'remove', 'replace'; default = 'replace' }
+        home_directory = @{ type = 'str' }
+        login_script = @{ type = 'str' }
+        name = @{ type = 'str'; required = $true }
+        password = @{ type = 'str'; no_log = $true }
+        password_expired = @{ type = 'bool' }
+        password_never_expires = @{ type = 'bool' }
+        profile = @{ type = 'str' }
+        state = @{ type = 'str'; choices = 'present', 'absent', 'query'; default = 'present' }
+        update_password = @{ type = 'str'; choices = 'always', 'on_create'; default = 'always' }
+        user_cannot_change_password = @{ type = 'bool' }
+
+    }
+    supports_check_mode = $false
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$accountDisabled = $module.Params.account_disabled
+$accountLocked = $module.Params.account_locked
+$description = $module.Params.description
+$fullname = $module.Params.fullname
+$groups = $module.Params.groups
+$groupsAction = $module.Params.groups_action
+$homeDirectory = $module.Params.home_directory
+$loginScript = $module.Params.login_script
+$name = $module.Params.name
+$password = $module.Params.password
+$passwordExpired = $module.Params.password_expired
+$passwordNeverExpires = $module.Params.password_never_expires
+$userProfile = $module.Params.profile
+$state = $module.Params.state
+$updatePassword = $module.Params.update_password
+$userCannotChangePassword = $module.Params.user_cannot_change_password
+
+$module.Diff.before = ""
+$module.Diff.after = ""
+
+if ($accountLocked -eq $true) {
+    $module.FailJson("account_locked must be set to 'no' if provided")
+}
+
 $ADS_UF_PASSWD_CANT_CHANGE = 64
 $ADS_UF_DONT_EXPIRE_PASSWD = 65536
+$ADSI = [ADSI]"WinNT://$env:COMPUTERNAME"
 
-$adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
+Function Get-AnsibleLocalGroup {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $Name
+    )
 
-function Get-User($user) {
-    $adsi.Children | Where-Object {$_.SchemaClassName -eq 'user' -and $_.Name -eq $user }
-    return
-}
-
-function Get-UserFlag($user, $flag) {
-    If ($user.UserFlags[0] -band $flag) {
-        $true
-    }
-    Else {
-        $false
+    $ADSI.Children | Where-Object {
+        $_.Schema -eq 'Group' -and $_.Name -eq $Name
     }
 }
 
-function Set-UserFlag($user, $flag) {
-    $user.UserFlags = ($user.UserFlags[0] -BOR $flag)
+Function Get-AnsibleLocalUser {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $Name
+    )
+
+    $ADSI.Children | Where-Object {
+        $_.SchemaClassName -eq 'User' -and $_.Name -eq $Name
+
+    } | ForEach-Object -Process {
+        $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $_.ObjectSid.Value, 0
+        $flags = $_.UserFlags.Value
+
+        [PSCustomObject]@{
+            Name = $_.Name.Value
+            FullName = $_.FullName.Value
+            Path = $_.Path
+            Description = $_.Description.Value
+            HomeDirectory = $_.HomeDirectory.Value
+            LoginScript = $_.LoginScript.Value
+            PasswordExpired = [bool]$_.PasswordExpired.Value
+            PasswordNeverExpires = [bool]($flags -band $ADS_UF_DONT_EXPIRE_PASSWD)
+            Profile = $_.Profile.Value
+            UserCannotChangePassword = [bool]($flags -band $ADS_UF_PASSWD_CANT_CHANGE)
+            AccountDisabled = $_.AccountDisabled
+            IsAccountLocked = $_.IsAccountLocked
+            SecurityIdentifier = $sid
+            Groups = @($_.Groups() | ForEach-Object -Process {
+                [PSCustomObject]@{
+                    Name = $_.GetType().InvokeMember('Name', 'GetProperty', $null, $_, $null)
+                    Path = $_.GetType().InvokeMember('ADsPath', 'GetProperty', $null, $_, $null)
+                }
+            })
+            BaseObject = $_
+        }
+    }
 }
 
-function Clear-UserFlag($user, $flag) {
-    $user.UserFlags = ($user.UserFlags[0] -BXOR $flag)
-}
+Function Get-UserDiff {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [AllowNull()]
+        $User
+    )
 
-function Get-Group($grp) {
-    $adsi.Children | Where-Object { $_.SchemaClassName -eq 'Group' -and $_.Name -eq $grp }
-    return
+    if (-not $User) {
+        ""
+
+    } else {
+        @{
+            account_disabled = $User.AccountDisabled
+            account_locked = $User.IsAccountLocked
+            description = $User.Description
+            fullname = $User.FullName
+            groups = [System.Collections.Generic.List[String]]@($User.Groups.Name)
+            home_directory = $User.HomeDirectory
+            login_script = $User.LoginScript
+            name = $User.Name
+            password = 'REDACTED'
+            password_expired = $User.PasswordExpired
+            password_never_expires = $User.PasswordNeverExpires
+            profile = $User.Profile
+            user_cannot_change_password = $User.UserCannotChangePassword
+        }
+    }
 }
 
 Function Test-LocalCredential {
-    param([String]$Username, [String]$Password)
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $Username,
+
+        [Parameter(Mandatory=$true)]
+        [String]
+        $Password
+    )
 
     try {
         $handle = [Ansible.AccessToken.TokenUtil]::LogonUser($Username, $null, $Password, "Network", "Default")
         $handle.Dispose()
-        $valid_credentials = $true
+        $isValid = $true
     } catch [Ansible.AccessToken.Win32Exception] {
         # following errors indicate the creds are correct but the user was
         # unable to log on for other reasons, which we don't care about
-        $success_codes = @(
+        $successCodes = @(
             0x0000052F,  # ERROR_ACCOUNT_RESTRICTION
             0x00000530,  # ERROR_INVALID_LOGON_HOURS
             0x00000531,  # ERROR_INVALID_WORKSTATION
@@ -58,216 +169,226 @@ Function Test-LocalCredential {
 
         if ($_.Exception.NativeErrorCode -eq 0x0000052E) {
             # ERROR_LOGON_FAILURE - the user or pass was incorrect
-            $valid_credentials = $false
-        } elseif ($_.Exception.NativeErrorCode -in $success_codes) {
-            $valid_credentials = $true
+            $isValid = $false
+        } elseif ($_.Exception.NativeErrorCode -in $successCodes) {
+            $isValid = $true
         } else {
             # an unknown failure, reraise exception
             throw $_
         }
     }
-    return $valid_credentials
+
+    $isValid
 }
 
-########
+$user = Get-AnsibleLocalUser -Name $name
+$module.Diff.before = Get-UserDiff -User $user
 
-$params = Parse-Args $args;
+if ($state -eq 'present') {
+    if (-not $user) {
+        $module.Diff.after = @{name = $name}
 
-$result = @{
-    changed = $false
-};
-
-$username = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$fullname = Get-AnsibleParam -obj $params -name "fullname" -type "str"
-$description = Get-AnsibleParam -obj $params -name "description" -type "str"
-$password = Get-AnsibleParam -obj $params -name "password" -type "str"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present","absent","query"
-$update_password = Get-AnsibleParam -obj $params -name "update_password" -type "str" -default "always" -validateset "always","on_create"
-$password_expired = Get-AnsibleParam -obj $params -name "password_expired" -type "bool"
-$password_never_expires = Get-AnsibleParam -obj $params -name "password_never_expires" -type "bool"
-$user_cannot_change_password = Get-AnsibleParam -obj $params -name "user_cannot_change_password" -type "bool"
-$account_disabled = Get-AnsibleParam -obj $params -name "account_disabled" -type "bool"
-$account_locked = Get-AnsibleParam -obj $params -name "account_locked" -type "bool"
-$groups = Get-AnsibleParam -obj $params -name "groups"
-$groups_action = Get-AnsibleParam -obj $params -name "groups_action" -type "str" -default "replace" -validateset "add","remove","replace"
-
-If ($null -ne $account_locked -and $account_locked) {
-    Fail-Json $result "account_locked must be set to 'no' if provided"
-}
-
-If ($null -ne $groups) {
-    If ($groups -is [System.String]) {
-        [string[]]$groups = $groups.Split(",")
-    }
-    ElseIf ($groups -isnot [System.Collections.IList]) {
-        Fail-Json $result "groups must be a string or array"
-    }
-    $groups = $groups | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ }
-    If ($null -eq $groups) {
-        $groups = @()
-    }
-}
-
-$user_obj = Get-User $username
-
-If ($state -eq 'present') {
-    # Add or update user
-    try {
-        If (-not $user_obj) {
-            $user_obj = $adsi.Create("User", $username)
-            If ($null -ne $password) {
-                $user_obj.SetPassword($password)
-            }
-            $user_obj.SetInfo()
-            $result.changed = $true
+        $userAdsi = $ADSI.Create('User', $name)
+        if ($null -ne $password) {
+            $userAdsi.SetPassword($password)
+            $module.Diff.after.password = 'REDACTED'
         }
-        ElseIf (($null -ne $password) -and ($update_password -eq 'always')) {
+
+        if (-not $module.CheckMode) {
+            $userAdsi.SetInfo()
+            $user = Get-AnsibleLocalUser -Name $name
+        }
+
+        $module.Result.changed = $true
+    }
+
+    # When in check mode and a new user was created, $user will still be $null
+    if (-not $user) {
+        $module.Diff.after = Get-UserDiff -User $user
+
+        if ($null -ne $password -and $updatePassword -eq 'always') {
             # ValidateCredentials will fail if either of these are true- just force update...
-            If($user_obj.AccountDisabled -or $user_obj.PasswordExpired) {
-                $password_match = $false
-            }
-            Else {
+            if ($user.AccountDisabled -or $user.PasswordExpired) {
+                $passwordMatch = $false
+
+            } else {
                 try {
-                    $password_match = Test-LocalCredential -Username $username -Password $password
+                    $passwordMatch = Test-LocalCredential -Username $user.Name -Password $password
                 } catch [System.ComponentModel.Win32Exception] {
-                    Fail-Json -obj $result -message "Failed to validate the user's credentials: $($_.Exception.Message)"
+                    $module.FailJson("Failed to validate the user's credentials: $($_.Exception.Message)", $_)
                 }
             }
 
-            If (-not $password_match) {
-                $user_obj.SetPassword($password)
-                $result.changed = $true
+            if (-not $passwordMatch) {
+                if (-not $module.CheckMode) {
+                    $user.BaseObject.SetPassword($password)
+                }
+                $module.Result.changed = $true
+                $module.Diff.after.password = 'CHANGED REDACTED'
             }
         }
-        If (($null -ne $fullname) -and ($fullname -ne $user_obj.FullName[0])) {
-            $user_obj.FullName = $fullname
-            $result.changed = $true
+
+        if ($null -ne $accountDisabled -and $accountDisabled -ne $user.AccountDisabled) {
+            $user.BaseObject.AccountDisabled = $accountDisabled
+            $module.Result.changed = $true
+            $module.Diff.after.account_disabled = $accountDisabled
         }
-        If (($null -ne $description) -and ($description -ne $user_obj.Description[0])) {
-            $user_obj.Description = $description
-            $result.changed = $true
+
+        if ($null -ne $accountLocked -and $accountLocked -ne $user.IsAccountLocked) {
+            $user.BaseObject.IsAccountLocked = $accountLocked
+            $module.Result.changed = $true
+            $module.Diff.after.account_locked = $accountLocked
         }
-        If (($null -ne $password_expired) -and ($password_expired -ne ($user_obj.PasswordExpired | ConvertTo-Bool))) {
-            $user_obj.PasswordExpired = If ($password_expired) { 1 } Else { 0 }
-            $result.changed = $true
+
+        if ($null -ne $fullname -and $fullname -cne $user.FullName) {
+            $user.BaseObject.FullName = $fullname
+            $module.Result.changed = $true
+            $module.Diff.after.fullname = $fullname
         }
-        If (($null -ne $password_never_expires) -and ($password_never_expires -ne (Get-UserFlag $user_obj $ADS_UF_DONT_EXPIRE_PASSWD))) {
-            If ($password_never_expires) {
-                Set-UserFlag $user_obj $ADS_UF_DONT_EXPIRE_PASSWD
+
+        if ($null -ne $description -and $description -cne $user.Description) {
+            $user.BaseObject.Description = $description
+            $module.Result.changed = $true
+            $module.Diff.after.description = $description
+        }
+
+        if ($null -ne $homeDirectory -and $homeDirectory -ne $user.HomeDirectory) {
+            $user.BaseObject.HomeDirectory = $homeDirectory
+            $module.Result.changed = $true
+            $module.Diff.after.home_directory = $homeDirectory
+        }
+
+        if ($null -ne $loginScript -and $loginScript -ne $user.LoginScript) {
+            $user.BaseObject.LoginScript = $loginScript
+            $module.Result.changed = $true
+            $module.Diff.after.login_script = $loginScript
+        }
+
+        if ($null -ne $passwordExpired -and $passwordExpired -ne $user.PasswordExpired) {
+            $user.BaseObject.PasswordExpired = [int]$passwordExpired
+            $module.Result.changed = $true
+            $module.Diff.after.password_expired = $passwordExpired
+        }
+
+        if ($null -ne $passwordNeverExpires -and $passwordNeverExpires -ne $user.PasswordNeverExpires) {
+            if ($passwordNeverExpires) {
+                $newFlags = $user.BaseObject.UserFlags.Value -bor $ADS_UF_DONT_EXPIRE_PASSWD
+            } else {
+                $newFlags = $user.BaseObject.UserFlags.Value -bxor $ADS_UF_DONT_EXPIRE_PASSWD
             }
-            Else {
-                Clear-UserFlag $user_obj $ADS_UF_DONT_EXPIRE_PASSWD
+            $user.BaseObject.UserFlags = $newFlags
+            $module.Result.changed = $true
+            $module.Diff.after.password_never_expires = $passwordNeverExpires
+        }
+
+        if ($null -ne $userProfile -and $userProfile -ne $user.Profile) {
+            $user.BaseObject.Profile = $userProfile
+            $module.Result.changed = $true
+            $module.Diff.after.profile = $userProfile
+        }
+
+        if ($null -ne $userCannotChangePassword -and $userCannotChangePassword -ne $user.UserCannotChangePassword) {
+            if ($userCannotChangePassword) {
+                $newFlags = $user.BaseObject.UserFlags.Value -bor $ADS_UF_PASSWD_CANT_CHANGE
+            } else {
+                $newFlags = $user.BaseObject.UserFlags.Value -bxor $ADS_UF_PASSWD_CANT_CHANGE
             }
-            $result.changed = $true
+            $user.BaseObject.UserFlags = $newFlags
+            $module.Result.changed = $true
+            $module.Diff.after.user_cannot_change_password = $userCannotChangePassword
         }
-        If (($null -ne $user_cannot_change_password) -and ($user_cannot_change_password -ne (Get-UserFlag $user_obj $ADS_UF_PASSWD_CANT_CHANGE))) {
-            If ($user_cannot_change_password) {
-                Set-UserFlag $user_obj $ADS_UF_PASSWD_CANT_CHANGE
+
+        if ($module.Result.changed -and -not $module.CheckMode) {
+            $user.BaseObject.SetInfo()
+        }
+
+        if ($null -ne $groups) {
+            $desiredGroups = [string[]]@($groups)
+            $existingGroups = [string[]]@($user.Groups.Name)
+
+            $toAdd = [string[]]@()
+            $toRemove = [string[]]@()
+            if ($groupsAction -eq 'add') {
+                $toAdd = [Linq.Enumerable]::Except($desiredGroups, $existingGroups)
+
+            } elseif ($groupsAction -eq 'remove') {
+                $toRemove = [Linq.Enumerable]::Intersect($desiredGroups, $existingGroups)
+
+            } else {
+                $toAdd = [Linq.Enumerable]::Except($desiredGroups, $existingGroups)
+                $toRemove = [Linq.Enumerable]::Except($existingGroups, $desiredGroups)
             }
-            Else {
-                Clear-UserFlag $user_obj $ADS_UF_PASSWD_CANT_CHANGE
+
+            $actionMap = @{
+                Add = $toAdd
+                Remove = $toRemove
             }
-            $result.changed = $true
-        }
-        If (($null -ne $account_disabled) -and ($account_disabled -ne $user_obj.AccountDisabled)) {
-            $user_obj.AccountDisabled = $account_disabled
-            $result.changed = $true
-        }
-        If (($null -ne $account_locked) -and ($account_locked -ne $user_obj.IsAccountLocked)) {
-            $user_obj.IsAccountLocked = $account_locked
-            $result.changed = $true
-        }
-        If ($result.changed) {
-            $user_obj.SetInfo()
-        }
-        If ($null -ne $groups) {
-            [string[]]$current_groups = $user_obj.Groups() | ForEach-Object { $_.GetType().InvokeMember("Name", "GetProperty", $null, $_, $null) }
-            If (($groups_action -eq "remove") -or ($groups_action -eq "replace")) {
-                ForEach ($grp in $current_groups) {
-                    If ((($groups_action -eq "remove") -and ($groups -contains $grp)) -or (($groups_action -eq "replace") -and ($groups -notcontains $grp))) {
-                        $group_obj = Get-Group $grp
-                        If ($group_obj) {
-                            $group_obj.Remove($user_obj.Path)
-                            $result.changed = $true
+            foreach ($action in $actionMap.GetEnumerator()) {
+                foreach ($group in $action.Value) {
+                    $groupAdsi = Get-AnsibleLocalGroup -Name $group
+
+                    if ($groupAdsi) {
+                        if (-not $module.CheckMode) {
+                            try {
+                                $groupAdsi."$($action.Key)"($user.Path)
+                            } catch {
+                                $module.FailJson(
+                                    "Failed to $($action.Key.ToLower()) $($group): $($_.Exception.Message)", $_
+                                )
+                            }
                         }
-                        Else {
-                            Fail-Json $result "group '$grp' not found"
+                        $module.Result.changed = $true
+                        if ($action.Key -eq 'Add') {
+                            $module.Diff.after.groups.Add($group)
+                        } else {
+                            $null = $module.Diff.after.groups.Remove($group)
                         }
+
+                    } else {
+                        $module.FailJson("group '$group' not found")
                     }
                 }
             }
-            If (($groups_action -eq "add") -or ($groups_action -eq "replace")) {
-                ForEach ($grp in $groups) {
-                    If ($current_groups -notcontains $grp) {
-                        $group_obj = Get-Group $grp
-                        If ($group_obj) {
-                            $group_obj.Add($user_obj.Path)
-                            $result.changed = $true
-                        }
-                        Else {
-                            Fail-Json $result "group '$grp' not found"
-                        }
-                    }
-                }
-            }
         }
     }
-    catch {
-        Fail-Json $result $_.Exception.Message
+
+} elseif ($state -eq 'absent') {
+    if ($user) {
+        $ADSI.Delete('User', $user.Name)
+        $module.Result.changed = $true
+        $module.Result.msg = "User '$($user.Name)' deleted successfully"
+        $user = $null
+
+    } else {
+        $module.Result.msg = "User '$name' was not found"
     }
-}
-ElseIf ($state -eq 'absent') {
-    # Remove user
-    try {
-        If ($user_obj) {
-            $username = $user_obj.Name.Value
-            $adsi.delete("User", $user_obj.Name.Value)
-            $result.changed = $true
-            $result.msg = "User '$username' deleted successfully"
-            $user_obj = $null
-        } else {
-            $result.msg = "User '$username' was not found"
-        }
-    }
-    catch {
-        Fail-Json $result $_.Exception.Message
-    }
+    $module.Diff.after = ""
+
+} else {
+    $module.Result.msg = "User '$name' was not found"
+    $module.Diff.after = $module.Diff.before
 }
 
-try {
-    If ($user_obj -and $user_obj -is [System.DirectoryServices.DirectoryEntry]) {
-        $user_obj.RefreshCache()
-        $result.name = $user_obj.Name[0]
-        $result.fullname = $user_obj.FullName[0]
-        $result.path = $user_obj.Path
-        $result.description = $user_obj.Description[0]
-        $result.password_expired = ($user_obj.PasswordExpired | ConvertTo-Bool)
-        $result.password_never_expires = (Get-UserFlag $user_obj $ADS_UF_DONT_EXPIRE_PASSWD)
-        $result.user_cannot_change_password = (Get-UserFlag $user_obj $ADS_UF_PASSWD_CANT_CHANGE)
-        $result.account_disabled = $user_obj.AccountDisabled
-        $result.account_locked = $user_obj.IsAccountLocked
-        $result.sid = (New-Object System.Security.Principal.SecurityIdentifier($user_obj.ObjectSid.Value, 0)).Value
-        $user_groups = @()
-        ForEach ($grp in $user_obj.Groups()) {
-            $group_result = @{
-                name = $grp.GetType().InvokeMember("Name", "GetProperty", $null, $grp, $null)
-                path = $grp.GetType().InvokeMember("ADsPath", "GetProperty", $null, $grp, $null)
-            }
-            $user_groups += $group_result;
-        }
-        $result.groups = $user_groups
-        $result.state = "present"
-    }
-    Else {
-        $result.name = $username
-        if ($state -eq 'query') {
-            $result.msg = "User '$username' was not found"
-        }
-        $result.state = "absent"
-    }
-}
-catch {
-    Fail-Json $result $_.Exception.Message
+$user = Get-AnsibleLocalUser -Name $name
+if ($user) {
+    $module.Result.name = $user.Name
+    $module.Result.fullname = $user.FullName
+    $module.Result.path = $user.Path
+    $module.Result.description = $user.Description
+    $module.Result.password_expired = $user.PasswordExpired
+    $module.Result.password_never_expires = $user.PasswordNeverExpires
+    $module.Result.user_cannot_change_password = $user.UserCannotChangePassword
+    $module.Result.account_disabled = $user.AccountDisabled
+    $module.Result.account_locked = $user.IsAccountLocked
+    $module.Result.sid = $user.SecurityIdentifier.Value
+    $module.Result.groups = @(foreach ($grp in $user.Groups) {
+        @{ name = $grp.Name; path = $grp.Path }
+    })
+    $module.Result.state = 'present'
+
+} else {
+    $module.Result.name = $name
+    $module.Result.state = 'absent'
 }
 
-Exit-Json $result
+$module.ExitJson()
