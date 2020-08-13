@@ -338,7 +338,11 @@ if ($state -eq 'present') {
                     if ($groupAdsi) {
                         if (-not $module.CheckMode) {
                             try {
-                                $groupAdsi."$($action.Key)"($user.Path)
+                                if ($action.Key -eq 'Add') {
+                                     $groupAdsi.Add($user.Path)
+                                 } else {
+                                     $groupAdsi.Remove($user.Path)
+                                 }
                             } catch {
                                 $module.FailJson(
                                     "Failed to $($action.Key.ToLower()) $($group): $($_.Exception.Message)", $_
@@ -346,6 +350,7 @@ if ($state -eq 'present') {
                             }
                         }
                         $module.Result.changed = $true
+
                         if ($action.Key -eq 'Add') {
                             $module.Diff.after.groups.Add($group)
                         } else {
