@@ -72,6 +72,84 @@
 - name: Add firewall rule
   win_firewall_rule:
     name: http
+    enabled: no
+    state: present
+    group: application
+    localport: 80
+    action: allow
+    direction: in
+    protocol: tcp
+  register: add_firewall_rule
+
+- name: Check that creating new firewall rule succeeds with a change
+  assert:
+    that:
+    - add_firewall_rule.changed == true
+
+- name: Enable all the rules in application group
+  win_firewall_rule:
+    group: application
+    enabled: yes 
+  register: change_firewall_rule
+
+- name: Check if the rules are enabled in application group
+  assert:
+    that:
+    - change_firewall_rule.changed == true 
+
+- name: Enable all the rules in application group (again)
+  win_firewall_rule:
+    group: application
+    enabled: yes 
+  register: change_firewall_rule
+
+- name: Check if the rules are enabled without a change
+  assert:
+    that:
+    - change_firewall_rule.changed == false
+
+- name: Disable all the rules in application group
+  win_firewall_rule:
+    group: application
+    enabled: no
+  register: change_firewall_rule
+
+- name: Check if the rules are disabled
+  assert:
+    that:
+    - change_firewall_rule.changed == true 
+
+- name: Disable all the rules in application group (again)
+  win_firewall_rule:
+    group: application
+    enabled: no 
+  register: change_firewall_rule
+
+- name: Check if the rules are disabled without a change
+  assert:
+    that:
+    - change_firewall_rule.changed == false
+
+- name: Remove firewall rule
+  win_firewall_rule:
+    name: http
+    enabled: no
+    state: absent
+    localport: 80
+    action: allow
+    group: application
+    direction: in
+    protocol: tcp
+  register: remove_firewall_rule
+
+- name: Check that removing existing firewall rule succeeds with a change
+  assert:
+    that:
+    - remove_firewall_rule.changed == true
+
+- name: Add firewall rule
+  win_firewall_rule:
+    name: http
     enabled: yes
     state: present
     localport: 80
@@ -472,3 +550,19 @@
   assert:
     that:
     - add_firewall_rule_with_icmptypecode.changed == true
+
+- name: Remove rule with icmptypecode
+  win_firewall_rule:
+    name: icmptest
+    enabled: yes
+    state: absent
+    action: allow
+    direction: in
+    protocol: icmpv4
+    icmp_type_code: '8:*'
+  register: remove_firewall_rule_with_icmptypecode
+
+- name: Check that removing same firewall rule with expanded vars identified
+  assert:
+    that:
+    - remove_firewall_rule_with_icmptypecode.changed == true
