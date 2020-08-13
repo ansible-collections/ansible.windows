@@ -359,10 +359,13 @@ if ($state -eq 'present') {
             }
         }
     }
+    $module.Result.state = 'present'
 
 } elseif ($state -eq 'absent') {
     if ($user) {
-        $ADSI.Delete('User', $user.Name)
+        if (-not $module.CheckMode) {
+            $ADSI.Delete('User', $user.Name)
+        }
         $module.Result.changed = $true
         $module.Result.msg = "User '$($user.Name)' deleted successfully"
         $user = $null
@@ -370,16 +373,20 @@ if ($state -eq 'present') {
     } else {
         $module.Result.msg = "User '$name' was not found"
     }
+
+    $module.Result.state = 'absent'
     $module.Diff.after = ""
 
 } else {
     $module.Result.msg = "User '$name' was not found"
+    $module.Result.state = if ($user) { 'present' } else { 'absent' }
     $module.Diff.after = $module.Diff.before
 }
 
 $user = Get-AnsibleLocalUser -Name $name
+$module.Result.name = $name
+
 if ($user) {
-    $module.Result.name = $user.Name
     $module.Result.fullname = $user.FullName
     $module.Result.path = $user.Path
     $module.Result.description = $user.Description
@@ -392,11 +399,6 @@ if ($user) {
     $module.Result.groups = @(foreach ($grp in $user.Groups) {
         @{ name = $grp.Name; path = $grp.Path }
     })
-    $module.Result.state = 'present'
-
-} else {
-    $module.Result.name = $name
-    $module.Result.state = 'absent'
 }
 
 $module.ExitJson()
