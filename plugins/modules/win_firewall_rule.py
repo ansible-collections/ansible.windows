@@ -27,11 +27,12 @@ options:
   name:
     description:
       - The rule's display name.
+      - This is required unless I(group) is specified.
     type: str
-    required: yes
   group:
     description:
       - The group name for the rule.
+      - If I(name) is not specified then the module will set the firewall options for all the rules in this group.
     type: str
   direction:
     description:
@@ -110,6 +111,9 @@ options:
       - See U(https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml)
         for a list of ICMP types and the codes that apply to them.
     type: list
+notes:
+- Multiple firewall rules can share the same I(name), if there are multiple matches then the module will set the user
+  defined options for each matching rule.
 seealso:
 - module: community.windows.win_firewall
 author:
@@ -148,6 +152,11 @@ EXAMPLES = r'''
     direction: in
     protocol: tcp
     state: present
+    enabled: yes
+
+- name: Enable all the Firewall rules in application group
+  win_firewall_rule:
+    group: application
     enabled: yes
 
 - name: Firewall rule to allow port range
