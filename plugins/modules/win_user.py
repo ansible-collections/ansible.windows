@@ -19,8 +19,8 @@ options:
     type: bool
   account_locked:
     description:
-    - C(no) will unlock the user account if locked.
-    choices: [ 'no' ]
+    - Only C(no) can be set and it will unlock the user account if locked.
+    type: bool
   description:
     description:
     - Description of the user.
@@ -98,6 +98,9 @@ options:
     - C(yes) will prevent the user from changing their password.
     - C(no) will allow the user to change their password.
     type: bool
+notes:
+- The return values are based on the user object after the module options have been set. When running in check mode
+  the values will still reflect the existing user settings and not what they would have been changed to.
 seealso:
 - module: ansible.builtin.user
 - module: ansible.windows.win_domain_membership

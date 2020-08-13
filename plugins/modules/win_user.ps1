@@ -26,7 +26,7 @@ $spec = @{
         user_cannot_change_password = @{ type = 'bool' }
 
     }
-    supports_check_mode = $false
+    supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
@@ -67,7 +67,7 @@ Function Get-AnsibleLocalGroup {
     )
 
     $ADSI.Children | Where-Object {
-        $_.Schema -eq 'Group' -and $_.Name -eq $Name
+        $_.SchemaClassName -eq 'Group' -and $_.Name -eq $Name
     }
 }
 
@@ -123,12 +123,17 @@ Function Get-UserDiff {
         ""
 
     } else {
+        $groups = [System.Collections.Generic.List[String]]@()
+        foreach ($group in $User.Groups.Name) {
+            $groups.Add($group)
+        }
+
         @{
             account_disabled = $User.AccountDisabled
             account_locked = $User.IsAccountLocked
             description = $User.Description
             fullname = $User.FullName
-            groups = [System.Collections.Generic.List[String]]@($User.Groups.Name)
+            groups = $groups
             home_directory = $User.HomeDirectory
             login_script = $User.LoginScript
             name = $User.Name
@@ -203,7 +208,7 @@ if ($state -eq 'present') {
     }
 
     # When in check mode and a new user was created, $user will still be $null
-    if (-not $user) {
+    if ($user) {
         $module.Diff.after = Get-UserDiff -User $user
 
         if ($null -ne $password -and $updatePassword -eq 'always') {
@@ -325,6 +330,9 @@ if ($state -eq 'present') {
             }
             foreach ($action in $actionMap.GetEnumerator()) {
                 foreach ($group in $action.Value) {
+                    if (-not $group) {
+                        continue
+                    }
                     $groupAdsi = Get-AnsibleLocalGroup -Name $group
 
                     if ($groupAdsi) {
