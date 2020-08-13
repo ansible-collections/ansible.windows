@@ -16,7 +16,7 @@ $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 $current_computer_name = (Get-CimInstance -Class Win32_ComputerSystem).DNSHostname
 
 $module.Result.old_name = $current_computer_name
-$module.Result.reboot_required = $true
+$module.Result.reboot_required = $false
 
 $module.Diff.before = $current_computer_name
 $module.Diff.after = $module.Params.name
