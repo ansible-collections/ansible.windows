@@ -1,0 +1,3 @@
+minor_changes:
+- win_hostname - Use new ``Ansible.Basic.AnsibleModule`` wrapper
+- win_hostname - Added diff mode support
