@@ -27,140 +27,140 @@ Parameters
 .. raw:: html
 
     <table  border=0 cellpadding=0 class="documentation-table">
-<tr>
+        <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-            <th width="100%">Comments</th>
+                        <th width="100%">Comments</th>
         </tr>
-            <tr>
-                <td colspan="1">
+                    <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>inherit</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>ContainerInherit</li>
-                                    <li>ObjectInherit</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Inherit flags on the ACL rules.</div>
-                        <div>Can be specified as a comma separated list, e.g. <code>ContainerInherit</code>, <code>ObjectInherit</code>.</div>
-                        <div>For more information on the choices see MSDN InheritanceFlags enumeration at <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx</a>.</div>
-                        <div>Defaults to <code>ContainerInherit, ObjectInherit</code> for Directories.</div>
-                </td>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li>ContainerInherit</li>
+                                                                                                                                                                                                <li>ObjectInherit</li>
+                                                                                    </ul>
+                                                                            </td>
+                                                                <td>
+                                            <div>Inherit flags on the ACL rules.</div>
+                                            <div>Can be specified as a comma separated list, e.g. <code>ContainerInherit</code>, <code>ObjectInherit</code>.</div>
+                                            <div>For more information on the choices see MSDN InheritanceFlags enumeration at <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx</a>.</div>
+                                            <div>Defaults to <code>ContainerInherit, ObjectInherit</code> for Directories.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
- / <span style="color: red">required</span>                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The path to the file or directory.</div>
-                </td>
+                                                 / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>The path to the file or directory.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>propagation</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>InheritOnly</li>
-                                    <li><div style="color: blue"><b>None</b>&nbsp;&larr;</div></li>
-                                    <li>NoPropagateInherit</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Propagation flag on the ACL rules.</div>
-                        <div>For more information on the choices see MSDN PropagationFlags enumeration at <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx</a>.</div>
-                </td>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li>InheritOnly</li>
+                                                                                                                                                                                                <li><div style="color: blue"><b>None</b>&nbsp;&larr;</div></li>
+                                                                                                                                                                                                <li>NoPropagateInherit</li>
+                                                                                    </ul>
+                                                                            </td>
+                                                                <td>
+                                            <div>Propagation flag on the ACL rules.</div>
+                                            <div>For more information on the choices see MSDN PropagationFlags enumeration at <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx</a>.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>rights</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
- / <span style="color: red">required</span>                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The rights/permissions that are to be allowed/denied for the specified user or group for the item at <code>path</code>.</div>
-                        <div>If <code>path</code> is a file or directory, rights can be any right under MSDN FileSystemRights <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx</a>.</div>
-                        <div>If <code>path</code> is a registry key, rights can be any right under MSDN RegistryRights <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx</a>.</div>
-                </td>
+                                                 / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>The rights/permissions that are to be allowed/denied for the specified user or group for the item at <code>path</code>.</div>
+                                            <div>If <code>path</code> is a file or directory, rights can be any right under MSDN FileSystemRights <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx</a>.</div>
+                                            <div>If <code>path</code> is a registry key, rights can be any right under MSDN RegistryRights <a href='https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx'>https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx</a>.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>absent</li>
-                                    <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Specify whether to add <code>present</code> or remove <code>absent</code> the specified access rule.</div>
-                </td>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li>absent</li>
+                                                                                                                                                                                                <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                                                                    </ul>
+                                                                            </td>
+                                                                <td>
+                                            <div>Specify whether to add <code>present</code> or remove <code>absent</code> the specified access rule.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>type</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
- / <span style="color: red">required</span>                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>allow</li>
-                                    <li>deny</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Specify whether to allow or deny the rights specified.</div>
-                </td>
+                                                 / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                                                                                                                                                <li>allow</li>
+                                                                                                                                                                                                <li>deny</li>
+                                                                                    </ul>
+                                                                            </td>
+                                                                <td>
+                                            <div>Specify whether to allow or deny the rights specified.</div>
+                                                        </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>user</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
- / <span style="color: red">required</span>                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>User or Group to add specified rights to act on src file/folder or registry key.</div>
-                </td>
+                                                 / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>User or Group to add specified rights to act on src file/folder or registry key.</div>
+                                                        </td>
             </tr>
-    </table>
+                        </table>
     <br/>
 
 

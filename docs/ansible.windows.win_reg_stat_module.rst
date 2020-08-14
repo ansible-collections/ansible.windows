@@ -29,45 +29,45 @@ Parameters
 .. raw:: html
 
     <table  border=0 cellpadding=0 class="documentation-table">
-<tr>
+        <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-            <th width="100%">Comments</th>
+                        <th width="100%">Comments</th>
         </tr>
-            <tr>
-                <td colspan="1">
+                    <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The registry property name to get information for, the return json will not include the sub_keys and properties entries for the <em>key</em> specified.</div>
-                        <div>Set to an empty string to target the registry key&#x27;s <code>(Default</code>) property value.</div>
-                        <div style="font-size: small; color: darkgreen"><br/>aliases: entry, value, property</div>
-                </td>
+                                                                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>The registry property name to get information for, the return json will not include the sub_keys and properties entries for the <em>key</em> specified.</div>
+                                            <div>Set to an empty string to target the registry key&#x27;s <code>(Default</code>) property value.</div>
+                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: entry, value, property</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
- / <span style="color: red">required</span>                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The full registry key path including the hive to search for.</div>
-                        <div style="font-size: small; color: darkgreen"><br/>aliases: key</div>
-                </td>
+                                                 / <span style="color: red">required</span>                    </div>
+                                    </td>
+                                <td>
+                                                                                                                                                            </td>
+                                                                <td>
+                                            <div>The full registry key path including the hive to search for.</div>
+                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: key</div>
+                                    </td>
             </tr>
-    </table>
+                        </table>
     <br/>
 
 
@@ -125,126 +125,126 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-            <tr>
-                <td colspan="1">
+                    <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>changed</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">boolean</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>always</td>
                 <td>
-                            <div>Whether anything was changed.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
-                </td>
+                                                                        <div>Whether anything was changed.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>exists</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">boolean</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success and path/property exists</td>
                 <td>
-                            <div>States whether the registry key/property exists.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
-                </td>
+                                                                        <div>States whether the registry key/property exists.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>properties</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success, path exists and property not specified</td>
                 <td>
-                            <div>A dictionary containing all the properties and their values in the registry key.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">{&#x27;&#x27;: {&#x27;raw_value&#x27;: &#x27;&#x27;, &#x27;type&#x27;: &#x27;REG_SZ&#x27;, &#x27;value&#x27;: &#x27;&#x27;}, &#x27;binary_property&#x27;: {&#x27;raw_value&#x27;: [&#x27;0x01&#x27;, &#x27;0x16&#x27;], &#x27;type&#x27;: &#x27;REG_BINARY&#x27;, &#x27;value&#x27;: [1, 22]}, &#x27;multi_string_property&#x27;: {&#x27;raw_value&#x27;: [&#x27;a&#x27;, &#x27;b&#x27;], &#x27;type&#x27;: &#x27;REG_MULTI_SZ&#x27;, &#x27;value&#x27;: [&#x27;a&#x27;, &#x27;b&#x27;]}}</div>
-                </td>
+                                                                        <div>A dictionary containing all the properties and their values in the registry key.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">{&#x27;&#x27;: {&#x27;raw_value&#x27;: &#x27;&#x27;, &#x27;type&#x27;: &#x27;REG_SZ&#x27;, &#x27;value&#x27;: &#x27;&#x27;}, &#x27;binary_property&#x27;: {&#x27;raw_value&#x27;: [&#x27;0x01&#x27;, &#x27;0x16&#x27;], &#x27;type&#x27;: &#x27;REG_BINARY&#x27;, &#x27;value&#x27;: [1, 22]}, &#x27;multi_string_property&#x27;: {&#x27;raw_value&#x27;: [&#x27;a&#x27;, &#x27;b&#x27;], &#x27;type&#x27;: &#x27;REG_MULTI_SZ&#x27;, &#x27;value&#x27;: [&#x27;a&#x27;, &#x27;b&#x27;]}}</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>raw_value</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success, path/property exists and property specified</td>
                 <td>
-                            <div>Returns the raw value of the registry property, REG_EXPAND_SZ has no string expansion, REG_BINARY or REG_NONE is in hex 0x format. REG_NONE, this value is a hex string in the 0x format.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">%ProgramDir%\\Common Files</div>
-                </td>
+                                                                        <div>Returns the raw value of the registry property, REG_EXPAND_SZ has no string expansion, REG_BINARY or REG_NONE is in hex 0x format. REG_NONE, this value is a hex string in the 0x format.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">%ProgramDir%\\Common Files</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>sub_keys</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success, path exists and property not specified</td>
                 <td>
-                            <div>A list of all the sub keys of the key specified.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;AppHost&#x27;, &#x27;Casting&#x27;, &#x27;DateTime&#x27;]</div>
-                </td>
+                                                                        <div>A list of all the sub keys of the key specified.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;AppHost&#x27;, &#x27;Casting&#x27;, &#x27;DateTime&#x27;]</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>type</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success, path/property exists and property specified</td>
                 <td>
-                            <div>The property type.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">REG_EXPAND_SZ</div>
-                </td>
+                                                                        <div>The property type.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">REG_EXPAND_SZ</div>
+                                    </td>
             </tr>
-            <tr>
-                <td colspan="1">
+                                <tr>
+                                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>value</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                    </div>
-                </td>
+                                          </div>
+                                    </td>
                 <td>success, path/property exists and property specified</td>
                 <td>
-                            <div>The value of the property.</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">C:\\Program Files\\Common Files</div>
-                </td>
+                                                                        <div>The value of the property.</div>
+                                                                <br/>
+                                            <div style="font-size: smaller"><b>Sample:</b></div>
+                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">C:\\Program Files\\Common Files</div>
+                                    </td>
             </tr>
-    </table>
+                        </table>
     <br/><br/>
 
 
