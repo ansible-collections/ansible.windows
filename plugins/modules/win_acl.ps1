@@ -3,11 +3,13 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
+# Copyright: (c) 2020, Håkon Heggernes Lerring <hakon@lerring.no>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 #Requires -Module Ansible.ModuleUtils.SID
+#AnsibleRequires -CSharpUtil Ansible.CertAclHelpers
 
 $ErrorActionPreference = "Stop"
 
@@ -102,6 +104,9 @@ if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
 if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
     New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
 }
+if ($path_qualifier -eq "Cert:" -and (-not (Test-Path -LiteralPath Cert:\))) {
+    New-PSDrive -Name Cert -PSProvider Certificate -Root \ > $null
+}
 
 If (-Not (Test-Path -LiteralPath $path)) {
     Fail-Json -obj $result -message "$path file or directory does not exist on the host"
@@ -122,7 +127,7 @@ ElseIf ($null -eq $inherit) {
 
 # Bug in Set-Acl, Get-Acl where -LiteralPath only works for the Registry provider if the location is in that root
 # qualifier. We also don't have a qualifier for a network path so only change if not null
-if ($null -ne $path_qualifier) {
+if (($null -ne $path_qualifier) -and ($path_qualifier -ne "Cert:")) {
     Push-Location -LiteralPath $path_qualifier
 }
 
@@ -131,6 +136,9 @@ Try {
     $path_item = Get-Item -LiteralPath $path -Force
     If ($path_item.PSProvider.Name -eq "Registry") {
         $colRights = [System.Security.AccessControl.RegistryRights]$rights
+    }
+    ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
+        $colRights = [Ansible.CertAclHelpers.CertAccessRights]$rights
     }
     Else {
         $colRights = [System.Security.AccessControl.FileSystemRights]$rights
@@ -147,13 +155,21 @@ Try {
     }
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
-    If ($path_item.PSProvider.Name -eq "Registry") {
-        $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+
+    If ($path_item.PSProvider.Name -eq "Certificate") {
+        $cert = Get-Item -LiteralPath $path
+        $certSecurityHandle = [Ansible.CertAclHelpers.CertAclHelper]::new($cert)
+        $objACL = $certSecurityHandle.Acl
+        $objACE = $objACL.AccessRuleFactory($objUser, [Ansible.CertAclHelpers.CertAccessRightsHelper]::ToAccessMask($colRights), $False, $InheritanceFlag, $PropagationFlag, $objType)
+    } Else {
+        If ($path_item.PSProvider.Name -eq "Registry") {
+            $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+        }
+        Else {
+            $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+        }
+        $objACL = Get-ACL -LiteralPath $path
     }
-    Else {
-        $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-    }
-    $objACL = Get-ACL -LiteralPath $path
 
     # Check if the ACE exists already in the objects ACL list
     $match = $false
@@ -178,6 +194,8 @@ Try {
             $objACL.AddAccessRule($objACE)
             If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
+            } elseif ($path_item.PSProvider.Name -eq "Certificate") {
+                $certSecurityHandle.Acl = $objACL
             } else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
@@ -192,6 +210,8 @@ Try {
             $objACL.RemoveAccessRule($objACE)
             If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
+            } elseif ($path_item.PSProvider.Name -eq "Certificate") {
+                $certSecurityHandle.Acl = $objACL
             } else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
@@ -217,7 +237,7 @@ Catch {
 }
 Finally {
     # Make sure we revert the location stack to the original path just for cleanups sake
-    if ($null -ne $path_qualifier) {
+    if (($null -ne $path_qualifier) -and ($path_qualifier -ne "Cert:")) {
         Pop-Location
     }
 }
