@@ -5,6 +5,51 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.0.0
+======
+
+Release Summary
+---------------
+
+- This is the first official release of `ansible.windows` to be included in Ansible 2.10. While the version has a major change bump it is still backwards compatible with `0.2.0`.
+
+Minor Changes
+-------------
+
+- win_hostname - Added diff mode support
+- win_hostname - Use new ``Ansible.Basic.AnsibleModule`` wrapper
+- win_user - Added check mode support
+- win_user - Added diff mode support
+- win_user - Added the ``home_directory`` option
+- win_user - Added the ``login_script`` option
+- win_user - Added the ``profile`` option
+- win_user - Use new ``Ansible.Basic.AnsibleModule`` wrapper for better invocation reporting
+- win_user_right - Improved error messages to show what right and account an operation failed on
+- win_user_right - Refactored to use ``Ansible.Basic.AnsibleModule`` for better module invocation reporting
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- win_find - module has been refactored to better match the behaviour of the ``find`` module. Here is what has changed:
+    * When the directory specified by ``paths`` does not exist or is a file, it will no longer fail and will just warn the user
+    * Junction points are no longer reported as ``islnk``, use ``isjunction`` to properly report these files. This behaviour matches the win_stat module
+    * Directories no longer return a ``size``, this matches the ``stat`` and ``find`` behaviour and has been removed due to the difficulties in correctly reporting the size of a directory
+- win_user - Change idempotency checks for ``description`` to be case sensitive
+- win_user - Change idempotency checks for ``fullname`` to be case sensitive
+
+Deprecated Features
+-------------------
+
+- win_domain_controller - the ``log_path`` option has been deprecated and will be removed in a later release. This was undocumented and only related to debugging information for module development.
+- win_package - the ``ensure`` alias for the ``state`` option has been deprecated and will be removed in a later release. Please use ``state`` instead of ``ensure``.
+- win_package - the ``productid`` alias for the ``product_id`` option has been deprecated and will be removed in a later release. Please use ``product_id`` instead of ``productid``.
+- win_package - the ``username`` and ``password`` options has been deprecated and will be removed in a later release. The same functionality can be done by using ``become: yes`` and ``become_flags: logon_type=new_credentials logon_flags=netcredentials_only`` on the task.
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- win_stat - removed the deprecated ``get_md55`` option and ``md5`` return value.
+
 v0.2.0
 ======
 
