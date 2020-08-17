@@ -6,6 +6,13 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Win32.SafeHandles;
 using System.Security.Principal;
 
+
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CryptHandle -TypeName CryptHandle
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.SafeSecurityDescriptorPtr -TypeName SafeSecurityDescriptorPtr
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRights -TypeName CertAccessRights
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRightsHelper -TypeName CertAccessRightsHelper
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
+
 namespace ansible_collections.ansible.windows.plugins.module_utils.CertAclHelper
 {
 
