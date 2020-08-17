@@ -9,7 +9,7 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 #Requires -Module Ansible.ModuleUtils.SID
-#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.CertAclHelper
+#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
 
 $ErrorActionPreference = "Stop"
 

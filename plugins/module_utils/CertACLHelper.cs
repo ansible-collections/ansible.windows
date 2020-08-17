@@ -13,7 +13,7 @@ using System.Security.Principal;
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRightsHelper -TypeName CertAccessRightsHelper
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
 
-namespace ansible_collections.ansible.windows.plugins.module_utils.CertAclHelper
+namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
 {
 
     public class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
