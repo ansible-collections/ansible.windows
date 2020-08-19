@@ -126,7 +126,8 @@ ElseIf ($null -eq $inherit) {
 }
 
 # Bug in Set-Acl, Get-Acl where -LiteralPath only works for the Registry provider if the location is in that root
-# qualifier. We also don't have a qualifier for a network path so only change if not null
+# qualifier. We also don't have a qualifier for a network path so only change if not null. The Cert provider does
+# not use Set-Acl or Get-Acl and does not have this bug.
 if (($null -ne $path_qualifier) -and ($path_qualifier -ne "Cert:")) {
     Push-Location -LiteralPath $path_qualifier
 }
