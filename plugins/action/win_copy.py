@@ -418,6 +418,7 @@ class ActionModule(ActionBase):
         source_files = {'files': [], 'directories': [], 'symlinks': []}
 
         # If source is a directory populate our list else source is a file and translate it to a tuple.
+        original_basename = None
         if os.path.isdir(to_bytes(source, errors='surrogate_or_strict')):
             result['operation'] = 'folder_copy'
 
@@ -500,7 +501,8 @@ class ActionModule(ActionBase):
             # we only need to copy 1 file, don't mess around with zips
             file_src = query_return['files'][0]['src']
             file_dest = query_return['files'][0]['dest']
-            result.update(self._copy_single_file(file_src, dest, original_basename, file_dest,
+            basename = original_basename or file_dest
+            result.update(self._copy_single_file(file_src, dest, basename, file_dest,
                                                  task_vars, self._connection._shell.tmpdir, backup))
             if result.get('failed') is True:
                 result['msg'] = "failed to copy file %s: %s" % (file_src, result['msg'])

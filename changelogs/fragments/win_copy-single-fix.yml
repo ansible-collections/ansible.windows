@@ -1,0 +1,2 @@
+bugfixes:
+- win_copy - fix bug when copying a single file during a folder copy operation
