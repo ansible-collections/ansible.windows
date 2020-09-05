@@ -420,6 +420,29 @@
     - copy_folder_contents_actual.files[3].filename == 'subdir3'
     - copy_folder_contents_actual.files[4].filename == 'subdir4'
 
+- name: remove single file in folder before next test
+  win_file:
+    path: '{{ test_win_copy_path }}\recursive-contents\subdir\bar.txt'
+    state: absent
+
+- name: copy folder contents with single file changed to folder
+  win_copy:
+    src: files/
+    dest: '{{ test_win_copy_path }}\recursive-contents\'
+  register: copy_folder_single_change
+
+- name: get result of copy folder contents with single file changed to folder
+  win_stat:
+    path: '{{ test_win_copy_path }}\recursive-contents\subdir\bar.txt'
+  register: copy_folder_single_change_actual
+
+- name: assert copy folder contents with single file changed to folder
+  assert:
+    that:
+    - copy_folder_single_change is changed
+    - copy_folder_single_change.operation == 'folder_copy'
+    - copy_folder_single_change_actual.stat.exists
+
 - name: remove foo.txt before next test
   win_file:
     path: '{{test_win_copy_path}}\recursive-contents\foo.txt'
