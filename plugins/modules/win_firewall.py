@@ -24,6 +24,20 @@ options:
     - Set state of firewall for given profile.
     type: str
     choices: [ disabled, enabled ]
+  inbound_action:
+    description:
+    - Set to C(allow) or C(block) inbound network traffic in the profile.
+    - C(not_configured) is valid when configuring a GPO.
+    type: str
+    choices: [ allow, block, not_configured ]
+    version_added: 1.1.0
+  outbound_action:
+    description:
+    - Set to C(allow) or C(block) inbound network traffic in the profile.
+    - C(not_configured) is valid when configuring a GPO.
+    type: str
+    choices: [ allow, block, not_configured ]
+    version_added: 1.1.0
 seealso:
 - module: community.windows.win_firewall_rule
 author:
@@ -46,6 +60,13 @@ EXAMPLES = r'''
     profiles:
     - Domain
   tags: disable_firewall
+
+- name: Enable firewall for Domain profile and block outbound connections
+  community.windows.win_firewall:
+    profiles: Domain
+    state: enabled
+    outbound_action: block
+  tags: block_connection
 '''
 
 RETURN = r'''
