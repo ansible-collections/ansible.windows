@@ -139,3 +139,25 @@
     - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
     - setup_result.warnings | length == 1
     - setup_result.warnings[0] | regex_search('bogus')
+
+- name: create fact directory
+  win_file:
+    path: '{{ remote_tmp_dir }}\facts'
+    state: directory
+
+- name: copy some fact files to that directory
+  win_copy:
+    src: files/
+    dest: '{{ remote_tmp_dir }}\facts'
+
+- name: gather custom facts
+  setup:
+    fact_path: '{{ remote_tmp_dir }}\facts'
+  register: setup_result
+
+- name: assert gather custom facts
+  assert:
+    that:
+    - setup_result.ansible_facts.ansible_my_facts.my_complex_custom_fact == {'hello':'world'}
+    - setup_result.ansible_facts.ansible_my_facts.my_custom_fact == 'value'
+    - setup_result.ansible_facts.ansible_other_facts == ['abc', 'def']
