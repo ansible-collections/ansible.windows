@@ -1,0 +1,1 @@
+some dummy text, won't run as it doesn't end with .ps1
