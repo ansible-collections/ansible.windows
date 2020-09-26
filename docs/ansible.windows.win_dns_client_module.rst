@@ -30,43 +30,45 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>adapter_names</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Adapter name or list of adapter names for which to manage DNS settings (&#x27;*&#x27; is supported as a wildcard value).</div>
-                                            <div>The adapter name used is the connection caption in the Network Control Panel or the InterfaceAlias of <code>Get-DnsClientServerAddress</code>.</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Adapter name or list of adapter names for which to manage DNS settings (&#x27;*&#x27; is supported as a wildcard value).</div>
+                        <div>The adapter name used is the connection caption in the Network Control Panel or the InterfaceAlias of <code>Get-DnsClientServerAddress</code>.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dns_servers</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Single or ordered list of DNS servers (IPv4 and IPv6 addresses) to configure for lookup.</div>
-                                            <div>An empty list will configure the adapter to use the DHCP-assigned values on connections where DHCP is enabled, or disable DNS lookup on statically-configured connections.</div>
-                                            <div>IPv6 DNS servers can only be set on Windows Server 2012 or newer, older hosts can only set IPv4 addresses.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: ipv4_addresses, ip_addresses, addresses</div>
-                                    </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Single or ordered list of DNS servers (IPv4 and IPv6 addresses) to configure for lookup.</div>
+                        <div>An empty list will configure the adapter to use the DHCP-assigned values on connections where DHCP is enabled, or disable DNS lookup on statically-configured connections.</div>
+                        <div>IPv6 DNS servers can only be set on Windows Server 2012 or newer, older hosts can only set IPv4 addresses.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: ipv4_addresses, ip_addresses, addresses</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 

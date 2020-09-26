@@ -145,10 +145,6 @@ releases:
         operation failed on
       - win_user_right - Refactored to use ``Ansible.Basic.AnsibleModule`` for better
         module invocation reporting
-      release_summary:
-      - This is the first official release of `ansible.windows` to be included in
-        Ansible 2.10. While the version has a major change bump it is still backwards
-        compatible with `0.2.0`.
       removed_features:
       - win_stat - removed the deprecated ``get_md55`` option and ``md5`` return value.
     fragments:
@@ -158,3 +154,13 @@ releases:
     - win_user-refactor.yml
     - win_user_right.yml
     release_date: '2020-08-14'
+  1.0.1:
+    changes:
+      bugfixes:
+      - win_copy - fix bug when copying a single file during a folder copy operation
+      release_summary:
+      - Minor bugfixes
+    fragments:
+    - 1.0.1-summary.yml
+    - win_copy-single-fix.yml
+    release_date: '2020-09-26'

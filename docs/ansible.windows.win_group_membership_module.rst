@@ -30,64 +30,66 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>A list of members to ensure are present/absent from the group.</div>
-                                            <div>Accepts local users as .\username, and SERVERNAME\username.</div>
-                                            <div>Accepts domain users and groups as DOMAIN\username and username@DOMAIN.</div>
-                                            <div>Accepts service users as NT AUTHORITY\username.</div>
-                                            <div>Accepts all local, domain and service user types as username, favoring domain lookups when in a domain.</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>A list of members to ensure are present/absent from the group.</div>
+                        <div>Accepts local users as .\username, and SERVERNAME\username.</div>
+                        <div>Accepts domain users and groups as DOMAIN\username and username@DOMAIN.</div>
+                        <div>Accepts service users as NT AUTHORITY\username.</div>
+                        <div>Accepts all local, domain and service user types as username, favoring domain lookups when in a domain.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Name of the local group to manage membership on.</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the local group to manage membership on.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>absent</li>
-                                                                                                                                                                                                <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
-                                                                                                                                                                                                <li>pure</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>Desired state of the members in the group.</div>
-                                            <div>When <code>state</code> is <code>pure</code>, only the members specified will exist, and all other existing members not specified are removed.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>absent</li>
+                                    <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                    <li>pure</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Desired state of the members in the group.</div>
+                        <div>When <code>state</code> is <code>pure</code>, only the members specified will exist, and all other existing members not specified are removed.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -147,75 +149,75 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-                    <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>added</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>success and <code>state</code> is <code>present</code></td>
                 <td>
-                                                                        <div>A list of members added when <code>state</code> is <code>present</code> or <code>pure</code>; this is empty if no members are added.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;SERVERNAME\\NewLocalAdmin&#x27;, &#x27;DOMAIN\\TestUser&#x27;]</div>
-                                    </td>
+                            <div>A list of members added when <code>state</code> is <code>present</code> or <code>pure</code>; this is empty if no members are added.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;SERVERNAME\\NewLocalAdmin&#x27;, &#x27;DOMAIN\\TestUser&#x27;]</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>members</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>success</td>
                 <td>
-                                                                        <div>A list of all local group members at completion; this is empty if the group contains no members.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;DOMAIN\\TestUser&#x27;, &#x27;SERVERNAME\\NewLocalAdmin&#x27;]</div>
-                                    </td>
+                            <div>A list of all local group members at completion; this is empty if the group contains no members.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;DOMAIN\\TestUser&#x27;, &#x27;SERVERNAME\\NewLocalAdmin&#x27;]</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>always</td>
                 <td>
-                                                                        <div>The name of the target local group.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Administrators</div>
-                                    </td>
+                            <div>The name of the target local group.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Administrators</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>removed</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>success and <code>state</code> is <code>absent</code></td>
                 <td>
-                                                                        <div>A list of members removed when <code>state</code> is <code>absent</code> or <code>pure</code>; this is empty if no members are removed.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;DOMAIN\\TestGroup&#x27;, &#x27;NT AUTHORITY\\SYSTEM&#x27;]</div>
-                                    </td>
+                            <div>A list of members removed when <code>state</code> is <code>absent</code> or <code>pure</code>; this is empty if no members are removed.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;DOMAIN\\TestGroup&#x27;, &#x27;NT AUTHORITY\\SYSTEM&#x27;]</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/><br/>
 
 

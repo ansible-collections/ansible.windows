@@ -31,128 +31,128 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>boot_time_command</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"(Get-WmiObject -ClassName Win32_OperatingSystem).LastBootUpTime"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Command to run that returns a unique string indicating the last time the system was booted.</div>
-                                            <div>Setting this to a command that has different output each time it is run will cause the task to fail.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"(Get-WmiObject -ClassName Win32_OperatingSystem).LastBootUpTime"</div>
+                </td>
+                <td>
+                        <div>Command to run that returns a unique string indicating the last time the system was booted.</div>
+                        <div>Setting this to a command that has different output each time it is run will cause the task to fail.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>connect_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">5</div>
-                                    </td>
-                                                                <td>
-                                            <div>Maximum seconds to wait for a single successful TCP connection to the WinRM endpoint before trying again.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: connect_timeout_sec</div>
-                                    </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">5</div>
+                </td>
+                <td>
+                        <div>Maximum seconds to wait for a single successful TCP connection to the WinRM endpoint before trying again.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: connect_timeout_sec</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>msg</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"Reboot initiated by Ansible"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Message to display to users.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"Reboot initiated by Ansible"</div>
+                </td>
+                <td>
+                        <div>Message to display to users.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>post_reboot_delay</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">0</div>
-                                    </td>
-                                                                <td>
-                                            <div>Seconds to wait after the reboot command was successful before attempting to validate the system rebooted successfully.</div>
-                                            <div>This is useful if you want wait for something to settle despite your connection already working.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: post_reboot_delay_sec</div>
-                                    </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">0</div>
+                </td>
+                <td>
+                        <div>Seconds to wait after the reboot command was successful before attempting to validate the system rebooted successfully.</div>
+                        <div>This is useful if you want wait for something to settle despite your connection already working.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: post_reboot_delay_sec</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>pre_reboot_delay</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">2</div>
-                                    </td>
-                                                                <td>
-                                            <div>Seconds to wait before reboot. Passed as a parameter to the reboot command.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: pre_reboot_delay_sec</div>
-                                    </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">2</div>
+                </td>
+                <td>
+                        <div>Seconds to wait before reboot. Passed as a parameter to the reboot command.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: pre_reboot_delay_sec</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>reboot_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">600</div>
-                                    </td>
-                                                                <td>
-                                            <div>Maximum seconds to wait for machine to re-appear on the network and respond to a test command.</div>
-                                            <div>This timeout is evaluated separately for both reboot verification and test command success so maximum clock time is actually twice this value.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: reboot_timeout_sec</div>
-                                    </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">600</div>
+                </td>
+                <td>
+                        <div>Maximum seconds to wait for machine to re-appear on the network and respond to a test command.</div>
+                        <div>This timeout is evaluated separately for both reboot verification and test command success so maximum clock time is actually twice this value.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: reboot_timeout_sec</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>test_command</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"whoami"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Command to expect success for to determine the machine is ready for management.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"whoami"</div>
+                </td>
+                <td>
+                        <div>Command to expect success for to determine the machine is ready for management.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -227,41 +227,41 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-                    <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>elapsed</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">float</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>always</td>
                 <td>
-                                                                        <div>The number of seconds that elapsed waiting for the system to be rebooted.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">23.2</div>
-                                    </td>
+                            <div>The number of seconds that elapsed waiting for the system to be rebooted.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">23.2</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>rebooted</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">boolean</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>always</td>
                 <td>
-                                                                        <div>True if the machine was rebooted.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
-                                    </td>
+                            <div>True if the machine was rebooted.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/><br/>
 
 

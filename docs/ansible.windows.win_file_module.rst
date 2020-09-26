@@ -32,49 +32,50 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">path</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>Path to the file being managed.</div>
-                                                                <div style="font-size: small; color: darkgreen"><br/>aliases: dest, name</div>
-                                    </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Path to the file being managed.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: dest, name</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                            <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                                                                                                                                                <li>absent</li>
-                                                                                                                                                                                                <li>directory</li>
-                                                                                                                                                                                                <li>file</li>
-                                                                                                                                                                                                <li>touch</li>
-                                                                                    </ul>
-                                                                            </td>
-                                                                <td>
-                                            <div>If <code>directory</code>, all immediate subdirectories will be created if they do not exist.</div>
-                                            <div>If <code>file</code>, the file will NOT be created if it does not exist, see the <span class='module'>ansible.windows.win_copy</span> or <span class='module'>ansible.windows.win_template</span> module if you want that behavior.</div>
-                                            <div>If <code>absent</code>, directories will be recursively deleted, and files will be removed.</div>
-                                            <div>If <code>touch</code>, an empty file will be created if the <code>path</code> does not exist, while an existing file or directory will receive updated file access and modification times (similar to the way <code>touch</code> works from the command line).</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>absent</li>
+                                    <li>directory</li>
+                                    <li>file</li>
+                                    <li>touch</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>If <code>directory</code>, all immediate subdirectories will be created if they do not exist.</div>
+                        <div>If <code>file</code>, the file will NOT be created if it does not exist, see the <span class='module'>ansible.windows.win_copy</span> or <span class='module'>ansible.windows.win_template</span> module if you want that behavior.</div>
+                        <div>If <code>absent</code>, directories will be recursively deleted, and files will be removed.</div>
+                        <div>If <code>touch</code>, an empty file will be created if the <code>path</code> does not exist, while an existing file or directory will receive updated file access and modification times (similar to the way <code>touch</code> works from the command line).</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 

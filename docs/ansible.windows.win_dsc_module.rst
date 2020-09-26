@@ -32,64 +32,66 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>free_form</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>The <span class='module'>ansible.windows.win_dsc</span> module takes in multiple free form options based on the DSC resource being invoked by <em>resource_name</em>.</div>
-                                            <div>There is no option actually named <code>free_form</code> so see the examples.</div>
-                                            <div>This module will try and convert the option to the correct type required by the DSC resource and throw a warning if it fails.</div>
-                                            <div>If the type of the DSC resource option is a <code>CimInstance</code> or <code>CimInstance[]</code>, this means the value should be a dictionary or list of dictionaries based on the values required by that option.</div>
-                                            <div>If the type of the DSC resource option is a <code>PSCredential</code> then there needs to be 2 options set in the Ansible task definition suffixed with <code>_username</code> and <code>_password</code>.</div>
-                                            <div>If the type of the DSC resource option is an array, then a list should be provided but a comma separated string also work. Use a list where possible as no escaping is required and it works with more complex types list <code>CimInstance[]</code>.</div>
-                                            <div>If the type of the DSC resource option is a <code>DateTime</code>, you should use a string in the form of an ISO 8901 string to ensure the exact date is used.</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The <span class='module'>ansible.windows.win_dsc</span> module takes in multiple free form options based on the DSC resource being invoked by <em>resource_name</em>.</div>
+                        <div>There is no option actually named <code>free_form</code> so see the examples.</div>
+                        <div>This module will try and convert the option to the correct type required by the DSC resource and throw a warning if it fails.</div>
+                        <div>If the type of the DSC resource option is a <code>CimInstance</code> or <code>CimInstance[]</code>, this means the value should be a dictionary or list of dictionaries based on the values required by that option.</div>
+                        <div>If the type of the DSC resource option is a <code>PSCredential</code> then there needs to be 2 options set in the Ansible task definition suffixed with <code>_username</code> and <code>_password</code>.</div>
+                        <div>If the type of the DSC resource option is an array, then a list should be provided but a comma separated string also work. Use a list where possible as no escaping is required and it works with more complex types list <code>CimInstance[]</code>.</div>
+                        <div>If the type of the DSC resource option is a <code>DateTime</code>, you should use a string in the form of an ISO 8901 string to ensure the exact date is used.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>module_version</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"latest"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Can be used to configure the exact version of the DSC resource to be invoked.</div>
-                                            <div>Useful if the target node has multiple versions installed of the module containing the DSC resource.</div>
-                                            <div>If not specified, the module will follow standard PowerShell convention and use the highest version available.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"latest"</div>
+                </td>
+                <td>
+                        <div>Can be used to configure the exact version of the DSC resource to be invoked.</div>
+                        <div>Useful if the target node has multiple versions installed of the module containing the DSC resource.</div>
+                        <div>If not specified, the module will follow standard PowerShell convention and use the highest version available.</div>
+                </td>
             </tr>
-                                <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>resource_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                 / <span style="color: red">required</span>                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                            </td>
-                                                                <td>
-                                            <div>The name of the DSC Resource to use.</div>
-                                            <div>Must be accessible to PowerShell using any of the default paths.</div>
-                                                        </td>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The name of the DSC Resource to use.</div>
+                        <div>Must be accessible to PowerShell using any of the default paths.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -205,75 +207,75 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-                    <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>module_version</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>always</td>
                 <td>
-                                                                        <div>The version of the dsc resource/module used.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">1.0.1</div>
-                                    </td>
+                            <div>The version of the dsc resource/module used.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">1.0.1</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>reboot_required</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">boolean</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>always</td>
                 <td>
-                                                                        <div>Flag returned from the DSC engine indicating whether or not the machine requires a reboot for the invoked changes to take effect.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
-                                    </td>
+                            <div>Flag returned from the DSC engine indicating whether or not the machine requires a reboot for the invoked changes to take effect.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>verbose_set</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>Ansible verbosity is -vvv or greater and a change occurred</td>
                 <td>
-                                                                        <div>The verbose output as a list from executing the DSC Set method.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;Perform operation &#x27;Invoke CimMethod&#x27; with the following parameters, &quot;, &#x27;[SERVER]: LCM: [Start Set ] [[File]DirectResourceAccess]&#x27;, &quot;Operation &#x27;Invoke CimMethod&#x27; complete.&quot;]</div>
-                                    </td>
+                            <div>The verbose output as a list from executing the DSC Set method.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;Perform operation &#x27;Invoke CimMethod&#x27; with the following parameters, &quot;, &#x27;[SERVER]: LCM: [Start Set ] [[File]DirectResourceAccess]&#x27;, &quot;Operation &#x27;Invoke CimMethod&#x27; complete.&quot;]</div>
+                </td>
             </tr>
-                                <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>verbose_test</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">list</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>Ansible verbosity is -vvv or greater</td>
                 <td>
-                                                                        <div>The verbose output as a list from executing the DSC test method.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;Perform operation &#x27;Invoke CimMethod&#x27; with the following parameters, &quot;, &#x27;[SERVER]: LCM: [Start Test ] [[File]DirectResourceAccess]&#x27;, &quot;Operation &#x27;Invoke CimMethod&#x27; complete.&quot;]</div>
-                                    </td>
+                            <div>The verbose output as a list from executing the DSC test method.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&quot;Perform operation &#x27;Invoke CimMethod&#x27; with the following parameters, &quot;, &#x27;[SERVER]: LCM: [Start Test ] [[File]DirectResourceAccess]&#x27;, &quot;Operation &#x27;Invoke CimMethod&#x27; complete.&quot;]</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/><br/>
 
 

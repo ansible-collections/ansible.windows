@@ -5,13 +5,21 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.0.0
+v1.0.1
 ======
 
 Release Summary
 ---------------
 
-- This is the first official release of `ansible.windows` to be included in Ansible 2.10. While the version has a major change bump it is still backwards compatible with `0.2.0`.
+- Minor bugfixes
+
+Bugfixes
+--------
+
+- win_copy - fix bug when copying a single file during a folder copy operation
+
+v1.0.0
+======
 
 Minor Changes
 -------------

@@ -32,26 +32,26 @@ Parameters
         <tr>
             <th colspan="1">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
-                        <th width="100%">Comments</th>
+            <th width="100%">Comments</th>
         </tr>
-                    <tr>
-                                                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>data</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                                                                    </div>
-                                    </td>
-                                <td>
-                                                                                                                                                                    <b>Default:</b><br/><div style="color: blue">"pong"</div>
-                                    </td>
-                                                                <td>
-                                            <div>Alternate data to return instead of &#x27;pong&#x27;.</div>
-                                            <div>If this parameter is set to <code>crash</code>, the module will cause an exception.</div>
-                                                        </td>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"pong"</div>
+                </td>
+                <td>
+                        <div>Alternate data to return instead of &#x27;pong&#x27;.</div>
+                        <div>If this parameter is set to <code>crash</code>, the module will cause an exception.</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/>
 
 
@@ -94,24 +94,24 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
-                    <tr>
-                                <td colspan="1">
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>ping</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
-                                          </div>
-                                    </td>
+                    </div>
+                </td>
                 <td>success</td>
                 <td>
-                                                                        <div>Value provided with the data parameter.</div>
-                                                                <br/>
-                                            <div style="font-size: smaller"><b>Sample:</b></div>
-                                                <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">pong</div>
-                                    </td>
+                            <div>Value provided with the data parameter.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">pong</div>
+                </td>
             </tr>
-                        </table>
+    </table>
     <br/><br/>
 
 
