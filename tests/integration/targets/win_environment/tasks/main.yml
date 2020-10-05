@@ -1,13 +1,6 @@
 ---
-- name: ensure test environment value is not set in all scope
-  win_environment:
-    name: "{{test_environment_name}}"
-    state: absent
-    level: "{{item}}"
-  with_items:
-  - machine
-  - process
-  - user
+- name: Pre-clean test vars
+  import_tasks: cleanup.yml
 
 - name: fail to create environment value with null value
   win_environment:
@@ -15,7 +8,7 @@
     state: present
     level: machine
   register: create_fail_null
-  failed_when: 'create_fail_null.msg != "state is present but all of the following are missing: value"'
+  failed_when: 'create_fail_null.msg != "state is present but any of the following are missing: value, variables"'
 
 - name: fail to create environment value with empty value
   win_environment:
@@ -256,12 +249,85 @@
     - change_user_again.before_value == test_new_user_environment_value
     - change_user_actual_again.stdout == "{{test_new_user_environment_value}}\r\n"
 
-- name: cleanup test changes
+# multi-value checks:
+#
+# single name/value option set and multi-value share implementation, so most tests above cover the bases
+# including user/machine/level setting. These tests primarily check that option restrictions work and that
+# the multi setting still sets all values, works in check mode, etc.
+
+- name: set multi value check mode
   win_environment:
-    name: "{{test_environment_name}}"
-    state: absent
-    level: "{{item}}"
-  with_items:
-  - machine
-  - process
-  - user
+    state: present
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+  check_mode: True
+
+- name: check multi values after check mode
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value check
+  assert:
+    that:
+    - multi_set is changed
+    - item.stdout | trim | bool == False
+  with_items: "{{ multi_val.results }}"
+
+- name: set multi value
+  win_environment:
+    state: present
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+
+- name: check multi values after setting
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value
+  assert:
+    that:
+    - multi_set is changed
+    - item.stdout | trim | bool == True
+  with_items: "{{ multi_val.results }}"
+
+- name: set multi value again
+  win_environment:
+    state: present
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+
+- name: check multi values after setting again
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value after setting again
+  assert:
+    that:
+    - multi_set is not changed
+    - item.stdout | trim | bool == True
+  with_items: "{{ multi_val.results }}"
+
+# cleanup
+- name: Post-clean test vars
+  import_tasks: cleanup.yml
