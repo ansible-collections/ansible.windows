@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Copyright: (c) 2020, Brian Scholer (@briantist)
 # Copyright: (c) 2015, Jon Hawkesworth (@jhawkesworth) <figs@unity.demon.co.uk>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -21,15 +22,21 @@ options:
     default: present
   name:
     description:
-    - The name of the environment variable.
+    - The name of the environment variable. Required when I(state=absent).
     type: str
-    required: yes
   value:
     description:
     - The value to store in the environment variable.
     - Must be set when C(state=present) and cannot be an empty string.
     - Can be omitted for C(state=absent).
     type: str
+    version_added: '1.1.0'
+  variables:
+    description:
+    - A dictionary where multiple environment variables can be defined at once.
+    - Only valid when I(state=present).
+    - I(level) applies to all vars defined this way.
+    type: dict
   level:
     description:
     - The level at which to set the environment variable.
@@ -49,10 +56,14 @@ notes:
   therefore will need restarting to pick up new environment settings.
   User level environment variables will require the user to log out
   and in again before they become available.
+- In the return, C(before_value) and C(value) will be set to the last values
+  when using I(variables). It's best to use C(values) in that case if you need
+  to find a specific variable's before and after values.
 seealso:
 - module: ansible.windows.win_path
 author:
 - Jon Hawkesworth (@jhawkesworth)
+- Brian Scholer (@briantist)
 '''
 
 EXAMPLES = r'''
@@ -68,6 +79,15 @@ EXAMPLES = r'''
     state: absent
     name: TestVariable
     level: user
+
+- name: Set several variables at once
+  ansible.windows.win_environment:
+    state: present
+    level: machine
+    variables:
+      TestVariable: Test value
+      CUSTOM_APP_VAR: 'Very important value'
+      ANOTHER_VAR: '{{ my_ansible_var }}'
 '''
 
 RETURN = r'''
@@ -81,4 +101,10 @@ value:
   returned: always
   type: str
   sample: C:\Program Files\jdk1.8
+values:
+  description: "dictionary of before and after values; each key is a variable name, each value is
+  another dict with C(before), C(after), and C(changed) keys"
+  returned: always
+  type: dict
+  version_added: '1.1.0'
 '''
