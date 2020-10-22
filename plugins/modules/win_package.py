@@ -176,6 +176,17 @@ options:
       C(2022-07-01).
     type: str
     aliases: [ user_name ]
+  wait_for_children:
+    description:
+    - Wait for any child process spawned by the install or uninstaller to
+      finish before M(ansible.windows.win_package) returns.
+    - This should not be required for most installers and setting to C(yes)
+      could result in the module not returning until the process it is waiting
+      for has been stopped manually.
+    - Requires Windows Server 2012 or Windows 8 or newer to use.
+    type: bool
+    default: no
+    version_added: 1.1.0
 extends_documentation_fragment:
 - ansible.windows.web_request
 

@@ -9,8 +9,7 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.AddType
-#Requires -Module Ansible.ModuleUtils.ArgvParser
-#Requires -Module Ansible.ModuleUtils.CommandUtil
+#AnsibleRequires -PowerShell ..module_utils.Process
 #AnsibleRequires -PowerShell ..module_utils.WebRequest
 
 Function Import-PInvokeCode {
@@ -618,7 +617,7 @@ Function Invoke-Executable {
 
         [Parameter(Mandatory=$true)]
         [String]
-        $Command,
+        $CommandLine,
 
         [Int32[]]
         $ReturnCodes,
@@ -630,34 +629,38 @@ Function Invoke-Executable {
         $WorkingDirectory,
 
         [String]
-        $ConsoleOutputEncoding
+        $ConsoleOutputEncoding,
+
+        [Switch]
+        $WaitChildren
     )
 
     $commandArgs = @{
-        command = $Command
+        CommandLine = $CommandLine
+        WaitChildren = $WaitForChildren
     }
     if ($WorkingDirectory) {
-        $commandArgs.working_directory = $WorkingDirectory
+        $commandArgs.WorkingDirectory = $WorkingDirectory
     }
     if ($ConsoleOutputEncoding) {
-        $commandArgs.output_encoding_override = $ConsoleOutputEncoding
+        $commandArgs.OutputEncodingOverride = $ConsoleOutputEncoding
     }
 
-    $result = Run-Command @commandArgs
+    $result = Start-AnsibleWindowsProcess @commandArgs
 
-    # Run-Command returns rc as a UInt32 but we need to compare it with a Int32, we get the byte equivalent Int32 value
-    # instead. https://github.com/ansible-collections/ansible.windows/issues/46
-    $rc = [BitConverter]::ToInt32([BitConverter]::GetBytes($result.rc), 0)
+    # Start-AnsibleWindowsProcess returns rc as a UInt32 but we need to compare it with a Int32, we get the byte
+    # equivalent Int32 value instead. https://github.com/ansible-collections/ansible.windows/issues/46
+    $rc = [BitConverter]::ToInt32([BitConverter]::GetBytes($result.ExitCode), 0)
 
     $module.Result.rc = $rc
     if ($ReturnCodes -notcontains $rc) {
-        $module.Result.stdout = $result.stdout
-        $module.Result.stderr = $result.stderr
+        $module.Result.stdout = $result.Stdout
+        $module.Result.stderr = $result.Stderr
         if ($LogPath -and (Test-Path -LiteralPath $LogPath)) {
             $module.Result.log = (Get-Content -LiteralPath $LogPath | Out-String)
         }
 
-        $module.FailJson("unexpected rc from '$($commandArgs.command)': see rc, stdout, and stderr for more details")
+        $module.FailJson("unexpected rc from '$($result.Command)': see rc, stdout, and stderr for more details")
     } else {
         $module.Result.failed = $false
     }
@@ -688,7 +691,10 @@ Function Invoke-Msiexec {
         $LogPath,
 
         [String]
-        $WorkingDirectory
+        $WorkingDirectory,
+
+        [Switch]
+        $WaitChildren
     )
 
     $tempFile = $null
@@ -703,21 +709,24 @@ Function Invoke-Msiexec {
         $cmd.AddRange([System.Collections.Generic.List[String]]@(
             '/L*V', $LogPath, '/qn', '/norestart'
         ))
+        $commandLine = @($cmd | ConvertTo-EscapedArgument) -join ' '
+        if ($Arguments) {
+            $commandLine += " $Arguments"
+        }
 
         $invokeParams = @{
             Module = $Module
-            Command = (Argv-ToString -arguments $cmd)
+            CommandLine = $commandLine
             ReturnCodes = $ReturnCodes
             LogPath = $LogPath
             WorkingDirectory = $WorkingDirectory
+            WaitChildren = $WaitChildren
 
             # Msiexec is not a console application but in the case of a fatal error it does still send messages back
             # over the stdout pipe. These messages are UTF-16 encoded so we override the default UTF-8.
             ConsoleOutputEncoding = 'Unicode'
         }
-        if ($Arguments) {
-            $invokeParams.Command += " $Arguments"
-        }
+
         Invoke-Executable @invokeParams
     } finally {
         if ($tempFile -and (Test-Path -LiteralPath $tempFile)) {
@@ -780,7 +789,10 @@ $providerInfo = [Ordered]@{
                 $State,
 
                 [String]
-                $WorkingDirectory
+                $WorkingDirectory,
+
+                [Switch]
+                $WaitChildren
             )
 
             if ($state -eq 'present') {
@@ -799,6 +811,7 @@ $providerInfo = [Ordered]@{
                 ReturnCodes = $ReturnCodes
                 LogPath = $LogPath
                 WorkingDirectory = $WorkingDirectory
+                WaitChildren = $WaitChildren
             }
             Invoke-Msiexec @invokeParams
         }
@@ -1072,6 +1085,9 @@ $providerInfo = [Ordered]@{
                 [String]
                 $WorkingDirectory,
 
+                [Switch]
+                $WaitChildren,
+
                 [String[]]
                 $ProductCodes
             )
@@ -1086,11 +1102,11 @@ $providerInfo = [Ordered]@{
                     # https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiapplypatchw
                     if ($Path.Contains(';')) {
                         $tempLink = Join-Path -Path $env:TEMP -ChildPath "win_package-$([System.IO.Path]::GetRandomFileName()).msp"
-                        $res = Run-Command -command (Argv-ToString -arguments @("cmd.exe", "/c", "mklink", $tempLink, $Path))
-                        if ($res.rc -ne 0) {
-                            $Module.Result.rc = $res.rc
-                            $Module.Result.stdout = $res.stdout
-                            $Module.Result.stderr = $res.stderr
+                        $res = Start-AnsibleWindowsProcess -FilePath cmd.exe -ArgumentList @('/c', 'mklink', $tempLink, $Path)
+                        if ($res.ExitCode -ne 0) {
+                            $Module.Result.rc = $res.ExitCode
+                            $Module.Result.stdout = $res.Stdout
+                            $Module.Result.stderr = $res.Stderr
 
                             $Module.FailJson("Failed to create temporary symlink '$tempLink' -> '$Path' for msiexec patch install as path contains semicolon")
                         }
@@ -1110,6 +1126,7 @@ $providerInfo = [Ordered]@{
                     ReturnCodes = $ReturnCodes
                     LogPath = $LogPath
                     WorkingDirectory = $WorkingDirectory
+                    WaitChildren = $WaitChildren
                 }
                 foreach ($action in $actions) {
                     Invoke-Msiexec -Actions $action @invokeParams
@@ -1175,17 +1192,21 @@ $providerInfo = [Ordered]@{
                 $WorkingDirectory,
 
                 [String]
-                $RegistryPath
+                $RegistryPath,
+
+                [Switch]
+                $WaitChildren
             )
 
             $invokeParams = @{
                 Module = $Module
                 ReturnCodes = $ReturnCodes
                 WorkingDirectory = $WorkingDirectory
+                WaitChildren = $WaitChildren
             }
 
             if ($Path) {
-                $invokeParams.Command = Argv-ToString -arguments @($Path)
+                $invokeParams.CommandLine = ConvertTo-EscapedArgument -Argument $Path
             } else {
                 $registryProperties = Get-ItemProperty -LiteralPath $RegistryPath
 
@@ -1207,7 +1228,7 @@ $providerInfo = [Ordered]@{
                     $rawArguments = [System.Collections.Generic.List[String]]@()
 
                     $executable = New-Object -TypeName System.Text.StringBuilder
-                    foreach ($cmd in ([Ansible.Process.ProcessUtil]::ParseCommandLine($command))) {
+                    foreach ($cmd in ($command | ConvertFrom-EscapedArgument)) {
                         if ($rawArguments.Count -eq 0) {
                             # Still haven't found the path, append the arg to the executable path and see if it exists.
                             $null = $executable.Append($cmd)
@@ -1225,15 +1246,15 @@ $providerInfo = [Ordered]@{
                     # If we still couldn't find a file just use the command literally and hope WIndows can handle it,
                     # otherwise recombind the args which will also quote whatever is needed.
                     if ($rawArguments.Count -gt 0) {
-                        $command = Argv-ToString -arguments $rawArguments
+                        $command = $rawArguments | ConvertTo-EscapedArgument
                     }
                 }
 
-                $invokeParams.Command = $command
+                $invokeParams.CommandLine = $command
             }
 
             if ($Arguments) {
-                $invokeParams.Command += " $Arguments"
+                $invokeParams.CommandLine += " $Arguments"
             }
 
             Invoke-Executable @invokeParams
@@ -1281,6 +1302,7 @@ $spec = @{
         creates_service = @{ type = "str" }
         log_path = @{ type = "path" }
         provider = @{ type = "str"; default = "auto"; choices = $providerInfo.Keys + "auto" }
+        wait_for_children = @{ type = 'bool'; default = $false }
     }
     required_by = @{
         creates_version = "creates_path"
@@ -1307,13 +1329,14 @@ $createsVersion = $module.Params.creates_version
 $createsService = $module.Params.creates_service
 $logPath = $module.Params.log_path
 $provider = $module.Params.provider
+$waitForChildren = $module.Params.wait_for_children
 
 $module.Result.reboot_required = $false
 
 if ($null -ne $arguments) {
     # convert a list to a string and escape the values
     if ($arguments -is [array]) {
-        $arguments = Argv-ToString -arguments $arguments
+        $arguments = $arguments | ConvertTo-EscapedArgument
     }
 }
 
@@ -1381,6 +1404,7 @@ try {
             Path = $path
             State = $state
             WorkingDirectory = $chdir
+            WaitChildren = $waitForChildren
         }
         $setParams += $packageStatus.ExtraInfo
         &$providerInfo."$($packageStatus.Provider)".Set @setParams
