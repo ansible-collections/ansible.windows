@@ -47,7 +47,7 @@ $tests = [Ordered]@{
     "Start-AnsibleWindowsProcess basic" = {
         $actual = Start-AnsibleWindowsProcess -FilePath whoami
         $actual.PSTypeNames[0] | Assert-Equals -Expected 'Ansible.Windows.Process.Info'
-        $actual.Command | Assert-Equals -Expected (Get-Command whoami -CommandType Application).Source
+        $actual.Command | Assert-Equals -Expected (Get-Command whoami -CommandType Application).Path
         $actual.Stdout | Assert-Equals -Expected "$(&whoami.exe)`r`n"
         $actual.Stderr | Assert-Equals -Expected ""
         $actual.ExitCode | Assert-Equals -Expected 0
@@ -107,7 +107,7 @@ $tests = [Ordered]@{
     }
 
     "Start-AnsibleWindowsProcess stderr" = {
-        $pwshPath = (Get-Command powershell.exe -CommandType Application).Source
+        $pwshPath = (Get-Command powershell.exe -CommandType Application).Path
         $actual = Start-AnsibleWindowsProcess -FilePath powershell.exe -ArgumentList '[Console]::Error.WriteLine("hi")'
         $actual.PSTypeNames[0] | Assert-Equals -Expected 'Ansible.Windows.Process.Info'
         $actual.Command | Assert-Equals -Expected "$pwshPath `"[Console]::Error.WriteLine(\`"hi\`")`""
@@ -117,7 +117,7 @@ $tests = [Ordered]@{
     }
 
     "Start-AnsibleWindowsProcess exit code" = {
-        $pwshPath = (Get-Command powershell.exe -CommandType Application).Source
+        $pwshPath = (Get-Command powershell.exe -CommandType Application).Path
         $actual = Start-AnsibleWindowsProcess -FilePath powershell.exe -ArgumentList 'exit 10'
         $actual.PSTypeNames[0] | Assert-Equals -Expected 'Ansible.Windows.Process.Info'
         $actual.Command | Assert-Equals -Expected "$pwshPath `"exit 10`""
@@ -127,7 +127,7 @@ $tests = [Ordered]@{
     }
 
     "Start-AnsibleWindowsProcess relative path" = {
-        $pwshPath = (Get-Command powershell.exe -CommandType Application).Source
+        $pwshPath = (Get-Command powershell.exe -CommandType Application).Path
         $pwshParent = Split-Path $pwshPath -Parent
         $pwshGrandparent = Split-Path $pwshParent -Parent
         $pwshGrandparentName = Split-Path $pwshParent -Leaf

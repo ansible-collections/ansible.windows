@@ -26,7 +26,7 @@ Function Resolve-ExecutablePath {
     # they exist.
     $command = Get-Command -Name $FilePath -CommandType Application -ErrorAction SilentlyContinue
     if ($command) {
-        $command.Source
+        $command.Path
         return
     }
 
@@ -166,7 +166,7 @@ Function Start-AnsibleWindowsProcess {
         [String[]]
         $ArgumentList,
 
-        [Parameter(ParameterSetName='CommandLine')]
+        [Parameter(Mandatory=$true, ParameterSetName='CommandLine')]
         [String]
         $CommandLine,
 
@@ -196,11 +196,13 @@ Function Start-AnsibleWindowsProcess {
     }
 
     if ($FilePath) {
-        $applicationName = Resolve-ExecutablePath -FilePath $FilePath -WorkingDirectory $WorkingDirectory
+        $applicationName = $FilePath
     }
     else {
-        $applicationName = [NullString]::Value
+        # If -FilePath is not set then -CommandLine must have been used. Select the path based on the first entry.
+        $applicationName = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv($CommandLine)[0]
     }
+    $applicationName = Resolve-ExecutablePath -FilePath $applicationName -WorkingDirectory $WorkingDirectory
 
     # When -ArgumentList is used, we need to escape each argument, including the FilePath to build our CommandLine.
     if ($PSCmdlet.ParameterSetName -eq 'ArgumentList') {
