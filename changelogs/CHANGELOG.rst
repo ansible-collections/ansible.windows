@@ -5,13 +5,16 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.0.1
+v1.2.0
 ======
 
 Release Summary
 ---------------
 
-- Minor bugfixes
+- No changes in this release, this is to rectify the mistake with the published `1.1.0` version.
+
+v1.0.1
+======
 
 Bugfixes
 --------
