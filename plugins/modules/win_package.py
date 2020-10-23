@@ -192,7 +192,7 @@ options:
     - Requires Windows Server 2012 or Windows 8 or newer to use.
     type: bool
     default: no
-    version_added: 1.1.0
+    version_added: 1.3.0
 extends_documentation_fragment:
 - ansible.windows.web_request
 
