@@ -201,17 +201,18 @@ exit 1
 '@))
         $cmd = "powershell.exe Start-Process powershell.exe -ArgumentList '-EncodedCommand', '$subCommand'"
 
+        $actual = $null
         $time = Measure-Command -Expression {
             $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
+            $actual.ExitCode | Assert-Equals -Expected 0
         }
         $time.TotalSeconds -lt 2 | Assert-Equals -Expected $true
-        $actual.ExitCode | Assert-Equals -Expected 0
 
         $time = Measure-Command -Expression {
             $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $true)
+            $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
         }
         $time.TotalSeconds -ge 2 | Assert-Equals -Expected $true
-        $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
     }
 }
 

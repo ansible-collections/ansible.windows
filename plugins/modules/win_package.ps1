@@ -1206,7 +1206,7 @@ $providerInfo = [Ordered]@{
             }
 
             if ($Path) {
-                $invokeParams.CommandLine = ConvertTo-EscapedArgument -Argument $Path
+                $invokeParams.CommandLine = ConvertTo-EscapedArgument -InputObject $Path
             } else {
                 $registryProperties = Get-ItemProperty -LiteralPath $RegistryPath
 
@@ -1244,9 +1244,9 @@ $providerInfo = [Ordered]@{
                     }
 
                     # If we still couldn't find a file just use the command literally and hope WIndows can handle it,
-                    # otherwise recombind the args which will also quote whatever is needed.
+                    # otherwise recombine the args which will also quote whatever is needed.
                     if ($rawArguments.Count -gt 0) {
-                        $command = $rawArguments | ConvertTo-EscapedArgument
+                        $command = @($rawArguments | ConvertTo-EscapedArgument) -join ' '
                     }
                 }
 
@@ -1336,7 +1336,7 @@ $module.Result.reboot_required = $false
 if ($null -ne $arguments) {
     # convert a list to a string and escape the values
     if ($arguments -is [array]) {
-        $arguments = $arguments | ConvertTo-EscapedArgument
+        $arguments = @($arguments | ConvertTo-EscapedArgument) -join ' '
     }
 }
 

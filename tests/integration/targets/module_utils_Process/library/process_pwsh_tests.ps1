@@ -132,7 +132,7 @@ $tests = [Ordered]@{
         $pwshGrandparent = Split-Path $pwshParent -Parent
         $pwshGrandparentName = Split-Path $pwshParent -Leaf
 
-        Push-Location -Path $pwshGrandparent
+        Push-Location -LiteralPath $pwshGrandparent
         $actual = Start-AnsibleWindowsProcess -FilePath "$pwshGrandparentName\powershell" -ArgumentList '$pwd.Path'
         Pop-Location
         $actual.PSTypeNames[0] | Assert-Equals -Expected 'Ansible.Windows.Process.Info'
@@ -259,15 +259,15 @@ exit 1
 
         $time = Measure-Command -Expression {
             $actual = Start-AnsibleWindowsProcess -CommandLine $cmd
+            $actual.ExitCode | Assert-Equals -Expected 0
         }
         $time.TotalSeconds -lt 2 | Assert-Equals -Expected $true
-        $actual.ExitCode | Assert-Equals -Expected 0
 
         $time = Measure-Command -Expression {
             $actual = Start-AnsibleWindowsProcess -CommandLine $cmd -WaitChildren
+            $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
         }
         $time.TotalSeconds -ge 2 | Assert-Equals -Expected $true
-        $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
     }
 }
 

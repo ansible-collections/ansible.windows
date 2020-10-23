@@ -14,8 +14,3 @@
 - assert:
     that:
     - process_pwsh_actual.data == 'success'
-
-- win_copy:
-    src: '{{ win_printargv_path }}'
-    dest: C:\temp\PrintArgvJson.exe
-    remote_src: yes
