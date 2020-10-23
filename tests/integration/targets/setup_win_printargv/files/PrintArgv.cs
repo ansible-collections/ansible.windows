@@ -1,13 +1,30 @@
 using System;
-// This has been compiled to an exe and uploaded to S3 bucket for argv test
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Web.Script.Serialization;
 
 namespace PrintArgv
 {
     class Program
     {
+        [DllImport("Kernel32.dll")]
+        public static extern IntPtr GetCommandLineW();
+
         static void Main(string[] args)
         {
-            Console.WriteLine(string.Join(System.Environment.NewLine, args));
+            IntPtr cmdLinePtr = GetCommandLineW();
+            string cmdLine = Marshal.PtrToStringUni(cmdLinePtr);
+
+            Dictionary<string, object> cmdInfo = new Dictionary<string, object>()
+            {
+                {"command_line", cmdLine },
+                {"args", args},
+            };
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = int.MaxValue;
+            jss.RecursionLimit = int.MaxValue;
+            Console.WriteLine(jss.Serialize(cmdInfo));
         }
     }
 }

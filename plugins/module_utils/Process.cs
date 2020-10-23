@@ -250,7 +250,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         public Win32Exception(string message) : this(Marshal.GetLastWin32Error(), message) { }
         public Win32Exception(int errorCode, string message) : base(errorCode)
         {
-            _msg = String.Format("{0} ({1}, Win32ErrorCode {2})", message, base.Message, errorCode);
+            _msg = String.Format("{0} ({1}, Win32ErrorCode {2} - 0x{2:X8})", message, base.Message, errorCode);
         }
 
         public override string Message { get { return _msg; } }
@@ -271,7 +271,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         /// </summary>
         /// <param name="lpCommandLine">The command line to parse</param>
         /// <returns>An array of arguments interpreted by Windows</returns>
-        public static string[] ParseCommandLine(string lpCommandLine)
+        public static string[] CommandLineToArgv(string lpCommandLine)
         {
             int numArgs;
             using (SafeMemoryBuffer buf = NativeMethods.CommandLineToArgvW(lpCommandLine, out numArgs))

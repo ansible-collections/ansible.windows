@@ -1,0 +1,21 @@
+- name: run Process.cs tests
+  process_cs_tests:
+  register: process_cs_actual
+
+- assert:
+    that:
+    - process_cs_actual.data == 'success'
+
+- name: run Process.psm1 tests
+  process_pwsh_tests:
+    print_argv: '{{ win_printargv_path }}'
+  register: process_pwsh_actual
+
+- assert:
+    that:
+    - process_pwsh_actual.data == 'success'
+
+- win_copy:
+    src: '{{ win_printargv_path }}'
+    dest: C:\temp\PrintArgvJson.exe
+    remote_src: yes

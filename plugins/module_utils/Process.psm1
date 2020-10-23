@@ -61,7 +61,11 @@ Function ConvertFrom-EscapedArgument {
 
     process {
         foreach ($command in $InputObject) {
-            [Ansible.Windows.Process.ProcessUtil]::ParseCommandLine($command)
+            # CommandLineToArgv treats \" slightly different for the first argument for some reason (probably because
+            # it expects it to be a filepath). We add a dummy value to ensure it splits the args in the same way as
+            # each other and just discard that first arg in the output.
+            $command = "a $command"
+            [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv($command) | Select-Object -Skip 1
         }
     }
 }
@@ -78,11 +82,17 @@ Function ConvertTo-EscapedArgument {
     [OutputType([String])]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [AllowEmptyString()]
+        [AllowNull()]
         [String[]]
         $InputObject
     )
 
     process {
+        if (-not $InputObject) {
+            return '""'
+        }
+
         foreach ($argument in $InputObject) {
             if (-not $argument) {
                 return '""'
@@ -94,8 +104,8 @@ Function ConvertTo-EscapedArgument {
             # Replace any double quotes in an argument with '\"'
             $argument = $argument -replace '"', '\"'
 
-            # Double up on any '\' chars that preceded a double quote
-            $argument = $argument -replace '(\\+)\"', '$1$1\"'
+            # Double up on any '\' chars that preceded '\"'
+            $argument = $argument -replace '(\\+)\\"', '$1$1\"'
 
             # Double up '\' at the end of the argument so it doesn't escape end quote.
             $argument = $argument -replace '(\\+)$', '$1$1'
@@ -161,7 +171,8 @@ Function Start-AnsibleWindowsProcess {
         $CommandLine,
 
         [String]
-        $WorkingDirectory,
+        # Default to the PowerShell location and not the process location.
+        $WorkingDirectory = (Get-Location -PSProvider FileSystem),
 
         [Collections.IDictionary]
         $Environment,
@@ -192,19 +203,23 @@ Function Start-AnsibleWindowsProcess {
     }
 
     # When -ArgumentList is used, we need to escape each argument, including the FilePath to build our CommandLine.
-    if ($PSCmdlet.ParameterSetName -eq 'SplitArgs') {
-        $CommandLine = ConvertTo-EscapedArgument -Argument $applicationName
-        if ($ArgumentList) {
+    if ($PSCmdlet.ParameterSetName -eq 'ArgumentList') {
+        $CommandLine = ConvertTo-EscapedArgument -InputObject $applicationName
+        if ($ArgumentList.Count) {
             $escapedArguments = @($ArgumentList | ConvertTo-EscapedArgument)
-            $CommandLine += " $($escapedArguments -join ' '))"
+            $CommandLine += " $($escapedArguments -join ' ')"
         }
     }
 
-    $stdin = switch ($InputObject) {
-        { $null -eq $_ } { $null }
-        { $_ -is [byte[]] } { ,$_ }
-        { $_ -is [String] } { ,[Text.Encoding]::UTF8.GetBytes($InputObject) }
-        default {
+    $stdin = $null
+    if ($InputObject) {
+        if ($InputObject -is [byte[]]) {
+            $stdin = $InputObject
+        }
+        elseif ($InputObject -is [string]) {
+            $stdin = [Text.Encoding]::UTF8.GetBytes($InputObject)
+        }
+        else {
             Write-Error -Message "InputObject must be a string or byte[]"
             return
         }
@@ -216,8 +231,8 @@ Function Start-AnsibleWindowsProcess {
     [PSCustomObject]@{
         PSTypeName = 'Ansible.Windows.Process.Info'
         Command = $CommandLine
-        Stdout = $res.Stdout
-        Stderr = $res.Stderr
+        Stdout = $res.StandardOut
+        Stderr = $res.StandardError
         ExitCode = $res.ExitCode
     }
 }

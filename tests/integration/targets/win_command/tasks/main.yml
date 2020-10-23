@@ -168,15 +168,18 @@
   win_command: '"{{ win_printargv_path }}" arg1 "arg 2" C:\path\arg "\"quoted arg\""'
   register: cmdout
 
+- set_fact:
+    cmdout_argv: '{{ cmdout.stdout | trim | from_json }}'
+
 - name: assert call to argv binary with absolute path
   assert:
     that:
     - cmdout is changed
     - cmdout.rc == 0
-    - cmdout.stdout_lines[0] == 'arg1'
-    - cmdout.stdout_lines[1] == 'arg 2'
-    - cmdout.stdout_lines[2] == 'C:\\path\\arg'
-    - cmdout.stdout_lines[3] == '"quoted arg"'
+    - cmdout_argv.args[0] == 'arg1'
+    - cmdout_argv.args[1] == 'arg 2'
+    - cmdout_argv.args[2] == 'C:\\path\\arg'
+    - cmdout_argv.args[3] == '"quoted arg"'
 
 - name: call argv binary with relative path
   win_command: '{{ win_printargv_path | win_basename }} C:\path\end\slash\ ADDLOCAL="msi,example" two\\slashes'
@@ -184,14 +187,17 @@
     chdir: '{{ win_printargv_path | win_dirname }}'
   register: cmdout
 
+- set_fact:
+    cmdout_argv: '{{ cmdout.stdout | trim | from_json }}'
+
 - name: assert call to argv binary with relative path
   assert:
     that:
     - cmdout is changed
     - cmdout.rc == 0
-    - cmdout.stdout_lines[0] == 'C:\\path\\end\\slash\\'
-    - cmdout.stdout_lines[1] == 'ADDLOCAL=msi,example'
-    - cmdout.stdout_lines[2] == 'two\\\\slashes'
+    - cmdout_argv.args[0] == 'C:\\path\\end\\slash\\'
+    - cmdout_argv.args[1] == 'ADDLOCAL=msi,example'
+    - cmdout_argv.args[2] == 'two\\\\slashes'
 
 - name: download binary that output shift_jis chars to console
   win_get_url:

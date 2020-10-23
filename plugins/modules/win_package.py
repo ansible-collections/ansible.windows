@@ -178,8 +178,14 @@ options:
     aliases: [ user_name ]
   wait_for_children:
     description:
-    - Wait for any child process spawned by the install or uninstaller to
-      finish before M(ansible.windows.win_package) returns.
+    - The module will wait for the process it spawns to finish but any
+      processes spawned in that child process as ignored.
+    - Set to C(yes) to wait for all descendent processes to finish before the
+      module returns.
+    - This is useful if the install/uninstaller is just a wrapper which then
+      calls the actual installer as its own child process. When this option is
+      C(yes) then the module will wait for both processes to finish before
+      returning.
     - This should not be required for most installers and setting to C(yes)
       could result in the module not returning until the process it is waiting
       for has been stopped manually.
