@@ -580,6 +580,7 @@ $factMeta = @(
                 day = $datetime.ToString("dd")
                 epoch_local = (Get-Date ($datetime) -UFormat '+%s')
                 epoch = (Get-Date ($datetimeUtc) -UFormat '+%s')
+                epoch_int = [int]$epoch
                 hour = $datetime.ToString("HH")
                 iso8601 = $datetimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ")
                 iso8601_basic = $datetime.ToString("yyyyMMddTHHmmssffffff")
