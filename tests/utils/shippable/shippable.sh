@@ -5,9 +5,16 @@ set -o pipefail -eux
 declare -a args
 IFS='/:' read -ra args <<< "$1"
 
-script="${args[0]}"
+ansible_version="${args[0]}"
+script="${args[1]}"
 
-test="$1"
+function join {
+    local IFS="$1";
+    shift;
+    echo "$*";
+}
+
+test="$(join / "${args[@]:1}")"
 
 docker images ansible/ansible
 docker images quay.io/ansible/*
@@ -26,17 +33,31 @@ fi
 command -v python
 python -V
 
+function retry
+{
+    # shellcheck disable=SC2034
+    for repetition in 1 2 3; do
+        set +e
+        "$@"
+        result=$?
+        set -e
+        if [ ${result} == 0 ]; then
+            return ${result}
+        fi
+        echo "@* -> ${result}"
+    done
+    echo "Command '@*' failed 3 times!"
+    exit -1
+}
+
 command -v pip
 pip --version
 pip list --disable-pip-version-check
-
-if [[ "${script}" =~ ^(sanity|units)$ ]]; then
-    ansible_branch="${args[1]}"
+if [ "${ansible_version}" == "devel" ]; then
+    retry pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 else
-    ansible_branch="devel"
+    retry pip install "https://github.com/ansible/ansible/archive/stable-${ansible_version}.tar.gz" --disable-pip-version-check
 fi
-
-pip install "https://github.com/ansible/ansible/archive/${ansible_branch}.tar.gz" --disable-pip-version-check
 
 SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
 TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
