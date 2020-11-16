@@ -3,7 +3,7 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
-# Reworked the logic to more exact handle of rights and proper return values, 
+# Revorked the logic to more exact handle of rights and proper return values,
 # Added state='reset' option to reset the ACL to the inherited ACEs only.
 # https://github.com/ansible-collections/ansible.windows/issues/18
 # Added support of environment variables for Path
@@ -114,7 +114,7 @@ $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "prese
 
 if($state -eq 'reset'){
    SetPrivilegeTokens
-   if(!(Get-Item $path).PSParentPath){
+   if(!(Get-Item -LiteralPath $path).PSParentPath){
       Fail-Json -obj $result -message "$path is a root folder! Cannot reset ACL!"
 	  }
    try
@@ -135,12 +135,12 @@ if($state -eq 'reset'){
 	     }
       $changed=$false
       # Remove any non-inherited ACE
-      $objACL.Access|?{!$_.isinherited}|%{
+      $objACL.Access|Where-Object{!$_.isinherited}|ForEach-Object{
          $result.changed=$true
-	     $changed=$true
+	     if(!$changed){$changed=$true}
 	     [void]$objACL.RemoveAccessRule($_)
          }
-      if($changed){		 
+      if($changed){
 	     If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             } else {
@@ -220,7 +220,7 @@ Try {
     }else{
        $objRights=[System.Security.AccessControl.FileSystemRights]$rights
     }
-    
+
 	Try {
 		$ar=$null
         If ($state -eq "present"){
@@ -228,17 +228,17 @@ Try {
 		} else {
 		   [void]$objACL.RemoveAccessRule($objACE)
 		   # Enumerate all remaining rights for the given SID except the InheritOnly ones
-           $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|?{
-             ($_.IdentityReference.Value -eq $sid) -and 
-             (($_.PropagationFlags -band [System.Security.AccessControl.PropagationFlags]'InheritOnly') -ne 
+           $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|Where-Object{
+             ($_.IdentityReference.Value -eq $sid) -and
+             (($_.PropagationFlags -band [System.Security.AccessControl.PropagationFlags]'InheritOnly') -ne
 			     [System.Security.AccessControl.PropagationFlags]'InheritOnly') -and
-			 ($_.AccessControlType -eq $objType) 
-             }|%{
+			 ($_.AccessControlType -eq $objType)
+             }|ForEach-Object{
              if(!$ar){$ar=$_."$($PathType)Rights"}else{$ar=$ar -bor $_."$($PathType)Rights"}
              }
 		}
 		$myMessage="Actual rights: "
-		$objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|?{$_.IdentityReference.Value -eq $sid}|%{
+		$objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|Where-Object{$_.IdentityReference.Value -eq $sid}|ForEach-Object{
 		   $myMessage += "$($_.AccessControlType): $($_."$($PathType)Rights"): $(if($_.IsInherited){'Inherited,'}) $($_.InheritanceFlags); "
 		   }
 		if($objOldRules -eq $objACL.AccessToString){
