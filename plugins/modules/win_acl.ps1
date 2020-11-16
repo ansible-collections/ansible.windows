@@ -3,6 +3,13 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
+# Reworked the logic to more exact handle of rights and proper return values, 
+# Added state='reset' option to reset the ACL to the inherited ACEs only.
+# https://github.com/ansible-collections/ansible.windows/issues/18
+# Added support of environment variables for Path
+# https://github.com/ansible/ansible/issues/68597
+# Added support of check_mode
+# Laszlo Papp <laca@placa.me>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.Legacy
@@ -78,18 +85,12 @@ Function SetPrivilegeTokens() {
 
 $result = @{
     changed = $false
+	msg = ""
 }
 
-$path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
-$user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
-$rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
-
-$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow","deny"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present"
-
-$inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
-$propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly","None","NoPropagateInherit"
-
+$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
+# Get the path parameter with expanded environment variables.
+$path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings(Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true)
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
 $path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
@@ -104,8 +105,82 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
-    Fail-Json -obj $result -message "$path file or directory does not exist on the host"
+    Fail-Json -obj $result -message "$path does not exist on the host"
 }
+$path_item = Get-Item -LiteralPath $path -Force
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present","reset"
+# Reset logic placed here as in this case no more parameters are required
+
+if($state -eq 'reset'){
+   SetPrivilegeTokens
+   if(!(Get-Item $path).PSParentPath){
+      Fail-Json -obj $result -message "$path is a root folder! Cannot reset ACL!"
+	  }
+   try
+   {
+      $objACL = Get-ACL -LiteralPath $path
+      # Save the ACL for reverting when needed
+	  $objACL_Bckp=$objACL
+      if($objACL.AreAccessRulesProtected){
+         $result.changed=$true
+         $objacl.SetAccessRuleProtection($false,$false)
+         # If inheritance set, we need to write and re-read the ACL to get the inherited ACEs.
+		 If ($path_item.PSProvider.Name -eq "Registry") {
+             Set-ACL -LiteralPath $path -AclObject $objACL
+         } else {
+             (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+         }
+         $objACL = Get-ACL -LiteralPath $path
+	     }
+      $changed=$false
+      # Remove any non-inherited ACE
+      $objACL.Access|?{!$_.isinherited}|%{
+         $result.changed=$true
+	     $changed=$true
+	     [void]$objACL.RemoveAccessRule($_)
+         }
+      if($changed){		 
+	     If ($path_item.PSProvider.Name -eq "Registry") {
+                Set-ACL -LiteralPath $path -AclObject $objACL
+            } else {
+                (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+            }
+         }
+      # When check_mode, the saved ACL needs to be written back to restore the original config.
+	  if($check_mode){
+	     If ($path_item.PSProvider.Name -eq "Registry") {
+                Set-ACL -LiteralPath $path -AclObject $objACL_Bckp
+            } else {
+                (Get-Item -LiteralPath $path).SetAccessControl($objACL_Bckp)
+            }
+		 }
+	  Exit-Json -obj $result
+   } catch {
+   # On failure, the saved ACL is tried to be restored.
+      if($objACL_Bckp){
+	     try{
+	        If ($path_item.PSProvider.Name -eq "Registry") {
+                   Set-ACL -LiteralPath $path -AclObject $objACL_Bckp
+               } else {
+                   (Get-Item -LiteralPath $path).SetAccessControl($objACL_Bckp)
+               }
+			} catch {
+               Fail-Json -obj $result -message "an exception occurred when restoring the ACL - $($_.Exception.Message)"
+			}
+	     }
+      Fail-Json -obj $result -message "an exception occurred when resetting the ACL - $($_.Exception.Message)"
+   }
+}
+# get the rest of the parameters
+
+$user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
+$rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
+
+$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow","deny"
+
+$inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
+$propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly","None","NoPropagateInherit"
+
 
 # Test that the user/group is resolvable on the local machine
 $sid = Get-UserSID -AccountName $user
@@ -125,91 +200,72 @@ ElseIf ($null -eq $inherit) {
 if ($null -ne $path_qualifier) {
     Push-Location -LiteralPath $path_qualifier
 }
-
+$myMessage=""
 Try {
     SetPrivilegeTokens
-    $path_item = Get-Item -LiteralPath $path -Force
-    If ($path_item.PSProvider.Name -eq "Registry") {
-        $colRights = [System.Security.AccessControl.RegistryRights]$rights
-    }
-    Else {
-        $colRights = [System.Security.AccessControl.FileSystemRights]$rights
-    }
+	$PathType='FileSystem'
+	If ($path_item.PSProvider.Name -eq "Registry") {$PathType='Registry'}
 
     $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
     $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
-
-    If ($type -eq "allow") {
-        $objType =[System.Security.AccessControl.AccessControlType]::Allow
-    }
-    Else {
-        $objType =[System.Security.AccessControl.AccessControlType]::Deny
-    }
-
+    $objType =[System.Security.AccessControl.AccessControlType]$type
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
-    If ($path_item.PSProvider.Name -eq "Registry") {
-        $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-    }
-    Else {
-        $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-    }
+    $objACE = New-Object System.Security.AccessControl."$($PathType)AccessRule" ($objUser, $Rights, $InheritanceFlag, $PropagationFlag, $objType)
     $objACL = Get-ACL -LiteralPath $path
-
-    # Check if the ACE exists already in the objects ACL list
-    $match = $false
-
-    ForEach($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])){
-
-        If ($path_item.PSProvider.Name -eq "Registry") {
-            If (($rule.RegistryRights -eq $objACE.RegistryRights) -And ($rule.AccessControlType -eq $objACE.AccessControlType) -And ($rule.IdentityReference -eq $objACE.IdentityReference) -And ($rule.IsInherited -eq $objACE.IsInherited) -And ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And ($rule.PropagationFlags -eq $objACE.PropagationFlags)) {
-                $match = $true
-                Break
-            }
-        } else {
-            If (($rule.FileSystemRights -eq $objACE.FileSystemRights) -And ($rule.AccessControlType -eq $objACE.AccessControlType) -And ($rule.IdentityReference -eq $objACE.IdentityReference) -And ($rule.IsInherited -eq $objACE.IsInherited) -And ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And ($rule.PropagationFlags -eq $objACE.PropagationFlags)) {
-                $match = $true
-                Break
-            }
-        }
+	$objOldRules=$objACL.AccessToString
+    $objRights=$null
+    if($PathType -eq 'Registry'){
+       $objRights=[System.Security.AccessControl.RegistryRights]$rights
+    }else{
+       $objRights=[System.Security.AccessControl.FileSystemRights]$rights
     }
-
-    If ($state -eq "present" -And $match -eq $false) {
-        Try {
-            $objACL.AddAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
-                Set-ACL -LiteralPath $path -AclObject $objACL
-            } else {
-                (Get-Item -LiteralPath $path).SetAccessControl($objACL)
-            }
-            $result.changed = $true
-        }
-        Catch {
-            Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
-        }
+    
+	Try {
+		$ar=$null
+        If ($state -eq "present"){
+			$objACL.AddAccessRule($objACE)
+		} else {
+		   [void]$objACL.RemoveAccessRule($objACE)
+		   # Enumerate all remaining rights for the given SID except the InheritOnly ones
+           $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|?{
+             ($_.IdentityReference.Value -eq $sid) -and 
+             (($_.PropagationFlags -band [System.Security.AccessControl.PropagationFlags]'InheritOnly') -ne 
+			     [System.Security.AccessControl.PropagationFlags]'InheritOnly') -and
+			 ($_.AccessControlType -eq $objType) 
+             }|%{
+             if(!$ar){$ar=$_."$($PathType)Rights"}else{$ar=$ar -bor $_."$($PathType)Rights"}
+             }
+		}
+		$myMessage="Actual rights: "
+		$objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])|?{$_.IdentityReference.Value -eq $sid}|%{
+		   $myMessage += "$($_.AccessControlType): $($_."$($PathType)Rights"): $(if($_.IsInherited){'Inherited,'}) $($_.InheritanceFlags); "
+		   }
+		if($objOldRules -eq $objACL.AccessToString){
+		   $result.changed = $false
+		   $result.msg=$myMessage
+		} else {
+		   if(!($check_mode)){
+		      If ($path_item.PSProvider.Name -eq "Registry") {
+                  Set-ACL -LiteralPath $path -AclObject $objACL
+              } else {
+                  (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+              }
+		   } else {
+                  Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf $true
+		   }
+           $result.changed = $true
+		   $myMessage=$myMessage.Replace('Actual rights: ','New rights: ')
+		   $result.msg=$myMessage
+		}
+		# result Failed if SID still has any of the rights to be removed.
+		if(($ar) -and (([int]($ar -band $objRights).value__) -ne 0 ) -and ($state -ne "present")){
+		   $result.stderr="$user still has $ar rights!"
+		   $result.msg=$myMessage
+		   Fail-Json -obj $result -message "$user still has $ar rights! $myMessage"
+		}
     }
-    ElseIf ($state -eq "absent" -And $match -eq $true) {
-        Try {
-            $objACL.RemoveAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
-                Set-ACL -LiteralPath $path -AclObject $objACL
-            } else {
-                (Get-Item -LiteralPath $path).SetAccessControl($objACL)
-            }
-            $result.changed = $true
-        }
-        Catch {
-            Fail-Json -obj $result -message "an exception occurred when removing the specified rule - $($_.Exception.Message)"
-        }
-    }
-    Else {
-        # A rule was attempting to be added but already exists
-        If ($match -eq $true) {
-            Exit-Json -obj $result -message "the specified rule already exists"
-        }
-        # A rule didn't exist that was trying to be removed
-        Else {
-            Exit-Json -obj $result -message "the specified rule does not exist"
-        }
+    Catch {
+        Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
     }
 }
 Catch {
@@ -221,5 +277,4 @@ Finally {
         Pop-Location
     }
 }
-
 Exit-Json -obj $result
