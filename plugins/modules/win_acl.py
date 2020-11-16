@@ -24,9 +24,9 @@ options:
   user:
     description:
     - User or Group to add specified rights to act on src file/folder or
-      registry key.
+      registry key. Only required when state is not 'reset'
     type: str
-    required: Only when state is not 'reset'
+    required: true
   state:
     description:
     - Specify whether to add C(present) or remove C(absent) the specified access rule.
@@ -36,20 +36,20 @@ options:
     default: present
   type:
     description:
-    - Specify whether to allow or deny the rights specified.
+    - Specify whether to allow or deny the rights specified. Only required when state is not 'reset'
     type: str
-    required: Only when state is not 'reset'
+    required: true
     choices: [ allow, deny ]
   rights:
     description:
     - The rights/permissions that are to be allowed/denied for the specified
-      user or group for the item at C(path).
+      user or group for the item at C(path). Only required when state is not 'reset'
     - If C(path) is a file or directory, rights can be any right under MSDN
       FileSystemRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx).
     - If C(path) is a registry key, rights can be any right under MSDN
       RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
     type: str
-    required: Only when state is not 'reset'
+    required: true
   inherit:
     description:
     - Inherit flags on the ACL rules.
@@ -70,13 +70,11 @@ options:
     default: "None"
 notes:
 - If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
-- In Windows there are simple, and complex rights, for example the "FullControl" right is a complex one, 
-  containing all simple rights like ReadData, CreateFile and so on. Removing complex rights (state=absent) 
-  means removing every element of the complex right: 
-    rights: FullControl
-    type: allow
-    state: absent
-  will result no right for the user on the defined object at all. 
+- In Windows there are simple, and complex rights, for example the "FullControl" right is a complex one,
+  containing all simple rights like ReadData, CreateFile and so on. Removing complex rights (state=absent)
+  means removing every element of the complex right.
+  By specifying rights= FullControl, type= allow and state= absent
+  will result no right for the user on the defined object at all.
   (Removing all element of the complex FullControl right.)
 seealso:
 - module: ansible.windows.win_acl_inheritance
