@@ -15,5 +15,5 @@
     state: absent
     level: "{{ item.1 }}"
   with_nested:
-  - "{{ test_multi_value_environment_values | dict2items }}"
+  - "{{ test_multi_value_with_removal_environment_values | dict2items }}"
   - [ 'machine', 'process', 'user' ]

@@ -10,17 +10,14 @@ $spec = @{
     options = @{
         name = @{ type = "str" }
         level = @{ type = "str"; choices = "machine", "process", "user"; required = $true }
-        state = @{ type = "str"; choices = "absent", "present"; default = "present" }
+        state = @{ type = "str"; choices = "absent", "present" }
         value = @{ type = "str" }
         variables = @{ type = "dict" }
     }
-    required_if = @(
-        ,@("state", "present", @("value", "variables"), $true)
-        ,@("state", "absent", @("name"))
-    )
     mutually_exclusive = @(
         ,@("variables", "name")
         ,@("variables", "value")
+        ,@("variables", "state")
     )
     required_one_of = @(,@("name", "variables"))
     supports_check_mode = $true
@@ -46,12 +43,20 @@ function Set-EnvironmentVariableState {
         $Value,
 
         [Parameter()]
-        [ValidateSet('present', 'absent')]
         [String]
         $State
     )
 
     Process {
+        if (-not $State) {
+            $State = if (-not $Value) {
+                'absent'
+            }
+            else {
+                'present'
+            }
+        }
+
         $before_value = [Environment]::GetEnvironmentVariable($name, $Level)
 
         $ret = @{

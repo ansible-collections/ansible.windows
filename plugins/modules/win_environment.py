@@ -17,9 +17,9 @@ options:
     description:
     - Set to C(present) to ensure environment variable is set.
     - Set to C(absent) to ensure it is removed.
+    - When using I(variables), do not set this option.
     type: str
     choices: [ absent, present ]
-    default: present
   name:
     description:
     - The name of the environment variable. Required when I(state=absent).
@@ -27,14 +27,14 @@ options:
   value:
     description:
     - The value to store in the environment variable.
-    - Must be set when C(state=present) and cannot be an empty string.
-    - Can be omitted for C(state=absent).
+    - Must be set when I(state=present) and cannot be an empty string.
+    - Should be omitted for I(state=absent) and I(variables).
     type: str
     version_added: '1.1.0'
   variables:
     description:
     - A dictionary where multiple environment variables can be defined at once.
-    - Only valid when I(state=present).
+    - Not valid when I(state) is set. Variables with a value will be set (C(present)) and variables with an empty value will be unset (C(absent)).
     - I(level) applies to all vars defined this way.
     type: dict
   level:
@@ -82,12 +82,20 @@ EXAMPLES = r'''
 
 - name: Set several variables at once
   ansible.windows.win_environment:
-    state: present
     level: machine
     variables:
       TestVariable: Test value
       CUSTOM_APP_VAR: 'Very important value'
       ANOTHER_VAR: '{{ my_ansible_var }}'
+
+- name: Set and remove multiple variables at once
+  ansible.windows.win_environment:
+    level: user
+    variables:
+      TestVariable: Test value
+      CUSTOM_APP_VAR: 'Very important value'
+      ANOTHER_VAR: '{{ my_ansible_var }}'
+      UNWANTED_VAR: ''  # < this will be removed
 '''
 
 RETURN = r'''
