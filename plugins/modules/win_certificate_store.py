@@ -192,6 +192,9 @@ EXAMPLES = r'''
     store_location: LocalMachine
     key_storage: machine
     state: present
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
 '''
 
 RETURN = r'''
