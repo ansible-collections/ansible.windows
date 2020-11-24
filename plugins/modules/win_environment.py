@@ -30,13 +30,13 @@ options:
     - Must be set when I(state=present) and cannot be an empty string.
     - Should be omitted for I(state=absent) and I(variables).
     type: str
-    version_added: '1.1.0'
   variables:
     description:
     - A dictionary where multiple environment variables can be defined at once.
     - Not valid when I(state) is set. Variables with a value will be set (C(present)) and variables with an empty value will be unset (C(absent)).
     - I(level) applies to all vars defined this way.
     type: dict
+    version_added: '1.3.0'
   level:
     description:
     - The level at which to set the environment variable.
@@ -114,5 +114,5 @@ values:
   another dict with C(before), C(after), and C(changed) keys"
   returned: always
   type: dict
-  version_added: '1.1.0'
+  version_added: '1.3.0'
 '''
