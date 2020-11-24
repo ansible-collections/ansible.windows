@@ -1,7 +1,18 @@
-- name: download the PrintArgv.exe binary to temp location
-  win_get_url:
-    url: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/setup_win_printargv/PrintArgv.exe
-    dest: '{{ remote_tmp_dir }}\PrintArgv.exe'
+- name: copy PrintArgv.cs to remote host
+  win_copy:
+    src: PrintArgv.cs
+    dest: '{{ remote_tmp_dir }}\PrintArgv.cs'
+
+- name: compile PrintArgv.cs
+  win_shell: |
+    $ErrorActionPreference = 'Stop'
+    $addParams = @{
+        TypeDefinition = (Get-Content -LiteralPath '{{ remote_tmp_dir }}\PrintArgv.cs' -Raw)
+        OutputType = 'ConsoleApplication'
+        OutputAssembly = '{{ remote_tmp_dir }}\PrintArgv.exe'
+        ReferencedAssemblies = @('System.Web.Extensions.dll')
+    }
+    Add-Type @addParams
 
 - name: set fact containing PrintArgv binary path
   set_fact:

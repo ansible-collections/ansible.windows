@@ -176,6 +176,23 @@ options:
       C(2022-07-01).
     type: str
     aliases: [ user_name ]
+  wait_for_children:
+    description:
+    - The module will wait for the process it spawns to finish but any
+      processes spawned in that child process as ignored.
+    - Set to C(yes) to wait for all descendent processes to finish before the
+      module returns.
+    - This is useful if the install/uninstaller is just a wrapper which then
+      calls the actual installer as its own child process. When this option is
+      C(yes) then the module will wait for both processes to finish before
+      returning.
+    - This should not be required for most installers and setting to C(yes)
+      could result in the module not returning until the process it is waiting
+      for has been stopped manually.
+    - Requires Windows Server 2012 or Windows 8 or newer to use.
+    type: bool
+    default: no
+    version_added: 1.3.0
 extends_documentation_fragment:
 - ansible.windows.web_request
 
