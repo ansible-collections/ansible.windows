@@ -1,0 +1,19 @@
+---
+- name: ensure test environment value is not set in all scope
+  win_environment:
+    name: "{{test_environment_name}}"
+    state: absent
+    level: "{{item}}"
+  with_items:
+  - machine
+  - process
+  - user
+
+- name: ensure test multi environment vars are not set in all scope
+  win_environment:
+    name: "{{ item.0.key }}"
+    state: absent
+    level: "{{ item.1 }}"
+  with_nested:
+  - "{{ test_multi_value_with_removal_environment_values | dict2items }}"
+  - [ 'machine', 'process', 'user' ]

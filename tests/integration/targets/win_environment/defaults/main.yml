@@ -3,3 +3,17 @@ test_machine_environment_value: "%SystemRoot%\\System32"
 test_new_machine_environment_value: C:\Windows\System32
 test_user_environment_value: C:\Program Files
 test_new_user_environment_value: C:\Program Files (x86)
+
+test_multi_value_environment_values:
+  TEST_VAR_A: value A
+  TEST_VAR_B: value B
+
+test_removal_var_name: TEST_VAR_C
+test_removal_var_dict: "{{
+  { test_removal_var_name: '' }
+}}"
+
+test_multi_value_with_removal_environment_values: "{{
+  test_multi_value_environment_values
+  | combine(test_removal_var_dict)
+}}"

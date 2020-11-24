@@ -1,13 +1,22 @@
 ---
-- name: ensure test environment value is not set in all scope
+- name: Pre-clean test vars
+  import_tasks: cleanup.yml
+
+- name: removal of non-existant value is ok check
   win_environment:
-    name: "{{test_environment_name}}"
+    level: machine
     state: absent
-    level: "{{item}}"
-  with_items:
-  - machine
-  - process
-  - user
+    name: "{{ test_removal_var_name }}"
+  register: remove_nonexistant
+  failed_when: remove_nonexistant is changed
+
+- name: removal of non-existant value is ok
+  win_environment:
+    level: machine
+    state: absent
+    name: "{{ test_removal_var_name }}"
+  register: remove_nonexistant
+  failed_when: remove_nonexistant is changed
 
 - name: fail to create environment value with null value
   win_environment:
@@ -15,7 +24,7 @@
     state: present
     level: machine
   register: create_fail_null
-  failed_when: 'create_fail_null.msg != "state is present but all of the following are missing: value"'
+  failed_when: 'create_fail_null.msg != "When state=present, value must be defined and not an empty string, if you wish to remove the envvar, set state=absent"'
 
 - name: fail to create environment value with empty value
   win_environment:
@@ -256,12 +265,146 @@
     - change_user_again.before_value == test_new_user_environment_value
     - change_user_actual_again.stdout == "{{test_new_user_environment_value}}\r\n"
 
-- name: cleanup test changes
+# multi-value checks:
+#
+# single name/value option set and multi-value share implementation, so most tests above cover the bases
+# including user/machine/level setting. These tests primarily check that option restrictions work and that
+# the multi setting still sets all values, works in check mode, etc. Only other main difference is some
+# checks for the mixed-mode of set/remove by setting variables with empty string.
+
+- name: fail when state is specified with multi-value
   win_environment:
-    name: "{{test_environment_name}}"
-    state: absent
-    level: "{{item}}"
-  with_items:
-  - machine
-  - process
-  - user
+    state: present
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+  check_mode: True
+  failed_when: 'multi_set.msg != "parameters are mutually exclusive: variables, state"'
+
+- name: set multi value check mode
+  win_environment:
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+  check_mode: True
+
+- name: check multi values after check mode
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value check
+  assert:
+    that:
+    - multi_set is changed
+    - item.stdout | trim | bool == False
+  with_items: "{{ multi_val.results }}"
+
+- name: set multi value
+  win_environment:
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+
+- name: check multi values after setting
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value
+  assert:
+    that:
+    - multi_set is changed
+    - item.stdout | trim | bool == True
+  with_items: "{{ multi_val.results }}"
+
+- name: set multi value again
+  win_environment:
+    level: machine
+    variables: "{{ test_multi_value_environment_values }}"
+  register: multi_set
+
+- name: check multi values after setting again
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert multi value after setting again
+  assert:
+    that:
+    - multi_set is not changed
+    - item.stdout | trim | bool == True
+  with_items: "{{ multi_val.results }}"
+
+- name: set removal test value
+  win_environment:
+    level: machine
+    state: present
+    name: "{{ test_removal_var_name }}"
+    value: value C
+
+- name: test removal in multi-val check
+  win_environment:
+    level: machine
+    variables: "{{ test_multi_value_with_removal_environment_values }}"
+  register: multi_mixed
+  failed_when: multi_mixed is not changed
+  check_mode: True
+
+- name: test removal in multi-val
+  win_environment:
+    level: machine
+    variables: "{{ test_multi_value_with_removal_environment_values }}"
+  register: multi_mixed
+  failed_when: multi_mixed is not changed
+
+- name: check set multi values after mixed-mode
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_multi_value_environment_values }}"
+
+- name: assert set multi value after mixed-mode
+  assert:
+    that:
+    - item.stdout | trim | bool == True
+  with_items: "{{ multi_val.results }}"
+
+- name: check removed multi values after mixed-mode
+  win_shell: |
+    [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true
+    ).GetValue(
+      '{{ item.key }}', $null, 'DoNotExpandEnvironmentNames'
+    ) -eq '{{ item.value }}'
+  register: multi_val
+  with_dict: "{{ test_removal_var_dict }}"
+
+- name: assert removal multi value after mixed-mode
+  assert:
+    that:
+    - item.stdout | trim | bool == False
+  with_items: "{{ multi_val.results }}"
+
+# cleanup
+- name: Post-clean test vars
+  import_tasks: cleanup.yml
