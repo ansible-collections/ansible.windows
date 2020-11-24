@@ -665,6 +665,15 @@ Function Test-XmlDurationFormat($key, $value) {
 ######################################
 ### VALIDATION/BUILDING OF OPTIONS ###
 ######################################
+
+# invalid characters in task name
+$invalid_name_chars = '\/:*?"<>|'
+$invalid_name_chars_regex = "[$([regex]::Escape($invalid_name_chars))]"
+
+if ($name -cmatch $invalid_name_chars_regex) {
+    Fail-Json -obj $result -message "Invalid task name '$name'. The following characters are not valid: $invalid_name_chars"
+}
+
 # convert username and group to SID if set
 $username_sid = $null
 if ($username) {
