@@ -69,7 +69,7 @@ function Convert-SizeToBytes {
     )
 
     switch ($Units) {
-        "B"   { return $Size }
+        "B"   { return 1 * $Size }
         "KB"  { return 1000 * $Size }
         "KiB" { return 1024 * $Size }
         "MB"  { return [Math]::Pow(1000, 2) * $Size }
