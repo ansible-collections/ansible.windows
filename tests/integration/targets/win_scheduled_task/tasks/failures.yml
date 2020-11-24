@@ -1,5 +1,17 @@
 # test out the known failure cases to ensure we have decent error messages
 ---
+# ensure we have good error messages for invalid task chars
+- name: fail to create tasks with invalid characters
+  win_scheduled_task:
+    name: "Bad {{ item }} {{ test_scheduled_task_name }}"
+    state: present
+    actions:
+      - path: cmd.exe
+        arguments: /c echo hi
+  loop: "{{ test_scheduled_task_invalid_chars }}"
+  register: fail_invalid_chars
+  failed_when: fail_invalid_chars is not failed or fail_invalid_chars.msg is not search('The following characters are not valid')
+
 - name: fail create task without an action
   win_scheduled_task:
     name: '{{test_scheduled_task_name}}'
