@@ -118,7 +118,7 @@ Function HandleReset() {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
          }
-   } 
+   }
    catch {
        if ($null -ne $path_qualifier) {
            Pop-Location
