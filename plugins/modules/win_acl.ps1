@@ -3,13 +3,7 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
-# Revorked the logic to more exact handle of rights and proper return values,
-# Added state='reset' option to reset the ACL to the inherited ACEs only.
-# https://github.com/ansible-collections/ansible.windows/issues/18
-# Added support of environment variables for Path
-# https://github.com/ansible/ansible/issues/68597
-# Added support of check_mode
-# Laszlo Papp <laca@placa.me>
+# Copyright: (c) 2020, Laszlo Papp <laca@placa.me>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.Legacy
@@ -17,6 +11,11 @@
 #Requires -Module Ansible.ModuleUtils.SID
 
 $ErrorActionPreference = "Stop"
+$result = @{
+    changed = $false
+	msg = ""
+}
+
 
 # win_acl module (File/Resources Permission Additions/Removal)
 
@@ -51,8 +50,6 @@ function Get-UserSID {
     return $userSID
 }
 
-$params = Parse-Args $args
-
 Function SetPrivilegeTokens() {
     # Set privilege tokens only if admin.
     # Admins would have these privs or be able to set these privs in the UI Anyway
@@ -82,56 +79,30 @@ Function SetPrivilegeTokens() {
     }
 }
 
-
-$result = @{
-    changed = $false
-	msg = ""
-}
-
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
-# Get the path parameter with expanded environment variables.
-$path=Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
-$path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
-# We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
-# Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
-$path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
-if ($path_qualifier -eq "HKCR:" -and (-not (Test-Path -LiteralPath HKCR:\))) {
-    New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT > $null
-}
-if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
-    New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
-}
-if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
-    New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
-}
-
-If (-Not (Test-Path -LiteralPath $path)) {
-    Fail-Json -obj $result -message "$path does not exist on the host"
-}
-$path_item = Get-Item -LiteralPath $path -Force
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present","reset"
-# Reset logic placed here as in this case no more parameters are required
-
-if($state -eq 'reset'){
+Function HandleReset() {
    SetPrivilegeTokens
    if(!(Get-Item -LiteralPath $path).PSParentPath){
+       if ($null -ne $path_qualifier) {
+           Pop-Location
+       }
       Fail-Json -obj $result -message "$path is a root folder! Cannot reset ACL!"
 	  }
    try
    {
       $objACL = Get-ACL -LiteralPath $path
       # Save the ACL for reverting when needed
-	  $objACL_Bckp=$objACL
       if($objACL.AreAccessRulesProtected){
          $result.changed=$true
          $objacl.SetAccessRuleProtection($false,$false)
-         # If inheritance set, we need to write and re-read the ACL to get the inherited ACEs.
-		 If ($path_item.PSProvider.Name -eq "Registry") {
-             Set-ACL -LiteralPath $path -AclObject $objACL
-         } else {
-             (Get-Item -LiteralPath $path).SetAccessControl($objACL)
-         }
-         $objACL = Get-ACL -LiteralPath $path
+         # If inheritance set, we need to write and re-read the ACL to get the inherited ACEs except when $check_mode.
+		 if(!$check_mode){
+		    If ($path_item.PSProvider.Name -eq "Registry") {
+                Set-ACL -LiteralPath $path -AclObject $objACL
+            } else {
+                (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+            }
+            $objACL = Get-ACL -LiteralPath $path
+			}
 	     }
       $changed=$false
       # Remove any non-inherited ACE
@@ -140,39 +111,61 @@ if($state -eq 'reset'){
 	     if(!$changed){$changed=$true}
 	     [void]$objACL.RemoveAccessRule($_)
          }
-      if($changed){
+      if($changed -and (!$check_mode)){
 	     If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             } else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
          }
-      # When check_mode, the saved ACL needs to be written back to restore the original config.
-	  if($check_mode){
-	     If ($path_item.PSProvider.Name -eq "Registry") {
-                Set-ACL -LiteralPath $path -AclObject $objACL_Bckp
-            } else {
-                (Get-Item -LiteralPath $path).SetAccessControl($objACL_Bckp)
-            }
-		 }
-	  Exit-Json -obj $result
-   } catch {
-   # On failure, the saved ACL is tried to be restored.
-      if($objACL_Bckp){
-	     try{
-	        If ($path_item.PSProvider.Name -eq "Registry") {
-                   Set-ACL -LiteralPath $path -AclObject $objACL_Bckp
-               } else {
-                   (Get-Item -LiteralPath $path).SetAccessControl($objACL_Bckp)
-               }
-			} catch {
-               Fail-Json -obj $result -message "an exception occurred when restoring the ACL - $($_.Exception.Message)"
-			}
-	     }
+   } 
+   catch {
+       if ($null -ne $path_qualifier) {
+           Pop-Location
+       }
       Fail-Json -obj $result -message "an exception occurred when resetting the ACL - $($_.Exception.Message)"
    }
+   # Make sure we revert the location stack to the original path just for cleanups sake
+   if ($null -ne $path_qualifier) {
+       Pop-Location
+   }
+   Exit-Json -obj $result
 }
-# get the rest of the parameters
+
+Function MountReg() {
+   if ($path_qualifier -eq "HKCR:" -and (-not (Test-Path -LiteralPath HKCR:\))) {
+       New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT > $null
+   }
+   if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
+       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+   }
+   if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
+       New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
+   }
+}
+
+$params = Parse-Args $args
+
+$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
+# Get the path parameter with expanded environment variables.
+$path=Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
+$path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
+# We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
+# Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
+$path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+MountReg
+If (-Not (Test-Path -LiteralPath $path)) {
+    Fail-Json -obj $result -message "$path does not exist on the host"
+}
+$path_item = Get-Item -LiteralPath $path -Force
+# Bug in Set-Acl, Get-Acl where -LiteralPath only works for the Registry provider if the location is in that root
+# qualifier. We also don't have a qualifier for a network path so only change if not null
+if ($null -ne $path_qualifier) {
+    Push-Location -LiteralPath $path_qualifier
+}
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present","reset"
+# Reset logic placed here as in this case no more parameters are required
+if($state -eq 'reset'){ HandleReset }
 
 $user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
 $rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
@@ -186,6 +179,9 @@ $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -de
 # Test that the user/group is resolvable on the local machine
 $sid = Get-UserSID -AccountName $user
 if (!$sid) {
+    if ($null -ne $path_qualifier) {
+        Pop-Location
+    }
     Fail-Json -obj $result -message "$user is not a valid user or group on the host machine or domain"
 }
 
@@ -196,11 +192,6 @@ ElseIf ($null -eq $inherit) {
     $inherit = "ContainerInherit, ObjectInherit"
 }
 
-# Bug in Set-Acl, Get-Acl where -LiteralPath only works for the Registry provider if the location is in that root
-# qualifier. We also don't have a qualifier for a network path so only change if not null
-if ($null -ne $path_qualifier) {
-    Push-Location -LiteralPath $path_qualifier
-}
 $myMessage=""
 Try {
     SetPrivilegeTokens
@@ -262,14 +253,23 @@ Try {
 		if(($ar) -and (([int]($ar -band $objRights).value__) -ne 0 ) -and ($state -ne "present")){
 		   $result.stderr="$user still has $ar rights!"
 		   $result.msg=$myMessage
+           if ($null -ne $path_qualifier) {
+               Pop-Location
+           }
 		   Fail-Json -obj $result -message "$user still has $ar rights! $myMessage"
 		}
     }
     Catch {
+        if ($null -ne $path_qualifier) {
+            Pop-Location
+        }
         Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
     }
 }
 Catch {
+    if ($null -ne $path_qualifier) {
+        Pop-Location
+    }
     Fail-Json -obj $result -message "an error occurred when attempting to $state $rights permission(s) on $path for $user - $($_.Exception.Message)"
 }
 Finally {
