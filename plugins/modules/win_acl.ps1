@@ -132,18 +132,6 @@ Function HandleReset() {
    Exit-Json -obj $result
 }
 
-Function MountReg() {
-   if ($path_qualifier -eq "HKCR:" -and (-not (Test-Path -LiteralPath HKCR:\))) {
-       New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT > $null
-   }
-   if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
-       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
-   }
-   if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
-       New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
-   }
-}
-
 $params = Parse-Args $args
 
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
@@ -153,7 +141,15 @@ $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
 $path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
-MountReg
+if ($path_qualifier -eq "HKCR:" -and (-not (Test-Path -LiteralPath HKCR:\))) {
+    New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT > $null
+}
+if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
+    New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+}
+if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
+    New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
+}
 If (-Not (Test-Path -LiteralPath $path)) {
     Fail-Json -obj $result -message "$path does not exist on the host"
 }
