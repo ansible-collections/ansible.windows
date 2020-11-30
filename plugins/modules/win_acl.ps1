@@ -132,7 +132,7 @@ Function HandleReset() {
    Exit-Json -obj $result
 }
 
-$params = Parse-Args $args
+$params = Parse-Args $args -supports_check_mode $true
 
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 # Get the path parameter with expanded environment variables.
@@ -238,8 +238,6 @@ Try {
               } else {
                   (Get-Item -LiteralPath $path).SetAccessControl($objACL)
               }
-		   } else {
-                  Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf $true
 		   }
            $result.changed = $true
 		   $myMessage=$myMessage.Replace('Actual rights: ','New rights: ')
