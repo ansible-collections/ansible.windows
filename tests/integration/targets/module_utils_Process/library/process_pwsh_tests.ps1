@@ -307,7 +307,7 @@ foreach ($kvp in $argv_tests.GetEnumerator()) {
         # Required to convert any $null args to ""
         $argv = @($argv | ForEach-Object { [String]$_ })
         Assert-Equals -Expected $argv -Actual $actualArgs.args
-    }.GetNewClosure()
+    }
 
     $tests."Test argument command line to list - '$($kvp.Key)" = {
         $argc = $kvp.Key
@@ -321,7 +321,7 @@ foreach ($kvp in $argv_tests.GetEnumerator()) {
         $commandActual = Start-AnsibleWindowsProcess -FilePath $module.Params.print_argv -CommandLine $cmd
         $actualArgs = ($commandActual.Stdout | ConvertFrom-Json)
         Assert-Equals -Expected $escapedArgv -Actual $actualArgs.args
-    }.GetNewClosure()
+    }
 }
 
 foreach ($test_impl in $tests.GetEnumerator()) {
