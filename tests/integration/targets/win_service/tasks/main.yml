@@ -26,6 +26,10 @@
   win_get_url:
     url: '{{ test_win_service_binary_url }}'
     dest: '{{ test_win_service_path }}'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: remove the dummy test services if it is left over from previous tests
   win_service:

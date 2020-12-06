@@ -8,6 +8,10 @@
   win_get_url:
     url: '{{ service_url }}'
     dest: '{{ test_path }}\SleepService.exe'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: create test service
   win_service:

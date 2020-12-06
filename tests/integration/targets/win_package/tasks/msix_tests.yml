@@ -11,6 +11,10 @@
   win_get_url:
     url: '{{ makeappx_url }}'
     dest: '{{ test_path }}\makeappx.zip'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: extract makeappx binaries
   win_shell: Expand-Archive -LiteralPath '{{ test_path }}\makeappx.zip' -DestinationPath '{{ test_path }}\makeappx'
