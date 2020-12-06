@@ -15,6 +15,10 @@
   win_get_url:
     url: '{{ item.url }}'
     dest: '{{ test_path }}\{{ item.name }}'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
   with_items:
   - url: '{{ good_url }}'
     name: good.msi

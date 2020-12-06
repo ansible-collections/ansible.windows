@@ -55,6 +55,10 @@
   win_get_url:
     url: https://ansible-ci-files.s3.amazonaws.com/test/integration/roles/test_win_get_url/SlimFTPd.exe
     dest: '{{ testing_dir }}\output'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: download single file with force no
   win_get_url:
@@ -62,6 +66,9 @@
     dest: '{{ testing_dir }}\output'
     force: no
   register: http_download_no_force
+  until: http_download_no_force is successful
+  retries: 3
+  delay: 5
 
 - name: assert download single file with force no
   assert:

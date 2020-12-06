@@ -203,6 +203,10 @@
   win_get_url:
     url: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/win_command/OutputEncodingOverride.exe
     dest: '{{ remote_tmp_dir }}\OutputEncodingOverride.exe'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: call binary with shift_jis output encoding override
   win_command: '"{{ remote_tmp_dir }}\OutputEncodingOverride.exe"'
