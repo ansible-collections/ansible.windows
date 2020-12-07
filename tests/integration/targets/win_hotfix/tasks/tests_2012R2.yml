@@ -8,16 +8,28 @@
   ansible.windows.win_get_url:
     url: '{{test_win_hotfix_good_url}}'
     dest: '{{test_win_hotfix_path}}\good.msu'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: download reboot hotfix
   ansible.windows.win_get_url:
     url: '{{test_win_hotfix_reboot_url}}'
     dest: '{{test_win_hotfix_path}}\reboot.msu'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: download bad hotfix
   ansible.windows.win_get_url:
     url: '{{test_win_hotfix_bad_url}}'
     dest: '{{test_win_hotfix_path}}\bad.msu'
+  register: download_res
+  until: download_res is successful
+  retries: 3
+  delay: 5
 
 - name: fail install install hotfix where kb doesn't match
   win_hotfix:
