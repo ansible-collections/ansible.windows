@@ -57,11 +57,13 @@ options:
         default (quick) format, and is not recommended on storage that is thinly provisioned.
       - Specify C(true) for full format.
     type: bool
+    default: no
   force:
     description:
       - Specify if formatting should be forced for volumes that are not created from new partitions
         or if the source and target file system are different.
     type: bool
+    default: no
 notes:
   - Microsoft Windows Server 2012 or Microsoft Windows 8 or newer is required to use this module. To check if your system is compatible, see
     U(https://docs.microsoft.com/en-us/windows/desktop/sysinfo/operating-system-version).
