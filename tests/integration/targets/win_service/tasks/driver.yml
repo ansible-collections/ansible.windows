@@ -1,0 +1,31 @@
+# https://github.com/ansible-collections/ansible.windows/issues/115
+# In lieu of having our own driver which we control, we just test with a inconsequential driver in CI.
+- name: get existing display name for driver
+  win_service_info:
+    name: cdrom
+  register: driver_info
+
+- block:
+  - name: open driver service and set display name
+    win_service:
+      name: cdrom
+      display_name: Ansible Display Name
+    register: driver_change_display
+
+  - name: get result of open driver service and set display name
+    win_service_info:
+      name: cdrom
+    register: driver_change_display_actual
+
+  - name: assert open driver service and set display name
+    assert:
+      that:
+      - driver_change_display is changed
+      - driver_change_display.display_name == 'Ansible Display Name'
+      - driver_change_display_actual.services[0].display_name == 'Ansible Display Name'
+
+  always:
+  - name: reset display name back to default
+    win_service:
+      name: cdrom
+      display_name: '{{ driver_info.services[0].display_name }}'

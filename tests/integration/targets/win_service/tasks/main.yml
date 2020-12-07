@@ -36,10 +36,14 @@
     name: '{{ item }}'
     force_dependent_services: True
     state: absent
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
   with_items:
   - '{{ test_win_service_name }}'
   - TestServiceParent2
   - TestServiceDependency
+  - TestRestrictedService
 
 - block:
   - name: create new dummy test service
@@ -75,6 +79,7 @@
   - include_tasks: required_privileges.yml
   - include_tasks: service_type.yml
   - include_tasks: sid_info.yml
+  - include_tasks: driver.yml
 
   always:
   - name: remove test services
@@ -82,10 +87,14 @@
       name: '{{ item }}'
       force_dependent_services: True
       state: absent
+    become: yes
+    become_method: runas
+    become_user: SYSTEM
     with_items:
     - '{{ test_win_service_name }}'
     - TestServiceParent2
     - TestServiceDependency
+    - TestRestrictedService
 
   - name: remove test directory
     win_file:

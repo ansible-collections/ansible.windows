@@ -254,6 +254,8 @@ options:
 notes:
 - This module historically returning information about the service in its return values. These should be avoided in
   favour of the M(ansible.windows.win_service_info) module.
+- Most of the options in this module are non-driver services that you can view in SCManager. While you can edit driver
+  services, not all functionality may be available.
 seealso:
 - module: ansible.builtin.service
 - module: community.windows.win_nssm

@@ -1,0 +1,6 @@
+bufixes:
+- win_service - Fix opening services with limited rights - https://github.com/ansible-collections/ansible.windows/issues/118
+- win_service_info - Provide failure details in warning when failing to open service
+
+minor_changes:
+- win_service - Allow opening driver services using this module. Not all functionality is available for these types of services - https://github.com/ansible-collections/ansible.windows/issues/115
