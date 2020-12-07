@@ -1,4 +1,4 @@
-bufixes:
+bugfixes:
 - win_service - Fix opening services with limited rights - https://github.com/ansible-collections/ansible.windows/issues/118
 - win_service_info - Provide failure details in warning when failing to open service
 

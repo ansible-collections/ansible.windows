@@ -244,7 +244,7 @@ Function Get-ServiceDiff {
 
         # Only set the username/password diff if we have the proper type.
         if ( -not (
-            $Service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or 
+            $Service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
             $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
         )) {
             $diff.username = $Service.Account.Value
@@ -996,7 +996,7 @@ if ($state -eq 'absent') {
         # The ServiceStartName for these types of services aren't the account it runs on so running this will fail
         # to convert it to an account. While this could be configured in the future for now we just ignore the values.
         if ( -not (
-            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or 
+            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
             $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
         )) {
             Set-ServiceAccount -Username $username -Password $password -UpdatePassword:$updatePassword @common
