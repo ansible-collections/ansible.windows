@@ -1,0 +1,2 @@
+bugfixes:
+- win_service - Fix edge case bug when running against PowerShell 5.0 - https://github.com/ansible-collections/ansible.windows/issues/125

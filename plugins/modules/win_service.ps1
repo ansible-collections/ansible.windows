@@ -196,7 +196,7 @@ Function ConvertTo-ServiceTypeDiff {
     # Converts the enum ServiceType to the valud for a diff.
     $ServiceType = [uint32]$ServiceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::InteractiveProcess
     $ServiceType = $ServiceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::UserServiceInstance
-    switch (([Ansible.Windows.SCManager.ServiceType]$ServiceType).ToString()) {
+    switch ($ServiceType.ToString()) {
         KernelDriver { 'kernel_driver' }
         FileSystemDriver { 'file_system_driver' }
         Adapter { 'adapter' }

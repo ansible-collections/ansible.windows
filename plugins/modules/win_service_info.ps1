@@ -87,9 +87,10 @@ $module.Result.services = @(foreach ($rawService in ($services)) {
 
     # The ServiceType value can contain other flags which are represented by other properties, this strips them out
     # so we don't include them in the service_type return value.
-    $serviceType = [uint32]$service.ServiceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::InteractiveProcess
-    $serviceType = $serviceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::UserServiceInstance
-    $serviceType = switch (([Ansible.Windows.SCManager.ServiceType]$serviceType).ToString()) {
+    [Ansible.Windows.SCManager.ServiceType]$serviceType = $service.ServiceType
+    $serviceType = [uint32]$serviceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::InteractiveProcess
+    $serviceType = [uint32]$serviceType -band -bnot [uint32][Ansible.Windows.SCManager.ServiceType]::UserServiceInstance
+    $serviceType = switch ($serviceType.ToString()) {
         KernelDriver { 'kernel_driver' }
         FileSystemDriver { 'file_system_driver' }
         Adapter { 'adapter' }
