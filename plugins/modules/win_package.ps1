@@ -399,6 +399,8 @@ namespace Ansible.WinPackage
 }
 
 Function Add-SystemReadAce {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '',
+        Justification='Failing to get or set the ACE is not critical, SYSTEM could still have access without it.')]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
@@ -411,14 +413,25 @@ Function Add-SystemReadAce {
         return
     }
 
-    $acl = Get-Acl -LiteralPath $Path
+    # If $Path is on a read only file system or one that doesn't support ACLs then this will fail. SYSTEM might still
+    # have access to the path so don't treat it as critical.
+    # https://github.com/ansible-collections/ansible.windows/issues/142
+    try {
+        $acl = Get-Acl -LiteralPath $Path
+    } catch {
+        return
+    }
+
     $ace = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
         (New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList ('S-1-5-18')),
         [System.Security.AccessControl.FileSystemRights]::Read,
         [System.Security.AccessControl.AccessControlType]::Allow
     )
     $acl.AddAccessRule($ace)
-    $acl | Set-Acl -LiteralPath $path
+
+    try {
+        $acl | Set-Acl -LiteralPath $path
+    } catch {}
 }
 
 Function Copy-ItemWithCredential {

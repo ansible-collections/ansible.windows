@@ -463,7 +463,7 @@
     path: '{{ test_path }}\good.msi'
     state: absent
 
-# MSI arguments KEY="value" are known to fail when set as a list, for this test just create a simple folder path that
+  # MSI arguments KEY="value" are known to fail when set as a list, for this test just create a simple folder path that
 # does not need to be escaped and cleanup at the end.
 - name: create a simple spaceless folder for argument list test
   win_file:
@@ -503,6 +503,73 @@
     win_package:
       path: '{{ test_path }}\good.msi'
       state: absent
+
+  # https://github.com/ansible-collections/ansible.windows/issues/142
+  # Mount VHD on a FAT formatted volume. This doesn't support ACLs and will test that the SYSTEM ACE doesn't bring down the module.
+  - name: get first free drive letter
+    win_shell: |
+      Get-ChildItem -Path 'function:[d-z]:' -Name |
+        Where-Object { -not (Test-Path -LiteralPath $_) } |
+        Select-Object -Last 1
+    register: drive
+
+  - set_fact:
+      drive: '{{ drive.stdout | trim }}'
+
+  - name: template mount and umount scripts
+    win_template:
+      src: '{{ item }}.j2'
+      dest: C:\ansible_win_package\{{ item }}
+    vars:
+      path: C:\ansible_win_package\image.vhd
+    with_items:
+    - mount.txt
+    - mount_readonly.txt
+    - umount.txt
+
+  - name: create VHD and mount it
+    win_command: diskpart.exe /s C:\ansible_win_package\mount.txt
+
+  - block:
+    - name: copy MSI to image
+      win_copy:
+        src: '{{ test_path }}\good.msi'
+        dest: '{{ drive }}\good.msi'
+        remote_src: yes
+
+    - name: unmount VHD
+      win_command: diskpart.exe /s C:\ansible_win_package\umount.txt
+
+    - name: mount VHD as read only
+      win_command: diskpart.exe /s C:\ansible_win_package\mount_readonly.txt
+
+    - name: install msi from read only location
+      win_package:
+        path: '{{ drive }}\good.msi'
+        state: present
+      register: install_readonly
+
+    - name: get result of install msi from read only location
+      win_reg_stat:
+        path: HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{{ good_id }}
+      register: install_readonly_actual
+
+    - name: assert install local msi
+      assert:
+        that:
+        - install_readonly is changed
+        - not install_readonly.reboot_required
+        - install_readonly.rc == 0
+        - install_readonly_actual.exists
+
+    - name: remove msi from read only location
+      win_package:
+        path: '{{ drive }}\good.msi'
+        state: absent
+
+    always:
+    - name: unmount FAT volume
+      win_command: diskpart.exe /s C:\ansible_win_package\umount.txt
 
   always:
   - name: remove spaceless folder for argument list test

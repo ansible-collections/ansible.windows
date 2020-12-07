@@ -1,0 +1,11 @@
+create vdisk file="{{ path }}" maximum=128 type=fixed
+
+attach vdisk
+
+convert mbr
+
+create partition primary
+
+format FS=NTFS label=FATDrive quick
+
+assign letter="{{ drive }}"
