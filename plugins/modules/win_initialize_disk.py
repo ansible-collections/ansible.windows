@@ -37,6 +37,7 @@ options:
         description:
             - Specify if initializing should be forced for disks that are already initialized.
         type: bool
+        default: no
 
 notes:
     - One of three parameters (I(disk_number), I(uniqueid), and I(path)) are mandatory to identify the target disk, but
