@@ -81,8 +81,10 @@ Function Assert-FileHidden {
         [Switch]$IsHidden
     )
 
+    # https://github.com/ansible-collections/ansible.windows/issues/130
+    # We want to always return non-hidden files + hidden files if hidden: yes.
     $file_is_hidden = $File.Attributes.HasFlag([System.IO.FileAttributes]::Hidden)
-    return $IsHidden.IsPresent -eq $file_is_hidden
+    return $IsHidden.IsPresent -or -not $file_is_hidden
 }
 
 
