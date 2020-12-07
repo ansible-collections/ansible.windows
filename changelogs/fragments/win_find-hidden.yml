@@ -1,0 +1,2 @@
+minor_changes:
+- 'win_find - Change ``hidden: yes`` to return hidden files and normal files to match the behaviour with ``find`` - https://github.com/ansible-collections/ansible.windows/issues/130'
