@@ -1,6 +1,6 @@
 # Ansible Collection: ansible.windows
 
-[![Run Status](https://api.shippable.com/projects/5e4d952ef7b7100007bcf1a1/badge?branch=main)](https://app.shippable.com/github/ansible-collections/ansible.windows/dashboard/jobs)
+[![Build Status](https://dev.azure.com/ansible/ansible.windows/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ansible/ansible.windows/_build/latest?definitionId=24&branchName=main)
 [![codecov](https://codecov.io/gh/ansible-collections/ansible.windows/branch/main/graph/badge.svg)](https://codecov.io/gh/ansible-collections/ansible.windows)
 
 The `ansible.windows` collection includes the core plugins supported by Ansible to help the management of Windows hosts.

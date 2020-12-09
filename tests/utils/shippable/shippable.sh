@@ -67,7 +67,9 @@ if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
     cd "${TEST_DIR}"
 fi
 
-# export PATH="${PWD}/bin:${PATH}"
+export PATH="${HOME}/.local/bin:${PATH}"
+sudo chown "$(whoami)" "${PWD}/../../"
+
 export PYTHONIOENCODING='utf-8'
 
 if [ "${JOB_TRIGGERED_BY_NAME:-}" == "nightly-trigger" ]; then

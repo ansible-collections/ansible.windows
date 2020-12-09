@@ -41,26 +41,32 @@ resources:
 pool: Standard
 
 stages:
-  - stage: Sanity
+  - stage: Ansible_devel
+    displayName: Ansible devel
     dependsOn: []
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: Test {0}
-          testFormat: '{0}/sanity'
+          nameFormat: '{0}'
+          testFormat: 'devel/{0}'
           targets:
-            - test: devel
-            - test: 2.10
-  - stage: Units
+            - name: Sanity
+              test: sanity
+            - name: Units
+              test: units
+  - stage: Ansible_2_10
+    displayName: Ansible 2.10
     dependsOn: []
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: Test {0}
-          testFormat: '{0}/units'
+          nameFormat: '{0}'
+          testFormat: '2.10/{0}'
           targets:
-            - test: devel
-            - test: 2.10
+            - name: Sanity
+              test: sanity
+            - name: Units
+              test: units
   - stage: Windows
     displayName: Windows
     dependsOn: []
@@ -81,8 +87,8 @@ stages:
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:
-      - Sanity
-      - Units
+      - Ansible_devel
+      - Ansible_2_10
       - Windows
     jobs:
       - template: templates/coverage.yml
