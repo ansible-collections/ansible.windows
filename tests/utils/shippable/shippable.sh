@@ -59,6 +59,7 @@ else
     retry pip install "https://github.com/ansible/ansible/archive/stable-${ansible_version}.tar.gz" --disable-pip-version-check
 fi
 
+
 if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
     SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
     TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
@@ -67,7 +68,9 @@ if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
     cd "${TEST_DIR}"
 fi
 
-# export PATH="${PWD}/bin:${PATH}"
+export PATH="${HOME}/.local/bin:${PATH}"
+sudo chown "$(whoami)" "${PWD}/../../"
+
 export PYTHONIOENCODING='utf-8'
 
 if [ "${JOB_TRIGGERED_BY_NAME:-}" == "nightly-trigger" ]; then
