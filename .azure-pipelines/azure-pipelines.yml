@@ -47,7 +47,7 @@ stages:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Test {0}
-          testFormat: {0}/sanity
+          testFormat: '{0}/sanity'
           targets:
             - test: devel
             - test: 2.10
@@ -57,7 +57,7 @@ stages:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Test {0}
-          testFormat: {0}/units
+          testFormat: '{0}/units'
           targets:
             - test: devel
             - test: 2.10
