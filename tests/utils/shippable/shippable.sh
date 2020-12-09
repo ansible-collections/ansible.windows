@@ -59,7 +59,6 @@ else
     retry pip install "https://github.com/ansible/ansible/archive/stable-${ansible_version}.tar.gz" --disable-pip-version-check
 fi
 
-
 if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
     SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
     TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
