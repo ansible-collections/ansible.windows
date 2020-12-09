@@ -27,7 +27,7 @@ variables:
   - name: coverageBranches
     value: main
   - name: pipelinesCoverage
-    value: coverage
+    value: coverage-powershell
   - name: entryPoint
     value: tests/utils/shippable/shippable.sh
   - name: fetchDepth
