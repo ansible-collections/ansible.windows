@@ -66,10 +66,10 @@ Function Test-IsValidSecurityIdentifier {
         [String]
         $InputObject
     )
-    
+
     process {
         try {
-            $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
+            $null = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
             return $true
         } catch {
             return $false
@@ -84,12 +84,12 @@ Function Convert-SecurityIdentifiertoBinary {
         [String]
         $InputObject
     )
-    
+
     if (Test-IsValidSecurityIdentifier -InputObject $InputObject) {
         $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
         $GroupSIDBinary = New-Object byte[] -ArgumentList $sid.BinaryLength
         $sid.GetBinaryForm($GroupSIDBinary, 0)
-    
+
         return $GroupSIDBinary
     }
 }
@@ -101,7 +101,7 @@ Function Get-AnsibleLocalGroup {
         [String]
         $Name
     )
-    
+
     $binarySid = Convert-SecurityIdentifiertoBinary -InputObject $Name
 
     $ADSI.Children | Where-Object {
