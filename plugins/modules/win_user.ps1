@@ -59,22 +59,22 @@ $ADS_UF_DONT_EXPIRE_PASSWD = 65536
 $ADSI = [ADSI]"WinNT://$env:COMPUTERNAME"
 
 Function Test-IsValidSecurityIdentifier {
-	[CmdletBinding()]
+    [CmdletBinding()]
     [OutputType('System.Boolean')]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [String]
         $InputObject
     )
-	
-	process {
-		try {
-			$sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
-			return $true
-		} catch {
-			return $false
-		}
-	}
+    
+    process {
+        try {
+            $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
+            return $true
+        } catch {
+            return $false
+        }
+    }
 }
 
 Function Convert-SecurityIdentifiertoBinary {
@@ -84,14 +84,14 @@ Function Convert-SecurityIdentifiertoBinary {
         [String]
         $InputObject
     )
-	
-	if (Test-IsValidSecurityIdentifier -InputObject $InputObject) {
-		$sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
-		$GroupSIDBinary = New-Object byte[] -ArgumentList $sid.BinaryLength
-		$sid.GetBinaryForm($GroupSIDBinary, 0)
-	
-		return $GroupSIDBinary
-	}
+    
+    if (Test-IsValidSecurityIdentifier -InputObject $InputObject) {
+        $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
+        $GroupSIDBinary = New-Object byte[] -ArgumentList $sid.BinaryLength
+        $sid.GetBinaryForm($GroupSIDBinary, 0)
+    
+        return $GroupSIDBinary
+    }
 }
 
 Function Get-AnsibleLocalGroup {
@@ -101,17 +101,17 @@ Function Get-AnsibleLocalGroup {
         [String]
         $Name
     )
-	
-	$binarySid = Convert-SecurityIdentifiertoBinary -InputObject $Name
+    
+    $binarySid = Convert-SecurityIdentifiertoBinary -InputObject $Name
 
     $ADSI.Children | Where-Object {
-		$_.SchemaClassName -eq 'Group'
-	} | Where-Object {
-		$_.Name -eq $Name -or (
-			# SID matching logic
-			$binarySid -and ($_.objectSid | Foreach-Object { [System.Linq.Enumerable]::SequenceEqual([byte[]]$binarysid, [byte[]]$_) }) -contains $true
-		)
-	}
+        $_.SchemaClassName -eq 'Group'
+    } | Where-Object {
+        $_.Name -eq $Name -or (
+            # SID matching logic
+            $binarySid -and ($_.objectSid | Foreach-Object { [System.Linq.Enumerable]::SequenceEqual([byte[]]$binarysid, [byte[]]$_) }) -contains $true
+        )
+    }
 }
 
 Function Get-AnsibleLocalUser {
