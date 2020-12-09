@@ -20,7 +20,7 @@ docker images ansible/ansible
 docker images quay.io/ansible/*
 docker ps
 
-for container in $(docker ps --format '{{.Image}} {{.ID}}' | grep -v '^drydock/' | sed 's/^.* //'); do
+for container in $(docker ps --format '{{.Image}} {{.ID}}' | grep -v -e '^drydock/' -e '^quay.io/ansible/azure-pipelines-test-container:' | sed 's/^.* //'); do
     docker rm -f "${container}" || true  # ignore errors
 done
 
@@ -59,11 +59,13 @@ else
     retry pip install "https://github.com/ansible/ansible/archive/stable-${ansible_version}.tar.gz" --disable-pip-version-check
 fi
 
-SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
-TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
-mkdir -p "${TEST_DIR}"
-cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
-cd "${TEST_DIR}"
+if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
+    SHIPPABLE_RESULT_DIR="$(pwd)/shippable"
+    TEST_DIR="${HOME}/.ansible/ansible_collections/ansible/windows"
+    mkdir -p "${TEST_DIR}"
+    cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
+    cd "${TEST_DIR}"
+fi
 
 # export PATH="${PWD}/bin:${PATH}"
 export PYTHONIOENCODING='utf-8'
@@ -181,7 +183,7 @@ function cleanup
     fi
 }
 
-trap cleanup EXIT
+if [ "${SHIPPABLE_BUILD_ID:-}" ]; then trap cleanup EXIT; fi
 
 if [[ "${COVERAGE:-}" == "--coverage" ]]; then
     timeout=60
@@ -191,5 +193,5 @@ fi
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
-"tests/utils/shippable/check_matrix.py"
+if [ "${SHIPPABLE_BUILD_ID:-}" ]; then "tests/utils/shippable/check_matrix.py"; fi
 "tests/utils/shippable/${script}.sh" "${test}"

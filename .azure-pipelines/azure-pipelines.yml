@@ -1,0 +1,88 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - stable-*
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - main
+      - stable-*
+
+schedules:
+  - cron: 0 9 * * *
+    displayName: Nightly
+    always: true
+    branches:
+      include:
+        - main
+        - stable-*
+
+variables:
+  - name: checkoutPath
+    value: ansible_collections/ansible/windows
+  - name: coverageBranches
+    value: main
+  - name: pipelinesCoverage
+    value: coverage
+  - name: entryPoint
+    value: tests/utils/shippable/shippable.sh
+  - name: fetchDepth
+    value: 0
+
+resources:
+  containers:
+    - container: default
+      image: quay.io/ansible/azure-pipelines-test-container:1.7.0
+
+pool: Standard
+
+stages:
+  - stage: Sanity
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Test {0}
+          testFormat: {0}/sanity
+          targets:
+            - test: devel
+            - test: 2.10
+  - stage: Units
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Test {0}
+          testFormat: {0}/units
+          targets:
+            - test: devel
+            - test: 2.10
+  - stage: Windows
+    displayName: Windows
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}
+          targets:
+            - test: 2012
+            - test: 2012-R2
+            - test: 2016
+            - test: 2019
+          groups:
+            - 1
+            - 2
+            - 3
+  - stage: Summary
+    condition: succeededOrFailed()
+    dependsOn:
+      - Sanity
+      - Units
+      - Windows
+    jobs:
+      - template: templates/coverage.yml
