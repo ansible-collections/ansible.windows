@@ -33,7 +33,8 @@ $module.Result.services = @(foreach ($rawService in ($services)) {
     } catch [Ansible.Windows.SCManager.ServiceManagerException] {
         # ERROR_ACCESS_DENIED, ignore the service and continue on.
         if ($_.Exception.InnerException -and $_.Exception.InnerException.NativeErrorCode -eq 5) {
-            $module.Warn("Failed to access service '$($rawService.Name) to get more info, ignoring")
+            $msg = "Failed to access service '$($rawService.Name) to get more info, ignoring: $($_.Exception.Message)"
+            $module.Warn($msg)
             continue
         }
 

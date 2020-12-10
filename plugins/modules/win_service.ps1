@@ -219,7 +219,7 @@ Function Get-ServiceDiff {
     if (-not $Service) {
         ""
     } else {
-        @{
+        $diff = @{
             dependencies = $Service.DependentOn
             description = $Service.Description
             desktop_interact = $Service.ServiceType.HasFlag(
@@ -233,7 +233,6 @@ Function Get-ServiceDiff {
             failure_reset_period_sec = $Service.FailureActions.ResetPeriod
             load_order_group = $Service.LoadOrderGroup
             name = $Service.ServiceName
-            password = 'REDACTED'
             path = $Service.Path
             pre_shutdown_timeout_ms = $Service.PreShutdownTimeout
             required_privileges = $Service.RequiredPrivileges
@@ -241,8 +240,18 @@ Function Get-ServiceDiff {
             sid_info = $Service.ServiceSidInfo.ToString().ToLowerInvariant()
             start_mode = ConvertTo-ServiceStartModeDiff -StartMode $Service.StartType
             state = ConvertTo-ServiceStateDiff -State $Service.State
-            username = $Service.Account.Value
         }
+
+        # Only set the username/password diff if we have the proper type.
+        if ( -not (
+            $Service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
+            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
+        )) {
+            $diff.username = $Service.Account.Value
+            $diff.password = 'REDACTED'
+        }
+
+        $diff
     }
 }
 
@@ -256,7 +265,15 @@ Function Get-ServiceFromName {
 
     # Get-Service -Name * doesn't work if the name has a wildcard char like '[]'. Use Where-Object to achieve the same
     # result just in a slightly more expensive way.
-    Get-Service | Where-Object { $_.ServiceName -eq $Name -or $_.DisplayName -eq $Name }
+    $service = Get-Service | Where-Object { $_.ServiceName -eq $Name -or $_.DisplayName -eq $Name }
+
+    # https://github.com/ansible-collections/ansible.windows/issues/115
+    # Get-Service without a name will not output driver services whereas -Name does. Fallback to checking with -Name
+    # if we couldn't find a match from above.
+    if ($service) {
+        return $service
+    }
+    Get-Service -Name $Name -ErrorAction SilentlyContinue
 }
 
 Function Set-ServiceAccount {
@@ -280,7 +297,7 @@ Function Set-ServiceAccount {
 
     $Module.Diff.after.username = $Username
     $Module.Diff.after.password = 'REDACTED'
-    if ($null -ne $Service) {
+    if ($null -ne $Service -and $Service.Account) {
         $desiredSid = $null
         if ($Username) {
             $desiredSid = ConvertTo-SecurityIdentifier -Name $Username
@@ -881,7 +898,28 @@ Function Set-ServiceType {
     }
 }
 
-$service = Get-ServiceFromName -Name $name | ForEach-Object { [Ansible.Windows.SCManager.Service]$_.ServiceName }
+# We don't need the full gauntlet of service rights for this module. Only request the ones that are needed in case
+# we come across a more restricted service.
+# https://github.com/ansible-collections/ansible.windows/issues/118
+$rights = [Ansible.Windows.SCManager.ServiceRights]'QueryConfig, QueryStatus, EnumerateDependents'
+
+if ($failureActions) {
+    # If setting an SC_ACTION_RESTART failure action the handle needs to be opened with start rights.
+    $rights = $rights -bor [Ansible.Windows.SCManager.ServiceRights]::Start
+}
+
+if ($state -eq 'absent') {
+    $rights = $rights -bor [Ansible.Windows.SCManager.ServiceRights]::Delete
+}
+else {
+    $rights = $rights -bor [Ansible.Windows.SCManager.ServiceRights]::ChangeConfig
+}
+
+$service = Get-ServiceFromName -Name $name | ForEach-Object {
+    New-Object -TypeName Ansible.Windows.SCManager.Service -ArgumentList @(
+        $_.ServiceName, $rights
+    )
+}
 $module.Diff.before = Get-ServiceDiff -Service $service
 
 if ($state -eq 'absent') {
@@ -954,7 +992,16 @@ if ($state -eq 'absent') {
         }
 
         $common = @{Service = $service; Module = $module}
-        Set-ServiceAccount -Username $username -Password $password -UpdatePassword:$updatePassword @common
+
+        # The ServiceStartName for these types of services aren't the account it runs on so running this will fail
+        # to convert it to an account. While this could be configured in the future for now we just ignore the values.
+        if ( -not (
+            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
+            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
+        )) {
+            Set-ServiceAccount -Username $username -Password $password -UpdatePassword:$updatePassword @common
+        }
+
         Set-ServiceDependencies -Dependencies $dependencies -DependencyAction $dependencyAction @common
         Set-ServiceDescription -Description $description @common
         Set-ServiceDisplayName -DisplayName $displayName @common
