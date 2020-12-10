@@ -256,6 +256,9 @@ notes:
   favour of the M(ansible.windows.win_service_info) module.
 - Most of the options in this module are non-driver services that you can view in SCManager. While you can edit driver
   services, not all functionality may be available.
+- The user running the module must have the following access rights on the service to be able to use it with this
+  module - C(SERVICE_CHANGE_CONFIG), C(SERVICE_ENUMERATE_DEPENDENTS), C(SERVICE_QUERY_CONFIG), C(SERVICE_QUERY_STATUS).
+- Changing the state or removing the service will also require futher rights depending on what needs to be done.
 seealso:
 - module: ansible.builtin.service
 - module: community.windows.win_nssm
