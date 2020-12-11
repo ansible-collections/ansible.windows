@@ -67,7 +67,6 @@ if [ "${SHIPPABLE_BUILD_ID:-}" ]; then
     cd "${TEST_DIR}"
 fi
 
-export PATH="${HOME}/.local/bin:${PATH}"
 sudo chown "$(whoami)" "${PWD}/../../"
 
 export PYTHONIOENCODING='utf-8'
