@@ -108,7 +108,7 @@ Function ConvertTo-SecurityIdentifier {
 
     # Handle cases when referencing a local user like .\account.
     if ($Name.Contains('\')) {
-        $nameSplit = $Name.Split('\.', 2)
+        $nameSplit = $Name.Split('\', 2)
         if ($nameSplit[0] -eq '.') {
             $domain = $env:COMPUTERNAME
         } else {
