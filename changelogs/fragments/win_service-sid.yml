@@ -1,0 +1,2 @@
+bugfixes:
+- win_service - Fix up account name lookup when dealing with netlogon formatted accounts (``DOMAIN\account``) - https://github.com/ansible-collections/ansible.windows/issues/156
