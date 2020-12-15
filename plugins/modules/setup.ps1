@@ -658,6 +658,11 @@ $factMeta = @(
         Code = {
             # Get-Command can be slow to enumerate the paths, do this ourselves
             $facterDir = $env:PATH -split ([IO.Path]::PathSeparator) | Where-Object {
+                # https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
+                # PATHs with missing entries 'C:\Windows;;C:\Program Files' needs to be handled.
+                if ([String]::IsNullOrWhiteSpace($_)) {
+                    return $false
+                }
                 $facterPath = Join-Path -Path $_ -ChildPath facter.exe
                 Test-Path -LiteralPath $facterPath
             } | Select-Object -First 1

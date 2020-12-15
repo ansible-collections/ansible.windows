@@ -161,3 +161,16 @@
     - setup_result.ansible_facts.ansible_my_facts.my_complex_custom_fact == {'hello':'world'}
     - setup_result.ansible_facts.ansible_my_facts.my_custom_fact == 'value'
     - setup_result.ansible_facts.ansible_other_facts == ['abc', 'def']
+
+# https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
+- name: check for facter with custom PATH
+  setup:
+    gather_subset: facter
+  register: faulty_path
+  environment:
+    PATH: '{{ ansible_env.Path }};;C:\Test'
+
+- name: make sure there were no warnings
+  assert:
+    that:
+    - fault_path.warnings | default([]) | length == 0
