@@ -1,0 +1,2 @@
+bugfixes:
+- setup - handle PATH environment vars that contain blank entries like ``C:\Windows;;C:\Program Files`` - https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
