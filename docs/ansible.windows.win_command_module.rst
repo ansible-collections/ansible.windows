@@ -161,7 +161,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Save the result of 'whoami' in 'whoami_out'
       ansible.windows.win_command: whoami

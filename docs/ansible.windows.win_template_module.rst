@@ -293,7 +293,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create a file from a Jinja2 template
       ansible.windows.win_template:

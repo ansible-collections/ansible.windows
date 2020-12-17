@@ -554,6 +554,9 @@ Notes
 
 .. note::
    - This module historically returning information about the service in its return values. These should be avoided in favour of the :ref:`ansible.windows.win_service_info <ansible.windows.win_service_info_module>` module.
+   - Most of the options in this module are non-driver services that you can view in SCManager. While you can edit driver services, not all functionality may be available.
+   - The user running the module must have the following access rights on the service to be able to use it with this module - ``SERVICE_CHANGE_CONFIG``, ``SERVICE_ENUMERATE_DEPENDENTS``, ``SERVICE_QUERY_CONFIG``, ``SERVICE_QUERY_STATUS``.
+   - Changing the state or removing the service will also require futher rights depending on what needs to be done.
 
 
 See Also
@@ -574,7 +577,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Restart a service
       ansible.windows.win_service:

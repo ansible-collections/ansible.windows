@@ -237,7 +237,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Install all security, critical, and rollup updates without a scheduled task
       ansible.windows.win_updates:

@@ -77,7 +77,7 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Set a single address on the adapter named Ethernet
       ansible.windows.win_dns_client:

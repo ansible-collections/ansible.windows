@@ -246,7 +246,7 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Import a certificate
       ansible.windows.win_certificate_store:
@@ -311,6 +311,9 @@ Examples
         store_location: LocalMachine
         key_storage: machine
         state: present
+      become: yes
+      become_method: runas
+      become_user: SYSTEM
 
 
 

@@ -177,7 +177,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Reboot the machine with all defaults
       ansible.windows.win_reboot:

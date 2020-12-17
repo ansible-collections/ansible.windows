@@ -507,7 +507,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Perform a GET and Store Output
       ansible.windows.win_uri:

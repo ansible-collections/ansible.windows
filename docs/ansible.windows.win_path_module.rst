@@ -132,7 +132,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Ensure that system32 and Powershell are present on the global system path, and in the specified order
       ansible.windows.win_path:

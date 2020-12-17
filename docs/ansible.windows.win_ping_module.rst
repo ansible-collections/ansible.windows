@@ -68,7 +68,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     # Test connectivity to a windows host
     # ansible winserver -m ansible.windows.win_ping

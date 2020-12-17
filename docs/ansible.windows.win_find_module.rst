@@ -275,7 +275,7 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Find files in path
       ansible.windows.win_find:

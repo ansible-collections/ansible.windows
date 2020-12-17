@@ -602,6 +602,30 @@ Parameters
                         <div>This should only be used on personally controlled sites using self-signed certificates.</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_for_children</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 1.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The module will wait for the process it spawns to finish but any processes spawned in that child process as ignored.</div>
+                        <div>Set to <code>yes</code> to wait for all descendent processes to finish before the module returns.</div>
+                        <div>This is useful if the install/uninstaller is just a wrapper which then calls the actual installer as its own child process. When this option is <code>yes</code> then the module will wait for both processes to finish before returning.</div>
+                        <div>This should not be required for most installers and setting to <code>yes</code> could result in the module not returning until the process it is waiting for has been stopped manually.</div>
+                        <div>Requires Windows Server 2012 or Windows 8 or newer to use.</div>
+                </td>
+            </tr>
     </table>
     <br/>
 
@@ -633,7 +657,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Install the Visual C thingy
       ansible.windows.win_package:

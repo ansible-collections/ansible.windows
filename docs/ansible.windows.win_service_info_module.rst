@@ -66,7 +66,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Get info for all installed services
       ansible.windows.win_service_info:

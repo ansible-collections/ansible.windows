@@ -110,7 +110,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Add a local and domain user to a local group
       ansible.windows.win_group_membership:

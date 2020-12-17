@@ -5,13 +5,29 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.2.0
+v1.3.0
 ======
 
-Release Summary
----------------
+Minor Changes
+-------------
 
-- No changes in this release, this is to rectify the mistake with the published `1.1.0` version.
+- setup - add ``epoch_int`` option to date_time facts (https://github.com/ansible/ansible/issues/72479).
+- win_environment - add ``variables`` dictionary option for setting many env vars at once (https://github.com/ansible-collections/ansible.windows/pull/113).
+- win_find - Change ``hidden: yes`` to return hidden files and normal files to match the behaviour with ``find`` - https://github.com/ansible-collections/ansible.windows/issues/130
+- win_service - Allow opening driver services using this module. Not all functionality is available for these types of services - https://github.com/ansible-collections/ansible.windows/issues/115
+
+Bugfixes
+--------
+
+- setup - handle PATH environment vars that contain blank entries like ``C:\Windows;;C:\Program Files`` - https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
+- win_package - Do not fail when trying to set SYSTEM ACE on read only path - https://github.com/ansible-collections/ansible.windows/issues/142
+- win_service - Fix edge case bug when running against PowerShell 5.0 - https://github.com/ansible-collections/ansible.windows/issues/125
+- win_service - Fix opening services with limited rights - https://github.com/ansible-collections/ansible.windows/issues/118
+- win_service - Fix up account name lookup when dealing with netlogon formatted accounts (``DOMAIN\account``) - https://github.com/ansible-collections/ansible.windows/issues/156
+- win_service_info - Provide failure details in warning when failing to open service
+
+v1.2.0
+======
 
 v1.0.1
 ======

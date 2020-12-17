@@ -110,7 +110,7 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Verify the WSMan HTTP listener is active and configured correctly
       ansible.windows.win_shell: |

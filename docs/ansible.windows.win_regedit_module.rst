@@ -198,7 +198,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create registry path MyCompany
       ansible.windows.win_regedit:

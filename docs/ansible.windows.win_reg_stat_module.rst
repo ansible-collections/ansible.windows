@@ -93,7 +93,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Obtain information about a registry key using short form
       ansible.windows.win_reg_stat:

@@ -355,7 +355,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Ensure user bob is present
       ansible.windows.win_user:

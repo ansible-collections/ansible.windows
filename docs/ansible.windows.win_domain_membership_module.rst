@@ -175,7 +175,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     # host should be a member of domain ansible.vagrant; module will ensure the hostname is mydomainclient
     # and will use the passed credentials to join domain if necessary.
