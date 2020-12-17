@@ -220,7 +220,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Copy a single file
       ansible.windows.win_copy:

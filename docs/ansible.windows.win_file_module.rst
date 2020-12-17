@@ -100,7 +100,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Touch a file (creates if not present, updates modification time if present)
       ansible.windows.win_file:

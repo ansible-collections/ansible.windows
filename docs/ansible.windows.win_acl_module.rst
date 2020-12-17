@@ -193,7 +193,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Restrict write and execute access to User Fed-Phil
       ansible.windows.win_acl:

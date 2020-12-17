@@ -104,7 +104,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Change owner of path
       ansible.windows.win_owner:

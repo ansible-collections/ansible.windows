@@ -46,7 +46,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Get whoami information
       ansible.windows.win_whoami:

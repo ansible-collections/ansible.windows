@@ -245,7 +245,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create new domain in a new forest on the target host
       ansible.windows.win_domain:

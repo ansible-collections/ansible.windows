@@ -120,7 +120,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     ---
     - name: Replace the entries of Deny log on locally

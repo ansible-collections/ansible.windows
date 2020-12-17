@@ -108,7 +108,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Disable inherited ACE's
       ansible.windows.win_acl_inheritance:

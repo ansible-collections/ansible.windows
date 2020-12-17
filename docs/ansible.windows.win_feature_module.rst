@@ -144,7 +144,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Install IIS (Web-Server only)
       ansible.windows.win_feature:

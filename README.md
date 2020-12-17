@@ -140,7 +140,8 @@ The current process for publishing new versions of the Windows Core Collection i
 * Rebuild the plugin docs:
     ```bash
     git clone https://github.com/ansible-network/collection_prep.git /tmp/collection_prep
-    python /tmp/collection_prep/add_docs.py --path ./ --branch-name main
+    pip install /tmp/collection_prep
+    collection_prep_add_docs --path ./ --branch-name main
     rm -rf /tmp/collection_prep
     ```
 * Update the `CHANGELOG`:

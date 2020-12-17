@@ -494,7 +494,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Download earthrise.jpg to specified path
       ansible.windows.win_get_url:

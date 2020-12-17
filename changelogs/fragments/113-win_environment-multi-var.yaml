@@ -1,2 +1,0 @@
-minor_changes:
-  - win_environment - add ``variables`` dictionary option for setting many env vars at once (https://github.com/ansible-collections/ansible.windows/pull/113).

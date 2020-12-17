@@ -224,7 +224,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Wait 300 seconds for port 8000 to become open on the host, don't start checking for 10 seconds
       ansible.windows.win_wait_for:

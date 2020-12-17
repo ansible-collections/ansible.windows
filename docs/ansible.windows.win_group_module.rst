@@ -104,7 +104,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create a new group
       ansible.windows.win_group:

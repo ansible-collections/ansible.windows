@@ -290,7 +290,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Ensure a server is a domain controller
       ansible.windows.win_domain_controller:

@@ -66,7 +66,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Change the hostname to sample-hostname
       ansible.windows.win_hostname:

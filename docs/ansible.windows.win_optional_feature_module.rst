@@ -127,7 +127,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Install .Net 3.5
       ansible.windows.win_optional_feature:

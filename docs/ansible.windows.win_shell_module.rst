@@ -197,7 +197,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Execute a comand in the remote shell, stdout goes to the specified file on the remote
       ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt

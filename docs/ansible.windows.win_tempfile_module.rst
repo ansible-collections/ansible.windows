@@ -119,7 +119,7 @@ See Also
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create temporary build directory
       ansible.windows.win_tempfile:
