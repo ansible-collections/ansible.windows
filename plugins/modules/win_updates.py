@@ -28,7 +28,7 @@ options:
           be the full category string, but is case insensitive.
         - Some possible categories are Application, Connectors, Critical Updates,
           Definition Updates, Developer Kits, Feature Packs, Guidance, Security
-          Updates, Service Packs, Tools, Update Rollups and Updates.
+          Updates, Service Packs, Tools, Update Rollups, Updates, and Upgrades.
         type: list
         default: [ CriticalUpdates, SecurityUpdates, UpdateRollups ]
     reboot:
