@@ -199,7 +199,7 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Execute a comand in the remote shell, stdout goes to the specified file on the remote
+    - name: Execute a command in the remote shell, stdout goes to the specified file on the remote
       ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
 
     - name: Change the working directory to somedir/ before executing the command
