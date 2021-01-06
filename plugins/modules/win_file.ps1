@@ -157,4 +157,16 @@ else {
 
 }
 
+if (Test-Path -LiteralPath $path) {
+    if ($fileinfo.PsIsContainer) {
+        $result.state = 'directory'
+    }
+    else {
+        $result.state = 'file'
+    }
+}
+else {
+    $result.state = 'absent'
+}
+
 Exit-Json $result

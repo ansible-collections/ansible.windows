@@ -502,6 +502,8 @@ class ActionModule(ActionBase):
             file_src = query_return['files'][0]['src']
             file_dest = query_return['files'][0]['dest']
             basename = original_basename or file_dest
+            if self._play_context.diff:
+                result['diff'] =  self._get_diff_data(file_src, file_dest, task_vars)
             result.update(self._copy_single_file(file_src, dest, basename, file_dest,
                                                  task_vars, self._connection._shell.tmpdir, backup))
             if result.get('failed') is True:
