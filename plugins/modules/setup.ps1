@@ -1003,7 +1003,7 @@ $factMeta = @(
                 'Hyper-V' = @('Virtual Machine')
                 VirtualBox = @('VirtualBox')
             }
-            foreach ($modelInfo in $moduleMap.GetEnumerator()) {
+            foreach ($modelInfo in $modelMap.GetEnumerator()) {
                 if ($bios.Model -in $modelInfo.Value) {
                     $ansibleFacts.ansible_virtualization_role = 'guest'
                     $ansibleFacts.ansible_virtualization_type = $modelInfo.Key
