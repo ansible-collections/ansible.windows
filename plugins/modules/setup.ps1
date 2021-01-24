@@ -994,16 +994,39 @@ $factMeta = @(
         Code = {
             $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
 
-            $machineType, $machineRole = switch ($bios.Model) {
-                "Virtual Machine" { "Hyper-V", "guest" }
-                "VMware Virtual Platform" { "VMware", "guest" }
-                "VirtualBox" { "VirtualBox", "guest" }
-                "HVM domU" { "Xen", "guest" }
-                default { "NA", "NA" }
+            $modelMap = @{
+                kvm = @('KVM', 'KVM Server', 'Bochs', 'AHV')
+                RHEV = @('RHEV Hypervisor')
+                VMware = @('VMWare Virtual Platform', 'VMware7,1')
+                openstack = @('OpenStack Compute', 'OpenStack Nova')
+                xen = @('xen', 'HVM domU')
+                'Hyper-V' = @('Virtual Machine')
+                VirtualBox = @('VirtualBox')
+            }
+            foreach ($modelInfo in $moduleMap.GetEnumerator()) {
+                if ($bios.Model -in $modelInfo.Value) {
+                    $ansibleFacts.ansible_virtualization_role = 'guest'
+                    $ansibleFacts.ansible_virtualization_type = $modelInfo.Key
+                    return
+                }
             }
 
-            $ansibleFacts.ansible_virtualization_role = $machineRole
-            $ansibleFacts.ansible_virtualization_type = $machineType
+            $manufacturerMap = @{
+                kvm = @('QEMU', 'oVirt', 'Amazon EC2', 'DigitalOcean', 'Google', 'Scaleway', 'Nutanix')
+                KubeVirt = @('KubVirt')
+                parallels = @('Parallels Software International Inc.')
+                openstack = @('OpenStack Foundation')
+            }
+            foreach ($manufacturerInfo in $manufacturerMap.GetEnumerator()) {
+                if ($bios.Manufacturer -in $manufacturerInfo.Value) {
+                    $ansibleFacts.ansible_virtualization_role = 'guest'
+                    $ansibleFacts.ansible_virtualization_type = $manufacturerInfo.Key
+                    return
+                }
+            }
+
+            $ansibleFacts.ansible_virtualization_role = 'NA'
+            $ansibleFacts.ansible_virtualization_type = 'NA'
         }
     }
 )
