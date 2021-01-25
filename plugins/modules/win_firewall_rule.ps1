@@ -169,7 +169,7 @@ try {
     if ($null -ne $description) { $new_rule.Description = $description }
     if ($null -ne $group) { $new_rule.Grouping = $group }
     if ($null -ne $program -and $program -ne "any") { $new_rule.ApplicationName = [System.Environment]::ExpandEnvironmentVariables($program) }
-    if ($null -ne $service -and $program -ne "any") { $new_rule.ServiceName = $service }
+    if ($null -ne $service -and $service -ne "any") { $new_rule.ServiceName = $service }
     if ($null -ne $protocol -and $protocol -ne "any") { $new_rule.Protocol = ConvertTo-ProtocolType -protocol $protocol }
     if ($null -ne $localport -and $localport -ne "any") { $new_rule.LocalPorts = $localport }
     if ($null -ne $remoteport -and $remoteport -ne "any") { $new_rule.RemotePorts = $remoteport }
