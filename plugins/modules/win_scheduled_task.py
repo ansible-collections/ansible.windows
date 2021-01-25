@@ -305,10 +305,12 @@ options:
     - The integer value with indicates which version of Task Scheduler a task
       is compatible with.
     - C(0) means the task is compatible with the AT command.
-    - C(1) means the task is compatible with Task Scheduler 1.0.
-    - C(2) means the task is compatible with Task Scheduler 2.0.
+    - C(1) means the task is compatible with Task Scheduler 1.0(Windows Vista, Windows Server 2008 and older).
+    - C(2) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
+    - C(3) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
+    - C(4) means the task is compatible with Task Scheduler 2.0(Windows 10, Windows Server 2019).
     type: int
-    choices: [ 0, 1, 2 ]
+    choices: [ 0, 1, 2, 3, 4 ]
   delete_expired_task_after:
     description:
     - The amount of time that the Task Scheduler will wait before deleting the
@@ -503,6 +505,19 @@ EXAMPLES = r'''
         interval: PT1M
         duration: PT5M
         stop_at_duration_end: yes
+
+- name: Create task to run a PS script in Windows 10 compatibility on boot with a delay of 1min
+  community.windows.win_scheduled_task:
+    name: TriggerTask
+    path: \Custom
+    actions:
+    - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+      arguments: -ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1
+    triggers:
+    - type: boot
+      delay: PT1M
+    username: SYSTEM
+    compatibility: 4
 '''
 
 RETURN = r'''
