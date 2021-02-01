@@ -364,6 +364,31 @@
     - not creates_path_present is changed
     - not creates_version_present is changed
 
+- name: test creates_version missing path
+  win_package:
+    path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    arguments: echo hi
+    creates_path: C:\missing\file.txt
+    creates_version: 1.0.0
+    state: present
+  register: creates_version_missing_path
+
+- name: assert test creates_version missing path
+  assert:
+    that:
+    - creates_version_missing_path is changed
+
+- name: test creates_version failure on dir
+  win_package:
+    path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    arguments: echo hi
+    creates_path: C:\Windows
+    creates_version: 1.0.0
+    state: present
+  register: creates_version_fail_dir
+  failed_when:
+    - '"creates_path must be a file not a directory when creates_version is set" not in creates_version_fail_dir.msg'
+
 - name: test creates_service overrides product_id
   win_package:
     path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe

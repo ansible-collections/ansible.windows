@@ -599,7 +599,7 @@ Function Get-InstalledStatus {
         $exists = Test-Path -LiteralPath $CreatesPath
         $status.Installed = $exists
 
-        if ($CreatesVersion) {
+        if ($CreatesVersion -and $exists) {
             if (Test-Path -LiteralPath $CreatesPath -PathType Leaf) {
                 $versionRaw = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($CreatesPath)
                 $existingVersion = New-Object -TypeName System.Version -ArgumentList @(
