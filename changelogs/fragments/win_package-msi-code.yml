@@ -1,0 +1,2 @@
+bugfixes:
+- win_package - fix msi detection when the msi product is already installed under a different version - https://github.com/ansible-collections/ansible.windows/issues/166

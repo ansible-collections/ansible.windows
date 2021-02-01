@@ -105,8 +105,9 @@ namespace Ansible.WinPackage
             out SafeMsiHandle phSummaryInfo);
 
         [DllImport("Msi.dll", CharSet = CharSet.Unicode)]
-        public static extern UInt32 MsiOpenPackageW(
+        public static extern UInt32 MsiOpenPackageExW(
             [MarshalAs(UnmanagedType.LPWStr)] string szPackagePath,
+            UInt32 dwOptions,
             out SafeMsiHandle hProduct);
 
         [DllImport("Msi.dll", CharSet = CharSet.Unicode)]
@@ -371,10 +372,14 @@ namespace Ansible.WinPackage
             return GetClsid(filename) == MSP_CLSID;
         }
 
-        public static SafeMsiHandle OpenPackage(string packagePath)
+        public static SafeMsiHandle OpenPackage(string packagePath, bool ignoreMachineState)
         {
             SafeMsiHandle packageHandle = null;
-            UInt32 res = NativeMethods.MsiOpenPackageW(packagePath, out packageHandle);
+            UInt32 options = 0;
+            if (ignoreMachineState)
+                options |= 1;  // MSIOPENPACKAGEFLAGS_IGNOREMACHINESTATE
+
+            UInt32 res = NativeMethods.MsiOpenPackageExW(packagePath, options, out packageHandle);
             if (res != 0)
                 throw new Win32Exception((int)res);
 
@@ -760,7 +765,18 @@ $providerInfo = [Ordered]@{
             param ([String]$Path, [String]$Id)
 
             if ($Path) {
-                $msiHandle = [Ansible.WinPackage.MsiHelper]::OpenPackage($Path)
+                # MSIs have 2 types of ids that are important here
+                #     ProductCode: Unique id for the app, could change across major versions, minor stays the same
+                #     PackageCode: Unique id for the msi itself, no msi should have a matching package code
+                #
+                # Because we cannot install multiple msi's with the same product code we use this to determine if its
+                # installed or not. When we open a handle to the package we also need to ignore the current machine
+                # state, without that MsiOpenPackage will fail with ERROR_PRODUCT_VERSION if the ProductCode of the
+                # msi is already installed but under a different PackageCode. When ignoring it we can still get the
+                # ProductCode and check the status ourselves.
+                # https://github.com/ansible-collections/ansible.windows/issues/166
+
+                $msiHandle = [Ansible.WinPackage.MsiHelper]::OpenPackage($Path, $true)
                 try {
                     $Id = [Ansible.WinPackage.MsiHelper]::GetProperty($msiHandle, 'ProductCode')
                 } finally {
