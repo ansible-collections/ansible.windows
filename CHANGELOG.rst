@@ -5,6 +5,25 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.4.0
+======
+
+Release Summary
+---------------
+
+- Release summary for v1.4.0
+
+Minor Changes
+-------------
+
+- setup - Added more virtualization types to the virtual facts based on the Linux setup module
+
+Bugfixes
+--------
+
+- win_package - fix msi detection when the msi product is already installed under a different version - https://github.com/ansible-collections/ansible.windows/issues/166
+- win_package - treat a missing ``creates_path`` when ``creates_version`` as though the package was not installed instead of a failure - https://github.com/ansible-collections/ansible.windows/issues/169
+
 v1.3.0
 ======
 

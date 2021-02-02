@@ -1,2 +1,0 @@
-minor_changes:
-- setup - Added more virtualization types to the virtual facts based on the Linux setup module

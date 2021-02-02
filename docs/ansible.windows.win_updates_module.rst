@@ -63,7 +63,7 @@ Parameters
                 </td>
                 <td>
                         <div>A scalar or list of categories to install updates from. To get the list of categories, run the module with <code>state=searched</code>. The category must be the full category string, but is case insensitive.</div>
-                        <div>Some possible categories are Application, Connectors, Critical Updates, Definition Updates, Developer Kits, Feature Packs, Guidance, Security Updates, Service Packs, Tools, Update Rollups and Updates.</div>
+                        <div>Some possible categories are Application, Connectors, Critical Updates, Definition Updates, Developer Kits, Feature Packs, Guidance, Security Updates, Service Packs, Tools, Update Rollups, Updates, and Upgrades.</div>
                 </td>
             </tr>
             <tr>

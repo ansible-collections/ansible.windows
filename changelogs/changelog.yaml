@@ -108,14 +108,14 @@ releases:
   1.0.0:
     changes:
       breaking_changes:
-      - "win_find - module has been refactored to better match the behaviour of the
-        ``find`` module. Here is what has changed:\n  * When the directory specified
-        by ``paths`` does not exist or is a file, it will no longer fail and will
-        just warn the user\n  * Junction points are no longer reported as ``islnk``,
-        use ``isjunction`` to properly report these files. This behaviour matches
-        the win_stat module\n  * Directories no longer return a ``size``, this matches
-        the ``stat`` and ``find`` behaviour and has been removed due to the difficulties
-        in correctly reporting the size of a directory\n"
+      - "win_find - module has been refactored to better match the behaviour of the\
+        \ ``find`` module. Here is what has changed:\n  * When the directory specified\
+        \ by ``paths`` does not exist or is a file, it will no longer fail and will\
+        \ just warn the user\n  * Junction points are no longer reported as ``islnk``,\
+        \ use ``isjunction`` to properly report these files. This behaviour matches\
+        \ the win_stat module\n  * Directories no longer return a ``size``, this matches\
+        \ the ``stat`` and ``find`` behaviour and has been removed due to the difficulties\
+        \ in correctly reporting the size of a directory\n"
       - win_user - Change idempotency checks for ``description`` to be case sensitive
       - win_user - Change idempotency checks for ``fullname`` to be case sensitive
       deprecated_features:
@@ -187,8 +187,6 @@ releases:
         to match the behaviour with ``find`` - https://github.com/ansible-collections/ansible.windows/issues/130'
       - win_service - Allow opening driver services using this module. Not all functionality
         is available for these types of services - https://github.com/ansible-collections/ansible.windows/issues/115
-      release_summary:
-      - Release summary of v1.3.0.
     fragments:
     - 113-win_environment-multi-var.yaml
     - 123-date_time_facts_add_epoch_int.yml
@@ -200,3 +198,21 @@ releases:
     - win_service-sid.yml
     - win_service.yaml
     release_date: '2020-12-18'
+  1.4.0:
+    changes:
+      bugfixes:
+      - win_package - fix msi detection when the msi product is already installed
+        under a different version - https://github.com/ansible-collections/ansible.windows/issues/166
+      - win_package - treat a missing ``creates_path`` when ``creates_version`` as
+        though the package was not installed instead of a failure - https://github.com/ansible-collections/ansible.windows/issues/169
+      minor_changes:
+      - setup - Added more virtualization types to the virtual facts based on the
+        Linux setup module
+      release_summary:
+      - Release summary for v1.4.0
+    fragments:
+    - release_summary.yml
+    - setup-virtual.yml
+    - win_package-creates-version.yml
+    - win_package-msi-code.yml
+    release_date: '2021-02-03'
