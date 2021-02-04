@@ -54,9 +54,9 @@ Function SetPrivilegeTokens() {
     # Set privilege tokens only if admin.
     # Admins would have these privs or be able to set these privs in the UI Anyway
 
-    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+    $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+    $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
 
 
     if ($myWindowsPrincipal.IsInRole($adminRole)) {
