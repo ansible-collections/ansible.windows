@@ -5,6 +5,7 @@
     test_ace_cmd: |
       # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
       Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
       $rights_key = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Registry") {
           "RegistryRights"
@@ -22,6 +23,55 @@
       }
       Pop-Location
       ConvertTo-Json -InputObject @($ace_list)
+    test_all_ace_cmd: |
+      # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
+      Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
+      $rights_key = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Registry") {
+          "RegistryRights"
+      } else {
+          "FileSystemRights"
+      }
+      $ace_list = (Get-Acl -LiteralPath $path).Access | ForEach-Object {
+          @{
+              rights = $_."$rights_key".ToString()
+              type = $_.AccessControlType.ToString()
+              identity = $_.IdentityReference.Value.ToString()
+              inherited = if($_.IsInherited){"yes"}else{"no"}
+              inheritance_flags = $_.InheritanceFlags.ToString()
+              propagation_flags = $_.PropagationFlags.ToString()
+          }
+      }
+      Pop-Location
+      ConvertTo-Json -InputObject @($ace_list)
+    break_reg_inh_cmd: |
+      # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
+      Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
+      $acl = Get-Acl -LiteralPath $path
+      $acl.SetAccessRuleProtection($true,$false)
+      Set-ACL -LiteralPath $path -AclObject $acl
+
+- name: add write rights to Guest check_mode
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Write
+  check_mode: yes
+  register: allow_right_check
+
+- name: get result of add write rights to Guest
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: allow_right_actual_check
+
+- name: assert add write rights to Guest check_mode (reported as changed but no explicite rights)
+  assert:
+    that:
+    - allow_right_check is changed
+    - allow_right_actual_check.stdout_lines == ["[", "", "]"]
 
 - name: add write rights to Guest
   win_acl:
@@ -58,6 +108,166 @@
   assert:
     that:
     - not allow_right_again is changed
+
+- name: reset rights check_mode (remove added write rights to Guest)
+  win_acl:
+    path: '{{ test_acl_path }}'
+    state: reset
+  check_mode: yes
+  register: reset_right_check
+
+- name: get result of reset check_mode
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: reset_right_actual_check
+
+- name: assert reset rights check_mode (reported as changed but write rights to Guest still present)
+  assert:
+    that:
+    - reset_right_check is changed
+    - (reset_right_actual_check.stdout|from_json)|count == 1
+    - (reset_right_actual_check.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (reset_right_actual_check.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (reset_right_actual_check.stdout|from_json)[0].propagation_flags == 'None'
+    - (reset_right_actual_check.stdout|from_json)[0].rights == 'Write, Synchronize'
+    - (reset_right_actual_check.stdout|from_json)[0].type == 'Allow'
+
+- name: reset rights (remove added write rights to Guest)
+  win_acl:
+    path: '{{ test_acl_path }}'
+    state: reset
+  register: reset_right
+
+- name: get result of reset rights
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: reset_right_actual
+
+- name: assert reset rights (No explicite rights)
+  assert:
+    that:
+    - reset_right is changed
+    - reset_right_actual.stdout_lines == ["[", "", "]"]
+
+- name: reset rights (idempotent)
+  win_acl:
+    path: '{{ test_acl_path }}'
+    state: reset
+  register: reset_right_idempotent
+
+- name: assert reset rights (idempotent)
+  assert:
+    that:
+    - not reset_right_idempotent is changed
+
+- name: add full rights to Everyone
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Everyone
+    rights: FullControl
+
+- name: Remove inheritance
+  win_acl_inheritance:
+    path: '{{ test_acl_path }}'
+    state: absent
+    reorganize: no
+
+- name: reset rights
+  win_acl:
+    path: '{{ test_acl_path }}'
+    state: reset
+  register: reset_right_1
+
+- name: get explicite result of reset rights
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: reset_right_actual_1
+
+- name: assert reset rights (no explicite rights present)
+  assert:
+    that:
+    - reset_right_1 is changed
+    - reset_right_actual_1.stdout_lines == ["[", "", "]"]
+
+- name: get all result of reset rights
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_all_ace_cmd }}'
+  register: reset_right_actual_all
+
+- name: assert reset rights (inherited rights present)
+  assert:
+    that:
+    - reset_right_1 is changed
+    - (reset_right_actual_all.stdout|from_json)|count >= 1
+    - (reset_right_actual_all.stdout|from_json)[0].inherited == 'yes'
+
+- name: add write rights back to Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Write
+
+- name: add read&exec rights to Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: ReadAndExecute
+  register: allow_read_right
+
+- name: add delete rights to Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Delete
+  register: allow_read_right
+
+- name: get result of add read rights to Guest
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: allow_read_right_actual
+
+- name: assert add write+read&exec+delete rights to Guest as Modify
+  assert:
+    that:
+    - allow_read_right is changed
+    - (allow_read_right_actual.stdout|from_json)|count == 1
+    - (allow_read_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (allow_read_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (allow_read_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+    - (allow_read_right_actual.stdout|from_json)[0].rights == 'Modify, Synchronize'
+    - (allow_read_right_actual.stdout|from_json)[0].type == 'Allow'
+
+- name: remove read&exec rights for Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: ReadAndExecute
+    state: absent
+  register: remove_read_right
+
+- name: remove delete rights for Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Delete
+    state: absent
+  register: allow_read_right
+
+- name: get result of remove read rights to Guest
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: remove_read_right_actual
+
+- name: assert remove read&exec+delete from Modify rights to Guest should be Write
+  assert:
+    that:
+    - remove_read_right is changed
+    - (remove_read_right_actual.stdout|from_json)|count == 1
+    - (remove_read_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (remove_read_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (remove_read_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+    - (remove_read_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
+    - (remove_read_right_actual.stdout|from_json)[0].type == 'Allow'
 
 - name: remove write rights from Guest
   win_acl:
@@ -171,6 +381,36 @@
     that:
     - not remove_deny_right_again is changed
 
+- name: remove read rights from Users (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Users
+    rights: Read
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users
+
+- name: assert remove read rights from Users (should fail)
+  assert:
+    that:
+    - remove_read_right_users is failed
+
+- name: remove read rights from users - network (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_network_path }}'
+    type: allow
+    user: Users
+    rights: Read
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users_network
+
+- name: assert remove read rights from Users - network (should fail)
+  assert:
+    that:
+    - remove_read_right_users_network is failed
+
 - name: add write rights to Guest - network
   win_acl:
     path: '{{ test_acl_network_path }}'
@@ -212,6 +452,21 @@
     that:
     - remove_right is changed
     - remove_right_actual.stdout_lines == ["[", "", "]"]
+
+- name: remove read rights from users - registry (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    type: allow
+    user: Users
+    rights: ReadKey
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users_reg
+
+- name: assert remove read rights from Users - registry (should fail)
+  assert:
+    that:
+    - remove_read_right_users_reg is failed
 
 - name: add write rights to Guest - registry
   win_acl:
@@ -360,3 +615,72 @@
   assert:
     that:
     - not remove_deny_right_reg_again is changed
+
+- name: add fullcontrol rights to everyone - registry
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    type: allow
+    user: Everyone
+    rights: fullcontrol
+    state: present
+
+- name: break inheritance - registry
+  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ break_reg_inh_cmd }}'
+
+- name: reset registry check_mode
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    state: reset
+  check_mode: yes
+  register: reset_reg_check
+
+- name: get result of reset - registry check_mode
+  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+  register: reset_reg_actual_check
+
+- name: assert reset - registry (still explicite rights for everyone fullcontrol)
+  assert:
+    that:
+    - reset_reg_check is changed
+    - (reset_reg_actual_check.stdout|from_json)|count == 1
+    - (reset_reg_actual_check.stdout|from_json)[0].identity == 'Everyone'
+    - (reset_reg_actual_check.stdout|from_json)[0].rights == 'FullControl'
+    - (reset_reg_actual_check.stdout|from_json)[0].type == 'Allow'
+
+- name: reset registry
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    state: reset
+  register: reset_reg
+
+- name: get result of reset - registry
+  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+  register: reset_reg_actual
+
+- name: assert reset - registry (no explicite rights)
+  assert:
+    that:
+    - reset_reg is changed
+    - reset_reg_actual.stdout_lines == ["[", "", "]"]
+
+- name: get all result of reset rights - registry
+  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_all_ace_cmd }}'
+  register: reset_right_registry_all
+
+- name: assert reset rights - registry (inherited rights present)
+  assert:
+    that:
+    - reset_reg is changed
+    - (reset_right_registry_all.stdout|from_json)|count >= 1
+    - (reset_right_registry_all.stdout|from_json)[0].inherited == 'yes'
+
+- name: reset registry (idempotent)
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    state: reset
+  register: reset_reg_idemp
+
+- name: assert reset - registry (idempotent)
+  assert:
+    that:
+    - not reset_reg_idemp is changed
