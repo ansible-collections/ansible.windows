@@ -381,32 +381,32 @@
     that:
     - not remove_deny_right_again is changed
 
-- name: remove ReadAndExecute rights from Users (should fail because of inherited rights)
+- name: remove read rights from Users (should fail because of inherited rights)
   win_acl:
     path: '{{ test_acl_path }}'
     type: allow
     user: Users
-    rights: ReadAndExecute
+    rights: Read
     state: absent
   ignore_errors: yes
   register: remove_read_right_users
 
-- name: assert remove ReadAndExecute rights from Users (should fail)
+- name: assert remove read rights from Users (should fail)
   assert:
     that:
     - remove_read_right_users is failed
 
-- name: remove ReadAndExecute rights from users - network (should fail because of inherited rights)
+- name: remove read rights from users - network (should fail because of inherited rights)
   win_acl:
     path: '{{ test_acl_network_path }}'
     type: allow
     user: Users
-    rights: ReadAndExecute
+    rights: Read
     state: absent
   ignore_errors: yes
   register: remove_read_right_users_network
 
-- name: assert remove ReadAndExecute rights from Users - network (should fail)
+- name: assert remove read rights from Users - network (should fail)
   assert:
     that:
     - remove_read_right_users_network is failed
