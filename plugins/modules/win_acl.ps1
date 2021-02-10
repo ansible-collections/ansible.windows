@@ -244,7 +244,7 @@ Try {
 		   $result.msg=$myMessage
 		}
 		# result Failed if SID still has any of the rights to be removed.
-		if(($ar) -and (([int]($ar -band $objRights).value__) -ne 0 ) -and ($state -ne "present")){
+		if(((([int]$ar) -band ([int]$objRights)) -ne 0 ) -and ($state -ne "present")){
 		   $result.stderr="$user still has $ar rights!"
 		   $result.msg=$myMessage
            if ($null -ne $path_qualifier) {
