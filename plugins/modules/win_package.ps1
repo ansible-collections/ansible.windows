@@ -1401,7 +1401,7 @@ try {
             url { Get-UrlFile -Module $module -Url $path }
             unc { Copy-ItemWithCredential -Path $path -Destination $module.Tmpdir -Credential $credential }
         }
-        $path = $tempFile
+        $path = Resolve-Path -LiteralPath $tempFile
         $getParams.Path = $path
     } elseif ($path -and -not $pathType) {
         if (-not (Test-Path -LiteralPath $path)) {
