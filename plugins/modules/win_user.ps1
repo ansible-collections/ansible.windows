@@ -62,12 +62,26 @@ Function Get-AnsibleLocalGroup {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [String]
-        $Name
+        [string]
+        $Sid
     )
 
+    $groupSid = New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList $Sid
+
     $ADSI.Children | Where-Object {
-        $_.SchemaClassName -eq 'Group' -and $_.Name -eq $Name
+        if ($_.SchemaClassName -ne 'Group') {
+            return $false
+        }
+
+        $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $_.ObjectSid.Value, 0
+        return $sid -eq $groupSid
+
+    } | ForEach-Object -Process {
+        [PSCustomObject]@{
+            Name = $_.Name.Value
+            SecurityIdentifier = $groupSid
+            BaseObject = $_
+        }
     }
 }
 
@@ -101,9 +115,13 @@ Function Get-AnsibleLocalUser {
             IsAccountLocked = $_.IsAccountLocked
             SecurityIdentifier = $sid
             Groups = @($_.Groups() | ForEach-Object -Process {
+                $rawSid = $_.GetType().InvokeMember('ObjectSid', 'GetProperty', $null, $_, $null)
+                $groupSid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $rawSid, 0
+
                 [PSCustomObject]@{
                     Name = $_.GetType().InvokeMember('Name', 'GetProperty', $null, $_, $null)
                     Path = $_.GetType().InvokeMember('ADsPath', 'GetProperty', $null, $_, $null)
+                    SecurityIdentifier = $groupSid
                 }
             })
             BaseObject = $_
@@ -124,8 +142,14 @@ Function Get-UserDiff {
 
     } else {
         $groups = [System.Collections.Generic.List[String]]@()
-        foreach ($group in $User.Groups.Name) {
-            $groups.Add($group)
+        foreach ($group in $User.Groups) {
+            try {
+                $name = $group.SecurityIdentifier.Translate([Security.Principal.NTAccount]).Value
+            }
+            catch [Security.Principal.IdentityNotMappedException] {
+                $name = $group.Name
+            }
+            $groups.Add($name)
         }
 
         @{
@@ -308,8 +332,30 @@ if ($state -eq 'present') {
         }
 
         if ($null -ne $groups) {
-            $desiredGroups = [string[]]@($groups)
-            $existingGroups = [string[]]@($user.Groups.Name)
+            $desiredGroups = [string[]]@($groups | Where-Object { -not [String]::IsNullOrWhiteSpace($_) } | ForEach-Object -Process {
+                $inputGroup = $_
+
+                try {
+                    $sid = New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList $inputGroup
+                } catch [ArgumentException] {
+                    $account = New-Object -TypeName Security.Principal.NTAccount -ArgumentList $inputGroup
+
+                    try {
+                        $sid = $account.Translate([Security.Principal.SecurityIdentifier])
+                    }
+                    catch [Security.Principal.IdentityNotMappedException] {
+                        $module.FailJson("group '$inputGroup' not found")
+                    }
+                }
+
+                # Make sure the group specified in the module args are an actual local group.
+                if (-not (Get-AnsibleLocalGroup -Sid $sid.Value)) {
+                    $module.FailJson("group '$inputGroup' not found")
+                }
+
+                $sid.Value
+            })
+            $existingGroups = [string[]]@($user.Groups.SecurityIdentifier.Value)
 
             $toAdd = [string[]]@()
             $toRemove = [string[]]@()
@@ -333,32 +379,27 @@ if ($state -eq 'present') {
                     if (-not $group) {
                         continue
                     }
-                    $groupAdsi = Get-AnsibleLocalGroup -Name $group
+                    $groupAdsi = Get-AnsibleLocalGroup -Sid $group
 
-                    if ($groupAdsi) {
-                        if (-not $module.CheckMode) {
-                            try {
-                                if ($action.Key -eq 'Add') {
-                                     $groupAdsi.Add($user.Path)
-                                 } else {
-                                     $groupAdsi.Remove($user.Path)
-                                 }
-                            } catch {
-                                $module.FailJson(
-                                    "Failed to $($action.Key.ToLower()) $($group): $($_.Exception.Message)", $_
-                                )
-                            }
+                    if (-not $module.CheckMode) {
+                        try {
+                            if ($action.Key -eq 'Add') {
+                                    $groupAdsi.BaseObject.Add($user.Path)
+                                } else {
+                                    $groupAdsi.BaseObject.Remove($user.Path)
+                                }
+                        } catch {
+                            $module.FailJson(
+                                "Failed to $($action.Key.ToLower()) $($groupAdsi.Name): $($_.Exception.Message)", $_
+                            )
                         }
-                        $module.Result.changed = $true
+                    }
+                    $module.Result.changed = $true
 
-                        if ($action.Key -eq 'Add') {
-                            $module.Diff.after.groups.Add($group)
-                        } else {
-                            $null = $module.Diff.after.groups.Remove($group)
-                        }
-
+                    if ($action.Key -eq 'Add') {
+                        $module.Diff.after.groups.Add($groupAdsi.Name)
                     } else {
-                        $module.FailJson("group '$group' not found")
+                        $null = $module.Diff.after.groups.Remove($groupAdsi.Name)
                     }
                 }
             }
