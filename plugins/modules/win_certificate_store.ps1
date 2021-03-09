@@ -50,6 +50,13 @@ namespace ansible.windows.win_certificate_store
             IntPtr hCryptProv,
             uint dwFlags,
             string pvPara);
+
+        [DllImport("Crypt32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        public static extern bool CertRegisterSystemStore(
+            [MarshalAs(UnmanagedType.LPWStr)] string pvSystemStore,
+            uint dwFlags,
+            IntPtr pStoreInfo,
+            IntPtr pvReserved);
     }
 
     internal class SafeX509Store : SafeHandle
@@ -115,6 +122,12 @@ namespace ansible.windows.win_certificate_store
             // TODO: Need better logic for this, fails with file not found after 2nd run.
             // CERT_STORE_DELETE_FLAG
             OpenStore(storeType, name, 0x00000010);
+        }
+
+        public static void Register(StoreType storeType, string name)
+        {
+            if (!NativeMethods.CertRegisterSystemStore(name, (uint)storeType, IntPtr.Zero, IntPtr.Zero))
+                throw new Win32Exception("CertRegisterSystemStore failed");
         }
 
         private static SafeX509Store OpenStore(StoreType storeType, string name, uint flags)
@@ -329,6 +342,24 @@ else {
         $module.FailJson("value of store_location '$store_location' is not a valid windows service")
     }
     $cert_params.Service = $service.Name
+
+    # These keys are based on what mmc creates the first time you open the snapping for that service account.
+    # Would be nice if there was a proper API for this but I cannot find any.
+    $reg_path = "HKLM:\SOFTWARE\Microsoft\Cryptography\Services\$($service.Name)\SystemCertificates"
+    'AuthRoot', 'CA', 'ClientAuthIssuer', 'Disallowed', 'My', 'Root', 'Trust', 'TrustedPeople', 'TrustedPublisher' |
+        ForEach-Object -Process {
+            $reg_store_path = Join-Path -Path $reg_path -ChildPath $_
+
+            if (-not (Test-Path -LiteralPath $reg_store_path)) {
+                if (-not $module.CheckMode) {
+                    [ansible.windows.win_certificate_store.Store]::Register(
+                        [ansible.windows.win_certificate_store.StoreType]::Service,
+                        "$($service.Name)\$_"
+                    )
+                }
+                $module.Result.changed = $true
+            }
+        }
 }
 
 try {

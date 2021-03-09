@@ -73,7 +73,7 @@ options:
     choices:
     - system
     - service
-    default: system.
+    default: system
     type: str
     version_added: '1.5.0'
   password:
