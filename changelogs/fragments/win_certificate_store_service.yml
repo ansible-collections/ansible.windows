@@ -1,4 +1,2 @@
 minor_changes:
 - win_certificate_store - Added functionality to open the store for a service account using ``store_type=service store_location=<service name>``
-- win_certificate_store - Added functionality to create a new store name with ``state=present create_store=yes``
-- win_certificate_store - Added functionality to remove a store with ``state=absent``
