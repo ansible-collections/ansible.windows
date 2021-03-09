@@ -4,17 +4,16 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-
-$store_name_values = ([System.Security.Cryptography.X509Certificates.StoreName]).GetEnumValues() | ForEach-Object { $_.ToString() }
-$store_location_values = ([System.Security.Cryptography.X509Certificates.StoreLocation]).GetEnumValues() | ForEach-Object { $_.ToString() }
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 $spec = @{
     options = @{
         state = @{ type = "str"; default = "present"; choices = "absent", "exported", "present" }
         path = @{ type = "path" }
         thumbprint = @{ type = "str" }
-        store_name = @{ type = "str"; default = "My"; choices = $store_name_values }
-        store_location = @{ type = "str"; default = "LocalMachine"; choices = $store_location_values }
+        store_name = @{ type = "str"; default = "My" }
+        store_location = @{ type = "str"; default = "LocalMachine" }
+        store_type = @{ type = "str"; default = "system"; choices = "service", "system" }
         password = @{ type = "str"; no_log = $true }
         key_exportable = @{ type = "bool"; default = $true }
         key_storage = @{ type = "str"; default = "default"; choices = "default", "machine", "user" }
@@ -28,6 +27,156 @@ $spec = @{
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+Add-CSharpType -AnsibleModule $module -References @'
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+
+namespace ansible.windows.win_certificate_store
+{
+    internal class NativeMethods
+    {
+        [DllImport("Crypt32.dll")]
+        public static extern bool CertCloseStore(
+            IntPtr hCertStore,
+            uint dwFlags);
+
+        [DllImport("Crypt32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        public static extern SafeX509Store CertOpenStore(
+            IntPtr lpszStoreProvider,
+            uint dwEncodingType,
+            IntPtr hCryptProv,
+            uint dwFlags,
+            string pvPara);
+    }
+
+    internal class SafeX509Store : SafeHandle
+    {
+        public SafeX509Store() : this(true) { }
+
+        protected SafeX509Store(bool ownsHandle): base(IntPtr.Zero, ownsHandle) {}
+
+        public override bool IsInvalid {
+            get { return handle == null || handle == IntPtr.Zero; }
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            return NativeMethods.CertCloseStore(handle, 0);
+        }
+    }
+
+    public class Win32Exception : System.ComponentModel.Win32Exception
+    {
+        private string _msg;
+
+        public Win32Exception(string message) : this(Marshal.GetLastWin32Error(), message) { }
+        public Win32Exception(int errorCode, string message) : base(errorCode)
+        {
+            _msg = String.Format("{0} ({1}, Win32ErrorCode {2} - 0x{2:X8})", message, base.Message, errorCode);
+        }
+
+        public override string Message { get { return _msg; } }
+        public static explicit operator Win32Exception(string message) { return new Win32Exception(message); }
+    }
+
+    public enum StoreType : uint
+    {
+        LocalMachine = 0x00020000,
+        CurrentUser = 0x00010000,
+        Service = 0x00050000,
+    }
+
+    public class Store
+    {
+        public static X509Store Open(StoreType storeType, string name, OpenFlags openFlags)
+        {
+            uint flags = 0x00000004;  // CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG
+
+            if (((uint)openFlags & 3) == (uint)OpenFlags.ReadOnly)
+                flags |= 0x00008000;  // CERT_STORE_READONLY_FLAG
+            else
+                flags |= 0x00001000;  // CERT_STORE_MAXIMUM_ALLOWED_FLAG
+
+            if (openFlags.HasFlag(OpenFlags.OpenExistingOnly))
+                flags |= 0x00004000;  // CERT_STORE_OPEN_EXISTING_FLAG
+
+            using (SafeX509Store store = OpenStore(storeType, name, flags))
+            {
+                // X509Store duplicates the handle so we can safely dispose ours
+                return new X509Store(store.DangerousGetHandle());
+            }
+        }
+
+        public static void Delete(StoreType storeType, string name)
+        {
+            // TODO: Need better logic for this, fails with file not found after 2nd run.
+            // CERT_STORE_DELETE_FLAG
+            OpenStore(storeType, name, 0x00000010);
+        }
+
+        private static SafeX509Store OpenStore(StoreType storeType, string name, uint flags)
+        {
+            flags |= (uint)storeType;
+
+            SafeX509Store store = NativeMethods.CertOpenStore(
+                new IntPtr(10),  // CERT_STORE_PROV_SYSTEM_W
+                0,
+                IntPtr.Zero,
+                flags,
+                name
+            );
+            int err = Marshal.GetLastWin32Error();
+
+            // DELETE returns NULL for store so we need to check the error code.
+            bool wasDelete = (flags & 0x00000010) != 0;
+            if ((wasDelete && err != 0) || (!wasDelete && store.IsInvalid))
+                throw new Win32Exception(err, "CertOpenStore failed");
+
+            return store;
+        }
+    }
+}
+'@
+
+Function Get-CertStore {
+    [CmdletBinding(DefaultParameterSetName='System')]
+    param (
+        [Parameter(Mandatory=$true, ParameterSetName='System')]
+        [Security.Cryptography.X509Certificates.Storelocation]
+        $Location,
+
+        [Parameter(Mandatory=$true, ParameterSetName='Service')]
+        [string]
+        $Service,
+
+        [Parameter(Mandatory=$true)]
+        [string]
+        $Name,
+
+        [Security.Cryptography.X509Certificates.OpenFlags]
+        $OpenFlags
+    )
+
+    if ($PSCmdlet.ParameterSetName -eq 'System') {
+        $store_type = [ansible.windows.win_certificate_store.StoreType]($Location.ToString())
+    }
+    else {
+        $store_type = [ansible.windows.win_certificate_store.StoreType]::Service
+        $Name = '{0}\{1}' -f ($Service, $Name)
+    }
+
+    try {
+        [ansible.windows.win_certificate_store.Store]::Open($store_type, $Name, $OpenFlags)
+    }
+    catch [ansible.windows.win_certificate_store.Win32Exception] {
+        # Yes this is necessary, without it anything catching this type for error flow will get
+        # MethodInvocationException and will need to drill down into InnerException :(
+        $PSCmdlet.ThrowTerminatingError($_)
+    }
+}
 
 Function Get-CertFile($module, $path, $password, $key_exportable, $key_storage) {
     # parses a certificate file and returns X509Certificate2Collection
@@ -151,8 +300,9 @@ Function Get-CertFileType($path, $password) {
 $state = $module.Params.state
 $path = $module.Params.path
 $thumbprint = $module.Params.thumbprint
-$store_name = [System.Security.Cryptography.X509Certificates.StoreName]"$($module.Params.store_name)"
-$store_location = [System.Security.Cryptography.X509Certificates.Storelocation]"$($module.Params.store_location)"
+$store_name = $module.Params.store_name
+$store_location = $module.Params.store_location
+$store_type = $module.Params.store_type
 $password = $module.Params.password
 $key_exportable = $module.Params.key_exportable
 $key_storage = $module.Params.key_storage
@@ -160,19 +310,47 @@ $file_type = $module.Params.file_type
 
 $module.Result.thumbprints = @()
 
-$store = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Store -ArgumentList $store_name, $store_location
-try {
-    $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-} catch [System.Security.Cryptography.CryptographicException] {
-    $module.FailJson("Unable to open the store as it is not readable: $($_.Exception.Message)", $_)
-} catch [System.Security.SecurityException] {
-    $module.FailJson("Unable to open the store with the current permissions: $($_.Exception.Message)", $_)
-} catch {
-    $module.FailJson("Unable to open the store: $($_.Exception.Message)", $_)
+[Security.Cryptography.X509Certificates.OpenFlags]$open_flags = if ($state -eq 'exported') { 'ReadOnly' } else { 'ReadWrite' }
+$open_flags = [int]$open_flags -bor [int][Security.Cryptography.X509Certificates.OpenFlags]::OpenExistingOnly
+
+$cert_params = @{
+    Name = $store_name
 }
-$store_certificates = $store.Certificates
+if ($store_type -eq 'system') {
+    $store_location_values = ([System.Security.Cryptography.X509Certificates.StoreLocation]).GetEnumValues() | ForEach-Object { $_.ToString() }
+    if ($store_location -notin $store_location_values) {
+        $module.FailJson("value of store_location must be one of: $($store_location_values -join ", "). Got no match for: $store_location")
+    }
+    $cert_params.Location = [System.Security.Cryptography.X509Certificates.Storelocation]$store_location
+}
+else {
+    $service = Get-Service -Name $store_location -ErrorAction SilentlyContinue
+    if (-not $service) {
+        $module.FailJson("value of store_location '$store_location' is not a valid windows service")
+    }
+    $cert_params.Service = $service.Name
+}
 
 try {
+    $store = Get-CertStore @cert_params -OpenFlags $open_flags -ErrorAction SilentlyContinue
+
+}
+catch [ansible.windows.win_certificate_store.Win32Exception] {
+    if ($_.Exception.NativeErrorCode -in @(2, 3)) {  # ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND
+        $msg = "unable to find store '$store_name'"
+    }
+    elseif ($_.Exception.NativeErrorCode -eq 5) {  # ERROR_ACCESS_DENIED
+        $msg = "unable to open the store with the current permissions"
+    }
+    else {
+        $msg = "unable to open the store"
+    }
+    $module.FailJson("$($msg): ($($_.Exception.Message))", $_)
+}
+
+try {
+    $store_certificates = $store.Certificates
+
     if ($state -eq "absent") {
         $cert_thumbprints = @()
 
