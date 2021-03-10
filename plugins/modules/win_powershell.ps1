@@ -285,8 +285,14 @@ if ($module.Params.executable) {
         $module.FailJson("executable requires PowerShell 5.0 or newer")
     }
 
-    # TODO: Should we use -NoNewWindow so we can capture [Console]::WriteLine()?
-    # Will this cause issues with random data coming back to Ansible (things bypassing redirection)?
+    $stdoutPipe = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
+    $stderrPipe = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
+    # ClientSafePipeHandle - handle for client to write to
+    # GetClientHandleAsString() - string to pass to remote host
+    # New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', 'client handle str'
+    # WaitForExit()
+    # Close()
+
     $processParams = @{
         FilePath = $module.Params.executable
         WindowStyle = 'Hidden'  # Really just to help with debugging locally
@@ -295,6 +301,7 @@ if ($module.Params.executable) {
     if ($module.Params.arguments) {
         $processParams.ArgumentList = $module.Params.arguments
     }
+
     $process = Start-Process @processParams
     $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$process.Id
 
@@ -307,7 +314,7 @@ try {
     # Using a custom host allows us to capture any host UI calls through our own Console output.
     $runspaceHost = New-Object -TypeName Ansible.Windows.WinPowerShell.Host -ArgumentList $Host
     if ($connInfo) {
-        $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)    
+        $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
     }
     else {
         $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost)
@@ -337,6 +344,7 @@ try {
     if ($connInfo) {
         # If we are running in a new process we need to set the various console encoding values to UTF-8 to ensure a
         # consistent encoding experience when PowerShell is running native commands and getting the output back.
+        # TODO: SetStdHandle and Out/Error to the client pipes
         [void]$ps.AddScript(@'
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object Text.UTF8Encoding $false
 '@).AddStatement()
@@ -374,7 +382,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Obj
         if ($_.Name -ne 'Invoke' -or $_.ReturnType -ne [void] -or -not $_.ContainsGenericParameters) {
             return $false
         }
-    
+
         # https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.powershell.invoke?view=powershellsdk-7.0.0#System_Management_Automation_PowerShell_Invoke__1_System_Collections_IEnumerable_System_Collections_Generic_IList___0__
         $parameters = $_.GetParameters()
         (
@@ -387,6 +395,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Obj
     $invoke = $invokeMethod.MakeGenericMethod([object])
 
     # We redirect the current stdout and stderr so we can capture any console output.
+    # TODO: Set Out/Error to the anonymous pipe
     $origStdout = [System.Console]::Out
     $origStderr = [System.Console]::Error
     $stdoutBuffer = New-Object -TypeName System.Text.StringBuilder
@@ -398,8 +407,8 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Obj
         [System.Console]::SetOut($newStdout)
         [System.Console]::SetError($newStderr)
 
-        # TODO: The input here is problematic in some scenarios, figure this out more.
-        $invoke.Invoke($ps, @(@($module.Params.input), $psOutput))
+        $psInput = @(if ($module.Params.input) { $module.Params.input })
+        $invoke.Invoke($ps, @($psInput, $psOutput))
     }
     catch [Management.Automation.RuntimeException] {
         # $ErrorActionPrefrence = 'Stop' and an error was raised
