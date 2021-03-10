@@ -9,12 +9,14 @@
 $spec = @{
     options = @{
         arguments = @{ type = 'list'; elements = 'str' }
-        creates = @{ type = 'path' }
+        chdir = @{ type = 'str' }
+        creates = @{ type = 'str' }
+        depth = @{ type = 'int'; default = 3 }
+        error_action = @{ type = 'str'; choices = 'silently_continue', 'continue', 'stop'; default = 'continue' }
         executable = @{ type = 'str' }
         input = @{ type = 'list' }
-        location = @{ type = 'str' }
         parameters = @{ type = 'dict' }
-        removes = @{ type = 'path' }
+        removes = @{ type = 'str' }
         script = @{ type = 'str'; required = $true }
     }
     supports_check_mode = $true
@@ -166,6 +168,26 @@ namespace Ansible.Windows.WinPowerShell
 }
 '@
 
+Function Convert-OutputObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [AllowNull()]
+        [object]
+        $InputObject,
+
+        [Parameter(Mandatory=$true)]
+        [int]
+        $Depth
+    )
+
+    process {
+        $a = ''
+        # TODO: DateTime/Type
+        $_
+    }
+}
+
 Function Format-Exception {
     [CmdletBinding()]
     param (
@@ -209,20 +231,16 @@ Function Test-AnsiblePath {
         $Path
     )
 
+    # Certain system files fail on Test-Path due to it being locked, we can still get the attributes though.
     try {
-        $attributes = [System.IO.File]::GetAttributes($Path)
+        [void][System.IO.File]::GetAttributes($Path)
+        return $true
     } catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
         return $false
     } catch [NotSupportedException] {
         # When testing a path like Cert:\LocalMachine\My, System.IO.File will
         # not work, we just revert back to using Test-Path for this
         return Test-Path -Path $Path
-    }
-
-    if ([Int32]$attributes -eq -1) {
-        return $false
-    } else {
-        return $true
     }
 }
 
@@ -238,7 +256,21 @@ if ($removes -and -not (Test-AnsiblePath -Path $removes)) {
     $module.ExitJson()
 }
 
-if ($module.CheckMode) {
+# Check if the script has [CmdletBinding(SupportsShouldProcess)] on it
+$scriptAst = [ScriptBlock]::Create($module.Params.script).Ast
+$supportsShouldProcess = $false
+if ($scriptAst -is [Management.Automation.Language.ScriptBlockAst] -and $scriptAst.ParamBlock.Attributes) {
+    $supportsShouldProcess = [bool]($scriptAst.ParamBlock.Attributes |
+        Where-Object { $_.TypeName.Name -eq 'CmdletBinding' } |
+        Select-Object -First 1 |
+        ForEach-Object -Process {
+            $_.NamedArguments | Where-Object {
+                $_.ArgumentName -eq 'SupportsShouldProcess' -and ($_.ExpressionOmitted -or $_.Argument.ToString() -eq '$true')
+            }
+        })
+}
+
+if ($module.CheckMode -and -not $supportsShouldProcess) {
     $module.Result.changed = $true
     $module.Result.msg = "skipped, running in check mode"
     $module.ExitJson()
@@ -249,7 +281,12 @@ $process = $null
 $connInfo = $null
 
 if ($module.Params.executable) {
-    # TODO: Fail if running on powershell <5. It does not support NamedPipeConnectionInfo.
+    if ($PSVersionTable.PSVersion -lt [version]'5.0') {
+        $module.FailJson("executable requires PowerShell 5.0 or newer")
+    }
+
+    # TODO: Should we use -NoNewWindow so we can capture [Console]::WriteLine()?
+    # Will this cause issues with random data coming back to Ansible (things bypassing redirection)?
     $processParams = @{
         FilePath = $module.Params.executable
         WindowStyle = 'Hidden'  # Really just to help with debugging locally
@@ -281,21 +318,73 @@ try {
     $ps = [PowerShell]::Create()
     $ps.Runspace = $runspace
 
-    # TODO: Set the location.
-
-    # TODO: Do we actually want the script to be able to set some of these values?
     $ps.Runspace.SessionStateProxy.SetVariable('Ansible', [PSCustomObject]@{
+        PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
+        CheckMode = $module.CheckMode
         Result = @{}
         Changed = $true
         Failed = $false
         Tmpdir = $module.Tmpdir
     })
 
+    $eap = switch ($module.Params.error_action) {
+        'stop' { 'Stop' }
+        'continue' { 'Continue' }
+        'silently_continue' { 'SilentlyContinue' }
+    }
+    $ps.Runspace.SessionStateProxy.SetVariable('ErrorActionPreference', [Management.Automation.ActionPreference]$eap)
+
+    if ($connInfo) {
+        # If we are running in a new process we need to set the various console encoding values to UTF-8 to ensure a
+        # consistent encoding experience when PowerShell is running native commands and getting the output back.
+        [void]$ps.AddScript(@'
+$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object Text.UTF8Encoding $false
+'@).AddStatement()
+    }
+
+    if ($module.Params.chdir) {
+        [void]$ps.AddCommand('Set-Location').AddParameter('LiteralPath', $module.Params.chdir).AddStatement()
+    }
+
     [void]$ps.AddScript($module.Params.script)
 
+    # We copy the existing parameter dictionary and add/modify the Confirm/WhatIf parameters if the script supports
+    # processing. We do a copy to avoid modifying the original Params dictionary just for safety.
+    $parameters = @{}
     if ($module.Params.parameters) {
-        [void]$ps.AddParameters($module.Params.parameters)
+        foreach ($kvp in $module.Params.parameters.GetEnumerator()) {
+            $parameters[$kvp.Key] = $kvp.Value
+        }
     }
+    if ($supportsShouldProcess) {
+        # We do this last to ensure we take precedence over any user inputted settings.
+        $parameters.Confirm = $false  # Ensure we don't block on any confirmation prompts
+        $parameters.WhatIf = $module.CheckMode
+    }
+
+    if ($parameters) {
+        [void]$ps.AddParameters($parameters)
+    }
+
+    # We cannot natively call a generic function so need to resort to reflection to get the method we know is there
+    # and turn it into an invocable method. We do this so we can call the overload that takes in an IList for the
+    # output which means we don't loose anything from before a terminating exception was raised.
+    $psOutput = [Collections.Generic.List[Object]]@()
+    $invokeMethod = $ps.GetType().GetMethods('Public, Instance, InvokeMethod') | Where-Object {
+        if ($_.Name -ne 'Invoke' -or $_.ReturnType -ne [void] -or -not $_.ContainsGenericParameters) {
+            return $false
+        }
+    
+        # https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.powershell.invoke?view=powershellsdk-7.0.0#System_Management_Automation_PowerShell_Invoke__1_System_Collections_IEnumerable_System_Collections_Generic_IList___0__
+        $parameters = $_.GetParameters()
+        (
+            $parameters.Count -eq 2 -and
+            $parameters[0].ParameterType -eq [Collections.IEnumerable] -and
+            $parameters[1].ParameterType.Namespace -eq 'System.Collections.Generic' -and
+            $parameters[1].ParameterType.Name -eq 'IList`1'
+        )
+    }
+    $invoke = $invokeMethod.MakeGenericMethod([object])
 
     # We redirect the current stdout and stderr so we can capture any console output.
     $origStdout = [System.Console]::Out
@@ -309,9 +398,16 @@ try {
         [System.Console]::SetOut($newStdout)
         [System.Console]::SetError($newStderr)
 
-        # TODO: need to test out various scenarios to see if this will ever throw an exception rather than just output
-        # to the error stream.
-        $module.Result.output = @($ps.Invoke($module.Params.input))
+        # TODO: The input here is problematic in some scenarios, figure this out more.
+        $invoke.Invoke($ps, @(@($module.Params.input), $psOutput))
+    }
+    catch [Management.Automation.RuntimeException] {
+        # $ErrorActionPrefrence = 'Stop' and an error was raised
+        # OR
+        # General exception was raised in the script like 'throw "error"'.
+        # We treat these as failures in the script and return them back to the user.
+        $module.Result.failed = $true
+        $ps.Streams.Error.Add($_.Exception.ErrorRecord)
     }
     finally {
         [System.Console]::SetOut($origStdout)
@@ -328,9 +424,7 @@ try {
     $module.Result.host_err = $stderrBuffer.ToString()
     $module.Result.result = $result.Result
     $module.Result.changed = $result.Changed
-
-    # TODO: check when HadErrors is actually set and document that.
-    $module.Result.failed = $result.Failed -or $ps.HadErrors
+    $module.Result.failed = $module.Result.failed -or $result.Failed
 }
 finally {
     if ($runspace) {
@@ -341,10 +435,14 @@ finally {
     }
 }
 
+# We process the output outselves to flatten anything beyond the depth and deal with certain problemactic types with
+# json serialization.
+$module.Result.output = @($psOutput | Convert-OutputObject -Depth $module.Params.depth)
+
 $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
-    # TODO: ErrorDetails
-    @{
+    $err = @{
         output = ($_ | Out-String)
+        error_details = $null
         exception = Format-Exception -Exception $_.Exception
         target_object = $_.TargetObject
         category_info = @{
@@ -359,24 +457,27 @@ $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
         script_stack_trace = $_.ScriptStackTrace
         pipeline_iteration_info = $_.PipelineIterationInfo
     }
+    if ($_.ErrorDetails) {
+        $err.error_details = @{
+            message = $_.ErrorDetails.Message
+            recommended_action = $_.ErrorDetails.RecommendedAction
+        }
+    }
+
+    $err
 })
 
 'debug', 'verbose', 'warning' | ForEach-Object -Process {
     $module.Result.$_ = @($ps.Streams.$_ | Select-Object -ExpandProperty Message)
 }
 
-# TODO: Will this fail on pre v5 as they don't have the Information stream.
-$module.Result.information = @($ps.Streams.Information | ForEach-Object -Process {
+# Use Select-Object as Information may not be present on earlier pwsh version (<v5).
+$module.Result.information = @($ps.Streams | Select-Object -ExpandProperty Information | ForEach-Object -Process {
     @{
         message_data = $_.MessageData
         source = $_.Source
         time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
         tags = @($_.Tags)
-        user = $_.User
-        computer = $_.Computer
-        process_id = $_.ProcessId
-        native_thread_id = $_.NativeThreadId
-        managed_thread_id = $_.ManagedThreadId
     }
 })
 

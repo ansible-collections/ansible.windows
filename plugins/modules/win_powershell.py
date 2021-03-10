@@ -18,12 +18,38 @@ options:
   arguments:
     description:
     - A list of arguments to pass to I(executable) when running a script in another PowerShell process.
+    - These are not arguments to pass to I(script), use I(parameters) for that purpose.
     type: list
     elements: str
+  chdir:
+    description:
+    - The PowerShell location to set when starting the script.
+    - This can be a location in any of the PowerShell providers.
+    - The default location is dependent on many factors, if relative paths are used then set this option.
+    type: str
   creates:
     description:  
     - A path or path filter pattern; when the referenced path exists on the target host, the task will be skipped.
-    type: path
+    type: str
+  depth:
+    description:
+    - How many levels deep that are serialized in the return output value.
+    - Setting this to a higher value can dramatically increase the amount of data that needs to be returned.
+    default: 3
+    type: int
+  error_action:
+    description:
+    - The C($ErrorActionPreference) to set before executing I(script).
+    - C(silently_continue) will ignore any errors and exceptions raised.
+    - C(continue) is the default behaviour in PowerShell, errors are present in the I(error) return value but only
+      terminating exceptions will stop the script from continuing and set it as failed.
+    - C(stop) will treat errors like exceptions, will stop the script and set it as failed.
+    choices:
+    - silently_continue
+    - continue
+    - stop
+    default: continue
+    type: str
   executable:
     description:
     - A custom PowerShell executable to run the script in.
@@ -32,12 +58,8 @@ options:
     type: str
   input:
     description:
-    - A list of objects to pass in as the input to the PowerShell script.
+    - A list of objects to pass in as the input to the PowerShell script specified by I(script).
     type: list
-  location:
-    description:
-    - The PowerShell location to set when starting the script.
-    type: path
   parameters:
     description:
     - Parameters to pass into the script as key value pairs.
@@ -47,7 +69,7 @@ options:
     description:
     - A path or path filter pattern; when the referenced path B(does not) exist on the target host, the task will be
       skipped.
-    type: path
+    type: str
   script:
     description:
     - The PowerShell script to run.
@@ -55,7 +77,7 @@ options:
     required: true
 seealso:
 - module: ansible.windows.win_command
-- module: ansible.builtin.win_shell
+- module: ansible.windows.win_shell
 notes:
 - The output of the script is serialized to json using the C(ConvertTo-Json) cmdlet. There are certain .NET types
   which do not serialize nicely and can cause the module to hang once it is completed. Take care when outputting any
@@ -127,6 +149,23 @@ EXAMPLES = r'''
   register: pwsh_output
   failed_when:
   - pwsh_output.output[0] != 7
+
+- name: Run code in check mode
+  ansible.windows.win_powershell:
+    script: |
+      [CmdletBinding(SupportsShouldProcess)]
+      param ()
+
+      # Use $Ansible to detect check mode
+      if (-not $Ansible.CheckMode) {
+          echo 'running in check mode'
+      }
+
+      # Use builtin ShouldProcess (-WhatIf)
+      if ($PSCmdlet.ShouldProcess('target')) {
+          echo 'also running in check mode'
+      }
+  check_mode: yes
 '''
 
 RETURN = r'''
@@ -174,6 +213,25 @@ error:
         Write-Error "error" : error
             + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
             + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+    error_details:
+      description:
+      - Additional details about an ErrorRecord.
+      - Can be null if there are not additional details.
+      type: dict
+      contains:
+        message:
+          description:
+          - Message for the error record.
+          returned: always
+          type: str
+          sample: Specific error message
+        recommended_action:
+          description:
+          - Recommended action in the even that this error occurs.
+          - This is empty unless the code which generates the error adds this explicitly.
+          returned: always
+          type: str
+          sample: Delete file
     exception:
       description:
       - Details about the exception behind the error record.
@@ -352,34 +410,4 @@ information:
       elements: str
       returned: always
       sample: ['Host']
-    user:
-      description:
-      - The user that generated the record.
-      type: str
-      returned: always
-      sample: MyUser
-    computer:
-      description:
-      - The computer that generated the record.
-      type: str
-      returned: always
-      sample: MY-HOST
-    process_id:
-      description:
-      - The native process that generated the record.
-      type: int
-      returned: always:
-      sample: 12932
-    native_thread_id:
-      description:
-      - The native thread that generated the record.
-      type: int
-      returned: always
-      sample: 2923
-    managed_thread_id:
-      description:
-      - The managed (.NET) thread that generated the record.
-      type: int
-      returned: always
-      sample: 10234
 '''
