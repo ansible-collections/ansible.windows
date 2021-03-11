@@ -1,0 +1,110 @@
+- name: run script with various output types
+  win_powershell:  # TODO: check with executable as well
+    #executable: pwsh.exe
+    script: |
+      $null
+      'string'
+      1
+      [IO.FileAttributes]'Hidden, Archive'
+      [IO.FileAccess]'Read'
+      [object]
+      [string]
+      [char]'a'
+      [Exception]"abc"
+
+      # Date tests
+      $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
+      $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
+      $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
+
+      $epoch_unspec
+      $epoch_unspec.ToLocalTime()
+      $epoch_unspec.ToUniversalTime()
+
+      $epoch_local
+      $epoch_local.ToLocalTime()
+      $epoch_local.ToUniversalTime()
+
+      $epoch_utc
+      $epoch_utc.ToLocalTime()
+      $epoch_utc.ToUniversalTime()
+
+      ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2))
+
+      # List tests
+      ,@()
+      ,@(1)
+      ,@($null)
+      ,@(
+          'entry 1',
+          $null,
+          1,
+          @('nested', @('even more nested', 'other more nested')),
+          @(),
+          @(1),
+          @($null),
+          @{
+              key = 'value'
+              exceed = Get-Item $env:SystemRoot
+          }
+      )
+
+      # Dictionary tests
+      @{}
+      @{
+          foo = 'bar'
+          list = @(
+            @{ foo = 'bar' }
+            'value 2',
+            [string]
+          )
+          empty_list = ,@()
+          null_list = ,@($null)
+          list_with_1 = ,@(1)
+          nested = @{
+              foo = 'bar'
+              exeed = @{
+                  foo = 'bar'
+              }
+          }
+      }
+      $hash = @{foo = 'bar'}
+      Add-Member -InputObject $has -NotePropertyName foo -NotePropertyValue hidden
+      $hash
+
+      # Classes with properties
+      [PSCustomObject]@{
+          Key = 'value'
+          DateTime = $epoch
+          Enum = [IO.FileAccess]::Read
+          List = @(
+            'value 1', 'value 2'
+          )
+          Nested = [PSCustomObject]@{
+              Exceed = @{
+                  foo = 'bar'
+              }
+              Key = 'value'
+          }
+      }
+
+      Get-Item $env:SystemRoot
+
+  register: output_types
+
+# Larger depth
+# Failure conditions
+#   output on a failure (should be there)
+#   $Ansible.Failed
+#   error_action with error records
+# Parameters
+# Arguments
+# Executable (v5 only)
+# Information records (v5 only)
+# Console output + Unicode values
+# creates/removes
+# Check mode + $Ansible.CheckMode
+# $Ansible.Tmpdir
+# error_action
+# chdir
+# invalid script

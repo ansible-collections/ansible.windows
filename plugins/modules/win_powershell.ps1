@@ -11,10 +11,10 @@ $spec = @{
         arguments = @{ type = 'list'; elements = 'str' }
         chdir = @{ type = 'str' }
         creates = @{ type = 'str' }
-        depth = @{ type = 'int'; default = 3 }
+        depth = @{ type = 'int'; default = 2 }
         error_action = @{ type = 'str'; choices = 'silently_continue', 'continue', 'stop'; default = 'continue' }
         executable = @{ type = 'str' }
-        input = @{ type = 'list' }
+        input = @{ type = 'list'; elements = 'raw' }
         parameters = @{ type = 'dict' }
         removes = @{ type = 'str' }
         script = @{ type = 'str'; required = $true }
@@ -33,11 +33,33 @@ $module.Result.verbose = @()
 $module.Result.debug = @()
 $module.Result.information = @()
 
-Add-CSharpType -AnsibleModule $module -References @'
+$stdPinvoke = @'
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Runtime.InteropServices;
+
+namespace Ansible.Windows.WinPowerShell
+{
+    public class NativeMethods
+    {
+        [DllImport("Kernel32.dll")]
+        public static extern SafeFileHandle GetStdHandle(
+            int nStdHandle);
+
+        [DllImport("Kernel32.dll")]
+        public static extern SafeFileHandle SetStdHandle(
+            int nStdHandle,
+            IntPtr hHandle);
+    }
+}
+'@
+
+Add-CSharpType -AnsibleModule $module -References $stdPinvoke, @'
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Host;
 using System.Security;
@@ -49,9 +71,10 @@ namespace Ansible.Windows.WinPowerShell
         private readonly PSHost PSHost;
         private readonly HostUI HostUI;
 
-        public Host(PSHost host){
+        public Host(PSHost host, StreamWriter stdout, StreamWriter stderr)
+        {
             PSHost = host;
-            HostUI = new HostUI();
+            HostUI = new HostUI(stdout, stderr);
         }
 
         public override CultureInfo CurrentCulture { get { return PSHost.CurrentCulture; } }
@@ -94,7 +117,14 @@ namespace Ansible.Windows.WinPowerShell
 
     public class HostUI : PSHostUserInterface
     {
-        public HostUI() {}
+        private StreamWriter _stdout;
+        private StreamWriter _stderr;
+
+        public HostUI(StreamWriter stdout, StreamWriter stderr)
+        {
+            _stdout = stdout;
+            _stderr = stderr;
+        }
 
         public override PSHostRawUserInterface RawUI { get { return null; } }
 
@@ -130,50 +160,100 @@ namespace Ansible.Windows.WinPowerShell
 
         public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
         {
-            Console.Write(value);
+            _stdout.Write(value);
         }
 
         public override void Write(string value)
         {
-            Console.Write(value);
+            _stdout.Write(value);
         }
 
         public override void WriteDebugLine(string message)
         {
-            Console.WriteLine(String.Format("DEBUG: {0}", message));
+            _stdout.WriteLine(String.Format("DEBUG: {0}", message));
         }
 
         public override void WriteErrorLine(string value)
         {
-            Console.Error.WriteLine(value);
+            _stderr.WriteLine(value);
         }
 
         public override void WriteLine(string value)
         {
-            Console.WriteLine(value);
+            _stdout.WriteLine(value);
         }
 
         public override void WriteProgress(long sourceId, ProgressRecord record) {}
 
         public override void WriteVerboseLine(string message)
         {
-            Console.WriteLine(String.Format("VERBOSE: {0}", message));
+            _stdout.WriteLine(String.Format("VERBOSE: {0}", message));
         }
 
         public override void WriteWarningLine(string message)
         {
-            Console.WriteLine(String.Format("WARNING: {0}", message));
+            _stdout.WriteLine(String.Format("WARNING: {0}", message));
         }
     }
 }
 '@
+
+Function Get-StdHandle {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateSet('Stdout', 'Stderr')]
+        [string]
+        $Stream
+    )
+
+    $id, $dotnet = switch ($Stream) {
+        Stdout { -11, [Console]::Out }
+        Stderr { -12, [Console]::Error }
+    }
+    $handle = [Ansible.Windows.WinPowerShell.NativeMethods]::GetStdHandle($id)
+
+    [PSCustomObject]@{
+        Stream = $Stream
+        NET = $dotnet
+        Raw = $handle
+    }
+}
+
+Function Set-StdHandle {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateSet('Stdout', 'Stderr')]
+        [string]
+        $Stream,
+
+        [IO.TextWriter]
+        $NET,
+
+        [Runtime.InteropServices.SafeHandle]
+        $Raw
+    )
+
+    $id, $meth = switch ($Stream) {
+        Stdout { -11; [Console]::SetOut($NET) }
+        Stderr { -12; [Console]::SetError($NET) }
+    }
+
+    # .NET does not actually affect the std handle on the process, we need to call SetStdHandle so any child processes
+    # spawned with Start-Process -NoNewWindow will use our custom pipe.
+    $rawHandle = if ($null -ne $Raw) { $Raw.DangerousGetHandle() } else { [IntPtr]::Zero }
+    [void][Ansible.Windows.WinPowerShell.NativeMethods]::SetStdHandle($id, $rawHandle)
+}
 
 Function Convert-OutputObject {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [AllowNull()]
-        [object]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [object[]]
         $InputObject,
 
         [Parameter(Mandatory=$true)]
@@ -181,10 +261,108 @@ Function Convert-OutputObject {
         $Depth
     )
 
+    begin {
+        $childDepth = $Depth - 1
+
+        $isType = {
+            [CmdletBinding()]
+            param (
+                [Object]
+                $InputObject,
+
+                [Type]
+                $Type
+            )
+
+            if ($InputObject -is $Type) {
+                return $true
+            }
+
+            $psTypes = @($InputObject.PSTypeNames | ForEach-Object -Process {
+                $_ -replace '^Deserialized.'
+            })
+
+            $Type.FullName -in $psTypes
+        }
+    }
+
     process {
-        $a = ''
-        # TODO: DateTime/Type
-        $_
+        if ($null -eq $InputObject) {
+            return $null
+        }
+
+        foreach ($obj in $InputObject) {
+            if ($null -eq $obj) {
+                # Need to explicitly output $null so the value isn't {}
+                $null
+            }
+            elseif ($Depth -eq 0 -or $obj -is [string]) {
+                # Need to special case string as it's neither a ValueType and we don't want to enum the props.
+                $obj.ToString()
+            }
+            elseif (&$isType -InputObject $obj -Type ([Enum])) {
+                # ToString() gives the human readable value but I thought it better to give some more context behind
+                # these types.
+                @{
+                    Type = ($obj.PSTypeNames[0] -replace '^Deserialized.')
+                    String = $obj.ToString()
+                    Value = [int]$obj
+                }
+            }
+            elseif ($obj -is [DateTime]) {
+                # The offset is based on the Kind value
+                # Unspecified leaves it off
+                # UTC set it to Z
+                # Local sets it to the local timezone
+                $obj.ToString('o')
+            }
+            elseif (&$isType -InputObject $obj -Type ([DateTimeOffset])) {
+                # If this is a deserialized object (from an executable) we need recreate a live DateTimeOffset
+                if ($obj -isnot [DateTimeOffset]) {
+                    $obj = New-Object -TypeName DateTimeOffset $obj.DateTime, $obj.Offset
+                }
+                $obj.ToString('o')
+            }
+            elseif (&$isType -InputObject $obj -Type ([Type])) {
+                # This type is very complex with circular properties, only return somewhat useful properties.
+                @{
+                    Name = $obj.Name
+                    FullName = $obj.FullName
+                    AssemblyQualifiedName = $obj.AssemblyQualifiedName
+                    BaseType = Convert-OutputObject -InputObject $obj.BaseType -Depth $childDepth
+                }
+            }
+            elseif ($obj.GetType().IsValueType) {
+                # We want to display just this value and not any properties it has (if any).
+                $obj
+            }
+            elseif ($obj -is [Collections.IList]) {
+                ,@(Convert-OutputObject -InputObject $obj -Depth $childDepth)
+            }
+            elseif ($obj -is [Collections.IDictionary]) {
+                $newObj = @{}
+
+                # Replicate ConvertTo-Json, props are replaced by keys if they share the same name. We only want ETS
+                # properties as well.
+                foreach ($prop in $obj.PSObject.Properties) {
+                    if ($prop.MemberType -notin @('AliasProperty', 'ScriptProperty', 'NoteProperty')) {
+                        continue
+                    }
+                    $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
+                }
+                foreach ($kvp in $obj.GetEnumerator()) {
+                    $newObj[$kvp.Key] = Convert-OutputObject -InputObject $kvp.Value -Depth $childDepth
+                }
+                $newObj
+            }
+            else {
+                $newObj = @{}
+                foreach ($prop in $obj.PSObject.Properties) {
+                    $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
+                }
+                $newObj
+            }
+        }
     }
 }
 
@@ -225,7 +403,7 @@ Function Format-Exception {
 
 Function Test-AnsiblePath {
     [CmdletBinding()]
-    Param(
+    param (
         [Parameter(Mandatory=$true)]
         [String]
         $Path
@@ -241,6 +419,62 @@ Function Test-AnsiblePath {
         # When testing a path like Cert:\LocalMachine\My, System.IO.File will
         # not work, we just revert back to using Test-Path for this
         return Test-Path -Path $Path
+    }
+}
+
+Function New-AnonymousPipe {
+    [CmdletBinding()]
+    param ()
+
+    $utf8NoBom = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
+
+    $server = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
+    $client = New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', $server.ClientSafePipeHandle
+    $clientWriter = New-Object -TypeName IO.StreamWriter -ArgumentList $client, $utf8NoBom
+    $clientWriter.AutoFlush = $true  # Ensures the data stays in sync when dealing with subprocesses.
+
+    # Create the background task that will constantly read from the pipe and append to our StringBuilder until the pipe
+    # is closed. It also closes the pipe once finished so we don't have to. Without this the pipe buffer can become
+    # full and hang the script.
+    $sb = New-Object -TypeName Text.StringBuilder
+    $ps = [PowerShell]::Create()
+
+    [void]$ps.AddScript(@'
+[CmdletBinding()]
+param (
+    [Text.StringBuilder]
+    $StringBuilder,
+
+    [IO.Pipes.AnonymousPipeServerStream]
+    $Server,
+
+    [Text.Encoding]
+    $Encoding
+)
+
+$sr = New-Object -TypeName IO.StreamReader -ArgumentList $Server, $Encoding
+try {
+    $buffer = New-Object -TypeName char[] -ArgumentList $Server.InBufferSize
+    while ($read = $sr.Read($buffer, 0, $buffer.Length)) {
+        [void]$StringBuilder.Append($buffer, 0, $read)
+    }
+}
+finally {
+    $sr.Dispose()
+}
+'@).AddParameters(@{
+        StringBuilder = $sb
+        Server = $server
+        Encoding = $utf8NoBom
+    })
+    $task = $ps.BeginInvoke()
+
+    [PSCustomObject]@{
+        PowerShell = $ps
+        Task = $task
+        Output = $sb
+        Client = $clientWriter
+        ClientString = $server.GetClientHandleAsString()
     }
 }
 
@@ -278,42 +512,34 @@ if ($module.CheckMode -and -not $supportsShouldProcess) {
 
 $runspace = $null
 $process = $null
-$connInfo = $null
-
-if ($module.Params.executable) {
-    if ($PSVersionTable.PSVersion -lt [version]'5.0') {
-        $module.FailJson("executable requires PowerShell 5.0 or newer")
-    }
-
-    $stdoutPipe = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
-    $stderrPipe = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
-    # ClientSafePipeHandle - handle for client to write to
-    # GetClientHandleAsString() - string to pass to remote host
-    # New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', 'client handle str'
-    # WaitForExit()
-    # Close()
-
-    $processParams = @{
-        FilePath = $module.Params.executable
-        WindowStyle = 'Hidden'  # Really just to help with debugging locally
-        PassThru = $true
-    }
-    if ($module.Params.arguments) {
-        $processParams.ArgumentList = $module.Params.arguments
-    }
-
-    $process = Start-Process @processParams
-    $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$process.Id
-
-    # In case a user specified an executable that does not support the PSHost named pipe that PowerShell uses we
-    # specify a timeout so the module does not hang.
-    $connInfo.OpenTimeout = 5000
-}
+$newStdout = New-AnonymousPipe
+$newStderr = New-AnonymousPipe
 
 try {
-    # Using a custom host allows us to capture any host UI calls through our own Console output.
-    $runspaceHost = New-Object -TypeName Ansible.Windows.WinPowerShell.Host -ArgumentList $Host
-    if ($connInfo) {
+    if ($module.Params.executable) {
+        if ($PSVersionTable.PSVersion -lt [version]'5.0') {
+            $module.FailJson("executable requires PowerShell 5.0 or newer")
+        }
+
+        # Need to use .NET for this as Start-Process will use ShellExecute which won't inherit out pipe handles.
+        $psi = [Diagnostics.ProcessStartInfo]@{
+            FileName = $module.Params.executable
+            Arguments = if ($module.Params.arguments) { $module.Params.arguments -join ' ' } else { '' }
+            UseShellExecute = $false
+            WindowStyle = 'Hidden'  # Useful when debugging the module locally.
+        }
+        $process = [Diagnostics.Process]::Start($psi)
+    }
+
+
+    # Using a custom host allows us to capture any host UI calls through our own output.
+    $runspaceHost = New-Object -TypeName Ansible.Windows.WinPowerShell.Host -ArgumentList $Host, $newStdout.Client, $newStderr.Client
+    if ($process) {
+        $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$process.Id
+
+        # In case a user specified an executable that does not support the PSHost named pipe that PowerShell uses we
+        # specify a timeout so the module does not hang.
+        $connInfo.OpenTimeout = 5000
         $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
     }
     else {
@@ -341,13 +567,62 @@ try {
     }
     $ps.Runspace.SessionStateProxy.SetVariable('ErrorActionPreference', [Management.Automation.ActionPreference]$eap)
 
-    if ($connInfo) {
+    $oldStdout = Get-StdHandle -Stream Stdout
+    $oldStderr = Get-StdHandle -Stream Stderr
+
+    if ($process) {
         # If we are running in a new process we need to set the various console encoding values to UTF-8 to ensure a
-        # consistent encoding experience when PowerShell is running native commands and getting the output back.
-        # TODO: SetStdHandle and Out/Error to the client pipes
+        # consistent encoding experience when PowerShell is running native commands and getting the output back. We
+        # also need to redirect the stdout/stderr pipes to our anonymous pipe so we can capture any native console
+        # output from .NET or calling a native application with 'Start-Process -NoNewWindow'.
+
         [void]$ps.AddScript(@'
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object Text.UTF8Encoding $false
-'@).AddStatement()
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory=$true)]
+    [String]
+    $StdoutHandle,
+
+    [Parameter(Mandatory=$true)]
+    [String]
+    $StderrHandle,
+
+    [Parameter(Mandatory=$true)]
+    [String]
+    $SetStdPInvoke,
+
+    [Parameter(Mandatory=$true)]
+    [String]
+    $SetScriptBlock
+)
+
+Add-Type -TypeDefinition $SetStdPInvoke
+$setHandle = [ScriptBlock]::Create($SetScriptBlock)
+$utf8NoBom = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
+
+# Make sure our console encoding values are all set to UTF-8 for a consistent experience.
+$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8NoBom
+
+# Set the stdout/stderr for both .NET and natively to our anonymous pipe.
+@{Name = 'Stdout'; Handle = $StdoutHandle}, @{Name = 'Stderr'; Handle = $StderrHandle} | ForEach-Object -Process {
+    $pipe = New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', $_.Handle
+    $writer = New-Object -TypeName IO.StreamWriter -ArgumentList $pipe, $utf8NoBom
+    $writer.AutoFlush = $true  # Ensures we data in the correct order.
+
+    &$setHandle -Stream $_.Name -NET $writer -Raw $pipe.SafePipeHandle
+}
+'@, $true).AddParameters(@{
+            StdoutHandle = $newStdout.ClientString
+            StderrHandle = $newStderr.ClientString
+            SetStdPInvoke = $stdPinvoke
+            SetScriptBlock = ${function:Set-StdHandle}
+        }).AddStatement()
+    }
+    else {
+        # Else we are running in the same process, we need to redirect the console and .NET output pipes to our
+        # anonymous pipe. We shouldn't have to set the encoding, the module wrapper already does this.
+        Set-StdHandle -Stream Stdout -NET $newStdout.Client -Raw $newStdout.Client.BaseStream.SafePipeHandle
+        Set-StdHandle -Stream Stderr -NET $newStderr.Client -Raw $newStderr.Client.BaseStream.SafePipeHandle
     }
 
     if ($module.Params.chdir) {
@@ -393,21 +668,9 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Obj
         )
     }
     $invoke = $invokeMethod.MakeGenericMethod([object])
-
-    # We redirect the current stdout and stderr so we can capture any console output.
-    # TODO: Set Out/Error to the anonymous pipe
-    $origStdout = [System.Console]::Out
-    $origStderr = [System.Console]::Error
-    $stdoutBuffer = New-Object -TypeName System.Text.StringBuilder
-    $stderrBuffer = New-Object -TypeName System.Text.StringBuilder
-    $newStdout = New-Object -TypeName System.IO.StringWriter -ArgumentList $stdoutBuffer
-    $newStderr = New-Object -TypeName System.IO.StringWriter -ArgumentList $stderrBuffer
+    $psInput = @(if ($module.Params.input) { $module.Params.input })
 
     try {
-        [System.Console]::SetOut($newStdout)
-        [System.Console]::SetError($newStderr)
-
-        $psInput = @(if ($module.Params.input) { $module.Params.input })
         $invoke.Invoke($ps, @($psInput, $psOutput))
     }
     catch [Management.Automation.RuntimeException] {
@@ -418,35 +681,37 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Obj
         $module.Result.failed = $true
         $ps.Streams.Error.Add($_.Exception.ErrorRecord)
     }
-    finally {
-        [System.Console]::SetOut($origStdout)
-        [System.Console]::SetError($origStderr)
-
-        $newStdout.Dispose()
-        $newStderr.Dispose()
-    }
 
     # Get the internal Ansible variable that can contain code specific information.
     $result = $ps.Runspace.SessionStateProxy.GetVariable('Ansible')
-
-    $module.Result.host_out = $stdoutBuffer.ToString()
-    $module.Result.host_err = $stderrBuffer.ToString()
-    $module.Result.result = $result.Result
-    $module.Result.changed = $result.Changed
-    $module.Result.failed = $module.Result.failed -or $result.Failed
 }
 finally {
+    $oldStdout, $oldStderr | ForEach-Object -Process {
+        Set-StdHandle -Stream $_.Stream -NET $_.NET -Raw $_.Raw.SafePipeHandle
+    }
+
     if ($runspace) {
         $runspace.Dispose()
     }
     if ($process) {
         $process | Stop-Process -Force
     }
+
+    $newStdout, $newStderr | ForEach-Object -Process {
+        $_.Client.Dispose()
+        [void]$_.PowerShell.EndInvoke($_.Task)
+    }
 }
 
-# We process the output outselves to flatten anything beyond the depth and deal with certain problemactic types with
+$module.Result.host_out = $newStdout.Output.ToString()
+$module.Result.host_err = $newStderr.Output.ToString()
+$module.Result.result = (Convert-OutputObject -InputObject $result.Result -Depth $module.Params.depth)
+$module.Result.changed = $result.Changed
+$module.Result.failed = $module.Result.failed -or $result.Failed
+
+# We process the output outselves to flatten anything beyond the depth and deal with certain problematic types with
 # json serialization.
-$module.Result.output = @($psOutput | Convert-OutputObject -Depth $module.Params.depth)
+$module.Result.output = Convert-OutputObject -InputObject $psOutput -Depth $module.Params.depth
 
 $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
     $err = @{
@@ -483,7 +748,7 @@ $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
 # Use Select-Object as Information may not be present on earlier pwsh version (<v5).
 $module.Result.information = @($ps.Streams | Select-Object -ExpandProperty Information | ForEach-Object -Process {
     @{
-        message_data = $_.MessageData
+        message_data = Convert-OutputObject -InputObject $_.MessageData -Depth $module.Params.depth
         source = $_.Source
         time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
         tags = @($_.Tags)

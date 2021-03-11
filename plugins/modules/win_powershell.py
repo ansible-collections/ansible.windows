@@ -33,9 +33,9 @@ options:
     type: str
   depth:
     description:
-    - How many levels deep that are serialized in the return output value.
+    - How deep the return values are serialized for C(result), C(output), and C(information[x].message_data).
     - Setting this to a higher value can dramatically increase the amount of data that needs to be returned.
-    default: 3
+    default: 2
     type: int
   error_action:
     description:
@@ -60,6 +60,7 @@ options:
     description:
     - A list of objects to pass in as the input to the PowerShell script specified by I(script).
     type: list
+    elements: raw
   parameters:
     description:
     - Parameters to pass into the script as key value pairs.
@@ -79,12 +80,28 @@ seealso:
 - module: ansible.windows.win_command
 - module: ansible.windows.win_shell
 notes:
-- The output of the script is serialized to json using the C(ConvertTo-Json) cmdlet. There are certain .NET types
-  which do not serialize nicely and can cause the module to hang once it is completed. Take care when outputting any
-  objects.
+- The module is set as failed when a terminating exception is throw, or C(error_action=stop) and a normal error record
+  is raised.
+- The output values are processed using a custom filter and while it mostly matches the C(ConvertTo-Json) result the
+  following value types are different.
+- C(DateTime) will be an ISO 8601 string in UTC, C(DateTimeOffset) will have the offset as specified by the value.
+- C(Enum) will contain a dictionary with C(Type), C(String), C(Value) being the type name, string representation and
+  raw integer value respectively.
+- C(Type) will contain a dictionary with C(Name), C(FullName), C(AssemblyQualifiedName), C(BaseType) being the type
+  name, the type name including the namespace, the full assembly name the type was defined in and the base type it
+  derives from.
 - The script has access to the C($Ansible) variable where it can set C(Result), C(Changed), C(Failed), or access
   C(Tmpdir).
-- Any host output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object.
+- C($Ansible.Result) is a value that is returned back to the controller as is.
+- C($Ansible.Changed) can be set to C(true) or C(false) to reflect whether the module made a change or not. By default
+  this is set to C(true).
+- C($Ansible.Failed) can be set to C(true) if the script wants to return the failure back to the controller.
+- C($Ansible.Tmpdir) is the path to a temporary directory to use as a scratch location that is cleaned up after the
+  module has finished.
+- Any host/console output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object, they are
+  returned as a string in I(host_out) and I(host_err).
+- The module will skip running the script when in check mode unless the script defines
+  C([CmdletBinding(SupportsShouldProcess)]).
 author:
 - Jordan Borean (@jborean93)
 '''
@@ -100,11 +117,11 @@ EXAMPLES = r'''
     script: |
       [CmdletBinding()]
       param (
-        [String]
-        $Path,
+          [String]
+          $Path,
 
-        [Switch]
-        $Force
+          [Switch]
+          $Force
       )
 
       New-Item -Path $Path -ItemType Direcotry -Force:$Force
@@ -117,9 +134,9 @@ EXAMPLES = r'''
     script: |
       [CmdletBinding()]
       param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-        [String[]]
-        $Path
+          [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+          [String[]]
+          $Path
       )
 
       process {
@@ -135,10 +152,10 @@ EXAMPLES = r'''
   ansible.windows.win_powershell:
     script: |
       if (Get-Service -Name test -ErrorAction SilentlyContinue) {
-        Remove-Service -Name test
+          Remove-Service -Name test
       }
       else {
-        $Ansible.Changed = $false
+          $Ansible.Changed = $false
       }
 
 - name: Run PowerShell script in PowerShell 7
@@ -157,15 +174,38 @@ EXAMPLES = r'''
       param ()
 
       # Use $Ansible to detect check mode
-      if (-not $Ansible.CheckMode) {
+      if ($Ansible.CheckMode) {
           echo 'running in check mode'
+      }
+      else {
+          echo 'running in normal mode'
       }
 
       # Use builtin ShouldProcess (-WhatIf)
       if ($PSCmdlet.ShouldProcess('target')) {
+          echo 'also running in normal mode'
+      }
+      else {
           echo 'also running in check mode'
       }
   check_mode: yes
+
+- name: Return a failure back to Ansible
+  ansible.windows.win_powershell:
+    script: |
+      if (Test-Path C:\bad.file) {
+          $Ansible.Failed = $true
+      }
+
+- name: Define when the script made a change or not
+  ansible.windows.win_powershell:
+    script: |
+      if ((Get-Item WSMan:\localhost\Service\Auth\Basic).Value -eq 'true') {
+          Set-Item WSMan:\localhost\Service\Auth\Basic -Value false
+      }
+      else {
+          $Ansible.Changed = $true
+      }
 '''
 
 RETURN = r'''
@@ -174,8 +214,9 @@ result:
   - The values that were set by C($Ansible.Result) in the script.
   - Defaults to an empty dict but can be set to anything by the script.
   returned: always
-  type: raw
+  type: complex
   sample: {'key': 'value', 'other key': 1}
+  contains: {}  # Satisfy the validate-modules sanity check
 host_out:
   description:
   - The strings written to the host output, typically the stdout.
@@ -338,7 +379,7 @@ error:
       - The script stack trace for the error record.
       type: str
       returned: always
-      sample: at <ScriptBlock>, <No file>: line 1
+      sample: 'at <ScriptBlock>, <No file>: line 1'
     pipeline_iteration_info:
       description:
       - The status of the pipeline when this record was created.
@@ -354,7 +395,7 @@ error:
 warning:
   description:
   - A list of warning messages created by the script.
-  - TODO: Document $WarningPreference and how it affects this
+  - Warning messages only appear when C($WarningPreference = 'Continue').
   returned: always
   type: list
   elements: str
@@ -362,7 +403,7 @@ warning:
 verbose:
   description:
   - A list of warning messages created by the script.
-  - TODO: Document $VerbosePreference and how it affects this
+  - Verbose messages only appear when C($VerbosePreference = 'Continue').
   returned: always
   type: list
   elements: str
@@ -370,7 +411,7 @@ verbose:
 debug:
   description:
   - A list of warning messages created by the script.
-  - TODO: Document $DebugPreference and how it affects this
+  - Debug messages only appear when C($DebugPreference = 'Continue').
   returned: always
   type: list
   elements: str
@@ -387,9 +428,10 @@ information:
       description:
       - Message data associated with the record.
       - The value here can be of any type.
-      type: raw
+      type: complex
       returned: always
       sample: information record
+      contains: {}  # Satisfy the validate-modules sanity check
     source:
       description:
       - The source of the record.
@@ -402,7 +444,7 @@ information:
       - This is the time in UTC as an ISO 8601 formatted string.
       type: str
       returned: always
-      sample: 2021-02-11T04:46:00.4694240Z
+      sample: '2021-02-11T04:46:00.4694240Z'
     tags:
       description:
       - A list of tags associated with the record.
