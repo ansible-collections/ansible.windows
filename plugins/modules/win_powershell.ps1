@@ -746,13 +746,16 @@ $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
 }
 
 # Use Select-Object as Information may not be present on earlier pwsh version (<v5).
-$module.Result.information = @($ps.Streams | Select-Object -ExpandProperty Information | ForEach-Object -Process {
-    @{
-        message_data = Convert-OutputObject -InputObject $_.MessageData -Depth $module.Params.depth
-        source = $_.Source
-        time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
-        tags = @($_.Tags)
+$module.Result.information = @($ps.Streams |
+    Select-Object -ExpandProperty Information -ErrorAction SilentlyContinue |
+    ForEach-Object -Process {
+        @{
+            message_data = Convert-OutputObject -InputObject $_.MessageData -Depth $module.Params.depth
+            source = $_.Source
+            time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
+            tags = @($_.Tags)
+        }
     }
-})
+)
 
 $module.ExitJson()

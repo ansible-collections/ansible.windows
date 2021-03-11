@@ -28,7 +28,7 @@ options:
     - The default location is dependent on many factors, if relative paths are used then set this option.
     type: str
   creates:
-    description:  
+    description:
     - A path or path filter pattern; when the referenced path exists on the target host, the task will be skipped.
     type: str
   depth:
