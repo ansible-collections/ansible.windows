@@ -11,9 +11,6 @@ module: win_updates
 short_description: Download and install Windows updates
 description:
     - Searches, downloads, and installs Windows updates synchronously by automating the Windows Update client.
-notes:
-    - The current module doesn't support Systems Center Configuration Manager (SCCM).
-    - See L(https://github.com/ansible-collections/ansible.windows/issues/194)
 options:
     blacklist:
         description:
@@ -112,6 +109,8 @@ notes:
   Check the examples for ways to mitigate this.
 - More information about PowerShell and how it handles RegEx strings can be
   found at U(https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx).
+- The current module doesn't support Systems Center Configuration Manager (SCCM).
+  See L(https://github.com/ansible-collections/ansible.windows/issues/194)
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: ansible.windows.win_feature
