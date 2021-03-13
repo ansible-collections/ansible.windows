@@ -11,6 +11,9 @@ module: win_updates
 short_description: Download and install Windows updates
 description:
     - Searches, downloads, and installs Windows updates synchronously by automating the Windows Update client.
+notes:
+    - The current module doesn't support Systems Center Configuration Manager (SCCM).
+    - See L(https://github.com/ansible-collections/ansible.windows/issues/194)
 options:
     blacklist:
         description:
@@ -51,13 +54,11 @@ options:
         - Defines the Windows Update source catalog.
         - C(default) Use the default search source. For many systems default is
           set to the Microsoft Windows Update catalog. Systems participating in
-          Windows Server Update Services (WSUS), Systems Center Configuration
-          Manager (SCCM), or similar corporate update server environments may
+          Windows Server Update Services (WSUS), or similar corporate update server environments may
           default to those managed update sources instead of the Windows Update
           catalog.
         - C(managed_server) Use a managed server catalog. For environments
-          utilizing Windows Server Update Services (WSUS), Systems Center
-          Configuration Manager (SCCM), or similar corporate update servers, this
+          utilizing Windows Server Update Services (WSUS), or similar corporate update servers, this
           option selects the defined corporate update source.
         - C(windows_update) Use the Microsoft Windows Update catalog.
         type: str
