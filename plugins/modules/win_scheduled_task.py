@@ -308,7 +308,7 @@ options:
     - C(1) means the task is compatible with Task Scheduler 1.0(Windows Vista, Windows Server 2008 and older).
     - C(2) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
     - C(3) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
-    - C(4) means the task is compatible with Task Scheduler 2.0(Windows 10, Windows Server 2019).
+    - C(4) means the task is compatible with Task Scheduler 2.0(Windows 10, Windows Server 2016, Windows Server 2019).
     type: int
     choices: [ 0, 1, 2, 3, 4 ]
   delete_expired_task_after:
