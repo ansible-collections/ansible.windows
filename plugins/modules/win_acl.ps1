@@ -80,7 +80,7 @@ Function SetPrivilegeTokens() {
 }
 
 
-$params = Parse-Args $args 
+$params = Parse-Args $args
 
 # Get the path parameter with expanded environment variables.
 $path=Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
