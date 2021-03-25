@@ -11,7 +11,7 @@ $spec = @{
         auto_detect = @{ type = "bool"; default = $true }
         auto_config_url = @{ type = "str" }
         proxy = @{ type = "raw" }
-        bypass = @{ type = "list"; elements = "str" }
+        bypass = @{ type = "list"; elements = "str"; no_log = $false }
         connection = @{ type = "str" }
     }
     required_by = @{
