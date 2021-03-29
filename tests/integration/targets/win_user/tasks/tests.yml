@@ -36,7 +36,7 @@
     password: '{{ test_win_user_password }}'
     fullname: Test User
     description: Test user account
-    groups: Guests
+    groups: guests  # Makes sure we aren't doing case sensitive checks
   register: win_user_create_result_again
 
 - name: assert test create user (idempotent)
@@ -317,7 +317,7 @@
       - "win_user_replace_groups_again_result is not changed"
 
 - name: add user to another group
-  win_user: name="{{ test_win_user_name }}" groups="Power Users" groups_action="add"
+  win_user: name="{{ test_win_user_name }}" groups="S-1-5-32-547" groups_action="add"
   register: win_user_add_groups_result
 
 - name: check add user to another group result
@@ -331,7 +331,7 @@
 - name: add user to another group again
   win_user:
     name: "{{ test_win_user_name }}"
-    groups: "Power Users"
+    groups: S-1-5-32-547
     groups_action: add
   register: win_user_add_groups_again_result
 

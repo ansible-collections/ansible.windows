@@ -34,6 +34,7 @@ options:
     - Adds or removes the user from this comma-separated list of groups, depending on the value of I(groups_action).
     - When I(groups_action) is C(replace) and I(groups) is set to the empty string ('groups='), the user is removed
       from all groups.
+    - Since C(ansible.windows v1.5.0) it is possible to specify a group using it's security identifier.
     type: list
     elements: str
   groups_action:
