@@ -574,6 +574,8 @@ $factMeta = @(
         Code = {
             $datetime = (Get-Date)
             $datetimeUtc = $datetime.ToUniversalTime()
+            $epochDatetimeUtc = New-Object -TypeName DateTime -ArgumentList @(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
+            $epoch = (New-TimeSpan -Start $epochDatetimeUtc -End $dateTimeUtc).TotalSeconds
 
             $ansibleFacts.ansible_date_time = @{
                 date = $datetime.ToString("yyyy-MM-dd")
