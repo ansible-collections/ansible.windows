@@ -7,13 +7,13 @@
   register: fail_fake_location
   failed_when: "fail_fake_location.msg != 'value of store_location must be one of: CurrentUser, LocalMachine. Got no match for: FakeLocation'"
 
-- name: fail with invalid store name
+- name: fail to open non-existing store without the creates flag
   win_certificate_store:
     state: present
     path: '{{win_cert_dir}}\subj-cert.pem'
     store_name: FakeName
   register: fail_fake_name
-  failed_when: "fail_fake_name.msg != 'value of store_name must be one of: AddressBook, AuthRoot, CertificateAuthority, Disallowed, My, Root, TrustedPeople, TrustedPublisher. Got no match for: FakeName'"
+  failed_when: '"unable to find store ''FakeName''" not in fail_fake_name.msg'
 
 - name: fail when state=present and no path is set
   win_certificate_store:
@@ -42,12 +42,6 @@
     path: '{{win_cert_dir}}'
   register: fail_export_path_is_dir
   failed_when: fail_export_path_is_dir.msg != "Cannot export cert to path '" + win_cert_dir + "' as it is a directory"
-
-- name: fail when state=absent and not path or thumbprint is set
-  win_certificate_store:
-    state: absent
-  register: fail_absent_no_path_or_thumbprint
-  failed_when: "fail_absent_no_path_or_thumbprint.msg != 'state is absent but any of the following are missing: path, thumbprint'"
 
 - name: import pem certificate (check)
   win_certificate_store:
@@ -799,3 +793,129 @@
   vars: *become_vars
   register: fail_export_non_exportable
   failed_when: fail_export_non_exportable.msg != 'Cannot export cert with key as PKCS12 when the key is not marked as exportable or not accessible by the current user'
+
+- name: fail to import with invalid service name
+  win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
+    store_type: service
+    store_location: FakeService
+    state: present
+  register: fail_invalid_service
+  failed_when: fail_invalid_service.msg != "value of store_location 'FakeService' is not a valid windows service"
+
+- block:
+  - name: import certificate into service store (check mode)
+    win_certificate_store:
+      path: '{{ win_cert_dir }}\subj-cert.pem'
+      store_type: service
+      store_location: WinRM
+      state: present
+    register: service_store_check
+    check_mode: yes
+
+  - name: get result of import certificate into service store (check mode)
+    win_reg_stat:
+      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+    register: service_store_check_actual
+
+  - name: assert import certificate into service store (check mode)
+    assert:
+      that:
+      - service_store_check is changed
+      - service_store_check.thumbprints == [subj_thumbprint]
+      - not service_store_check_actual.exists
+
+  - name: import certificate into service store
+    win_certificate_store:
+      path: '{{ win_cert_dir }}\subj-cert.pem'
+      store_type: service
+      store_location: WinRM
+      state: present
+    register: service_store
+
+  - name: get result of import certificate into service store
+    win_reg_stat:
+      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+    register: service_store_actual
+
+  - name: assert import certificate into service store
+    assert:
+      that:
+      - service_store is changed
+      - service_store.thumbprints == [subj_thumbprint]
+      - service_store_actual.exists
+
+  - name: import certificate into service store (idempotent)
+    win_certificate_store:
+      path: '{{ win_cert_dir }}\subj-cert.pem'
+      store_type: service
+      store_location: WinRM
+      state: present
+    register: service_store_again
+
+  - name: assert import certificate into service store (idempotent)
+    assert:
+      that:
+      - not service_store_again is changed
+
+  - name: remove service certificate (check)
+    win_certificate_store:
+      store_type: service
+      store_location: WinRM
+      thumbprint: '{{ subj_thumbprint }}'
+      state: absent
+    register: service_remove_check
+    check_mode: yes
+
+  - name: get result of remove service certificate (check)
+    win_reg_stat:
+      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+    register: service_remove_check_actual
+
+  - name: assert remove service certificate (check)
+    assert:
+      that:
+      - service_remove_check is changed
+      - service_remove_check.thumbprints == [subj_thumbprint]
+      - service_remove_check_actual.exists
+
+  - name: remove service certificate
+    win_certificate_store:
+      store_type: service
+      store_location: WinRM
+      thumbprint: '{{ subj_thumbprint }}'
+      state: absent
+    register: service_remove
+
+  - name: get result of remove service certificate
+    win_reg_stat:
+      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+    register: service_remove_actual
+
+  - name: assert remove service certificate
+    assert:
+      that:
+      - service_remove is changed
+      - service_remove.thumbprints == [subj_thumbprint]
+      - not service_remove_actual.exists
+
+  - name: remove service certificate (idempotent)
+    win_certificate_store:
+      store_type: service
+      store_location: WinRM
+      thumbprint: '{{ subj_thumbprint }}'
+      state: absent
+    register: service_remove_again
+
+  - name: assert remove service certificate (idempotent)
+    assert:
+      that:
+      - not service_remove_again is changed
+
+  always:
+  - name: remove service certificate
+    win_certificate_store:
+      path: '{{ win_cert_dir }}\subj-cert.pem'
+      store_type: service
+      store_location: WinRM
+      state: absent

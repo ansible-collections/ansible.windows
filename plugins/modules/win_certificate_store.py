@@ -55,23 +55,27 @@ options:
     - "C(TrustedPeople): The X.509 certificate store for directly trusted people and resources"
     - "C(TrustedPublisher): The X.509 certificate store for directly trusted publishers"
     type: str
-    choices:
-    - AddressBook
-    - AuthRoot
-    - CertificateAuthority
-    - Disallowed
-    - My
-    - Root
-    - TrustedPeople
-    - TrustedPublisher
     default: My
   store_location:
     description:
     - The store location to use when importing a certificate or searching for a
       certificate.
-    choices: [ CurrentUser, LocalMachine ]
-    default: LocalMachine
+    - Can be set to C(CurrentUser) or C(LocalMachine) when C(store_type=system).
+    - Defaults to C(LocalMachine) when C(store_type=system).
+    - Must be set to any service name when C(store_type=service).
     type: str
+    default: LocalMachine
+  store_type:
+    description:
+    - The store type to manage.
+    - Use C(system) to manage locations in the system store, C(LocalMachine) and C(CurrentUser).
+    - Use C(service) to manage the store of a service account specified by I(store_location).
+    choices:
+    - system
+    - service
+    default: system
+    type: str
+    version_added: '1.5.0'
   password:
     description:
     - The password of the pkcs12 certificate key.
@@ -195,6 +199,16 @@ EXAMPLES = r'''
   become: yes
   become_method: runas
   become_user: SYSTEM
+
+- name: Import certificate to be used for LDAPS
+  ansible.windows.win_certificate_store:
+    path: C:\Temp\cert.pfx
+    password: StrongPassword!
+    store_type: service
+    store_location: NTDS
+    key_exportable: no
+    key_storage: machine
+    state: present
 '''
 
 RETURN = r'''
