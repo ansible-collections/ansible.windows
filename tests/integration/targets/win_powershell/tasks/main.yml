@@ -47,3 +47,4 @@
   assert:
     that:
     - exe_with_arguments.output == ['Restricted']
+  when: use_executable.stdout | trim | bool
