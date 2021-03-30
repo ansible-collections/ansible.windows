@@ -55,12 +55,9 @@ options:
     - A custom PowerShell executable to run the script in.
     - When not defined the script will run in the current module PowerShell interpreter.
     - Both the remote PowerShell and the one specified by I(executable) must be running on PowerShell v5.1 or newer.
+    - Setting this value may change the values returned in the C(output) return value depending on the underlying .NET
+      type.
     type: str
-  input:
-    description:
-    - A list of objects to pass in as the input to the PowerShell script specified by I(script).
-    type: list
-    elements: raw
   parameters:
     description:
     - Parameters to pass into the script as key value pairs.
@@ -128,25 +125,6 @@ EXAMPLES = r'''
     parameters:
       Path: C:\temp
       Force: true
-
-- name: Run PowerShell script with input
-  ansible.windows.win_powershell:
-    script: |
-      [CmdletBinding()]
-      param (
-          [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-          [String[]]
-          $Path
-      )
-
-      process {
-        foreach ($pathEntry in $Path) {
-            Test-Path -Path $pathEntry
-        }
-      }
-    input:
-    - C:\Windows
-    - HKLM:\SYSTEM
 
 - name: Run PowerShell script that modifies the module changed result
   ansible.windows.win_powershell:

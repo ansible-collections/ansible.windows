@@ -1,110 +1,49 @@
-- name: run script with various output types
-  win_powershell:  # TODO: check with executable as well
-    #executable: pwsh.exe
-    script: |
-      $null
-      'string'
-      1
-      [IO.FileAttributes]'Hidden, Archive'
-      [IO.FileAccess]'Read'
-      [object]
-      [string]
-      [char]'a'
-      [Exception]"abc"
+- name: check if executable is supported
+  win_shell: '[Version]$PSVersionTable.PSVersion -gt [Version]"5.0"'
+  register: use_executable
+  changed_when: False
 
-      # Date tests
+- name: get datetimes used for tests
+  win_shell: |
       $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
       $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
       $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
 
-      $epoch_unspec
-      $epoch_unspec.ToLocalTime()
-      $epoch_unspec.ToUniversalTime()
+      $epoch_unspec.ToString('o')
+      $epoch_unspec.ToLocalTime().ToString('o')
+      $epoch_unspec.ToUniversalTime().ToString('o')
 
-      $epoch_local
-      $epoch_local.ToLocalTime()
-      $epoch_local.ToUniversalTime()
+      $epoch_local.ToString('o')
+      $epoch_local.ToLocalTime().ToString('o')
+      $epoch_local.ToUniversalTime().ToString('o')
 
-      $epoch_utc
-      $epoch_utc.ToLocalTime()
-      $epoch_utc.ToUniversalTime()
+      $epoch_utc.ToString('o')
+      $epoch_utc.ToLocalTime().ToString('o')
+      $epoch_utc.ToUniversalTime().ToString('o')
 
-      ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2))
+      ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2)).ToString('o')
+  register: dt_values
+  changed_when: False
 
-      # List tests
-      ,@()
-      ,@(1)
-      ,@($null)
-      ,@(
-          'entry 1',
-          $null,
-          1,
-          @('nested', @('even more nested', 'other more nested')),
-          @(),
-          @(1),
-          @($null),
-          @{
-              key = 'value'
-              exceed = Get-Item $env:SystemRoot
-          }
-      )
+- name: run tests using current interpreter
+  import_tasks: tests.yml
 
-      # Dictionary tests
-      @{}
-      @{
-          foo = 'bar'
-          list = @(
-            @{ foo = 'bar' }
-            'value 2',
-            [string]
-          )
-          empty_list = ,@()
-          null_list = ,@($null)
-          list_with_1 = ,@(1)
-          nested = @{
-              foo = 'bar'
-              exeed = @{
-                  foo = 'bar'
-              }
-          }
-      }
-      $hash = @{foo = 'bar'}
-      Add-Member -InputObject $has -NotePropertyName foo -NotePropertyValue hidden
-      $hash
+- name: run tests using executable
+  import_tasks: tests.yml
+  when: use_executable.stdout | trim | bool
+  vars:
+    pwsh_executable: powershell.exe
 
-      # Classes with properties
-      [PSCustomObject]@{
-          Key = 'value'
-          DateTime = $epoch
-          Enum = [IO.FileAccess]::Read
-          List = @(
-            'value 1', 'value 2'
-          )
-          Nested = [PSCustomObject]@{
-              Exceed = @{
-                  foo = 'bar'
-              }
-              Key = 'value'
-          }
-      }
+- name: run executable with arguments
+  win_powershell:
+    executable: powershell.exe
+    arguments: -ExecutionPolicy Restricted
+    script: |
+      $env:PSExecutionPolicyPreference
+  register: exe_with_arguments
+  when: use_executable.stdout | trim | bool
 
-      Get-Item $env:SystemRoot
-
-  register: output_types
-
-# Larger depth
-# Failure conditions
-#   output on a failure (should be there)
-#   $Ansible.Failed
-#   error_action with error records
-# Parameters
-# Arguments
-# Executable (v5 only)
-# Information records (v5 only)
-# Console output + Unicode values
-# creates/removes
-# Check mode + $Ansible.CheckMode
-# $Ansible.Tmpdir
-# error_action
-# chdir
-# invalid script
+- name: assert run executable with arguments
+  assert:
+    that:
+    - exe_with_arguments.output == ['Restricted']

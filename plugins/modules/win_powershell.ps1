@@ -14,7 +14,6 @@ $spec = @{
         depth = @{ type = 'int'; default = 2 }
         error_action = @{ type = 'str'; choices = 'silently_continue', 'continue', 'stop'; default = 'continue' }
         executable = @{ type = 'str' }
-        input = @{ type = 'list'; elements = 'raw' }
         parameters = @{ type = 'dict' }
         removes = @{ type = 'str' }
         script = @{ type = 'str'; required = $true }
@@ -42,9 +41,18 @@ namespace Ansible.Windows.WinPowerShell
 {
     public class NativeMethods
     {
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool AllocConsole();
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetConsoleWindow();
+
         [DllImport("Kernel32.dll")]
         public static extern SafeFileHandle GetStdHandle(
             int nStdHandle);
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool FreeConsole();
 
         [DllImport("Kernel32.dll")]
         public static extern SafeFileHandle SetStdHandle(
@@ -251,9 +259,7 @@ Function Convert-OutputObject {
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [AllowNull()]
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [object[]]
+        [object]
         $InputObject,
 
         [Parameter(Mandatory=$true)]
@@ -288,80 +294,92 @@ Function Convert-OutputObject {
 
     process {
         if ($null -eq $InputObject) {
-            return $null
+            $null
         }
-
-        foreach ($obj in $InputObject) {
-            if ($null -eq $obj) {
-                # Need to explicitly output $null so the value isn't {}
-                $null
+        elseif ((&$isType -InputObject $InputObject -Type ([Enum])) -and $Depth -ge 0) {
+            # ToString() gives the human readable value but I thought it better to give some more context behind
+            # these types.
+            @{
+                Type = ($InputObject.PSTypeNames[0] -replace '^Deserialized.')
+                String = $InputObject.ToString()
+                Value = [int]$InputObject
             }
-            elseif ($Depth -eq 0 -or $obj -is [string]) {
-                # Need to special case string as it's neither a ValueType and we don't want to enum the props.
-                $obj.ToString()
+        }
+        elseif ($InputObject -is [DateTime]) {
+            # The offset is based on the Kind value
+            # Unspecified leaves it off
+            # UTC set it to Z
+            # Local sets it to the local timezone
+            $InputObject.ToString('o')
+        }
+        elseif (&$isType -InputObject $InputObject -Type ([DateTimeOffset])) {
+            # If this is a deserialized object (from an executable) we need recreate a live DateTimeOffset
+            if ($InputObject -isnot [DateTimeOffset]) {
+                $InputObject = New-Object -TypeName DateTimeOffset $InputObject.DateTime, $InputObject.Offset
             }
-            elseif (&$isType -InputObject $obj -Type ([Enum])) {
-                # ToString() gives the human readable value but I thought it better to give some more context behind
-                # these types.
-                @{
-                    Type = ($obj.PSTypeNames[0] -replace '^Deserialized.')
-                    String = $obj.ToString()
-                    Value = [int]$obj
-                }
-            }
-            elseif ($obj -is [DateTime]) {
-                # The offset is based on the Kind value
-                # Unspecified leaves it off
-                # UTC set it to Z
-                # Local sets it to the local timezone
-                $obj.ToString('o')
-            }
-            elseif (&$isType -InputObject $obj -Type ([DateTimeOffset])) {
-                # If this is a deserialized object (from an executable) we need recreate a live DateTimeOffset
-                if ($obj -isnot [DateTimeOffset]) {
-                    $obj = New-Object -TypeName DateTimeOffset $obj.DateTime, $obj.Offset
-                }
-                $obj.ToString('o')
-            }
-            elseif (&$isType -InputObject $obj -Type ([Type])) {
-                # This type is very complex with circular properties, only return somewhat useful properties.
-                @{
-                    Name = $obj.Name
-                    FullName = $obj.FullName
-                    AssemblyQualifiedName = $obj.AssemblyQualifiedName
-                    BaseType = Convert-OutputObject -InputObject $obj.BaseType -Depth $childDepth
-                }
-            }
-            elseif ($obj.GetType().IsValueType) {
-                # We want to display just this value and not any properties it has (if any).
-                $obj
-            }
-            elseif ($obj -is [Collections.IList]) {
-                ,@(Convert-OutputObject -InputObject $obj -Depth $childDepth)
-            }
-            elseif ($obj -is [Collections.IDictionary]) {
-                $newObj = @{}
-
-                # Replicate ConvertTo-Json, props are replaced by keys if they share the same name. We only want ETS
-                # properties as well.
-                foreach ($prop in $obj.PSObject.Properties) {
-                    if ($prop.MemberType -notin @('AliasProperty', 'ScriptProperty', 'NoteProperty')) {
-                        continue
-                    }
-                    $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
-                }
-                foreach ($kvp in $obj.GetEnumerator()) {
-                    $newObj[$kvp.Key] = Convert-OutputObject -InputObject $kvp.Value -Depth $childDepth
-                }
-                $newObj
+            $InputObject.ToString('o')
+        }
+        elseif (&$isType -InputObject $InputObject -Type ([Type])) {
+            if ($Depth -lt 0) {
+                $InputObject.FullName
             }
             else {
-                $newObj = @{}
-                foreach ($prop in $obj.PSObject.Properties) {
-                    $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
+                # This type is very complex with circular properties, only return somewhat useful properties.
+                # BaseType might be a string (serialized output), try and convert it back to a Type if possible.
+                $baseType = $InputObject.BaseType -as [Type]
+                if ($baseType) {
+                    $baseType = Convert-OutputObject -InputObject $baseType -Depth $childDepth
                 }
-                $newObj
+
+                @{
+                    Name = $InputObject.Name
+                    FullName = $InputObject.FullName
+                    AssemblyQualifiedName = $InputObject.AssemblyQualifiedName
+                    BaseType = $baseType
+                }
             }
+        }
+        elseif ($InputObject -is [string]) {
+            $InputObject
+        }
+        elseif (&$isType -InputObject $InputObject -Type ([switch])) {
+            $InputObject.IsPresent
+        }
+        elseif ($InputObject.GetType().IsValueType) {
+            # We want to display just this value and not any properties it has (if any).
+            $InputObject
+        }
+        elseif ($Depth -lt 0) {
+            # This must occur after the above to ensure ints and other ValueTypes are preserved as is.
+            [string]$InputObject
+        }
+        elseif ($InputObject -is [Collections.IList]) {
+            ,@(foreach ($obj in $InputObject) {
+                Convert-OutputObject -InputObject $obj -Depth $childDepth
+            })
+        }
+        elseif ($InputObject -is [Collections.IDictionary]) {
+            $newObj = @{}
+
+            # Replicate ConvertTo-Json, props are replaced by keys if they share the same name. We only want ETS
+            # properties as well.
+            foreach ($prop in $InputObject.PSObject.Properties) {
+                if ($prop.MemberType -notin @('AliasProperty', 'ScriptProperty', 'NoteProperty')) {
+                    continue
+                }
+                $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
+            }
+            foreach ($kvp in $InputObject.GetEnumerator()) {
+                $newObj[$kvp.Key] = Convert-OutputObject -InputObject $kvp.Value -Depth $childDepth
+            }
+            $newObj
+        }
+        else {
+            $newObj = @{}
+            foreach ($prop in $InputObject.PSObject.Properties) {
+                $newObj[$prop.Name] = Convert-OutputObject -InputObject $prop.Value -Depth $childDepth
+            }
+            $newObj
         }
     }
 }
@@ -415,7 +433,7 @@ Function Test-AnsiblePath {
         return $true
     } catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
         return $false
-    } catch [NotSupportedException] {
+    } catch {
         # When testing a path like Cert:\LocalMachine\My, System.IO.File will
         # not work, we just revert back to using Test-Path for this
         return Test-Path -Path $Path
@@ -514,6 +532,7 @@ $runspace = $null
 $process = $null
 $newStdout = New-AnonymousPipe
 $newStderr = New-AnonymousPipe
+$freeConsole = $false
 
 try {
     if ($module.Params.executable) {
@@ -619,10 +638,18 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
         }).AddStatement()
     }
     else {
+        # The psrp connection plugin doesn't have a console so we need to create one ourselves.
+        if ([Ansible.Windows.WinPowerShell.NativeMethods]::GetConsoleWindow() -eq [IntPtr]::Zero) {
+            $freeConsole = [Ansible.Windows.WinPowerShell.NativeMethods]::AllocConsole()
+        }
+
         # Else we are running in the same process, we need to redirect the console and .NET output pipes to our
         # anonymous pipe. We shouldn't have to set the encoding, the module wrapper already does this.
         Set-StdHandle -Stream Stdout -NET $newStdout.Client -Raw $newStdout.Client.BaseStream.SafePipeHandle
         Set-StdHandle -Stream Stderr -NET $newStderr.Client -Raw $newStderr.Client.BaseStream.SafePipeHandle
+
+        $utf8NoBom = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
+        $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8NoBom
     }
 
     if ($module.Params.chdir) {
@@ -668,10 +695,9 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
         )
     }
     $invoke = $invokeMethod.MakeGenericMethod([object])
-    $psInput = @(if ($module.Params.input) { $module.Params.input })
 
     try {
-        $invoke.Invoke($ps, @($psInput, $psOutput))
+        $invoke.Invoke($ps, @(@(), $psOutput))
     }
     catch [Management.Automation.RuntimeException] {
         # $ErrorActionPrefrence = 'Stop' and an error was raised
@@ -701,11 +727,15 @@ finally {
         $_.Client.Dispose()
         [void]$_.PowerShell.EndInvoke($_.Task)
     }
+
+    if ($freeConsole) {
+        [void][Ansible.Windows.WinPowerShell.NativeMethods]::FreeConsole()
+    }
 }
 
 $module.Result.host_out = $newStdout.Output.ToString()
 $module.Result.host_err = $newStderr.Output.ToString()
-$module.Result.result = (Convert-OutputObject -InputObject $result.Result -Depth $module.Params.depth)
+$module.Result.result = Convert-OutputObject -InputObject $result.Result -Depth $module.Params.depth
 $module.Result.changed = $result.Changed
 $module.Result.failed = $module.Result.failed -or $result.Failed
 
