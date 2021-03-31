@@ -141,6 +141,9 @@ EXAMPLES = r'''
     script: |
       $PSVersionTable.PSVersion.Major
     executable: pwsh.exe
+    arguments:
+    - -ExecutionPolicy
+    - ByPass
   register: pwsh_output
   failed_when:
   - pwsh_output.output[0] != 7

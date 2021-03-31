@@ -6,6 +6,8 @@
 #AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
+#AnsibleRequires -PowerShell ..module_utils.Process
+
 $spec = @{
     options = @{
         arguments = @{ type = 'list'; elements = 'str' }
@@ -529,32 +531,53 @@ if ($module.CheckMode -and -not $supportsShouldProcess) {
 }
 
 $runspace = $null
-$process = $null
+$processId = $null
 $newStdout = New-AnonymousPipe
 $newStderr = New-AnonymousPipe
 $freeConsole = $false
 
 try {
+    $oldStdout = Get-StdHandle -Stream Stdout
+    $oldStderr = Get-StdHandle -Stream Stderr
+
     if ($module.Params.executable) {
         if ($PSVersionTable.PSVersion -lt [version]'5.0') {
             $module.FailJson("executable requires PowerShell 5.0 or newer")
         }
 
-        # Need to use .NET for this as Start-Process will use ShellExecute which won't inherit out pipe handles.
-        $psi = [Diagnostics.ProcessStartInfo]@{
-            FileName = $module.Params.executable
-            Arguments = if ($module.Params.arguments) { $module.Params.arguments -join ' ' } else { '' }
-            UseShellExecute = $false
-            WindowStyle = 'Hidden'  # Useful when debugging the module locally.
+        # Neither Start-Process or Diagnostics.Process give us the ability to create a process with a new console and
+        # the ability to inherit handles so we use own home grown CreateProcess wrapper.
+        $applicationName = Resolve-ExecutablePath -FilePath $module.Params.executable
+        $commandLine = ConvertTo-EscapedArgument -InputObject $module.Params.executable
+        if ($module.Params.arguments) {
+            $escapedArguments = @($module.Params.arguments | ConvertTo-EscapedArgument)
+            $commandLine += " $($escapedArguments -join ' ')"
         }
-        $process = [Diagnostics.Process]::Start($psi)
-    }
 
+        # While we could attach the stdout/stderr pipes here we would capture the startup info and prompt that
+        # powershell will output. Instead we set the console as part of the pipeline we run.
+        $si = [Ansible.Windows.Process.StartupInfo]@{
+            WindowStyle = 'Hidden'  # Useful when debugging locally, doesn't really matter in normal Ansible.
+        }
+        $pi = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $applicationName,
+            $commandLIne,
+            $null,
+            $null,
+            $true,  # Required so the child process can inherit our anon pipes.
+            'CreateNewConsole',  # Ensures we don't mess with the current console output.
+            $null,
+            $null,
+            $si
+        )
+        $processId = $pi.ProcessId
+        $pi.Dispose()
+    }
 
     # Using a custom host allows us to capture any host UI calls through our own output.
     $runspaceHost = New-Object -TypeName Ansible.Windows.WinPowerShell.Host -ArgumentList $Host, $newStdout.Client, $newStderr.Client
-    if ($process) {
-        $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$process.Id
+    if ($processId) {
+        $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$processId
 
         # In case a user specified an executable that does not support the PSHost named pipe that PowerShell uses we
         # specify a timeout so the module does not hang.
@@ -586,10 +609,7 @@ try {
     }
     $ps.Runspace.SessionStateProxy.SetVariable('ErrorActionPreference', [Management.Automation.ActionPreference]$eap)
 
-    $oldStdout = Get-StdHandle -Stream Stdout
-    $oldStderr = Get-StdHandle -Stream Stderr
-
-    if ($process) {
+    if ($processId) {
         # If we are running in a new process we need to set the various console encoding values to UTF-8 to ensure a
         # consistent encoding experience when PowerShell is running native commands and getting the output back. We
         # also need to redirect the stdout/stderr pipes to our anonymous pipe so we can capture any native console
@@ -709,7 +729,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     }
 
     # Get the internal Ansible variable that can contain code specific information.
-    $result = $ps.Runspace.SessionStateProxy.GetVariable('Ansible')
+    $result = $runspace.SessionStateProxy.GetVariable('Ansible')
 }
 finally {
     $oldStdout, $oldStderr | ForEach-Object -Process {
@@ -719,8 +739,8 @@ finally {
     if ($runspace) {
         $runspace.Dispose()
     }
-    if ($process) {
-        $process | Stop-Process -Force
+    if ($processId) {
+        Stop-Process -Id $processId -Force
     }
 
     $newStdout, $newStderr | ForEach-Object -Process {

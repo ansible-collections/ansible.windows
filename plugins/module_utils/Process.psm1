@@ -240,6 +240,6 @@ Function Start-AnsibleWindowsProcess {
 }
 
 $export_members = @{
-    Function = 'ConvertFrom-EscapedArgument', 'ConvertTo-EscapedArgument', 'Start-AnsibleWindowsProcess'
+    Function = 'ConvertFrom-EscapedArgument', 'ConvertTo-EscapedArgument', 'Resolve-ExecutablePath', 'Start-AnsibleWindowsProcess'
 }
 Export-ModuleMember @export_members

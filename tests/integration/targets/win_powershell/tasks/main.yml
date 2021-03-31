@@ -37,7 +37,9 @@
 - name: run executable with arguments
   win_powershell:
     executable: powershell.exe
-    arguments: -ExecutionPolicy Restricted
+    arguments:
+    - -ExecutionPolicy
+    - Restricted
     script: |
       $env:PSExecutionPolicyPreference
   register: exe_with_arguments
