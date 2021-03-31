@@ -231,6 +231,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
     [Flags]
     public enum ProcessCreationFlags : uint
     {
+        None = 0x00000000,
         DebugProcess = 0x00000001,
         DebugOnlyThisProcess = 0x00000002,
         CreateSuspended = 0x00000004,
