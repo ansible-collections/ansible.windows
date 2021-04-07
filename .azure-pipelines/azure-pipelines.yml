@@ -101,6 +101,7 @@ stages:
     condition: succeededOrFailed()
     dependsOn:
       - Ansible_devel
+      - Ansible_2_11
       - Ansible_2_10
       - Windows
     jobs:
