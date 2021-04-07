@@ -1,0 +1,5 @@
+plugins/modules/setup.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore custom rules in the version of PSSA in ansible-test docker
+tests/integration/targets/win_dsc/files/xTestDsc/1.0.0/DSCResources/ANSIBLE_xTestResource/ANSIBLE_xTestResource.psm1 pslint:PSDSCUseIdenticalMandatoryParametersForDSC # Rule is broken in older PSSA versions
+tests/integration/targets/win_dsc/files/xTestDsc/1.0.1/DSCResources/ANSIBLE_xTestResource/ANSIBLE_xTestResource.psm1 pslint:PSDSCUseIdenticalMandatoryParametersForDSC # Rule is broken in older PSSA versions
+tests/utils/shippable/check_matrix.py replace-urlopen
+tests/utils/shippable/timing.py shebang
