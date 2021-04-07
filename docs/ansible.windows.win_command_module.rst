@@ -138,6 +138,8 @@ Notes
 
 .. note::
    - If you want to run a command through a shell (say you are using ``<``, ``>``, ``|``, etc), you actually want the :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` module instead. The :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` module is much more secure as it's not affected by the user's environment.
+   - As a general rule, ``win_command`` is preferred for running executables and :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` is preferred for running shell commands such as Powershell because ``win_shell`` includes some helpful extras for running raw PowerShell. 
+   - ``win_shell`` essentially does ``- win_command: powershell.exe -NonInteractive -EncodedCommand 'my command here'``.
    - ``creates``, ``removes``, and ``chdir`` can be specified after the command. For instance, if you only want to run a command if a certain file does not exist, use this.
 
 
