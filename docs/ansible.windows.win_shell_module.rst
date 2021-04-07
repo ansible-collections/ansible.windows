@@ -171,7 +171,8 @@ Notes
 -----
 
 .. note::
-   - If you want to run an executable securely and predictably, it may be better to use the :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` module instead. Best practices when writing playbooks will follow the trend of using :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` unless ``win_shell`` is explicitly required. When running ad-hoc commands, use your best judgement.
+   - If you want to run an executable securely and predictably, it may be better to use the :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` module instead. Best practices when writing playbooks will follow the trend of using :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` for running executables unless ``win_shell`` is explicitly required. When running executables via ad-hoc commands, use your best judgement. The reason for using :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` with executables this is that it removes any shell-specific items such as variable expansion and redirection.
+   - If you want to run a shell script such as Powershell code, use ``win_shell`` as it has some helpful extras to run the raw PowerShell script. ``win_shell`` essentially does ``- win_command: powershell.exe -NonInteractive -EncodedCommand 'my command here'``.
    - WinRM will not return from a command execution until all child processes created have exited. Thus, it is not possible to use :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` to spawn long-running child or background processes. Consider creating a Windows service for managing background processes.
 
 
