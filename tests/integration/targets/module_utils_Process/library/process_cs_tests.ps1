@@ -5,6 +5,22 @@
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, @{})
 
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+namespace Handle
+{
+    public class NativeMethods
+    {
+        [DllImport("Kernel32.dll")]
+        public static extern bool GetHandleInformation(
+            IntPtr hObject,
+            out uint lpdwFlags);
+    }
+}
+'@
+
 Function Assert-Equals {
     param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)][AllowNull()]$Actual,
@@ -213,6 +229,168 @@ exit 1
             $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
         }
         $time.TotalSeconds -ge 2 | Assert-Equals -Expected $true
+    }
+
+    "NativeCreateProcess with redirected pipes" = {
+        $cmd = 'powershell.exe -Command "[Console]::Out.Write(\"stdout\"); [Console]::Error.Write(\"stderr\")"'
+
+        $enc = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
+        $stdoutServer = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
+        $stdoutClient = New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', $stdoutServer.ClientSafePipeHandle
+        $stdoutSr = New-Object -TypeName IO.StreamReader -ArgumentList $stdoutServer, $enc
+
+        $stderrServer = New-Object -TypeName IO.Pipes.AnonymousPipeServerStream -ArgumentList 'In', 'Inheritable'
+        $stderrClient = New-Object -TypeName IO.Pipes.AnonymousPipeClientStream -ArgumentList 'Out', $stderrServer.ClientSafePipeHandle
+        $stderrSr = New-Object -TypeName IO.StreamReader -ArgumentList $stderrServer, $enc
+
+        $si = [Ansible.Windows.Process.StartupInfo]@{
+            StandardOutput = $stdoutClient.SafePipeHandle
+            StandardError = $stderrClient.SafePipeHandle
+        }
+        $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $null,
+            $cmd,
+            $null,
+            $null,
+            $true,
+            'CreateNewConsole',
+            $null,
+            $null,
+            $si
+        )
+        $actual.Process.IsClosed | Assert-Equals -Expected $false
+        $actual.Process.IsInvalid | Assert-Equals -Expected $false
+        $actual.Thread.IsClosed | Assert-Equals -Expected $false
+        $actual.Thread.IsInvalid | Assert-Equals -Expected $false
+
+        $actual.Dispose()
+        $actual.Process.IsClosed | Assert-Equals -Expected $true
+        $actual.Thread.IsClosed | Assert-Equals -Expected $true
+
+        Wait-Process -Id $actual.ProcessId
+
+        $stdoutClient.Dispose()
+        $stdout = $stdoutSr.ReadToEnd()
+        $stdoutSr.Dispose()
+
+        $stderrClient.Dispose()
+        $stderr = $stderrSr.ReadToEnd()
+        $stderrSr.Dispose()
+
+        # If someone would have gone wrong it would be in stderr so check that first.
+        $stderr | Assert-Equals -Expected 'stderr'
+        $stdout | Assert-Equals -Expected 'stdout'
+    }
+
+    "NativeCreateProcess with suspended thread" = {
+        $cmd = 'powershell.exe -Command $a = "abc"'
+
+        $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $null,
+            $cmd,
+            $null,
+            $null,
+            $false,
+            'CreateNewConsole, CreateSuspended',
+            $null,
+            $null,
+            [Ansible.Windows.Process.StartupInfo]@{}
+        )
+        $actual.Process.IsClosed | Assert-Equals -Expected $false
+        $actual.Process.IsInvalid | Assert-Equals -Expected $false
+        $actual.Thread.IsClosed | Assert-Equals -Expected $false
+        $actual.Thread.IsInvalid | Assert-Equals -Expected $false
+
+        $processFlags = 0
+        $threadFlags = 0
+
+        # Check that $null SA means the handle isn't inherited
+        [void][Handle.NativeMethods]::GetHandleInformation($actual.Process.DangerousGetHandle(), [ref]$processFlags)
+        [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
+
+        # 1 == HANDLE_FLAG_INHERIT
+        $processFlags | Assert-Equals -Expected 0
+        $threadFlags | Assert-Equals -Expected 0
+
+        $process = Get-Process -Id $actual.ProcessId
+        Wait-Process -Id $actual.ProcessId -Timeout 1 -ErrorAction SilentlyContinue
+        $process.HasExited | Assert-Equals -Expected $false
+
+        [Ansible.Windows.Process.ProcessUtil]::ResumeThread($actual.Thread)
+        Wait-Process -Id $actual.ProcessId -ErrorAction SilentlyContinue
+        $process.HasExited | Assert-Equals -Expected $true
+    }
+
+    "NativeCreateProcess with InheritHandle=`$true security attributes" = {
+        $cmd = 'powershell.exe -Command sleep 60'
+
+        # Test this would be complicated
+        $sa = [Ansible.Windows.Process.SecurityAttributes]@{
+            InheritHandle = $true
+        }
+        $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $null,
+            $cmd,
+            $sa,
+            $sa,
+            $false,
+            'CreateNewConsole',
+            $null,
+            $null,
+            [Ansible.Windows.Process.StartupInfo]@{}
+        )
+
+        try {
+            $processFlags = 0
+            $threadFlags = 0
+
+            [void][Handle.NativeMethods]::GetHandleInformation($actual.Process.DangerousGetHandle(), [ref]$processFlags)
+            [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
+
+            # 1 == HANDLE_FLAG_INHERIT
+            $processFlags | Assert-Equals -Expected 1
+            $threadFlags | Assert-Equals -Expected 1
+        }
+        finally {
+            Stop-Process -Id $actual.ProcessId -Force
+            $actual.Dispose()
+        }
+    }
+
+    "NativeCreateProcess with InheritHandle=`$false security attributes" = {
+        $cmd = 'powershell.exe -Command sleep 60'
+
+        # Test this would be complicated
+        $sa = [Ansible.Windows.Process.SecurityAttributes]@{
+            InheritHandle = $false
+        }
+        $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $null,
+            $cmd,
+            $sa,
+            $sa,
+            $false,
+            'CreateNewConsole',
+            $null,
+            $null,
+            [Ansible.Windows.Process.StartupInfo]@{}
+        )
+
+        try {
+            $processFlags = 0
+            $threadFlags = 0
+
+            [void][Handle.NativeMethods]::GetHandleInformation($actual.Process.DangerousGetHandle(), [ref]$processFlags)
+            [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
+
+            # 1 == HANDLE_FLAG_INHERIT
+            $processFlags | Assert-Equals -Expected 0
+            $threadFlags | Assert-Equals -Expected 0
+        }
+        finally {
+            Stop-Process -Id $actual.ProcessId -Force
+            $actual.Dispose()
+        }
     }
 }
 

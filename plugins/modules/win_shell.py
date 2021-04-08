@@ -63,12 +63,15 @@ notes:
    -  WinRM will not return from a command execution until all child processes created have exited.
       Thus, it is not possible to use M(ansible.windows.win_shell) to spawn long-running child or background processes.
       Consider creating a Windows service for managing background processes.
+    - Consider using M(ansible.windows.win_powershell) if you want to capture the output from the PowerShell script
+      as structured objects.
 seealso:
 - module: community.windows.psexec
 - module: ansible.builtin.raw
 - module: ansible.builtin.script
 - module: ansible.builtin.shell
 - module: ansible.windows.win_command
+- module: ansible.windows.win_powershell
 - module: community.windows.win_psexec
 author:
     - Matt Davis (@nitzmahone)

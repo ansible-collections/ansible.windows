@@ -1,0 +1,846 @@
+- name: run script with various output types
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $null
+      'string'
+      1
+      [IO.FileAttributes]'Hidden, Archive'
+      [IO.FileAccess]'Read'
+      [object]
+      [string]
+      [char]'a'
+      [Exception]"abc"
+
+      # Date tests
+      $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
+      $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
+      $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
+
+      $epoch_unspec
+      $epoch_unspec.ToLocalTime()
+      $epoch_unspec.ToUniversalTime()
+
+      $epoch_local
+      $epoch_local.ToLocalTime()
+      $epoch_local.ToUniversalTime()
+
+      $epoch_utc
+      $epoch_utc.ToLocalTime()
+      $epoch_utc.ToUniversalTime()
+
+      ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2))
+
+      # List tests
+      ,@()
+      ,@(1)
+      ,@($null)
+      ,@(
+          'entry 1',
+          $null,
+          1,
+          @(
+              'level2',
+              @(
+                  'level3',
+                  'value'
+              )
+          ),
+          @(),
+          @(1),
+          @($null),
+          @{
+              key = 'value'
+              exceed = Get-Item $env:SystemRoot
+          }
+      )
+
+      # Dictionary tests
+      @{}
+      @{
+          foo = 'bar'
+          list = @(
+            @{ foo = 'bar' }
+            'value 2',
+            [string]
+          )
+          empty_list = @()
+          null_list = @($null)
+          list_with_1 = @(1)
+          nested = @{
+              foo = 'bar'
+              exceed = @{
+                  foo = 'bar'
+              }
+          }
+      }
+      $hash = @{foo = 'bar'}
+      Add-Member -InputObject $hash -NotePropertyName foo -NotePropertyValue hidden
+      $hash
+
+      # Classes with properties
+      [PSCustomObject]@{
+          Key = 'value'
+          DateTime = $epoch_utc
+          Enum = [IO.FileAccess]::Read
+          List = @(
+            'value 1', 'value 2'
+          )
+          Nested = [PSCustomObject]@{
+              Exceed = @{
+                  foo = 'bar'
+              }
+              Key = 'value'
+          }
+      }
+
+      Get-Item $env:SystemRoot
+
+  register: output_types
+
+- name: assert script with various output types
+  assert:
+    that:
+    - output_types is changed
+    - output_types.debug == []
+    - output_types.error == []
+    - output_types.host_err == ''
+    - output_types.host_out == ''
+    - output_types.information == []
+    - output_types.output|length == 28
+    - output_types.output[0] == None
+
+    - output_types.output[1] == 'string'
+
+    - output_types.output[2] == 1
+
+    - output_types.output[3]['String'] == 'Hidden, Archive'
+    - output_types.output[3]['Type'] == 'System.IO.FileAttributes'
+    - output_types.output[3]['Value'] == 34
+
+    - output_types.output[4]['String'] == 'Read'
+    - output_types.output[4]['Type'] == 'System.IO.FileAccess'
+    - output_types.output[4]['Value'] == 1
+
+    - output_types.output[5]['AssemblyQualifiedName'].startswith('System.Object, ')
+    - output_types.output[5]['BaseType'] == None
+    - output_types.output[5]['FullName'] == 'System.Object'
+    - output_types.output[5]['Name'] == 'Object'
+
+    - output_types.output[6]['AssemblyQualifiedName'].startswith('System.String, ')
+    - output_types.output[6]['BaseType']['AssemblyQualifiedName'].startswith('System.Object, ')
+    - output_types.output[6]['BaseType']['BaseType'] == None
+    - output_types.output[6]['BaseType']['FullName'] == 'System.Object'
+    - output_types.output[6]['BaseType']['Name'] == 'Object'
+    - output_types.output[6]['FullName'] == 'System.String'
+    - output_types.output[6]['Name'] == 'String'
+
+    - output_types.output[7] == 'a'
+
+    - output_types.output[8]['Data'] == {}
+    - output_types.output[8]['HResult'] == -2146233088
+    - output_types.output[8]['HelpLink'] == None
+    - output_types.output[8]['InnerException'] == None
+    - output_types.output[8]['Message'] == 'abc'
+    - output_types.output[8]['Source'] == None
+    - output_types.output[8]['StackTrace'] == None
+    - output_types.output[8]['TargetSite'] == None
+
+    - output_types.output[9] == dt_values.stdout_lines[0]
+    - output_types.output[10] == dt_values.stdout_lines[1]
+    - output_types.output[11] == dt_values.stdout_lines[2]
+
+    - output_types.output[12] == dt_values.stdout_lines[3]
+    - output_types.output[13] == dt_values.stdout_lines[4]
+    - output_types.output[14] == dt_values.stdout_lines[5]
+
+    - output_types.output[15] == dt_values.stdout_lines[6]
+    - output_types.output[16] == dt_values.stdout_lines[7]
+    - output_types.output[17] == dt_values.stdout_lines[8]
+
+    - output_types.output[18] == dt_values.stdout_lines[9]
+
+    - output_types.output[19] == []
+
+    - output_types.output[20] == [1]
+
+    - output_types.output[21] == [None]
+
+    - output_types.output[22]|length == 8
+    - output_types.output[22][0] == 'entry 1'
+    - output_types.output[22][1] == None
+    - output_types.output[22][2] == 1
+    - output_types.output[22][3] == ['level2', 'level3 value']
+    - output_types.output[22][4] == []
+    - output_types.output[22][5] == [1]
+    - output_types.output[22][6] == [None]
+    - output_types.output[22][7]['key'] == 'value'
+    - output_types.output[22][7]['exceed'] == 'C:\Windows'
+
+    - output_types.output[23] == {}
+
+    - output_types.output[24]['foo'] == 'bar'
+    - output_types.output[24]['list']|length == 3
+    - output_types.output[24]['list'][0] == 'System.Collections.Hashtable'
+    - output_types.output[24]['list'][1] == 'value 2'
+    - output_types.output[24]['list'][2] == 'System.String'
+    - output_types.output[24]['empty_list'] == []
+    - output_types.output[24]['null_list'] == [None]
+    - output_types.output[24]['list_with_1'] == [1]
+    - output_types.output[24]['nested']['exceed'] == 'System.Collections.Hashtable'
+
+    - 'output_types.output[25] == {"foo": "bar"}'
+
+    - output_types.output[26]['Key'] == 'value'
+    - output_types.output[26]['DateTime'] == '1970-01-01T00:00:00.0000000Z'
+    - output_types.output[26]['Enum']['String'] == 'Read'
+    - output_types.output[26]['Enum']['Type'] == 'System.IO.FileAccess'
+    - output_types.output[26]['Enum']['Value'] == 1
+    - output_types.output[26]['List'] == ['value 1', 'value 2']
+    - output_types.output[26]['Nested']['Exceed'] == 'System.Collections.Hashtable'
+    - output_types.output[26]['Nested']['Key'] == 'value'
+
+    - output_types.output[27]['BaseName'] == 'Windows'
+    - output_types.output[27]['Exists'] == True
+    - output_types.output[27]['FullName'] == 'C:\Windows'
+    - output_types.output[27]['PSDrive']['Name'] == 'C'
+    - output_types.output[27]['PSDrive']['Provider'] == 'Microsoft.PowerShell.Core\FileSystem'
+    - output_types.output[27]['PSProvider']['Drives'] == 'C'
+    - output_types.output[27]['PSProvider']['ImplementingType'] == 'Microsoft.PowerShell.Commands.FileSystemProvider'
+    - output_types.output[27]['PSProvider']['Name'] == 'FileSystem'
+
+    - output_types.result == {}
+    - output_types.verbose == []
+    - output_types.warning == []
+
+- name: output with larger depth
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    depth: 3
+    script: |
+      @(
+          'normal 0',
+          @(
+              'normal 1',
+              @(
+                  'normal 2',
+                  @(
+                      'normal 3',
+                      @(
+                          'squashed',
+                          @(
+                              'even more squashed'
+                          )
+                      )
+
+                  )
+              )
+          )
+      )
+  register: higher_depth
+
+- name: assert output with larger depth without executable
+  assert:
+    that:
+    - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Object[]']]]]
+  when: not pwsh_executable is defined
+
+- name: assert output with larger depth with executable
+  assert:
+    that:
+    - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Collections.ArrayList']]]]
+  when: pwsh_executable is defined
+
+- name: set explicit value on Ansible.Result
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $Ansible.Result = @(
+          (New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)),
+          'string'
+      )
+  register: result_ansible
+
+- name: assert set explicit value on Ansible.Result
+  assert:
+    that:
+    - result_ansible is changed
+    - result_ansible.output == []
+    - result_ansible.result == ['1970-01-01T00:00:00.0000000Z', 'string']
+
+- name: get temporary directory
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $tmp = $Ansible.Tmpdir
+      $null = New-Item -Path "$tmp\Directory" -ItemType Directory
+
+      $tmp
+  register: tmpdir
+
+- name: check that tmpdir doesn't exist anymore
+  win_stat:
+    path: '{{ tmpdir.output[0] }}'
+  register: tmpdir_actual
+
+- name: assert get temporary directory
+  assert:
+    that:
+    - tmpdir is changed
+    - not tmpdir_actual.stat.exists
+
+- name: dont fail with error record
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+        'output 1'
+        Write-Error -Message 'error'
+        'output 2'
+  register: error_record
+
+- name: assert dont fail with error record
+  assert:
+    that:
+    - error_record is changed
+    - error_record.error|length == 1
+    - error_record.error[0]['category_info']['activity'] == 'Write-Error'
+    - error_record.error[0]['category_info']['category'] == 'NotSpecified'
+    - error_record.error[0]['category_info']['category_id'] == 0
+    - error_record.error[0]['category_info']['reason'] == 'WriteErrorException'
+    - error_record.error[0]['category_info']['target_name'] == ''
+    - error_record.error[0]['category_info']['target_type'] == ''
+    - error_record.error[0]['error_details'] == None
+    - error_record.error[0]['exception']['help_link'] == None
+    - error_record.error[0]['exception']['hresult'] == -2146233087
+    - error_record.error[0]['exception']['inner_exception'] == None
+    - error_record.error[0]['exception']['message'] == 'error'
+    - error_record.error[0]['exception']['source'] == None
+    - error_record.error[0]['exception']['type'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
+    - error_record.error[0]['fully_qualified_error_id'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
+    - error_record.error[0]['output'] is defined
+    - error_record.error[0]['pipeline_iteration_info'] == [0, 0]
+    - "error_record.error[0]['script_stack_trace'] == 'at <ScriptBlock>, <No file>: line 2'"
+    - error_record.error[0]['target_object'] == None
+    - error_record.output == ['output 1', 'output 2']
+
+- name: fail with error record and ErrorActionPreference Stop
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    error_action: stop
+    script: |
+        'output 1'
+        Write-Error -Message 'error'
+        'output 2'
+  register: error_record_stop
+  ignore_errors: yes
+
+- name: assert fail with error record and ErrorActionPreference Stop
+  assert:
+    that:
+    - error_record_stop is failed
+    - error_record_stop is failed
+    - error_record_stop.error|length == 1
+    - error_record_stop.error[0]['exception']['message'] == 'error'
+    - error_record_stop.output == ['output 1']
+
+- name: output more complex error record
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      Function Test-Function {
+          [CmdletBinding()]
+          param (
+              [Parameter(Mandatory, ValueFromPipeline)]
+              [Object]
+              $InputObject
+          )
+
+          process {
+              if ($InputObject -eq 2) {
+                  $errorParams = @{
+                      Exception = ([ComponentModel.Win32Exception]5)
+                      Message = 'error message'
+                      Category = 'PermissionDenied'
+                      ErrorId = 'error id'
+                      TargetObject = 'some object'
+                      RecommendedAction = 'recommended action'
+                      CategoryActivity = 'ran pipeline'
+                      CategoryReason = 'touch luck'
+                      CategoryTargetName = 'target'
+                      CategoryTargetType = 'directory'
+                  }
+                  Write-Error @errorParams
+              }
+          }
+          
+      }
+      1..3 | Test-Function
+  register: complex_error_record
+
+- name: assert output more complex error record
+  assert:
+    that:
+    - complex_error_record is changed
+    - complex_error_record.error|length == 1
+    - complex_error_record.error[0]['category_info']['activity'] == 'Write-Error'
+    - complex_error_record.error[0]['category_info']['category'] == 'PermissionDenied'
+    - complex_error_record.error[0]['category_info']['category_id'] == 18
+    - complex_error_record.error[0]['category_info']['reason'] == 'touch luck'
+    - complex_error_record.error[0]['category_info']['target_name'] == 'target'
+    - complex_error_record.error[0]['category_info']['target_type'] == 'directory'
+    - complex_error_record.error[0]['error_details']['message'] == 'error message'
+    - complex_error_record.error[0]['error_details']['recommended_action'] == 'recommended action'
+    - complex_error_record.error[0]['exception']['help_link'] == None
+    - complex_error_record.error[0]['exception']['hresult'] == -2147467259
+    - complex_error_record.error[0]['exception']['inner_exception'] == None
+    - complex_error_record.error[0]['exception']['message'] == 'Access is denied'
+    - complex_error_record.error[0]['exception']['source'] == None
+    - complex_error_record.error[0]['exception']['type'] == 'System.ComponentModel.Win32Exception'
+    - complex_error_record.error[0]['fully_qualified_error_id'] == 'error id,Test-Function'
+    - complex_error_record.error[0]['output'] is defined
+    - complex_error_record.error[0]['pipeline_iteration_info'] == [2, 2]
+    - "complex_error_record.error[0]['script_stack_trace'] == 'at Test-Function<Process>, <No file>: line 23\\r\\nat <ScriptBlock>, <No file>: line 28'"
+    - complex_error_record.error[0]['target_object'] == 'some object'
+
+- name: failure with terminating exception
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      'output 1'
+      throw "exception"
+      'output 2'
+  register: failed_exception
+  ignore_errors: yes
+
+- name: assert failure with terminating exception
+  assert:
+    that:
+    - failed_exception is failed
+    - failed_exception.error|length == 1
+    - failed_exception.error[0]['exception']['message'] == 'exception'
+    - failed_exception.output == ['output 1']
+
+- name: failure with Ansible.Failed
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      'output 1'
+      $Ansible.Failed = $true
+      'output 2'
+  register: failed_ansible
+  ignore_errors: yes
+
+- name: assert failure with Ansible.Failed
+  assert:
+    that:
+    - failed_ansible is failed
+    - failed_ansible.error == []
+    - failed_ansible.output == ['output 1', 'output 2']
+
+- name: Ansible.Failed cannot overwrite terminating exception
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $Ansible.Failed = $false
+      throw "exception"
+  register: term_beats_failed
+  ignore_errors: yes
+
+- name: assert Ansible.Failed cannot overwrite terminating exception
+  assert:
+    that:
+    - term_beats_failed is failed
+    - term_beats_failed.error|length == 1
+    - term_beats_failed.error[0]['exception']['message'] == 'exception'
+
+- name: error with interactive prompt
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: $Host.UI.ReadLine()
+  register: error_noninteractive
+  ignore_errors: yes
+
+- name: assert error with interactive prompt
+  assert:
+    that:
+    - error_noninteractive is changed
+    - not error_noninteractive is failed  # This isn't considered a terminating exception in PowerShell so no failure here.
+    - error_noninteractive.error|length == 1
+    - "'PowerShell is in NonInteractive mode. Read and Prompt functionality is not available.' in error_noninteractive.error[0]['exception']['message']"
+    - error_noninteractive.output == []
+
+- name: run script with parameters
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      [CmdletBinding()]
+      param (
+          [String]
+          $String,
+
+          [Switch]
+          $Switch,
+
+          [Bool]
+          $Bool,
+
+          [int]
+          $Int,
+
+          [Object[]]
+          $List,
+
+          [Hashtable]
+          $Dict
+      )
+
+      @{
+          String = $String
+          Switch = $Switch
+          Bool = $Bool
+          Int = $Int
+          List = $List
+          Dict = $Dict
+      }
+    parameters:
+      String: string
+      Switch: True
+      Bool: False
+      Int: 1
+      List:
+      - abc
+      - 123
+      Dict:
+        Key: Value
+  register: parameters
+
+- name: assert run script with parameters
+  assert:
+    that:
+    - parameters is changed
+    - parameters.output|length == 1
+    - parameters.output[0]['String'] == 'string'
+    - parameters.output[0]['Switch'] == True
+    - parameters.output[0]['Bool'] == False
+    - parameters.output[0]['Int'] == 1
+    - parameters.output[0]['List'] == ['abc', 123]
+    - "parameters.output[0]['Dict'] == {'Key': 'Value'}"
+
+- name: write debug/verbose/warning streams
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $DebugPreference = 'Continue'
+      $VerbosePreference = 'Continue'
+      $WarningPreference = 'Continue'
+
+      Write-Debug 'debug'
+      Write-Verbose 'verbose'
+      Write-Warning 'warning'
+
+  register: extra_streams
+      
+- name: assert write debug/verbose/warning streams
+  assert:
+    that:
+    - extra_streams is changed
+    - "extra_streams.host_out == 'DEBUG: debug\\r\\nVERBOSE: verbose\\r\\nWARNING: warning\\r\\n'"
+    - extra_streams.debug == ['debug']
+    - extra_streams.verbose == ['verbose']
+    - extra_streams.warning == ['warning']
+
+- name: output information record
+  win_powershell:
+    script: |
+      $epoch = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
+      Write-Information -MessageData $epoch -Tags tag1
+  register: info_record
+  when: use_executable.stdout | trim | bool  # Information records were only added in v5
+
+- name: assert output information record
+  assert:
+    that:
+    - info_record is changed
+    - info_record.information|length == 1
+    - info_record.information[0]['message_data'] == '1970-01-01T00:00:00.0000000Z'
+    - info_record.information[0]['source'] == 'Write-Information'
+    - info_record.information[0]['tags'] == ['tag1']
+    - info_record.information[0]['time_generated'].endswith('Z')
+    - info_record.output == []
+  when: use_executable.stdout | trim | bool
+
+- name: verify confirmation prompts aren't called
+  win_powershell:
+    script: |
+      [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+      param ()
+
+      $PSCmdlet.ShouldProcess('action')
+  register: ignore_confirm
+
+- name: assert verify confirmation prompts aren't called
+  assert:
+    that:
+    - ignore_confirm is changed
+    - ignore_confirm.output == [True]
+
+- name: try to run an invalid script
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+        def my_function():
+            print("abc")
+
+        def main():
+            my_function()
+
+        if __name__ == '__main__':
+            main()
+
+  register: invalid_script
+  ignore_errors: yes
+
+- name: assert try to run an invalid script
+  assert:
+    that:
+    - invalid_script is failed
+
+- name: run script with custom location
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: $pwd.Path
+    chdir: '{{ remote_tmp_dir }}'
+  register: filesystem_chdir
+
+- name: assert run script with custom location
+  assert:
+    that:
+    - filesystem_chdir is changed
+    - filesystem_chdir.output == [remote_tmp_dir]
+
+- name: run script with non-filesystem location
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: $pwd.Path
+    chdir: Cert:\LocalMachine\My
+  register: cert_chdir
+
+- name: assert run script with non-filesystem location
+  assert:
+    that:
+    - cert_chdir is changed
+    - cert_chdir.output == ['Cert:\LocalMachine\My']
+
+- name: skip execution when not in check mode
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: echo "hi"
+  register: check
+  check_mode: yes
+
+- name: assert skip execution when not in check mode
+  assert:
+    that:
+    - check is changed
+    - check.msg == 'skipped, running in check mode'
+    - check.output == []
+
+- name: run check mode aware script
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      [CmdletBinding(SupportsShouldProcess)]
+      param ()
+
+      $Ansible.CheckMode
+  register: check_aware
+  check_mode: yes
+
+- name: assert run check mode aware script
+  assert:
+    that:
+    - check_aware is changed
+    - check_aware.output == [True]
+
+- name: SupportsShouldProcess with explicit value
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      [CmdletBinding(SupportsShouldProcess=$true)]
+      param ()
+
+      $PSCmdlet.ShouldProcess('resource')
+  register: check_aware_true
+  check_mode: yes
+
+- name: assert SupportsShouldProcess with explicit value
+  assert:
+    that:
+    - check_aware_true is changed
+    - check_aware_true.output == [False]
+
+- name: skip check mode with SupportsShouldProcess=$false
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      [CmdletBinding(SupportsShouldProcess=$false)]
+      param ()
+
+      $PSCmdlet.ShouldProcess('resource')
+  register: check_aware_false
+  check_mode: yes
+
+- name: assert skip check mode with SupportsShouldProcess=$false
+  assert:
+    that:
+    - check_aware_false is changed
+    - check_aware_false.msg == 'skipped, running in check mode'
+    - check_aware_false.output == []
+
+- name: skip check mode without SupportsShouldProcess
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      [CmdletBinding()]
+      param ()
+
+      $PSCmdlet.ShouldProcess('resource')
+  register: check_unaware
+  check_mode: yes
+
+- name: assert skip check mode without SupportsShouldProcess
+  assert:
+    that:
+    - check_unaware is changed
+    - check_unaware.msg == 'skipped, running in check mode'
+    - check_unaware.output == []
+
+- name: do not skip if file does not exist
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    creates: missing
+  register: creates_missing
+
+- name: assert do not skip if file does not exist
+  assert:
+    that:
+    - creates_missing is changed
+    - creates_missing.output == ['output']
+
+- name: skip if file exists
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    creates: '{{ remote_tmp_dir }}'
+  register: creates_exists
+
+- name: assert skip if file exists
+  assert:
+    that:
+    - not creates_exists is changed
+    - creates_exists.msg == 'skipped, since ' + remote_tmp_dir + ' exists'
+    - creates_exists.output == []
+
+- name: skip for creates non-filesystem
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    creates: cert:\LocalMachine\*
+  register: creates_non_fs
+
+- name: assert skip for creates non-filesystem
+  assert:
+    that:
+    - not creates_non_fs is changed
+    - creates_non_fs.msg == 'skipped, since cert:\LocalMachine\* exists'
+    - creates_non_fs.output == []
+
+- name: skip if removes does not exist
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    removes: C:\Windows\Missing\file.txt
+  register: removes_missing
+
+- name: assert skip if removes does not exist
+  assert:
+    that:
+    - not removes_missing is changed
+    - removes_missing.msg == 'skipped, since C:\\Windows\\Missing\\file.txt does not exist'
+    - removes_missing.output == []
+
+- name: do not skip if removes exists
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    removes: '{{ remote_tmp_dir }}'
+  register: removes_exists
+
+- name: assert do not skip if removes exists
+  assert:
+    that:
+    - removes_exists is changed
+    - removes_exists.output == ['output']
+
+- name: do not skip if removes exists non-filesystem
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: '"output"'
+    removes: cert:\LocalMachine\*
+  register: removes_exists_non_fs
+
+- name: assert do not skip if removes exists non-filesystem
+  assert:
+    that:
+    - removes_exists_non_fs is changed
+    - removes_exists_non_fs.output == ['output']
+
+- name: script changed status
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: $Ansible.Changed = $false
+  register: script_changed
+
+- name: assert script changed status
+  assert:
+    that:
+    - not script_changed is changed
+
+- name: capture console output as host output
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $poop = [Char]::ConvertFromUtf32(0x1F4A9)
+      $Host.UI.WriteLine("host café $poop")
+      $Host.UI.WriteErrorLine("error café $poop")
+
+      $subProcessCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes({
+          $p = [Char]::ConvertFromUtf32(0x1F4A9)
+
+          [Console]::Out.WriteLine("sub stdout café $p")
+          [Console]::Error.WriteLine("sub stderr café $p")
+      }.ToString()))
+
+      # Calling a process directly goes to the output/error stream. Calling it with Start-Process with -NoNewWindow
+      # means the sub process will inherit the current console handles and should be captured in the host output.
+      $processParams = @{
+          FilePath = 'powershell.exe'
+          ArgumentList = "-EncodedCommand $subProcessCommand"
+          Wait = $true
+          NoNewWindow = $true
+      }
+      Start-Process @processParams
+
+      [Console]::Out.WriteLine("stdout café $poop")
+      [Console]::Error.WriteLine("stderr café $poop")
+  register: host_output
+
+- name: assert capture console output as host output
+  assert:
+    that:
+    - host_output is changed
+    - host_output.host_err == 'error café 💩\r\nsub stderr café 💩\r\nstderr café 💩\r\n'
+    - host_output.host_out == 'host café 💩\r\nsub stdout café 💩\r\nstdout café 💩\r\n'
+    - host_output.error == []
+    - host_output.output == []

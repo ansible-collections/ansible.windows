@@ -1,0 +1,52 @@
+- name: check if executable is supported
+  win_shell: '[Version]$PSVersionTable.PSVersion -gt [Version]"5.0"'
+  register: use_executable
+  changed_when: False
+
+- name: get datetimes used for tests
+  win_shell: |
+      $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
+      $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
+      $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
+
+      $epoch_unspec.ToString('o')
+      $epoch_unspec.ToLocalTime().ToString('o')
+      $epoch_unspec.ToUniversalTime().ToString('o')
+
+      $epoch_local.ToString('o')
+      $epoch_local.ToLocalTime().ToString('o')
+      $epoch_local.ToUniversalTime().ToString('o')
+
+      $epoch_utc.ToString('o')
+      $epoch_utc.ToLocalTime().ToString('o')
+      $epoch_utc.ToUniversalTime().ToString('o')
+
+      ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2)).ToString('o')
+  register: dt_values
+  changed_when: False
+
+- name: run tests using current interpreter
+  import_tasks: tests.yml
+
+- name: run tests using executable
+  import_tasks: tests.yml
+  when: use_executable.stdout | trim | bool
+  vars:
+    pwsh_executable: powershell.exe
+
+- name: run executable with arguments
+  win_powershell:
+    executable: powershell.exe
+    arguments:
+    - -ExecutionPolicy
+    - Restricted
+    script: |
+      $env:PSExecutionPolicyPreference
+  register: exe_with_arguments
+  when: use_executable.stdout | trim | bool
+
+- name: assert run executable with arguments
+  assert:
+    that:
+    - exe_with_arguments.output == ['Restricted']
+  when: use_executable.stdout | trim | bool
