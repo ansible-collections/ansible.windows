@@ -432,15 +432,18 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
             // $null from PowerShell ends up as an empty string, we need to convert back as an empty string doesn't
             // make sense for these parameters
-            if (applicationName == "")
+            if (String.IsNullOrWhiteSpace(applicationName))
                 applicationName = null;
 
-            if (currentDirectory == "")
+            if (String.IsNullOrWhiteSpace(currentDirectory))
                 currentDirectory = null;
 
             NativeHelpers.STARTUPINFOEX si = new NativeHelpers.STARTUPINFOEX();
-            si.startupInfo.lpDesktop = startupInfo.Desktop;
-            si.startupInfo.lpTitle = startupInfo.Title;
+            if (!String.IsNullOrWhiteSpace(startupInfo.Desktop))
+                si.startupInfo.lpDesktop = startupInfo.Desktop;
+
+            if (!String.IsNullOrWhiteSpace(startupInfo.Title))
+                si.startupInfo.lpTitle = startupInfo.Title;
 
             bool useStdHandles = false;
             if (startupInfo.StandardInput != null)
