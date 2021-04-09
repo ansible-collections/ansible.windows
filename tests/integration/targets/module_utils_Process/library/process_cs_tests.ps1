@@ -267,8 +267,6 @@ exit 1
         $actual.Process.IsClosed | Assert-Equals -Expected $true
         $actual.Thread.IsClosed | Assert-Equals -Expected $true
 
-        Wait-Process -Id $actual.ProcessId
-
         $stdoutClient.Dispose()
         $stdout = $stdoutSr.ReadToEnd()
         $stdoutSr.Dispose()

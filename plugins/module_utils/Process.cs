@@ -56,9 +56,9 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             public UInt16 wShowWindow;
             public UInt16 cbReserved2;
             public IntPtr lpReserved2;
-            public SafeHandle hStdInput;
-            public SafeHandle hStdOutput;
-            public SafeHandle hStdError;
+            public IntPtr hStdInput;
+            public IntPtr hStdOutput;
+            public IntPtr hStdError;
 
             public STARTUPINFOW()
             {
@@ -166,12 +166,12 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool GetExitCodeProcess(
-            SafeWaitHandle hProcess,
+            SafeHandle hProcess,
             out UInt32 lpExitCode);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool GetQueuedCompletionStatus(
-            IntPtr CompletionPort,
+            SafeHandle CompletionPort,
             out UInt32 lpNumberOfBytesTransferred,
             out UIntPtr lpCompletionKey,
             out IntPtr lpOverlapped,
@@ -179,7 +179,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UInt32 ResumeThread(
-            IntPtr hThread);
+            SafeHandle hThread);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool SetConsoleCP(
@@ -191,7 +191,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool SetHandleInformation(
-            SafeFileHandle hObject,
+            SafeHandle hObject,
             NativeHelpers.HandleFlags dwMask,
             NativeHelpers.HandleFlags dwFlags);
 
@@ -204,7 +204,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
         [DllImport("kernel32.dll")]
         public static extern UInt32 WaitForSingleObject(
-            SafeWaitHandle hHandle,
+            SafeHandle hHandle,
             UInt32 dwMilliseconds);
     }
 
@@ -379,33 +379,42 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             SafeFileHandle stdoutRead, stdoutWrite, stderrRead, stderrWrite, stdinRead, stdinWrite;
             CreateStdioPipes(si, out stdoutRead, out stdoutWrite, out stderrRead, out stderrWrite, out stdinRead,
                 out stdinWrite);
-            FileStream stdinStream = new FileStream(stdinWrite, FileAccess.Write);
 
-            bool isConsole = false;
-            if (NativeMethods.GetConsoleWindow() == IntPtr.Zero)
+            using (stdoutRead)
+            using (stdoutWrite)
+            using (stderrRead)
+            using (stderrWrite)
+            using (stdinRead)
+            using (stdinWrite)
             {
-                isConsole = NativeMethods.AllocConsole();
+                FileStream stdinStream = new FileStream(stdinWrite, FileAccess.Write);
 
-                // Set console input/output codepage to UTF-8
-                NativeMethods.SetConsoleCP(65001);
-                NativeMethods.SetConsoleOutputCP(65001);
-            }
+                bool isConsole = false;
+                if (NativeMethods.GetConsoleWindow() == IntPtr.Zero)
+                {
+                    isConsole = NativeMethods.AllocConsole();
 
-            try
-            {
-                pi = NativeCreateProcess(lpApplicationName, lpCommandLine, null, null, true, creationFlags,
-                    environment, lpCurrentDirectory, si);
-            }
-            finally
-            {
-                if (isConsole)
-                    NativeMethods.FreeConsole();
-            }
+                    // Set console input/output codepage to UTF-8
+                    NativeMethods.SetConsoleCP(65001);
+                    NativeMethods.SetConsoleOutputCP(65001);
+                }
 
-            using (pi)
-            {
-                return WaitProcess(stdoutRead, stdoutWrite, stderrRead, stderrWrite, stdinStream, stdin, pi,
-                    outputEncoding, waitChildren);
+                try
+                {
+                    pi = NativeCreateProcess(lpApplicationName, lpCommandLine, null, null, true, creationFlags,
+                        environment, lpCurrentDirectory, si);
+                }
+                finally
+                {
+                    if (isConsole)
+                        NativeMethods.FreeConsole();
+                }
+
+                using (pi)
+                {
+                    return WaitProcess(stdoutRead, stdoutWrite, stderrRead, stderrWrite, stdinStream, stdin, pi,
+                        outputEncoding, waitChildren);
+                }
             }
         }
 
@@ -448,27 +457,21 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             bool useStdHandles = false;
             if (startupInfo.StandardInput != null)
             {
-                si.startupInfo.hStdInput = startupInfo.StandardInput;
+                si.startupInfo.hStdInput = startupInfo.StandardInput.DangerousGetHandle();
                 useStdHandles = true;
             }
-            else
-                si.startupInfo.hStdInput = new SafeNativeHandle(IntPtr.Zero);
 
             if (startupInfo.StandardOutput != null)
             {
-                si.startupInfo.hStdOutput = startupInfo.StandardOutput;
+                si.startupInfo.hStdOutput = startupInfo.StandardOutput.DangerousGetHandle();
                 useStdHandles = true;
             }
-            else
-                si.startupInfo.hStdOutput = new SafeNativeHandle(IntPtr.Zero);
 
             if (startupInfo.StandardError != null)
             {
-                si.startupInfo.hStdError = startupInfo.StandardError;
+                si.startupInfo.hStdError = startupInfo.StandardError.DangerousGetHandle();
                 useStdHandles = true;
             }
-            else
-                si.startupInfo.hStdError = new SafeNativeHandle(IntPtr.Zero);
 
             if (useStdHandles)
                 si.startupInfo.dwFlags |= NativeHelpers.StartupInfoFlags.USESTDHANDLES;
@@ -521,7 +524,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         /// <param name="thread">The thread handle to resume</param>
         public static void ResumeThread(SafeHandle thread)
         {
-            if (NativeMethods.ResumeThread(thread.DangerousGetHandle()) == 0xFFFFFFFF)
+            if (NativeMethods.ResumeThread(thread) == 0xFFFFFFFF)
                 throw new Win32Exception("ResumeThread() failed");
         }
 
@@ -643,7 +646,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
 
                 string stdoutStr, stderrStr = null;
                 GetProcessOutput(stdout, stderr, out stdoutStr, out stderrStr);
-                UInt32 rc = GetProcessExitCode(pi.Process.DangerousGetHandle());
+                UInt32 rc = GetProcessExitCode(pi.Process);
 
                 if (waitChildren)
                 {
@@ -653,7 +656,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
                     UIntPtr completionKey;
                     IntPtr overlapped;
 
-                    while (NativeMethods.GetQueuedCompletionStatus(ioPort.DangerousGetHandle(), out completionCode,
+                    while (NativeMethods.GetQueuedCompletionStatus(ioPort, out completionCode,
                         out completionKey, out overlapped, 0xFFFFFFFF) && completionCode != 4) { }
                 }
 
@@ -687,13 +690,12 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             stderr = se;
         }
 
-        internal static UInt32 GetProcessExitCode(IntPtr processHandle)
+        internal static UInt32 GetProcessExitCode(SafeHandle processHandle)
         {
-            SafeWaitHandle hProcess = new SafeWaitHandle(processHandle, true);
-            NativeMethods.WaitForSingleObject(hProcess, 0xFFFFFFFF);
+            NativeMethods.WaitForSingleObject(processHandle, 0xFFFFFFFF);
 
             UInt32 exitCode;
-            if (!NativeMethods.GetExitCodeProcess(hProcess, out exitCode))
+            if (!NativeMethods.GetExitCodeProcess(processHandle, out exitCode))
                 throw new Win32Exception("GetExitCodeProcess() failed");
             return exitCode;
         }
