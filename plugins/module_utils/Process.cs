@@ -56,9 +56,9 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             public UInt16 wShowWindow;
             public UInt16 cbReserved2;
             public IntPtr lpReserved2;
-            public IntPtr hStdInput;
-            public IntPtr hStdOutput;
-            public IntPtr hStdError;
+            public SafeHandle hStdInput = new SafeNativeHandle(IntPtr.Zero);
+            public SafeHandle hStdOutput = new SafeNativeHandle(IntPtr.Zero);
+            public SafeHandle hStdError = new SafeNativeHandle(IntPtr.Zero);
 
             public STARTUPINFOW()
             {
@@ -457,19 +457,19 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             bool useStdHandles = false;
             if (startupInfo.StandardInput != null)
             {
-                si.startupInfo.hStdInput = startupInfo.StandardInput.DangerousGetHandle();
+                si.startupInfo.hStdInput = startupInfo.StandardInput;
                 useStdHandles = true;
             }
 
             if (startupInfo.StandardOutput != null)
             {
-                si.startupInfo.hStdOutput = startupInfo.StandardOutput.DangerousGetHandle();
+                si.startupInfo.hStdOutput = startupInfo.StandardOutput;
                 useStdHandles = true;
             }
 
             if (startupInfo.StandardError != null)
             {
-                si.startupInfo.hStdError = startupInfo.StandardError.DangerousGetHandle();
+                si.startupInfo.hStdError = startupInfo.StandardError;
                 useStdHandles = true;
             }
 
