@@ -137,8 +137,8 @@ Parameters
                 </td>
                 <td>
                         <div>Defines the Windows Update source catalog.</div>
-                        <div><code>default</code> Use the default search source. For many systems default is set to the Microsoft Windows Update catalog. Systems participating in Windows Server Update Services (WSUS), Systems Center Configuration Manager (SCCM), or similar corporate update server environments may default to those managed update sources instead of the Windows Update catalog.</div>
-                        <div><code>managed_server</code> Use a managed server catalog. For environments utilizing Windows Server Update Services (WSUS), Systems Center Configuration Manager (SCCM), or similar corporate update servers, this option selects the defined corporate update source.</div>
+                        <div><code>default</code> Use the default search source. For many systems default is set to the Microsoft Windows Update catalog. Systems participating in Windows Server Update Services (WSUS) or similar corporate update server environments may default to those managed update sources instead of the Windows Update catalog.</div>
+                        <div><code>managed_server</code> Use a managed server catalog. For environments utilizing Windows Server Update Services (WSUS) or similar corporate update servers, this option selects the defined corporate update source.</div>
                         <div><code>windows_update</code> Use the Microsoft Windows Update catalog.</div>
                 </td>
             </tr>
@@ -217,6 +217,7 @@ Notes
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` can take a significant amount of time to complete (hours, in some cases). Performance depends on many factors, including OS version, number of updates, system load, and update server load.
    - Beware that just after :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` reboots the system, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.
    - More information about PowerShell and how it handles RegEx strings can be found at https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx.
+   - The current module doesn't support Systems Center Configuration Manager (SCCM). See L(https://github.com/ansible-collections/ansible.windows/issues/194)
 
 
 See Also

@@ -19,7 +19,7 @@ PEP440 is the schema used to describe the versions of Ansible.
 ## Included content
 
 <!--start collection content-->
-### Filter plugins
+### Quote filter plugins
 Name | Description
 --- | ---
 ansible.windows.quote|Quotes argument(s) for the various shells in Windows command processing.
@@ -50,6 +50,7 @@ Name | Description
 [ansible.windows.win_package](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_package_module.rst)|Installs/uninstalls an installable package
 [ansible.windows.win_path](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_path_module.rst)|Manage Windows path environment variables
 [ansible.windows.win_ping](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_ping_module.rst)|A windows version of the classic ping module
+[ansible.windows.win_powershell](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_powershell_module.rst)|Run PowerShell scripts
 [ansible.windows.win_reboot](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_reboot_module.rst)|Reboot a windows machine
 [ansible.windows.win_reg_stat](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_reg_stat_module.rst)|Get information about Windows registry keys
 [ansible.windows.win_regedit](https://github.com/ansible-collections/ansible.windows/blob/main/docs/ansible.windows.win_regedit_module.rst)|Add, change, or remove registry keys and values

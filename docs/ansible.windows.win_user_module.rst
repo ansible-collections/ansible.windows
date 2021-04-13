@@ -117,6 +117,7 @@ Parameters
                 <td>
                         <div>Adds or removes the user from this comma-separated list of groups, depending on the value of <em>groups_action</em>.</div>
                         <div>When <em>groups_action</em> is <code>replace</code> and <em>groups</em> is set to the empty string (&#x27;groups=&#x27;), the user is removed from all groups.</div>
+                        <div>Since <code>ansible.windows v1.5.0</code> it is possible to specify a group using it&#x27;s security identifier.</div>
                 </td>
             </tr>
             <tr>

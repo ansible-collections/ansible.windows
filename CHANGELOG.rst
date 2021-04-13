@@ -5,13 +5,34 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.4.0
+v1.5.0
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.4.0
+- Release summary for v1.5.0
+
+Minor Changes
+-------------
+
+- win_certificate_store - Added functionality to open the store for a service account using ``store_type=service store_location=<service name>``
+- win_user - Support specifying groups using the SecurityIdentifier - https://github.com/ansible-collections/ansible.windows/issues/153
+
+Bugfixes
+--------
+
+- setup - Return correct epoch integer value for the ``ansible_date_time.epoch_int`` fact
+- win_template - Fix changed internal API that win_template uses to work with devel again
+- win_user - Compare existing vs desired groups in a case insenstive way - https://github.com/ansible-collections/ansible.windows/issues/168
+
+New Modules
+-----------
+
+- win_powershell - Run PowerShell scripts
+
+v1.4.0
+======
 
 Minor Changes
 -------------

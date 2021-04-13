@@ -1,2 +1,0 @@
-bugfixes:
-- win_template - Fix changed internal API that win_template uses to work with devel again

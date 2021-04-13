@@ -1,2 +1,0 @@
-bugfixes:
-  - setup - Return correct epoch integer value for the ``ansible_date_time.epoch_int`` fact

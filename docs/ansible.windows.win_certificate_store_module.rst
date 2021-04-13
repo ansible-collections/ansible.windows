@@ -171,13 +171,13 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>CurrentUser</li>
-                                    <li><div style="color: blue"><b>LocalMachine</b>&nbsp;&larr;</div></li>
-                        </ul>
+                        <b>Default:</b><br/><div style="color: blue">"LocalMachine"</div>
                 </td>
                 <td>
                         <div>The store location to use when importing a certificate or searching for a certificate.</div>
+                        <div>Can be set to <code>CurrentUser</code> or <code>LocalMachine</code> when <code>store_type=system</code>.</div>
+                        <div>Defaults to <code>LocalMachine</code> when <code>store_type=system</code>.</div>
+                        <div>Must be set to any service name when <code>store_type=service</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -190,16 +190,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>AddressBook</li>
-                                    <li>AuthRoot</li>
-                                    <li>CertificateAuthority</li>
-                                    <li>Disallowed</li>
-                                    <li><div style="color: blue"><b>My</b>&nbsp;&larr;</div></li>
-                                    <li>Root</li>
-                                    <li>TrustedPeople</li>
-                                    <li>TrustedPublisher</li>
-                        </ul>
+                        <b>Default:</b><br/><div style="color: blue">"My"</div>
                 </td>
                 <td>
                         <div>The store name to use when importing a certificate or searching for a certificate.</div>
@@ -211,6 +202,28 @@ Parameters
                         <div><code>Root</code>: The X.509 certificate store for trusted root certificate authorities (CAs)</div>
                         <div><code>TrustedPeople</code>: The X.509 certificate store for directly trusted people and resources</div>
                         <div><code>TrustedPublisher</code>: The X.509 certificate store for directly trusted publishers</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>store_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 1.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>system</b>&nbsp;&larr;</div></li>
+                                    <li>service</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The store type to manage.</div>
+                        <div>Use <code>system</code> to manage locations in the system store, <code>LocalMachine</code> and <code>CurrentUser</code>.</div>
+                        <div>Use <code>service</code> to manage the store of a service account specified by <em>store_location</em>.</div>
                 </td>
             </tr>
             <tr>
@@ -314,6 +327,16 @@ Examples
       become: yes
       become_method: runas
       become_user: SYSTEM
+
+    - name: Import certificate to be used for LDAPS
+      ansible.windows.win_certificate_store:
+        path: C:\Temp\cert.pfx
+        password: StrongPassword!
+        store_type: service
+        store_location: NTDS
+        key_exportable: no
+        key_storage: machine
+        state: present
 
 
 

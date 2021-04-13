@@ -108,14 +108,14 @@ releases:
   1.0.0:
     changes:
       breaking_changes:
-      - "win_find - module has been refactored to better match the behaviour of the\
-        \ ``find`` module. Here is what has changed:\n  * When the directory specified\
-        \ by ``paths`` does not exist or is a file, it will no longer fail and will\
-        \ just warn the user\n  * Junction points are no longer reported as ``islnk``,\
-        \ use ``isjunction`` to properly report these files. This behaviour matches\
-        \ the win_stat module\n  * Directories no longer return a ``size``, this matches\
-        \ the ``stat`` and ``find`` behaviour and has been removed due to the difficulties\
-        \ in correctly reporting the size of a directory\n"
+      - "win_find - module has been refactored to better match the behaviour of the
+        ``find`` module. Here is what has changed:\n  * When the directory specified
+        by ``paths`` does not exist or is a file, it will no longer fail and will
+        just warn the user\n  * Junction points are no longer reported as ``islnk``,
+        use ``isjunction`` to properly report these files. This behaviour matches
+        the win_stat module\n  * Directories no longer return a ``size``, this matches
+        the ``stat`` and ``find`` behaviour and has been removed due to the difficulties
+        in correctly reporting the size of a directory\n"
       - win_user - Change idempotency checks for ``description`` to be case sensitive
       - win_user - Change idempotency checks for ``fullname`` to be case sensitive
       deprecated_features:
@@ -208,11 +208,34 @@ releases:
       minor_changes:
       - setup - Added more virtualization types to the virtual facts based on the
         Linux setup module
-      release_summary:
-      - Release summary for v1.4.0
     fragments:
     - release_summary.yml
     - setup-virtual.yml
     - win_package-creates-version.yml
     - win_package-msi-code.yml
     release_date: '2021-02-03'
+  1.5.0:
+    changes:
+      bugfixes:
+      - setup - Return correct epoch integer value for the ``ansible_date_time.epoch_int``
+        fact
+      - win_template - Fix changed internal API that win_template uses to work with
+        devel again
+      - win_user - Compare existing vs desired groups in a case insenstive way - https://github.com/ansible-collections/ansible.windows/issues/168
+      minor_changes:
+      - win_certificate_store - Added functionality to open the store for a service
+        account using ``store_type=service store_location=<service name>``
+      - win_user - Support specifying groups using the SecurityIdentifier - https://github.com/ansible-collections/ansible.windows/issues/153
+      release_summary:
+      - Release summary for v1.5.0
+    fragments:
+    - release_150.yml
+    - setup-epoch.yml
+    - win_certificate_store_service.yml
+    - win_template-dest_path.yml
+    - win_user-groups.yml
+    modules:
+    - description: Run PowerShell scripts
+      name: win_powershell
+      namespace: ''
+    release_date: '2021-04-13'

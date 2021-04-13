@@ -1,2 +1,0 @@
-minor_changes:
-- win_certificate_store - Added functionality to open the store for a service account using ``store_type=service store_location=<service name>``

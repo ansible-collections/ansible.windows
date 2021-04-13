@@ -172,7 +172,7 @@ Notes
 
 .. note::
    - If you want to run an executable securely and predictably, it may be better to use the :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` module instead. Best practices when writing playbooks will follow the trend of using :ref:`ansible.windows.win_command <ansible.windows.win_command_module>` unless ``win_shell`` is explicitly required. When running ad-hoc commands, use your best judgement.
-   - WinRM will not return from a command execution until all child processes created have exited. Thus, it is not possible to use :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` to spawn long-running child or background processes. Consider creating a Windows service for managing background processes.
+   - WinRM will not return from a command execution until all child processes created have exited. Thus, it is not possible to use :ref:`ansible.windows.win_shell <ansible.windows.win_shell_module>` to spawn long-running child or background processes. Consider creating a Windows service for managing background processes. - Consider using :ref:`ansible.windows.win_powershell <ansible.windows.win_powershell_module>` if you want to capture the output from the PowerShell script as structured objects.
 
 
 See Also
@@ -190,6 +190,8 @@ See Also
       The official documentation on the **ansible.builtin.shell** module.
    :ref:`ansible.windows.win_command_module`
       The official documentation on the **ansible.windows.win_command** module.
+   :ref:`ansible.windows.win_powershell_module`
+      The official documentation on the **ansible.windows.win_powershell** module.
    :ref:`community.windows.win_psexec_module`
       The official documentation on the **community.windows.win_psexec** module.
 
