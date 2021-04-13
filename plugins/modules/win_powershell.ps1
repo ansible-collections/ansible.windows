@@ -50,14 +50,14 @@ namespace Ansible.Windows.WinPowerShell
         public static extern IntPtr GetConsoleWindow();
 
         [DllImport("Kernel32.dll")]
-        public static extern SafeFileHandle GetStdHandle(
+        public static extern IntPtr GetStdHandle(
             int nStdHandle);
 
         [DllImport("Kernel32.dll", SetLastError = true)]
         public static extern bool FreeConsole();
 
         [DllImport("Kernel32.dll")]
-        public static extern SafeFileHandle SetStdHandle(
+        public static extern bool SetStdHandle(
             int nStdHandle,
             IntPtr hHandle);
     }
@@ -241,7 +241,7 @@ Function Set-StdHandle {
         [IO.TextWriter]
         $NET,
 
-        [Runtime.InteropServices.SafeHandle]
+        [IntPtr]
         $Raw
     )
 
@@ -252,8 +252,7 @@ Function Set-StdHandle {
 
     # .NET does not actually affect the std handle on the process, we need to call SetStdHandle so any child processes
     # spawned with Start-Process -NoNewWindow will use our custom pipe.
-    $rawHandle = if ($null -ne $Raw) { $Raw.DangerousGetHandle() } else { [IntPtr]::Zero }
-    [void][Ansible.Windows.WinPowerShell.NativeMethods]::SetStdHandle($id, $rawHandle)
+    [void][Ansible.Windows.WinPowerShell.NativeMethods]::SetStdHandle($id, $Raw)
 }
 
 Function Convert-OutputObject {
@@ -648,7 +647,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     $writer = New-Object -TypeName IO.StreamWriter -ArgumentList $pipe, $utf8NoBom
     $writer.AutoFlush = $true  # Ensures we data in the correct order.
 
-    &$setHandle -Stream $_.Name -NET $writer -Raw $pipe.SafePipeHandle
+    &$setHandle -Stream $_.Name -NET $writer -Raw $pipe.SafePipeHandle.DangerousGetHandle()
 }
 '@, $true).AddParameters(@{
             StdoutHandle = $newStdout.ClientString
@@ -665,8 +664,8 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
 
         # Else we are running in the same process, we need to redirect the console and .NET output pipes to our
         # anonymous pipe. We shouldn't have to set the encoding, the module wrapper already does this.
-        Set-StdHandle -Stream Stdout -NET $newStdout.Client -Raw $newStdout.Client.BaseStream.SafePipeHandle
-        Set-StdHandle -Stream Stderr -NET $newStderr.Client -Raw $newStderr.Client.BaseStream.SafePipeHandle
+        Set-StdHandle -Stream Stdout -NET $newStdout.Client -Raw $newStdout.Client.BaseStream.SafePipeHandle.DangerousGetHandle()
+        Set-StdHandle -Stream Stderr -NET $newStderr.Client -Raw $newStderr.Client.BaseStream.SafePipeHandle.DangerousGetHandle()
 
         $utf8NoBom = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
         $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8NoBom
@@ -733,7 +732,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
 }
 finally {
     $oldStdout, $oldStderr | ForEach-Object -Process {
-        Set-StdHandle -Stream $_.Stream -NET $_.NET -Raw $_.Raw.SafePipeHandle
+        Set-StdHandle -Stream $_.Stream -NET $_.NET -Raw $_.Raw
     }
 
     if ($runspace) {
