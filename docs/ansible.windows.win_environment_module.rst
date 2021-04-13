@@ -241,7 +241,8 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <div style="font-size: small">
                       <span style="color: purple">dictionary</span>
                     </div>
-    <div style="font-style: italic; font-size: small; color: darkgreen">added in 1.3.0</div></td>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 1.3.0</div>
+                </td>
                 <td>always</td>
                 <td>
                             <div>dictionary of before and after values; each key is a variable name, each value is another dict with <code>before</code>, <code>after</code>, and <code>changed</code> keys</div>
