@@ -140,10 +140,8 @@ The current process for publishing new versions of the Windows Core Collection i
 * Update `galaxy.yml` with the new version for the collection.
 * Rebuild the plugin docs:
     ```bash
-    git clone https://github.com/ansible-network/collection_prep.git /tmp/collection_prep
-    pip install /tmp/collection_prep
+    pip install git+https://github.com/ansible-network/collection_prep
     collection_prep_add_docs --path ./ --branch-name main
-    rm -rf /tmp/collection_prep
     ```
 * Update the `CHANGELOG`:
   * Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed `pip install antsibull-changelog`.
@@ -155,7 +153,7 @@ The current process for publishing new versions of the Windows Core Collection i
     ```bash
     git clone https://github.com/ansible-collections/ansible.windows.git /tmp/ansible.windows
     ansible-galaxy collection build /tmp/ansible.windows --output-path /tmp/ansible.windows
-    ansible-galaxy collection publish $(find /tmp/ansible.windows -maxdepth 1 -name 'ansible-windows-*.tar.gz') --token <API_KEY>
+    ansible-galaxy collection publish $(find /tmp/ansible.windows -maxdepth 1 -name 'ansible-windows-*.tar.gz') --token <API_KEY> -vv
     ```
 
 After the version is published, verify it exists on the [Windows Core Collection Galaxy page](https://galaxy.ansible.com/ansible/windows).
