@@ -631,10 +631,21 @@ param (
 
     [Parameter(Mandatory=$true)]
     [String]
-    $SetScriptBlock
+    $SetScriptBlock,
+
+    [Parameter(Mandatory=$true)]
+    [String]
+    $AddTypeCode,
+
+    [Parameter(Mandatory=$true)]
+    [String]
+    $Tmpdir
 )
 
-Add-Type -TypeDefinition $SetStdPInvoke
+# Using Add-Type here leaves an empty folder for some reason, our code does not and also allows us to control the
+# temp directory used.
+&([ScriptBlock]::Create($AddTypeCode)) -References $SetStdPInvoke -TempPath $Tmpdir
+
 $setHandle = [ScriptBlock]::Create($SetScriptBlock)
 $utf8NoBom = New-Object -TypeName Text.UTF8Encoding -ArgumentList $false
 
@@ -654,6 +665,8 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
             StderrHandle = $newStderr.ClientString
             SetStdPInvoke = $stdPinvoke
             SetScriptBlock = ${function:Set-StdHandle}
+            AddTypeCode = ${function:Add-CSharpType}
+            TmpDir = $module.Tmpdir
         }).AddStatement()
     }
     else {
@@ -731,8 +744,10 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     $result = $runspace.SessionStateProxy.GetVariable('Ansible')
 }
 finally {
-    $oldStdout, $oldStderr | ForEach-Object -Process {
-        Set-StdHandle -Stream $_.Stream -NET $_.NET -Raw $_.Raw
+    if (-not $processId) {
+        $oldStdout, $oldStderr | ForEach-Object -Process {
+            Set-StdHandle -Stream $_.Stream -NET $_.NET -Raw $_.Raw
+        }
     }
 
     if ($runspace) {
