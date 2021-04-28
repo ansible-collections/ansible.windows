@@ -26,11 +26,12 @@ try:
         Any,
         Callable,
         Dict,
+        Optional,
         Tuple,
     )
 except ImportError:
     # Satisfy Python 2 which doesn't have typing.
-    Any = Callable = Dict = Tuple = None
+    Any = Callable = Dict = Optional = Tuple = None
 
 
 # This is not ideal but the psrp connection plugin doesn't catch all these exceptions as an AnsibleConnectionFailure.
@@ -44,8 +45,11 @@ except ImportError:
     RequestsConnectionError = RequestsTimeout = None
 
 
+_LOGON_UI_KEY = r'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoLogonChecked'
+
 _DEFAULT_BOOT_TIME_COMMAND = "(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime)" \
                              ".LastBootUpTime.ToFileTime()"
+
 display = Display()
 
 
@@ -65,8 +69,8 @@ def reboot_action(
         post_reboot_delay=0,
         pre_reboot_delay=2,
         reboot_timeout=600,
-        test_command='whoami',
-):  # type: (str, ConnectionBase, str, int, str, int, int, int, str) -> Dict
+        test_command=None,
+):  # type: (str, ConnectionBase, str, int, str, int, int, int, Optional[str]) -> Dict
     """Reboot a Windows Host.
 
     Used by action plugins in ansible.windows to reboot a Windows host. It
@@ -87,7 +91,7 @@ def reboot_action(
         2: Message when each reboot step is completed
         3: Connection plugin operations and their results
         5: Raw commands run and the results of those commands
-        Debug:
+        Debug: Everything, very verbose
 
     Args:
         task_action: The name of the action plugin that is running for logging.
@@ -103,7 +107,9 @@ def reboot_action(
         reboot_timeout: Seconds to wait while polling for the host to come
             back online.
         test_command: Command to run when the host is back online and
-            determines the machine is ready for management.
+            determines the machine is ready for management. When not defined
+            the default command should wait until the reboot is complete and
+            all pre-login configuration has completed.
 
     Returns:
         (Dict[str, Any]): The return result as a dictionary. Use the 'failed'
@@ -140,6 +146,18 @@ def reboot_action(
 
     # Initiate reboot
     reboot_command = 'shutdown.exe /r /t %s /c "%s"' % (pre_reboot_delay, msg)
+
+    if not test_command:
+        # TODO: Test this some more before merging.
+        # It turns out that LogonUI will create this registry key if it does not exist when it's about to show the
+        # logon prompt. By deleting the key we can have our test command check if the key exists and fail if it does
+        # not. This means our test_command will actually wait until the logon screen is shown and any updates or config
+        # that occurs on the first boot will be done before the command doesn't fail. Without this the command will run
+        # when WinRM is essentially online which can occur way before the reboot is actually complete.
+        test_command = "Get-Item -LiteralPath '%s' -ErrorAction Stop" % _LOGON_UI_KEY
+        reboot_command = "Remove-Item -LiteralPath '%s' -Force -ErrorAction SilentlyContinue; %s" \
+                         % (_LOGON_UI_KEY, reboot_command)
+
     try:
         _perform_reboot(task_action, connection, reboot_command)
     except Exception as e:
@@ -242,7 +260,7 @@ def _do_until_success_or_timeout(task_action, connection, action_desc, timeout, 
 
             try:
                 error = to_text(e).splitlines()[-1]
-            except IndexError as e:
+            except IndexError:
                 error = to_text(e)
 
             display.vvvvv("{action}: {desc} fail {e_type} '{err}', retrying in {sleep:.4} seconds...\n{test}".format(
@@ -328,7 +346,7 @@ def _perform_reboot(task_action, connection, reboot_command, handle_abort=True):
         raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
 
-def _reset_connection(task_action, connection, ignore_errors=False):  # type: (str, ConnectionBase, tru) -> bool
+def _reset_connection(task_action, connection, ignore_errors=False):  # type: (str, ConnectionBase, bool) -> bool
     """Resets the connection handling any errors and returns a bool stating if it is resettable"""
     res = True
     if getattr(_reset_connection, '_skip', False):
