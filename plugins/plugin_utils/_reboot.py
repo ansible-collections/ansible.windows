@@ -18,6 +18,7 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import datetime
+import json
 import random
 import time
 import traceback
@@ -25,9 +26,11 @@ import uuid
 
 from ansible.errors import AnsibleConnectionFailure, AnsibleError
 from ansible.module_utils.common.text.converters import to_native, to_text
+from ansible.plugins.connection import ConnectionBase
 from ansible.utils.display import Display
 
-from ansible.plugins.connection import ConnectionBase
+from ._quote import quote_pwsh
+
 try:
     from typing import (
         Any,
@@ -164,7 +167,24 @@ def reboot_action(
         reset_connection_timeout = False
 
     # Initiate reboot
-    reboot_command = 'shutdown.exe /r /t %s /c "%s"' % (int(pre_reboot_delay), msg)
+    # This command may be wrapped in other shells or command making it hard to detect what shutdown.exe actually
+    # returned. We use this hackery to return a json that contains the stdout/stderr/rc as a structured object for our
+    # code to parse and detect if something went wrong.
+    reboot_command = '''$ErrorActionPreference = 'Continue'
+
+if ($%s) {
+    Remove-Item -LiteralPath '%s' -Force -ErrorAction SilentlyContinue
+}
+
+$stdout = $null
+$stderr = . { shutdown.exe /r /t %s /c %s | Set-Variable stdout } 2>&1 | ForEach-Object ToString
+
+ConvertTo-Json -Compress -InputObject @{
+    stdout = (@($stdout) -join "`n")
+    stderr = (@($stderr) -join "`n")
+    rc = $LASTEXITCODE
+}
+''' % (str(not test_command), _LOGON_UI_KEY, int(pre_reboot_delay), quote_pwsh(msg))
 
     expected_test_result = None  # We cannot have an expected result if the command is user defined
     if not test_command:
@@ -176,8 +196,6 @@ def reboot_action(
         # being 0 causing it to consider a successful reboot too early (seen on ssh connections).
         expected_test_result = 'success-%s' % str(uuid.uuid4())
         test_command = "Get-Item -LiteralPath '%s' -ErrorAction Stop; '%s'" % (_LOGON_UI_KEY, expected_test_result)
-        reboot_command = "Remove-Item -LiteralPath '%s' -Force -ErrorAction SilentlyContinue; %s" \
-                         % (_LOGON_UI_KEY, reboot_command)
 
     try:
         _perform_reboot(task_action, connection, reboot_command)
@@ -350,6 +368,18 @@ def _perform_reboot(task_action, connection, reboot_command, handle_abort=True):
         # If the connection is closed too quickly due to the system being shutdown, carry on
         display.vvv('%s: AnsibleConnectionFailure caught and handled: %s' % (task_action, to_text(e)))
         rc = 0
+
+    if stdout:
+        try:
+            reboot_result = json.loads(stdout)
+        except getattr(json.decoder, 'JSONDecodeError', ValueError):
+            # While the reboot command should output json it may have failed for some other reason. We continue
+            # reporting with that output instead
+            pass
+        else:
+            stdout = reboot_result.get('stdout', stdout)
+            stderr = reboot_result.get('stderr', stderr)
+            rc = int(reboot_result.get('rc', rc))
 
     # Test for "A system shutdown has already been scheduled. (1190)" and handle it gracefully
     if handle_abort and (rc == 1190 or (rc != 0 and "(1190)" in stderr)):
