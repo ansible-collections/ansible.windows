@@ -196,7 +196,7 @@ Parameters
                         <div>The store name to use when importing a certificate or searching for a certificate.</div>
                         <div><code>AddressBook</code>: The X.509 certificate store for other users</div>
                         <div><code>AuthRoot</code>: The X.509 certificate store for third-party certificate authorities (CAs)</div>
-                        <div><code>CertificateAuthority</code>: The X.509 certificate store for intermediate certificate authorities (CAs)</div>
+                        <div><code>CA</code>: The X.509 certificate store for intermediate certificate authorities (CAs)</div>
                         <div><code>Disallowed</code>: The X.509 certificate store for revoked certificates</div>
                         <div><code>My</code>: The X.509 certificate store for personal certificates</div>
                         <div><code>Root</code>: The X.509 certificate store for trusted root certificate authorities (CAs)</div>
