@@ -8,6 +8,12 @@ in this collection. Right now it should only be used in ansible.windows as the
 interface is not final and could be subject to change.
 """
 
+# FOR INTERNAL COLLECTION USE ONLY
+# The interfaces in this file are meant for use within the ansible.windows collection
+# and may not remain stable to outside uses. Changes may be made in ANY release, even a bugfix release.
+# See also: https://github.com/ansible/community/issues/539#issuecomment-780839686
+# Please open an issue if you have questions about this.
+
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
@@ -15,6 +21,7 @@ import datetime
 import random
 import time
 import traceback
+import uuid
 
 from ansible.errors import AnsibleConnectionFailure, AnsibleError
 from ansible.module_utils.common.text.converters import to_native, to_text
@@ -42,7 +49,7 @@ try:
         Timeout as RequestsTimeout,
     )
 except ImportError:
-    RequestsConnectionError = RequestsTimeout = None
+    RequestsConnectionError = RequestsTimeout = AnsibleConnectionFailure
 
 
 _LOGON_UI_KEY = r'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoLogonChecked'
@@ -54,23 +61,29 @@ display = Display()
 
 
 class _ReturnResultException(Exception):
+    """Used to sneak results back to the return dict from an exception"""
 
     def __init__(self, msg, **result):
         super(_ReturnResultException, self).__init__(msg)
         self.result = result
 
 
+class _TestCommandFailure(Exception):
+    """Differentiates between a connection failure and just a command assertion failure during the reboot loop"""
+    pass
+
+
 def reboot_action(
         task_action,
         connection,
         boot_time_command=_DEFAULT_BOOT_TIME_COMMAND,
-        connection_timeout=5,
+        connect_timeout=5,
         msg='Reboot initiated by Ansible',
         post_reboot_delay=0,
         pre_reboot_delay=2,
         reboot_timeout=600,
         test_command=None,
-):  # type: (str, ConnectionBase, str, int, str, int, int, int, Optional[str]) -> Dict
+):  # type: (str, ConnectionBase, str, float, str, float, float, float, Optional[str]) -> Dict
     """Reboot a Windows Host.
 
     Used by action plugins in ansible.windows to reboot a Windows host. It
@@ -81,6 +94,7 @@ def reboot_action(
         changed: Whether a change occurred (reboot was done)
         elapsed: Seconds elapsed between the reboot and it coming back online
         failed: Whether a failure occurred
+        unreachable: Whether it failed to connect to the host on the first cmd
         rebooted: Whether the host was rebooted
 
     When failed=True there may be more keys to give some information around
@@ -97,7 +111,7 @@ def reboot_action(
         task_action: The name of the action plugin that is running for logging.
         connection: The connection plugin to run the reboot again.
         boot_time_command: The command to run when getting the boot timeout.
-        connection_timeout: Override the connection timeout of the connection
+        connect_timeout: Override the connection timeout of the connection
             plugin when polling the rebooted host.
         msg: The message to display to interactive users when rebooting the
             host.
@@ -119,6 +133,7 @@ def reboot_action(
         'changed': False,
         'elapsed': 0,
         'failed': False,
+        'unreachable': False,
         'rebooted': False,
     }
 
@@ -129,7 +144,11 @@ def reboot_action(
         if isinstance(e, _ReturnResultException):
             result.update(e.result)
 
-        result['failed'] = True
+        if isinstance(e, AnsibleConnectionFailure):
+            result['unreachable'] = True
+        else:
+            result['failed'] = True
+
         result['msg'] = to_text(e)
         result['exception'] = traceback.format_exc()
         return result
@@ -139,22 +158,24 @@ def reboot_action(
     reset_connection_timeout = True
     try:
         original_connection_timeout = connection.get_option('connection_timeout')
-        display.vvv("%s: saving original connect_timeout of %s" % (task_action, original_connection_timeout))
+        display.vvv("%s: saving original connection_timeout of %s" % (task_action, original_connection_timeout))
     except KeyError:
-        display.vvv("%s: connect_timeout connection option has not been set" % task_action)
+        display.vvv("%s: connection_timeout connection option has not been set" % task_action)
         reset_connection_timeout = False
 
     # Initiate reboot
-    reboot_command = 'shutdown.exe /r /t %s /c "%s"' % (pre_reboot_delay, msg)
+    reboot_command = 'shutdown.exe /r /t %s /c "%s"' % (int(pre_reboot_delay), msg)
 
+    expected_test_result = None  # We cannot have an expected result if the command is user defined
     if not test_command:
-        # TODO: Test this some more before merging.
         # It turns out that LogonUI will create this registry key if it does not exist when it's about to show the
-        # logon prompt. By deleting the key we can have our test command check if the key exists and fail if it does
-        # not. This means our test_command will actually wait until the logon screen is shown and any updates or config
-        # that occurs on the first boot will be done before the command doesn't fail. Without this the command will run
-        # when WinRM is essentially online which can occur way before the reboot is actually complete.
-        test_command = "Get-Item -LiteralPath '%s' -ErrorAction Stop" % _LOGON_UI_KEY
+        # logon prompt. Normally this is a volatile key but if someone has explicitly created it that might no longer
+        # be the case. We ensure it is not present on a reboot so we can wait until LogonUI creates it to determine
+        # the host is actually online and ready, e.g. no configurations/updates still to be applied.
+        # We echo a known successful statement to catch issues with powershell failing to start but the rc mysteriously
+        # being 0 causing it to consider a successful reboot too early (seen on ssh connections).
+        expected_test_result = 'success-%s' % str(uuid.uuid4())
+        test_command = "Get-Item -LiteralPath '%s' -ErrorAction Stop; '%s'" % (_LOGON_UI_KEY, expected_test_result)
         reboot_command = "Remove-Item -LiteralPath '%s' -Force -ErrorAction SilentlyContinue; %s" \
                          % (_LOGON_UI_KEY, reboot_command)
 
@@ -172,6 +193,7 @@ def reboot_action(
     start = datetime.datetime.utcnow()
 
     try:
+        result['changed'] = True
         result['rebooted'] = True
 
         if post_reboot_delay != 0:
@@ -182,7 +204,7 @@ def reboot_action(
         display.vv('%s validating reboot' % task_action)
         _do_until_success_or_timeout(task_action, connection, 'last boot time check', reboot_timeout,
                                      _check_boot_time, task_action, connection, previous_boot_time, boot_time_command,
-                                     connection_timeout)
+                                     connect_timeout)
 
         # Reset the connection plugin connection timeout back to the original
         if reset_connection_timeout:
@@ -191,7 +213,8 @@ def reboot_action(
         # Run test command until ti is successful or a timeout occurs
         display.vv('%s running post reboot test command' % task_action)
         _do_until_success_or_timeout(task_action, connection, 'post-reboot test command', reboot_timeout,
-                                     _run_test_command, task_action, connection, test_command)
+                                     _run_test_command, task_action, connection, test_command,
+                                     expected=expected_test_result)
 
         display.vv("%s: system successfully rebooted" % task_action)
 
@@ -215,19 +238,16 @@ def _check_boot_time(task_action, connection, previous_boot_time, boot_time_comm
 
     # override connection timeout from defaults to custom value
     if timeout:
-        display.vvvvv("%s: setting connect_timeout to %s" % (task_action, timeout))
-        connection.set_option("connection_timeout", timeout)
-        if not _reset_connection(task_action, connection):
-            display.warning("Connection plugin does not allow the connection timeout to be overridden")
+        _set_connection_timeout(task_action, connection, timeout)
 
     # try and get boot time
     current_boot_time = _get_system_boot_time(task_action, connection, boot_time_command)
     if current_boot_time == previous_boot_time:
-        raise ValueError("boot time has not changed")
+        raise _TestCommandFailure("boot time has not changed")
 
 
 def _do_until_success_or_timeout(task_action, connection, action_desc, timeout, func, *args, **kwargs):
-    # type: (str, ConnectionBase, str, int, Callable, Any, Any) -> Any
+    # type: (str, ConnectionBase, str, float, Callable, Any, Any) -> Any
     """Runs the function multiple times ignoring errors until a timeout occurs"""
     max_end_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=timeout)
 
@@ -249,8 +269,9 @@ def _do_until_success_or_timeout(task_action, connection, action_desc, timeout, 
                 return res
 
         except Exception as e:
-            # The error may be due to a connection problem, just reset the connection just in case
-            reset_required = True
+            if not isinstance(e, _TestCommandFailure):
+                # The error may be due to a connection problem, just reset the connection just in case
+                reset_required = True
 
             # Use exponential backoff with a max timeout, plus a little bit of randomness
             random_int = random.randint(0, 1000) / 1000
@@ -263,13 +284,13 @@ def _do_until_success_or_timeout(task_action, connection, action_desc, timeout, 
             except IndexError:
                 error = to_text(e)
 
-            display.vvvvv("{action}: {desc} fail {e_type} '{err}', retrying in {sleep:.4} seconds...\n{test}".format(
+            display.vvvvv("{action}: {desc} fail {e_type} '{err}', retrying in {sleep:.4} seconds...\n{tcb}".format(
                 action=task_action,
                 desc=action_desc,
                 e_type=type(e).__name__,
                 err=error,
                 sleep=fail_sleep,
-                test=traceback.format_exc(),
+                tcb=traceback.format_exc(),
             ))
 
             fail_count += 1
@@ -346,30 +367,47 @@ def _perform_reboot(task_action, connection, reboot_command, handle_abort=True):
         raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
 
-def _reset_connection(task_action, connection, ignore_errors=False):  # type: (str, ConnectionBase, bool) -> bool
-    """Resets the connection handling any errors and returns a bool stating if it is resettable"""
-    res = True
-    if getattr(_reset_connection, '_skip', False):
-        return res
+def _reset_connection(task_action, connection, ignore_errors=False):  # type: (str, ConnectionBase, bool) -> None
+    """Resets the connection handling any errors"""
+    def _wrap_conn_err(func, *args, **kwargs):
+        try:
+            func(*args, **kwargs)
 
+        except (AnsibleError, RequestsConnectionError, RequestsTimeout) as e:
+            if ignore_errors:
+                return False
+
+            raise AnsibleError(to_native(e))
+
+        return True
+
+    # While reset() should probably better handle this some connection plugins don't clear the existing connection on
+    # reset() leaving resources still in use on the target (WSMan shells). Instead we try to manually close the
+    # connection then call reset. If it fails once we want to skip closing to avoid a perpetual loop and just hope
+    # reset() brings us back into a good state. If it's successful we still want to try it again.
+    if getattr(_reset_connection, 'do_close', True):
+        display.vvv("%s: closing connection plugin" % task_action)
+        try:
+            success = _wrap_conn_err(connection.close)
+
+        except Exception:
+            setattr(_reset_connection, 'do_close', False)
+            raise
+
+        setattr(_reset_connection, 'do_close', success)
+
+    # For some connection plugins (ssh) reset actually does something more than close so we also class that
     display.vvv("%s: resetting connection plugin" % task_action)
     try:
-        connection.reset()
+        _wrap_conn_err(connection.reset)
 
     except AttributeError:
-        res = False
-        setattr(_reset_connection, '_skip', True)
-
-    except (AnsibleError, RequestsConnectionError, RequestsTimeout) as e:
-        if ignore_errors:
-            return res
-
-        raise AnsibleError(to_native(e))
-
-    return res
+        # Not all connection plugins have reset so we just ignore those, close should have done our job.
+        pass
 
 
-def _run_test_command(task_action, connection, command):  # type: (str, ConnectionBase, str) -> None
+def _run_test_command(task_action, connection, command, expected=None):
+    # type: (str, ConnectionBase, str, Optional[str]) -> None
     """Runs the user specified test command until the host is able to run it properly"""
     display.vvv("%s: attempting post-reboot test command" % task_action)
 
@@ -377,12 +415,21 @@ def _run_test_command(task_action, connection, command):  # type: (str, Connecti
 
     if rc != 0:
         msg = "%s: Test command failed - rc: %s, stdout: %s, stderr: %s" % (task_action, rc, stdout, stderr)
-        raise RuntimeError(msg)
+        raise _TestCommandFailure(msg)
+
+    if expected and expected not in stdout:
+        msg = "%s: Test command failed - '%s' was not in stdout: %s" % (task_action, expected, stdout)
+        raise _TestCommandFailure(msg)
 
 
-def _set_connection_timeout(task_action, connection, timeout):  # type: (str, ConnectionBase, int) -> None
+def _set_connection_timeout(task_action, connection, timeout):  # type: (str, ConnectionBase, float) -> None
     """Sets the connection plugin connection_timeout option and resets the connection"""
-    current_connection_timeout = connection.get_option('connection_timeout')
+    try:
+        current_connection_timeout = connection.get_option('connection_timeout')
+    except KeyError:
+        # Not all connection plugins implement this, just ignore the setting if it doesn't work
+        return
+
     if timeout == current_connection_timeout:
         return
 

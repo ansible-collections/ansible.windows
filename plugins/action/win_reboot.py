@@ -6,13 +6,22 @@ __metaclass__ = type
 
 from ansible.errors import AnsibleError
 from ansible.module_utils.common.text.converters import to_native
-from ansible.module_utils.common.validation import check_type_str, check_type_int
+from ansible.module_utils.common.validation import check_type_str, check_type_float
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
 
 from ..plugin_utils._reboot import reboot_action
 
 display = Display()
+
+
+def _positive_float(val):
+    float_val = check_type_float(val)
+    if float_val < 0:
+        return 0
+
+    else:
+        return float_val
 
 
 class ActionModule(ActionBase):
@@ -48,11 +57,11 @@ class ActionModule(ActionBase):
         parameters = {}
         for names, check_func in [
             (['boot_time_command'], check_type_str),
-            (['connect_timeout', 'connect_timeout_sec'], check_type_int),
+            (['connect_timeout', 'connect_timeout_sec'], _positive_float),
             (['msg'], check_type_str),
-            (['post_reboot_delay', 'post_reboot_delay_sec'], check_type_int),
-            (['pre_reboot_delay', 'pre_reboot_delay_sec'], check_type_int),
-            (['reboot_timeout', 'reboot_timeout_sec'], check_type_int),
+            (['post_reboot_delay', 'post_reboot_delay_sec'], _positive_float),
+            (['pre_reboot_delay', 'pre_reboot_delay_sec'], _positive_float),
+            (['reboot_timeout', 'reboot_timeout_sec'], _positive_float),
             (['test_command'], check_type_str),
         ]:
             for name in names:
@@ -71,4 +80,16 @@ class ActionModule(ActionBase):
 
                 parameters[names[0]] = value
 
-        return reboot_action(self._task.action, self._connection, **parameters)
+        result = reboot_action(self._task.action, self._connection, **parameters)
+
+        # Historical behaviour had ignore_errors=True being able to ignore unreachable hosts and not just task errors.
+        # This snippet will allow that to continue but state that it will be removed in a future version and to use
+        # ignore_unreachable to ignore unreachable hosts.
+        if result['unreachable'] and self._task.ignore_errors and not self._task.ignore_unreachable:
+            dep_msg = "Host was unreachable but is being skipped because ignore_errors=True is set. In the future " \
+                      "only ignore_unreachable will be able to ignore an unreachable host for %s" % self._task.action
+            display.deprecated(dep_msg, date="2023-05-01", collection_name="ansible.windows")
+            result['unreachable'] = False
+            result['failed'] = True
+
+        return result

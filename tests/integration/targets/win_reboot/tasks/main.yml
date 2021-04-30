@@ -33,7 +33,7 @@
     test_command: 'FAIL'
     reboot_timeout: 120
   register: reboot_fail_test
-  failed_when: "reboot_fail_test.msg != 'Timed out waiting for post-reboot test command (timeout=120)'"
+  failed_when: "reboot_fail_test.msg != 'Timed out waiting for post-reboot test command (timeout=120.0)'"
 
 - name: remove SeRemoteShutdownPrivilege
   win_user_right:
@@ -47,8 +47,8 @@
     win_reboot:
     register: fail_privilege
     failed_when:
-    - "'Reboot command failed, error was:' not in fail_privilege.msg"
-    - "'Access is denied.(5)' not in fail_privilege.msg"
+    - 'fail_privilege.msg != "win_reboot: Reboot command failed"'
+    - "'Access is denied.(5)' not in fail_privilege.stderr"
 
   always:
   - name: reset the SeRemoteShutdownPrivilege
@@ -58,7 +58,7 @@
       action: add
 
 - name: Use invalid parameter
-  reboot:
+  win_reboot:
     foo: bar
   ignore_errors: true
   register: invalid_parameter
@@ -67,4 +67,4 @@
   assert:
     that:
     - invalid_parameter is failed
-    - "invalid_parameter.msg == 'Invalid options for reboot: foo'"
+    - "invalid_parameter.msg == 'Invalid options for win_reboot: foo'"

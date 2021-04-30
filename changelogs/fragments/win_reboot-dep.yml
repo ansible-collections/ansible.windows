@@ -1,2 +1,0 @@
-removed_features:
-- win_reboot - Removed ``shutdown_timeout`` and ``shutdown_timeout_sec`` which has not done anything since Ansible 2.5.
