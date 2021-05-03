@@ -10,7 +10,7 @@ from ansible.module_utils.common.validation import check_type_str, check_type_fl
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
 
-from ..plugin_utils._reboot import reboot_action
+from ..plugin_utils._reboot import reboot_host
 
 display = Display()
 
@@ -80,7 +80,7 @@ class ActionModule(ActionBase):
 
                 parameters[names[0]] = value
 
-        result = reboot_action(self._task.action, self._connection, **parameters)
+        result = reboot_host(self._task.action, self._connection, **parameters)
 
         # Historical behaviour had ignore_errors=True being able to ignore unreachable hosts and not just task errors.
         # This snippet will allow that to continue but state that it will be removed in a future version and to use
@@ -91,5 +91,21 @@ class ActionModule(ActionBase):
             display.deprecated(dep_msg, date="2023-05-01", collection_name="ansible.windows")
             result['unreachable'] = False
             result['failed'] = True
+
+        print("Running become test code")
+        from ansible.plugins.loader import become_loader
+        command = {
+            "_raw_params": "(New-Object -ComObject Microsoft.Update.Session).CreateUpdateInstaller().IsBusy"
+        }
+        become = become_loader.get('runas')
+        become.set_options(direct={'become_user': 'SYSTEM', 'become_pass': None})
+        self._connection.set_become_plugin(become)
+        module_res = self._execute_module(
+            module_name='ansible.windows.win_shell',
+            module_args=command,
+            task_vars=task_vars,
+            wrap_async=False
+        )
+        print(module_res)
 
         return result
