@@ -14,34 +14,35 @@ options:
   pre_reboot_delay:
     description:
     - Seconds to wait before reboot. Passed as a parameter to the reboot command.
-    type: int
+    type: float
     default: 2
     aliases: [ pre_reboot_delay_sec ]
   post_reboot_delay:
     description:
     - Seconds to wait after the reboot command was successful before attempting to validate the system rebooted successfully.
     - This is useful if you want wait for something to settle despite your connection already working.
-    type: int
+    type: float
     default: 0
     aliases: [ post_reboot_delay_sec ]
   reboot_timeout:
     description:
     - Maximum seconds to wait for machine to re-appear on the network and respond to a test command.
     - This timeout is evaluated separately for both reboot verification and test command success so maximum clock time is actually twice this value.
-    type: int
+    type: float
     default: 600
     aliases: [ reboot_timeout_sec ]
   connect_timeout:
     description:
     - Maximum seconds to wait for a single successful TCP connection to the WinRM endpoint before trying again.
-    type: int
+    type: float
     default: 5
     aliases: [ connect_timeout_sec ]
   test_command:
     description:
     - Command to expect success for to determine the machine is ready for management.
+    - By default this test command is a custom one to detect when the Windows Logon screen is up and ready to accept
+      credentials. Using a custom command will replace this behaviour and just run the command specified.
     type: str
-    default: whoami
   msg:
     description:
     - Message to display to users.
@@ -52,11 +53,12 @@ options:
       - Command to run that returns a unique string indicating the last time the system was booted.
       - Setting this to a command that has different output each time it is run will cause the task to fail.
     type: str
-    default: '(Get-WmiObject -ClassName Win32_OperatingSystem).LastBootUpTime'
+    default: '(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime).LastBootUpTime.ToFileTime()'
 notes:
 - If a shutdown was already scheduled on the system, M(ansible.windows.win_reboot) will abort the scheduled shutdown and enforce its own shutdown.
 - Beware that when M(ansible.windows.win_reboot) returns, the Windows system may not have settled yet and some base services could be in limbo.
-  This can result in unexpected behavior. Check the examples for ways to mitigate this.
+  This can result in unexpected behavior. Check the examples for ways to mitigate this. This has been slightly mitigated
+  in the C(1.6.0) release of C(ansible.windows) but it is not guranteed to always wait until the logon prompt is shown.
 - The connection user must have the C(SeRemoteShutdownPrivilege) privilege enabled, see
   U(https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/force-shutdown-from-a-remote-system)
   for more information.
@@ -89,7 +91,6 @@ EXAMPLES = r'''
   ansible.windows.win_service:
     name: WinRM
     start_mode: delayed
-
 
 # Additionally, you can add a delay before running the next task
 - name: Reboot a machine that takes time to settle after being booted
