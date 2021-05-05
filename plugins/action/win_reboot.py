@@ -92,20 +92,4 @@ class ActionModule(ActionBase):
             result['unreachable'] = False
             result['failed'] = True
 
-        print("Running become test code")
-        from ansible.plugins.loader import become_loader
-        command = {
-            "_raw_params": "(New-Object -ComObject Microsoft.Update.Session).CreateUpdateInstaller().IsBusy"
-        }
-        become = become_loader.get('runas')
-        become.set_options(direct={'become_user': 'SYSTEM', 'become_pass': None})
-        self._connection.set_become_plugin(become)
-        module_res = self._execute_module(
-            module_name='ansible.windows.win_shell',
-            module_args=command,
-            task_vars=task_vars,
-            wrap_async=False
-        )
-        print(module_res)
-
         return result
