@@ -1,0 +1,8 @@
+# This is used for ansible-builder and should not be used by other tools
+gcc [platform:rpm compile]
+krb5-devel [platform:rpm compile]
+krb5-workstation [platform:rpm]  # Used by winrm as it calls kinit during runtime
+python38-cryptography [platform:rpm]
+python38-devel [platform:rpm compile]
+python38-requests [platform:rpm]  # Uses a requests that trust the system cert store rather than certifi
+

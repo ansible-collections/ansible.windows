@@ -1,0 +1,4 @@
+# This is used for ansible-builder and should not be used by other tools
+pypsrp[kerberos,credssp]
+pywinrm[kerberos,credssp]
+
