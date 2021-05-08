@@ -299,17 +299,17 @@
   win_certificate_store:
     path: '{{win_cert_dir}}\chain.p7b'
     state: present
-    store_name: TrustedPeople
+    store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b_check
   check_mode: yes
 
 - name: get result of subj in p7b chain in custom store (check)
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
   register: import_der_p7b_subj_result_check
 
 - name: get result of root in p7b chain in custom store (check)
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
   register: import_der_p7b_root_result_check
 
 - name: assert results of import DER encoded p7b chain into custom store (check)
@@ -326,16 +326,16 @@
   win_certificate_store:
     path: '{{win_cert_dir}}\chain.p7b'
     state: present
-    store_name: TrustedPeople
+    store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b
 
 - name: get result of subj in p7b chain in custom store
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
   register: import_der_p7b_subj_result
 
 - name: get result of root in p7b chain in custom store
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
   register: import_der_p7b_root_result
 
 - name: assert results of import DER encoded p7b chain into custom store
@@ -352,7 +352,7 @@
   win_certificate_store:
     path: '{{win_cert_dir}}\chain.p7b'
     state: present
-    store_name: TrustedPeople
+    store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b_again
 
@@ -365,7 +365,7 @@
   win_certificate_store:
     thumbprint: '{{item}}'
     state: absent
-    store_name: TrustedPeople
+    store_name: CertificateAuthority
     store_location: CurrentUser
   with_items:
   - '{{subj_thumbprint}}'

@@ -1,0 +1,4 @@
+bugfixes:
+- >-
+  win_certificate_store - Make sure `store_name: CertificateAuthority` refers to the `CA` store for backwards
+  compatibility - https://github.com/ansible-collections/ansible.windows/pull/216
