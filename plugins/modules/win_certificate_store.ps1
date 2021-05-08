@@ -326,6 +326,13 @@ $module.Result.thumbprints = @()
 [Security.Cryptography.X509Certificates.OpenFlags]$open_flags = if ($state -eq 'exported') { 'ReadOnly' } else { 'ReadWrite' }
 $open_flags = [int]$open_flags -bor [int][Security.Cryptography.X509Certificates.OpenFlags]::OpenExistingOnly
 
+# We originally opened the store with [X509]::new($name, $location). Now that we call the necessary Win32 APIs we need
+# map any of the StoreName enum values to the proper string name. Luckily that is just CertificateAuthority -> CA.
+# https://github.com/microsoft/referencesource/blob/master/System/security/system/security/cryptography/x509/x509store.cs#L67-L91
+if ($store_name -eq 'CertificateAuthority') {
+    $store_name = 'CA'
+}
+
 $cert_params = @{
     Name = $store_name
 }
