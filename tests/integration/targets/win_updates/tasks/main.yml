@@ -1,26 +1,108 @@
----
-- name: ensure test folder exists
-  win_file:
-    path: '{{win_updates_dir}}'
-    state: directory
-
 - name: ensure WUA service is running
   win_service:
     name: wuauserv
     state: started
     start_mode: manual
 
-- block:
-  - include_tasks: tests.yml
+- name: failure with invalid reboot value
+  win_updates:
+    reboot: test
+  register: reboot_not_bool
+  ignore_errors: yes
 
-  always:
-  - name: ensure test folder is deleted
-    win_file:
-      path: '{{win_updates_dir}}'
-      state: absent
-  
-  - name: ensure WUA service is running
-    win_service:
-      name: wuauserv
-      state: started
-      start_mode: manual
+- assert:
+    that:
+    - reboot_not_bool is failed
+    - '"Invalid value given for ''reboot'': The value ''test'' is not a valid boolean" in reboot_not_bool.msg'
+
+- name: failure with reboot_timeout not an int
+  win_updates:
+    reboot_timeout: a
+  register: reboot_timeout_not_int
+  ignore_errors: yes
+
+- assert:
+    that:
+    - reboot_timeout_not_int is failed
+    - '"Invalid value given for ''reboot_timeout''" in reboot_timeout_not_int.msg'
+
+- name: failure on async with reboot=True
+  win_updates:
+    reboot: True
+  async: 60
+  register: async_reboot_fail
+  ignore_errors: yes
+
+- assert:
+    that:
+    - async_reboot_fail is failed
+    - async_reboot_fail.msg == 'async is not supported for this task when reboot=yes'
+
+- name: expect failure when state is not a valid option
+  win_updates:
+    state: invalid
+  register: invalid_state
+  failed_when: "invalid_state.msg != 'value of state must be one of: installed, searched, downloaded. Got no match for: invalid'"
+
+- name: search for all updates
+  win_updates:
+    category_names: '*'
+    state: searched
+  register: search_sync
+
+- name: search for all updates with async
+  win_updates:
+    category_names: '*'
+    state: searched
+  register: search_async
+  async: 60
+
+- name: search for all updates with become
+  win_updates:
+    category_names: '*'
+    state: searched
+  register: search_become
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+
+- assert:
+    that:
+    - not search_sync is changed
+    - not search_async is changed
+    - not search_become is changed
+    - not search_sync.reboot_required
+    - not search_async.reboot_required
+    - not search_become.reboot_required
+    - search_sync.failed_update_count == 0
+    - search_async.failed_update_count == 0
+    - search_become.failed_update_count == 0
+    - search_sync.installed_update_count == 0
+    - search_async.installed_update_count == 0
+    - search_become.installed_update_count == 0
+    - search_sync.found_update_count == search_sync.updates|length
+    - search_async.found_update_count == search_async.updates|length
+    - search_become.found_update_count == search_become.updates|length
+    - search_sync.filtered_updates == []
+    - search_async.filtered_updates == []
+    - search_become.filtered_updates == []
+
+- name: search updates - check mode
+  win_updates:
+    category_names:
+    - CriticalUpdates
+    - UpdateRollups
+    state: searched
+    log_path: '{{ remote_tmp_dir }}\update.log'
+  register: search_check
+  check_mode: yes
+
+- name: check if log path is created - check mode
+  win_stat:
+    path: '{{ remote_tmp_dir }}\update.log'
+  register: search_actual_check
+
+- assert:
+    that:
+    - not search_check is changed
+    - not search_actual_check.stat.exists
