@@ -5,13 +5,39 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.5.0
+v1.6.0
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.5.0
+- Release summary for v1.6.0
+
+Minor Changes
+-------------
+
+- win_reboot - Change the default ``test_command`` run after a reboot to wait for more services to start up before the plugin finished. This should better handle waiting until the logon screen appears rather than just when WinRM is first online.
+
+Deprecated Features
+-------------------
+
+- win_reboot - Unreachable hosts can be ignored with ``ignore_errors: True``, this ability will be removed in a future version. Use ``ignore_unreachable: True`` to ignore unreachable hosts instead. - https://github.com/ansible-collections/ansible.windows/issues/62
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- win_reboot - Removed ``shutdown_timeout`` and ``shutdown_timeout_sec`` which has not done anything since Ansible 2.5.
+
+Bugfixes
+--------
+
+- win_certificate_store - Make sure `store_name: CertificateAuthority` refers to the `CA` store for backwards compatibility - https://github.com/ansible-collections/ansible.windows/pull/216
+- win_reboot - Ensure documented return values are always returned even on a failure
+- win_reboot - Handle more connection failures during the reboot phases
+- win_reboot - User defined commands are run wrapped as a PowerShell command so they work on all shells - https://github.com/ansible-collections/ansible.windows/issues/36
+
+v1.5.0
+======
 
 Minor Changes
 -------------
