@@ -43,7 +43,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"(Get-WmiObject -ClassName Win32_OperatingSystem).LastBootUpTime"</div>
+                        <b>Default:</b><br/><div style="color: blue">"(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime).LastBootUpTime.ToFileTime()"</div>
                 </td>
                 <td>
                         <div>Command to run that returns a unique string indicating the last time the system was booted.</div>
@@ -56,7 +56,7 @@ Parameters
                     <b>connect_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">integer</span>
+                        <span style="color: purple">float</span>
                     </div>
                 </td>
                 <td>
@@ -89,7 +89,7 @@ Parameters
                     <b>post_reboot_delay</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">integer</span>
+                        <span style="color: purple">float</span>
                     </div>
                 </td>
                 <td>
@@ -107,7 +107,7 @@ Parameters
                     <b>pre_reboot_delay</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">integer</span>
+                        <span style="color: purple">float</span>
                     </div>
                 </td>
                 <td>
@@ -124,7 +124,7 @@ Parameters
                     <b>reboot_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">integer</span>
+                        <span style="color: purple">float</span>
                     </div>
                 </td>
                 <td>
@@ -146,10 +146,10 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"whoami"</div>
                 </td>
                 <td>
                         <div>Command to expect success for to determine the machine is ready for management.</div>
+                        <div>By default this test command is a custom one to detect when the Windows Logon screen is up and ready to accept credentials. Using a custom command will replace this behaviour and just run the command specified.</div>
                 </td>
             </tr>
     </table>
@@ -161,7 +161,7 @@ Notes
 
 .. note::
    - If a shutdown was already scheduled on the system, :ref:`ansible.windows.win_reboot <ansible.windows.win_reboot_module>` will abort the scheduled shutdown and enforce its own shutdown.
-   - Beware that when :ref:`ansible.windows.win_reboot <ansible.windows.win_reboot_module>` returns, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.
+   - Beware that when :ref:`ansible.windows.win_reboot <ansible.windows.win_reboot_module>` returns, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this. This has been slightly mitigated in the ``1.6.0`` release of ``ansible.windows`` but it is not guranteed to always wait until the logon prompt is shown.
    - The connection user must have the ``SeRemoteShutdownPrivilege`` privilege enabled, see https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/force-shutdown-from-a-remote-system for more information.
 
 
@@ -201,7 +201,6 @@ Examples
       ansible.windows.win_service:
         name: WinRM
         start_mode: delayed
-
 
     # Additionally, you can add a delay before running the next task
     - name: Reboot a machine that takes time to settle after being booted
