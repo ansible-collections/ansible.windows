@@ -238,13 +238,13 @@ EXAMPLES = r'''
 
 - name: Install MSBuild thingy with arguments split to prevent quotes
   ansible.windows.win_package:
-    path: https://download.visualstudio.microsoft.com/download/pr/9665567e-f580-4acd-85f2-bc94a1db745f/3580c7d8c43782aebab3af6db6e46e0f89752a96336f9518d3a10f407f4048af/vs_BuildTools.exe
+    path: https://download.visualstudio.microsoft.com/download/pr/9665567e-f580-4acd-85f2-bc94a1db745f/vs_BuildTools.exe
     product_id: '{D1437F51-786A-4F57-A99C-F8E94FBA1BD8}'
-    arguments: 
+    arguments:
     - --norestart
     - --passive
     - --wait
-    - --add 
+    - --add
     - Microsoft.Net.Component.4.6.1.TargetingPack
     - --add
     - Microsoft.Net.Component.4.6.TargetingPack
