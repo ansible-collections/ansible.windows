@@ -26,6 +26,12 @@ options:
     - Can be a list of arguments and the module will escape the arguments as
       necessary, it is recommended to use a string when dealing with MSI
       packages due to the unique escaping issues with msiexec.
+    - When using a list of arguments each item in the list is considered to be
+      a single argument. As such, if an argument in the list contains a space
+      then Ansible will quote this to ensure that this is seen by Windows as
+      a single argument. Should this behaviour not be what is required, the
+      argument should be split into two separate list items. See the examples
+      section for more detail.
     type: raw
   chdir:
     description:
@@ -229,6 +235,19 @@ EXAMPLES = r'''
     - /install
     - /passive
     - /norestart
+
+- name: Install MSBuild thingy with arguments split to prevent quotes
+  ansible.windows.win_package:
+    path: https://download.visualstudio.microsoft.com/download/pr/9665567e-f580-4acd-85f2-bc94a1db745f/vs_BuildTools.exe
+    product_id: '{D1437F51-786A-4F57-A99C-F8E94FBA1BD8}'
+    arguments:
+    - --norestart
+    - --passive
+    - --wait
+    - --add
+    - Microsoft.Net.Component.4.6.1.TargetingPack
+    - --add
+    - Microsoft.Net.Component.4.6.TargetingPack
 
 - name: Install Remote Desktop Connection Manager from msi with a permanent log
   ansible.windows.win_package:
