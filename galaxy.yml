@@ -16,5 +16,6 @@ documentation: https://github.com/ansible-collections/ansible.windows/tree/main/
 homepage: https://github.com/ansible-collections/ansible.windows
 issues: https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc
 build_ignore:
+- .vscode
 - tests/integration/inventory*
 - changelogs/.plugin-cache.yaml
