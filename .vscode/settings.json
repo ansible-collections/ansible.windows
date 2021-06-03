@@ -1,0 +1,17 @@
+{
+    "python.envFile": "${workspaceFolder}/.vscode/.env",
+    "python.testing.pytestArgs": [
+        "-p", "pytest_collection_loader",
+        "tests/unit",
+        "-vv"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.extraPaths": [
+        // ansible_collections dir
+        "${workspaceFolder}/../../../",
+        // optional - ansible source checkout (points to the lib folder in the checkout)
+        // "/home/<username>/ansible/lib",
+    ]
+}
