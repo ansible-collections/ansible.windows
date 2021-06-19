@@ -123,8 +123,8 @@ options:
     type: str
   failure_reset_period_sec:
     description:
-    - The time in seconds after which the failure action list begings from the
-      start if there are no failures.
+    - The time in seconds after which the failure action list resets back to
+      the start of the list if there are no failures.
     - To set this value, I(failure_actions) must have at least 1 action
       present.
     - Specify C('0xFFFFFFFF') to set an infinite reset period.
