@@ -38,6 +38,9 @@ if (-not $product_key) {
 
     if ($data) {
         $product_key = $null
+        $isWin8 = [int]($data[66]/6) -band 1
+        $HF7 = 0xF7
+        $data[66] = ($data[66] -band $HF7) -bOr (($isWin8 -band 2) * 4)
         $hexdata = $data[52..66]
         $chardata = "B","C","D","F","G","H","J","K","M","P","Q","R","T","V","W","X","Y","2","3","4","6","7","8","9"
 
@@ -49,11 +52,24 @@ if (-not $product_key) {
                 $hexdata[$j] = [math]::truncate($k / 24)
                 $k = $k % 24
             }
-            $product_key = $chardata[$k] + $product_key
-            if (($i % 5 -eq 0) -and ($i -ne 0)) {
-                $product_key = "-" + $product_key
-            }
+            $product_key_output = $chardata[$k] + $product_key_output
+            $last = $k
         }
+
+        $product_key_tmp1 = $product_key_output.SubString(1,$last)
+        $product_key_tmp2 = $product_key_output.SubString(1,$product_key_output.Length - 1)
+        if ($last -eq 0) {
+            $product_key_output = "N" + $product_key_tmp2
+        } else {
+            $product_key_output = $product_key_tmp2.Insert($product_key_tmp2.IndexOf($product_key_tmp1) + $product_key_tmp1.Length, "N")
+        }
+        $num = 0
+        $product_key_split = @()
+        for ($i = 0; $i -le 4; $i++) {
+            $product_key_split += $product_key_output.SubString($num,5)
+            $num += 5
+        }
+        $product_key = $product_key_split -join "-"
     }
 }
 
