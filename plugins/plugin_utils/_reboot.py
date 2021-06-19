@@ -337,7 +337,7 @@ def _execute_command(task_action, connection, command):  # type: (str, Connectio
 
 def _get_system_boot_time(task_action, connection, boot_time_command):  # type: (str, ConnectionBase, str) -> str
     """Gets a unique identifier to represent the boot time of the Windows host"""
-    display.vv("%s: getting boot time" % task_action)
+    display.vvv("%s: getting boot time" % task_action)
     rc, stdout, stderr = _execute_command(task_action, connection, boot_time_command)
 
     if rc != 0:
