@@ -4,588 +4,1502 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-$ErrorActionPreference = "Stop"
-
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-
-$category_names = Get-AnsibleParam -obj $params -name "category_names" -type "list" -default @("CriticalUpdates", "SecurityUpdates", "UpdateRollups")
-$log_path = Get-AnsibleParam -obj $params -name "log_path" -type "path"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "installed" -validateset "installed", "searched", "downloaded"
-$blacklist = Get-AnsibleParam -obj $params -name "blacklist" -type "list"
-$whitelist = Get-AnsibleParam -obj $params -name "whitelist" -type "list"
-$server_selection = Get-AnsibleParam -obj $params -name "server_selection" -type "string" -default "default" -validateset "default", "managed_server", "windows_update"
-
-# For backwards compatibility
-Function Get-CategoryMapping ($category_name) {
-    switch -exact ($category_name) {
-        "CriticalUpdates"   {return "Critical Updates"}
-        "DefinitionUpdates" {return "Definition Updates"}
-        "DeveloperKits"     {return "Developer Kits"}
-        "FeaturePacks"      {return "Feature Packs"}
-        "SecurityUpdates"   {return "Security Updates"}
-        "ServicePacks"      {return "Service Packs"}
-        "UpdateRollups"     {return "Update Rollups"}
-        default             {return $category_name}
-    }
-}
-
-$category_names = $category_names | ForEach-Object { Get-CategoryMapping -category_name $_ }
-
-$common_functions = {
-    Function Write-DebugLog($msg) {
-        $date_str = Get-Date -Format u
-        $msg = "$date_str $msg"
-
-        Write-Debug -Message $msg
-        if ($null -ne $log_path -and (-not $check_mode)) {
-            Add-Content -LiteralPath $log_path -Value $msg
+$spec = @{
+    options = @{
+        accept_list = @{ type = 'list'; elements = 'str'; aliases = 'whitelist' }
+        category_names = @{
+            type = 'list'
+            elements = 'str'
+            default = 'CriticalUpdates', 'SecurityUpdates', 'UpdateRollups'
         }
+        log_path = @{ type = 'path' }
+        reject_list = @{ type = 'list'; elements = 'str'; aliases = 'blacklist' }
+        server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
+        state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
+
+        # options used by the action plugin - ignored here
+        reboot = @{ type = 'bool'; default = $false }
+        reboot_timeout = @{ type = 'int'; default = 1200}
+        use_scheduled_task = @{ type = 'bool'; default = $false}
+        _wait = @{ type = 'bool'; default = $false }
+        _output_path = @{ type = 'str' }
+    }
+    supports_check_mode = $true
+}
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+# For backwards compatibility - allow the camel case names but internally use the full names
+$categoryNames = $module.Params.category_names | ForEach-Object -Process {
+    switch -exact ($_) {
+        CriticalUpdates { 'Critical Updates' }
+        DefinitionUpdates { 'Definition Updates' }
+        DeveloperKits { 'Developer Kits' }
+        FeaturePacks { 'Feature Packs' }
+        SecurityUpdates { 'Security Updates' }
+        ServicePacks { 'Service Packs' }
+        UpdateRollups { 'Update Rollups' }
+        default { $_ }
     }
 }
 
-$update_script_block = {
-    Param(
-        [hashtable]$arguments
+Function Invoke-TaskInfo {
+    <#
+    .SYNOPSIS
+    Bootstrap script used as the entrypoint for our ephemeral task to invoke the code written to the pipe.
+
+    .PARAMETER PipeName
+    The named pipe to read the invocation details from.
+
+    .PARAMETER LogPath
+    Write any failures to this path for reporting an error to the parent.
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String]
+        $Id,
+
+        [Parameter(Mandatory)]
+        [String]
+        $LogPath
     )
 
-    $ErrorActionPreference = "Stop"
-    $DebugPreference = "Continue"
+    $ErrorActionPreference = 'Stop'
 
-    Function Start-Updates {
-        Param(
-            $category_names,
-            $log_path,
-            $state,
-            $blacklist,
-            $whitelist,
-            $server_selection
+    # Traps are icky but it does have the convenience of capturing all failures for us to log
+    trap {
+        $errInfo = $runInfo = [System.Management.Automation.PSSerializer]::Serialize($_)
+        $errInfo | Out-File (Join-Path $LogPath 'error.txt')
+        [System.Environment]::Exit(1)
+    }
+
+    # NamedPipeClientStream does not fail if the pipe does not exist and will hang indefinitely. In case there was a
+    # problem with starting the pipe fail straight away instead of hanging. We cannot use Test-Path as that will
+    # connect to the pipe which we want to reserve for our explicit .Connect() call later on. We also cannot use the
+    # $Id as the filter part because old Win versions (2008/08R2) do not seem to support filtering for pipes there.
+    # While we don't guarantee support for these versions I'm not ready to fully drop it when there's a simple
+    # workaround.
+    $pipeCheck = [System.IO.Directory]::EnumerateFiles('\\.\pipe\', '*') |
+        Where-Object { $_ -eq "\\.\pipe\$Id" } |
+        Select-Object -First 1
+    if (-not $pipeCheck) {
+        throw "Pipe $Id does not exist"
+    }
+
+    $clientReader = $null
+    $client = New-Object -TypeName System.IO.Pipes.NamedPipeClientStream -ArgumentList @(
+        '.',
+        $Id,
+        [System.IO.Pipes.PipeDirection]::In,
+        [System.IO.Pipes.PipeOptions]::None,
+        [System.Security.Principal.TokenImpersonationLevel]::Anonymous
+    )
+    try {
+        $client.Connect()
+        $clientReader = New-Object -TypeName System.IO.StreamReader -ArgumentList $client
+        $details = $clientReader.ReadToEnd()
+    }
+    finally {
+        if ($clientReader) { $clientReader.Dispose() }
+        $client.Dispose()
+    }
+
+    $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$Id")
+    try {
+        $runInfo = [System.Management.Automation.PSSerializer]::Deserialize($details)
+        $ps = [PowerShell]::Create()
+        [void]$ps.AddScript($runInfo.ScriptBlock).AddParameters($runInfo.Parameters)
+        $task = $ps.BeginInvoke()
+
+        # Signal parent that the data was received/decoded and is running.
+        [void]$eventHandle.Set()
+    }
+    finally {
+        $eventHandle.Dispose()
+    }
+
+    $ps.EndInvoke($task)
+}
+
+Function New-NamedPipe {
+    <#
+    .SYNOPSIS
+    Creates a namedpipe accessible to the current user.
+
+    .PARAMETER Name
+    The pipe name to create.
+    #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
+        Justification="We don't care about failures on dispoable, especially ones we know will occur")]
+    [OutputType([System.IO.StreamWriter])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String]
+        $Name
+    )
+
+    $currentUser = ([Security.Principal.WindowsIdentity]::GetCurrent()).User
+    $pipeSec = New-Object -TypeName System.IO.Pipes.PipeSecurity
+    $pipeSec.AddAccessRule($pipeSec.AccessRuleFactory(
+        $currentUser,
+        [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
+        $false,
+        [System.Security.AccessControl.InheritanceFlags]::None,
+        [System.Security.AccessControl.PropagationFlags]::None,
+        [System.Security.AccessControl.AccessControlType]::Allow
+    ))
+
+    # FUTURE: This won't work on pwsh as it doesn't take the PipeSecurity overload. Unfortunately the only way to do
+    # that before .NET 5 (pwsh 7.2+) is to use PInvoke to call CreateNamedPipeW.
+    $server = New-Object -TypeName System.IO.Pipes.NamedPipeServerStream -ArgumentList @(
+        $Name,
+        [System.IO.Pipes.PipeDirection]::Out,
+        1,
+        [System.IO.Pipes.PipeTransmissionMode]::Byte,
+        [System.IO.Pipes.PipeOptions]::Asynchronous,
+        0,
+        0,
+        $pipeSec
+    )
+
+    $sw = New-Object -TypeName System.IO.StreamWriter -ArgumentList $server
+
+    # Calling Dispose() on the stream will throw an exception is no client has connected to the server. It still
+    # closes the stream which is what we want so we just ignore the exception.
+    $sw.PSObject.Members.Add((New-Object -TypeName System.Management.Automation.PSScriptMethod -ArgumentList @(
+        'Dispose',
+        {
+            try {
+                $this.PSBase.Dispose()
+            }
+            catch [System.InvalidOperationException] {}
+        }
+    )))
+
+    $sw
+}
+
+Function Start-EphemeralTask {
+    <#
+    .SYNOPSIS
+    Creates and starts the process as a scheduled task immediately.
+
+    .PARAMETER Name
+    The name of the task to create.
+
+    .PARAMETER Path
+    The executable path to invoke.
+
+    .PARAMETER Arguments
+    The arguments to run the task with.
+    #>
+    [OutputType([Int32])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String]
+        $Name,
+
+        [Parameter(Mandatory)]
+        [String]
+        $Path,
+
+        [Parameter(Mandatory)]
+        [String]
+        $Arguments
+    )
+
+    $scheduler = New-Object -ComObject Schedule.Service
+    try {
+        $scheduler.Connect()
+        $taskFolder = $scheduler.GetFolder('\')
+
+        # Stop and delete the task if it is already running
+        $task = $null
+        $folderTasks = $taskFolder.GetTasks(1)  # TASK_ENUM_HIDDEN
+        for ($i = 1; $i -le $folderTasks.Count; $i++) {
+            if ($folderTasks.Item($i).Name -eq $Name) {
+                $task = $folderTasks.Item($i)
+                break
+            }
+        }
+        if ($task) {
+            if ($task.State -eq 4) {  # TASK_STATE_RUNNING
+                $task.Stop(0)
+            }
+            $taskFolder.DeleteTask($Name, 0)
+        }
+
+        $taskDefinition = $scheduler.NewTask(0)
+
+        $taskAction = $taskDefinition.Actions.Create(0)  # TASK_ACTION_EXEC
+        $taskAction.Path = $Path
+        $taskAction.Arguments = $Arguments
+
+        $taskDefinition.Settings.AllowDemandStart = $true
+        $taskDefinition.Settings.AllowHardTerminate = $true
+        $taskDefinition.Settings.DisallowStartIfOnBatteries = $false
+        $taskDefinition.Settings.Enabled = $true
+        $taskDefinition.Settings.StopIfGoingOnBatteries = $false
+
+        # While S4U is designed for normal user accounts it is accepted for well known service accounts
+        $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User
+        $taskDefinition.Principal.UserId = $currentSid.Value
+        $taskDefinition.Principal.LogonType = 2  # TASK_LOGON_S4U
+        $taskDefinition.Principal.RunLevel = 1  # TASK_RUNLEVEL_HIGHEST
+
+        $createdTask = $taskFolder.RegisterTaskDefinition(
+            $Name,
+            $taskDefinition,
+            2,  # TASK_CREATE
+            $null,
+            $null,
+            $taskDefinition.Principal.LogonType
         )
 
-        $result = @{
-            changed = $false
-            updates = @{}
-            filtered_updates = @{}
+        $runningTask = $createdTask.RunEx(
+            $null,
+            2,  # TASK_RUN_IGNORE_CONSTRAINTS
+            0,
+            ""
+        )
+        # There is a change EnginePID isn't yet defined (task hasn't fully started). We want to wait until that prop
+        # is populated before returning the value and continuing on.
+        while (-not $runningTask.EnginePID) { Start-Sleep -Seconds 1 }
+        $runningTask.EnginePID
+
+        # The task will continue to run even after it is deleted
+        $taskFolder.DeleteTask($Name, 0)
+    }
+    finally {
+        [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($scheduler)
+    }
+}
+
+Function Invoke-AsBatchLogon {
+    <#
+    .SYNOPSIS
+    Invoke the scriptblock as a batch logon through the task scheduler.
+
+    .PARAMETER Path
+    The directory to store the bootstrap script and any errors it encountered.
+
+    .PARAMETER ScriptBlock
+    The scriptblock to invoke.
+
+    .PARAMETER Parameters
+    The parameters to invoke on the scriptblock.
+
+    .PARAMETER Wait
+    Wait for the scriptblock to finish instead of it running in the background.
+    #>
+    [OutputType([int])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [Ansible.Basic.AnsibleModule]
+        $Module,
+
+        [Parameter(Mandatory)]
+        [ScriptBlock]
+        $ScriptBlock,
+
+        [Parameter(Mandatory)]
+        [Hashtable]
+        $Parameters,
+
+        [Switch]
+        $Wait
+    )
+
+    $errPath = Join-Path $Module.Tmpdir 'error.txt'
+    if (Test-Path -LiteralPath $errPath) {
+        Remove-Item -LiteralPath $errpath -Force
+    }
+
+    $eventHandle = $server = $null
+    try {
+        $pipeName = "ansible-$($Module.ModuleName)-$([Guid]::NewGuid().Guid)"
+        $server = New-NamedPipe -Name $pipeName
+
+        $eventHandle = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
+            $false,
+            [System.Threading.EventResetMode]::ManualReset,
+            "Global\$pipeName"
+        )
+        [void]$eventHandle.Reset()
+
+        $scriptPath = Join-Path $Module.Tmpdir 'task.ps1'
+        Set-Content -LiteralPath $scriptPath -Value ${function:Invoke-TaskInfo}
+
+        $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+        $arguments = '-ExecutionPolicy ByPass -NoProfile -NonInteractive -File "{0}" -Id "{1}" -LogPath "{2}"' -f (
+            $scriptPath, $pipeName, $module.TmpDir
+        )
+        $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path $pwsh -Arguments $arguments
+
+        # Wait for the task to connect to our pipe or for the process to end (failed and should be reported)
+        $waitConnect = $server.BaseStream.BeginWaitForConnection($null, $null)
+        $waitProcPS = [PowerShell]::Create()
+        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id=$taskPid; ErrorAction='SilentlyContinue'})
+        $waitProcTask = $waitProcPS.BeginInvoke()
+
+        $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
+            $waitProcTask.AsyncWaitHandle, $waitConnect.AsyncWaitHandle
+        ))
+        if ($waitIdx -eq 0) {
+            throw "Task failed to connect to pipe"
         }
 
-        Write-DebugLog -msg "Creating Windows Update session..."
-        try {
-            $session = New-Object -ComObject Microsoft.Update.Session
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to create Microsoft.Update.Session COM object: $($_.Exception.Message)"
-            return $result
+        $server.BaseStream.EndWaitForConnection($waitConnect)
+        $runInfo = [System.Management.Automation.PSSerializer]::Serialize(@{
+            ScriptBlock = $ScriptBlock.ToString()
+            Parameters = $Parameters
+        })
+        $server.WriteLine($runInfo)
+        $server.BaseStream.WaitForPipeDrain()
+        # Close the named pipe so the client knows it's reached the end
+        $server.Dispose()
+
+        # Wait for confirmation the task has received the data and has started the task or failed (proc has ended)
+        $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
+            $waitProcTask.AsyncWaitHandle, $eventHandle
+        ))
+
+        if ($waitIdx -eq 0) {
+            throw "Task failed to invoke script"
         }
 
-        Write-DebugLog -msg "Create Windows Update searcher..."
-        try {
-            $searcher = $session.CreateUpdateSearcher()
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to create Windows Update search from session: $($_.Exception.Message)"
-            return $result
+        if ($Wait) {
+            [void]$waitProcPS.EndInvoke($waitProcTask)
+        }
+        else {
+            $waitProcPS.Stop()
         }
 
-        Write-DebugLog -msg "Setting the Windows Update Agent source catalog..."
-        Write-DebugLog -msg "Requested search source is '$($server_selection)'"
-        try {
-            $server_selection_value = switch ($server_selection) {
-                "default" { 0 ; break }
-                "managed_server" { 1 ; break }
-                "windows_update" { 2 ; break }
+        $taskPid
+    }
+    catch {
+        if (Test-Path -LiteralPath $errPath) {
+            $rawError = Get-Content -LiteralPath $errPath -Raw
+            $errDetails = [System.Management.Automation.PSSerializer]::Deserialize($rawError)
+
+            # Because the ErrorRecord is a deserialized object we need to manually build the exception msg.
+            $catInfo = '{0}: ({1}:{2}) [{3}], {4}' -f (
+                [System.Management.Automation.ErrorCategory]$errDetails.ErrorCategory_Category,
+                $errDetails.ErrorCategory_TargetName,
+                $errDetails.ErrorCategory_TargetType,
+                $errDetails.ErrorCategory_Activity,
+                $errDetails.ErrorCategory_Reason
+            )
+            $exceptionString = "{0}`r`n{1}" -f ($errDetails.ToString(), $errDetails.InvocationInfo.PositionMessage)
+            $exceptionString += "`r`n    + CategoryInfo          : {0}" -f $catInfo
+            $exceptionString += "`r`n    + FullyQualifiedErrorId : {0}" -f $errDetails.FullyQualifiedErrorId
+            $exceptionString += "`r`n`r`nScriptStackTrace:`r`n{0}" -f $errDetails.ErrorDetails_ScriptStackTrace
+
+            $Module.Result.exception = $exceptionString
+            $Module.FailJson("Failure in task bootstrap script ($($_.Exception.Message)): $($errDetails.ToString())")
+        }
+        else {
+            $Module.FailJson("Failed to invoke batch script: $($_.Exception.Message)", $_)
+        }
+    }
+    finally {
+        if ($eventHandle) { $eventHandle.Dispose() }
+        if ($server) { $server.Dispose() }
+    }
+}
+
+Function Install-WindowsUpdate {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String[]]
+        $Category,
+
+        [Parameter(Mandatory)]
+        [String]
+        $ServerSelection,
+
+        [Parameter(Mandatory)]
+        [String]
+        $State,
+
+        [Parameter(Mandatory)]
+        [String]
+        $OutputPath,
+
+        [Parameter(Mandatory)]
+        [String]
+        $CancelId,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [String[]]
+        $Accept = @(),
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [String[]]
+        $Reject = @(),
+
+        [Parameter()]
+        [String]
+        $LogPath,
+
+        [Switch]
+        $CheckMode,
+
+        [Switch]
+        $LocalDebugger
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $exitResult = @{
+        changed = $false
+        failed = $false
+        reboot_required = $false
+        action = $null  # Current action, used for exception information if set
+        exception = $null  # Exception info in case of a failure @{message, exception, hresult}
+    }
+
+    Add-Type -TypeDefinition @'
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Ansible.Windows.WinUpdates
+{
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("77254866-9F5B-4C8E-B9E2-C77A8530D64B")]
+    public interface IDownloadCompletedCallback
+    {
+        void Invoke(IDownloadJob job, IDownloadCompletedCallbackArgs callbackArgs);
+    }
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("C574DE85-7358-43F6-AAE8-8697E62D8BA7")]
+    public interface IDownloadJob {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("FA565B23-498C-47A0-979D-E7D5B1813360")]
+    public interface IDownloadCompletedCallbackArgs {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("8C3F1CDD-6173-4591-AEBD-A56A53CA77C1")]
+    public interface IDownloadProgressChangedCallback
+    {
+        void Invoke(IDownloadJob job, IDownloadProgressChangedCallbackArgs callbackArgs);
+    }
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("324FF2C6-4981-4B04-9412-57481745AB24")]
+    public interface IDownloadProgressChangedCallbackArgs {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("DAA4FDD0-4727-4DBE-A1E7-745DCA317144")]
+    public interface IDownloadResult {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("45F4F6F3-D602-4F98-9A8A-3EFA152AD2D3")]
+    public interface IInstallationCompletedCallback
+    {
+        void Invoke(IInstallationJob job, IInstallationCompletedCallbackArgs callbackArgs);
+    }
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("5C209F0B-BAD5-432A-9556-4699BED2638A")]
+    public interface IInstallationJob {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("250E2106-8EFB-4705-9653-EF13C581B6A1")]
+    public interface IInstallationCompletedCallbackArgs {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("E01402D5-F8DA-43BA-A012-38894BD048F1")]
+    public interface IInstallationProgressChangedCallback
+    {
+        void Invoke(IInstallationJob job, IInstallationProgressChangedCallbackArgs callbackArgs);
+    }
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("E4F14E1E-689D-4218-A0B9-BC189C484A01")]
+    public interface IInstallationProgressChangedCallbackArgs {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("A43C56D6-7451-48D4-AF96-B6CD2D0D9B7A")]
+    public interface IInstallationResult {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("88AEE058-D4B0-4725-A2F1-814A67AE964C")]
+    public interface ISearchCompletedCallback
+    {
+        void Invoke(ISearchJob job, ISearchCompletedCallbackArgs callbackArgs);
+    }
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("7366EA16-7A1A-4EA2-B042-973D3E9CD99B")]
+    public interface ISearchJob {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("A700A634-2850-4C47-938A-9E4B6E5AF9A6")]
+    public interface ISearchCompletedCallbackArgs {}
+
+    [ComImport()]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("D40CFF62-E08C-4498-941A-01E25F0FD33C")]
+    public interface ISearchResult {}
+
+    public enum OperationResultCode : int
+    {
+        NotStarted = 0,
+        InProgress = 1,
+        Succeeded = 2,
+        SuceededWithErrors = 3,
+        Failed = 4,
+        Aborted = 5,
+    }
+
+    public class API
+    {
+        public Dictionary<int, string> IndexMap = new Dictionary<int, string>();
+
+        private Mutex LogMutex = new Mutex();
+        private Mutex OutputMutex = new Mutex();
+        private string OutputPath;
+        private string LogPath;
+        private bool CheckMode;
+        private bool LocalDebugging;
+
+        public API(string outputPath, string logPath, bool checkMode, bool localDebugging)
+        {
+            OutputPath = outputPath;
+            LogPath = logPath;
+            CheckMode = checkMode;
+            LocalDebugging = localDebugging;
+        }
+
+        public static Task WaitHandleToTask(WaitHandle waitHandle)
+        {
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            ThreadPool.RegisterWaitForSingleObject(
+                waitHandle,
+                (o, timeout) => { tcs.SetResult(null); },
+                null,
+                Timeout.InfiniteTimeSpan,
+                true
+            );
+
+            return tcs.Task;
+        }
+
+        public Task<IDownloadResult> DownloadAsync(object downloader, ScriptBlock progress,
+            CancellationToken cancelToken)
+        {
+            BuildOnCompleted onCompleted = action => new DownloadCompletedCallback(action);
+            return InvokeAsync<IDownloadResult>(downloader, "Download", onCompleted,
+                new DownloadProgressChangedCallback(progress, this), cancelToken);
+        }
+
+        public Task<IInstallationResult> InstallAsync(object installer, ScriptBlock progress,
+            CancellationToken cancelToken)
+        {
+            BuildOnCompleted onCompleted = action => new InstallationCompletedCallback(action);
+            return InvokeAsync<IInstallationResult>(installer, "Install", onCompleted,
+                new InstallationProgressChangedCallback(progress, this), cancelToken);
+        }
+
+        public Task<ISearchResult> SearchAsync(object searcher, string criteria, CancellationToken cancelToken)
+        {
+            BuildOnCompleted onCompleted = action => new SearchCompletedCallback(action);
+            return InvokeAsync<ISearchResult>(searcher, "Search", onCompleted, criteria, cancelToken);
+        }
+
+        public void InvokePowerShell(ScriptBlock scriptblock, object job, object callbackArgs, string id)
+        {
+            try
+            {
+                using (Runspace rs = RunspaceFactory.CreateRunspace())
+                using (PowerShell pipeline = PowerShell.Create())
+                {
+                    rs.Open();
+                    pipeline.Runspace = rs;
+                    pipeline.AddScript(scriptblock.ToString());
+                    pipeline.AddParameter("Api", this);
+                    pipeline.AddParameter("Job", job);
+                    pipeline.AddParameter("CallbackArgs", callbackArgs);
+                    pipeline.Invoke();
+                }
             }
-            $searcher.serverselection = $server_selection_value
-            Write-DebugLog -msg "Search source set to '$($server_selection)' (ServerSelection = $($server_selection_value))"
+            catch (Exception e)
+            {
+                WriteLog(String.Format("{0} failed to invoke powershell script: {1}", id, e.Message));
+                throw;
+            }
+        }
+
+        public void WriteProgress(string task, IDictionary result)
+        {
+            Dictionary<string, object> progress = new Dictionary<string, object>()
+            {
+                { "task", task },
+                { "result", result },
+            };
+
+            using (Runspace rs = RunspaceFactory.CreateRunspace())
+            using (PowerShell pipeline = PowerShell.Create())
+            {
+                rs.Open();
+                pipeline.Runspace = rs;
+                pipeline.AddCommand("ConvertTo-Json");
+                pipeline.AddParameter("InputObject", progress);
+                pipeline.AddParameter("Compress", true);
+                pipeline.AddParameter("Depth", 5);
+                string msg = pipeline.Invoke<string>()[0];
+
+                AppendFile(msg, OutputPath, OutputMutex);
+            }
+        }
+
+        public void WriteLog(string msg)
+        {
+            string dateStr = DateTime.Now.ToString("u");
+            string logMsg = String.Format("{0} {1}", dateStr, msg);
+
+            if (!String.IsNullOrWhiteSpace(LogPath) && !CheckMode)
+                AppendFile(logMsg, LogPath, LogMutex);
+
+            if (LocalDebugging)
+            {
+                LogMutex.WaitOne();
+                try
+                {
+                    Console.WriteLine(logMsg);
+                }
+                finally
+                {
+                    LogMutex.ReleaseMutex();
+                }
+            }
+        }
+
+        private void AppendFile(string msg, string path, Mutex mut)
+        {
+            mut.WaitOne();
+            try
+            {
+                using (FileStream fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
+                using (StreamWriter sw = new StreamWriter(fs))
+                    sw.WriteLine(msg);
+            }
+            finally
+            {
+                mut.ReleaseMutex();
+            }
+        }
+
+        private delegate object BuildOnCompleted(Action<object, object> action);
+
+        private Task<T>InvokeAsync<T>(object com, string method, BuildOnCompleted buildOnCompleted, object onProgress,
+            CancellationToken cancelToken)
+            where T : class
+        {
+            TaskCompletionSource<T> task = new TaskCompletionSource<T>();
+            object job = null;
+            CancellationTokenRegistration? reg = null;
+
+            object onCompleted = buildOnCompleted((_job, callbackArgs) =>
+            {
+                try
+                {
+                    T res = com.GetType().InvokeMember(
+                        String.Format("End{0}", method),
+                        BindingFlags.InvokeMethod,
+                        null,
+                        com,
+                        new object[] { _job }
+                    ) as T;
+                    task.TrySetResult(res);
+                }
+                catch (TargetInvocationException e)
+                {
+                    Exception exp = e;
+                    if (e.InnerException is COMException)
+                        exp = e.InnerException;
+
+                    task.TrySetException(exp);
+                    WriteLog(String.Format("{0} on completed callback failed: {1}", method, exp.Message));
+                }
+                finally
+                {
+                    job = null;
+                    if (reg != null)
+                        ((CancellationTokenRegistration)reg).Dispose();
+                }
+            });
+
+            job = com.GetType().InvokeMember(
+                String.Format("Begin{0}", method),
+                BindingFlags.InvokeMethod,
+                null,
+                com,
+                new object[] { onProgress, onCompleted, method }
+            );
+            reg = cancelToken.Register(() =>
+            {
+                //task.TrySetCanceled(cancelToken);
+                if (job != null)
+                {
+                    job.GetType().InvokeMember(
+                        "RequestAbort",
+                        BindingFlags.InvokeMethod,
+                        null,
+                        job,
+                        new object[] {}
+                    );
+                }
+            });
+
+            return task.Task;
+        }
+    }
+
+    public class DownloadCompletedCallback : IDownloadCompletedCallback
+    {
+        private Action<IDownloadJob, IDownloadCompletedCallbackArgs> Action;
+
+        public DownloadCompletedCallback(Action<IDownloadJob, IDownloadCompletedCallbackArgs> action)
+        {
+            this.Action = action;
+        }
+
+        public void Invoke(IDownloadJob job, IDownloadCompletedCallbackArgs callbackArgs)
+        {
+            Action.Invoke(job, callbackArgs);
+        }
+    }
+
+    public class DownloadProgressChangedCallback : IDownloadProgressChangedCallback
+    {
+        private ScriptBlock Action;
+        private API Api;
+
+        public DownloadProgressChangedCallback(ScriptBlock action, API api)
+        {
+            this.Action = action;
+            this.Api = api;
+        }
+
+        public void Invoke(IDownloadJob job, IDownloadProgressChangedCallbackArgs callbackArgs)
+        {
+            Api.InvokePowerShell(Action, job, callbackArgs, "Download");
+        }
+    }
+
+    public class InstallationCompletedCallback : IInstallationCompletedCallback
+    {
+        private Action<IInstallationJob, IInstallationCompletedCallbackArgs> Action;
+
+        public InstallationCompletedCallback(Action<IInstallationJob, IInstallationCompletedCallbackArgs> action)
+        {
+            this.Action = action;
+        }
+
+        public void Invoke(IInstallationJob job, IInstallationCompletedCallbackArgs callbackArgs)
+        {
+            Action.Invoke(job, callbackArgs);
+        }
+    }
+
+    public class InstallationProgressChangedCallback : IInstallationProgressChangedCallback
+    {
+        private ScriptBlock Action;
+        private API Api;
+
+        public InstallationProgressChangedCallback(ScriptBlock action, API api)
+        {
+            this.Action = action;
+            this.Api = api;
+        }
+
+        public void Invoke(IInstallationJob job, IInstallationProgressChangedCallbackArgs callbackArgs)
+        {
+            Api.InvokePowerShell(Action, job, callbackArgs, "Install");
+        }
+    }
+
+    public class SearchCompletedCallback : ISearchCompletedCallback
+    {
+        private Action<ISearchJob, ISearchCompletedCallbackArgs> Action;
+
+        public SearchCompletedCallback(Action<ISearchJob, ISearchCompletedCallbackArgs> action)
+        {
+            this.Action = action;
+        }
+
+        public void Invoke(ISearchJob job, ISearchCompletedCallbackArgs callbackArgs)
+        {
+            Action.Invoke(job, callbackArgs);
+        }
+    }
+}
+'@
+
+    Function Invoke-AsyncMethod {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSPossibleIncorrectUsageOfAssignmentOperator", "",
+            Justification="False positive, the syntax is valid and works")]
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory, Position=0)]
+            [String]
+            $Action,
+
+            [Parameter(Mandatory, Position=1)]
+            [ScriptBlock]
+            $ScriptBlock
+        )
+
+        try {
+            $cancelToken = New-Object -TypeName System.Threading.CancellationTokenSource
+            $task = &$ScriptBlock $cancelToken.Token
+
+            $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
+                $cancelTask, $task
+            ))
+            if ($waitIdx -eq 0) {
+                if (-not $task.IsCompleted) {
+                    # Sends the COM RequestAbort signal to the job
+                    $cancelToken.Cancel()
+                }
+            }
+
+            [void]$task.Wait()
+            $task.Result
         }
         catch {
-            $result.failed = $true
-            $result.msg = "Failed to set Windows Update Agent search source: $($_.Exception.Message)"
-            return $result
-        }
+            $exitResult.action = $Action
 
-        Write-DebugLog -msg "Searching for updates to install"
-        try {
-            $search_result = $searcher.Search("IsInstalled = 0")
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to search for updates: $($_.Exception.Message)"
-            return $result
-        }
-        Write-DebugLog -msg "Found $($search_result.Updates.Count) updates"
-
-        Write-DebugLog -msg "Creating update collection..."
-        try {
-            $updates_to_install = New-Object -ComObject Microsoft.Update.UpdateColl
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to create update collection object: $($_.Exception.Message)"
-            return $result
-        }
-
-        foreach ($update in $search_result.Updates) {
-            $update_info = @{
-                title = $update.Title
-                # TODO: pluck the first KB out (since most have just one)?
-                kb = $update.KBArticleIDs
-                id = $update.Identity.UpdateId
-                installed = $false
-                categories = @($update.Categories | ForEach-Object { $_.Name })
-            }
-
-            # validate update again blacklist/whitelist/post_category_names/hidden
-            $whitelist_match = $false
-            foreach ($whitelist_entry in $whitelist) {
-                if ($update_info.title -imatch $whitelist_entry) {
-                    $whitelist_match = $true
-                    break
+            # The COMException could be deeply nested, try and throw that if it exists
+            $exp = $_.Exception
+            do {
+                if ($exp -is [System.Runtime.InteropServices.COMException]) {
+                    throw $exp
                 }
-                foreach ($kb in $update_info.kb) {
-                    if ("KB$kb" -imatch $whitelist_entry) {
-                        $whitelist_match = $true
-                        break
-                    }
-                }
-            }
-            if ($whitelist.Length -gt 0 -and -not $whitelist_match) {
-                Write-DebugLog -msg "Skipping update $($update_info.id) - $($update_info.title) as it was not found in the whitelist"
-                $update_info.filtered_reason = "whitelist"
-                $result.filtered_updates[$update_info.id] = $update_info
-                continue
-            }
+            } while ($exp = $exp.InnerException)
 
-            $blacklist_match = $false
-            foreach ($blacklist_entry in $blacklist) {
-                if ($update_info.title -imatch $blacklist_entry) {
-                    $blacklist_match = $true
-                    break
-                }
-                foreach ($kb in $update_info.kb) {
-                    if ("KB$kb" -imatch $blacklist_entry) {
-                        $blacklist_match = $true
-                        break
-                    }
-                }
-            }
-            if ($blacklist_match) {
-                Write-DebugLog -msg "Skipping update $($update_info.id) - $($update_info.title) as it was found in the blacklist"
-                $update_info.filtered_reason = "blacklist"
-                $result.filtered_updates[$update_info.id] = $update_info
-                continue
-            }
-
-            if ($update.IsHidden) {
-                Write-DebugLog -msg "Skipping update $($update_info.title) as it was hidden"
-                $update_info.filtered_reason = "skip_hidden"
-                $result.filtered_updates[$update_info.id] = $update_info
-                continue
-            }
-
-            $category_match = $false
-            foreach ($match_cat in $category_names) {
-                if ($update_info.categories -ieq $match_cat) {
-                    $category_match = $true
-                    break
-                }
-            }
-            if ($category_names.Length -gt 0 -and -not $category_match) {
-                Write-DebugLog -msg "Skipping update $($update_info.id) - $($update_info.title) as it was not found in the category names filter"
-                $update_info.filtered_reason = "category_names"
-                $result.filtered_updates[$update_info.id] = $update_info
-                continue
-            }
-
-            if (-not $update.EulaAccepted) {
-                Write-DebugLog -msg "Accepting EULA for $($update_info.id)"
-                try {
-                    $update.AcceptEula()
-                } catch {
-                    $result.failed = $true
-                    $result.msg = "Failed to accept EULA for update $($update_info.id) - $($update_info.title)"
-                    return $result
-                }
-            }
-
-            Write-DebugLog -msg "Adding update $($update_info.id) - $($update_info.title)"
-            $updates_to_install.Add($update) > $null
-
-            $result.updates[$update_info.id] = $update_info
-        }
-
-        Write-DebugLog -msg "Calculating pre-install reboot requirement..."
-
-        # calculate this early for check mode, and to see if we should allow updates to continue
-        $result.reboot_required = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
-        $result.found_update_count = $updates_to_install.Count
-        $result.installed_update_count = 0
-
-        # Early exit of check mode/state=searched as it cannot do more after this
-        if ($check_mode -or $state -eq "searched") {
-            Write-DebugLog -msg "Check mode: exiting..."
-            Write-DebugLog -msg "Return value:`r`n$(ConvertTo-Json -InputObject $result -Depth 99)"
-
-            if ($updates_to_install.Count -gt 0 -and ($state -ne "searched")) {
-                $result.changed = $true
-            }
-            return $result
-        }
-
-        if ($updates_to_install.Count -gt 0) {
-            if ($result.reboot_required) {
-                Write-DebugLog -msg "FATAL: A reboot is required before more updates can be installed"
-                $result.failed = $true
-                $result.msg = "A reboot is required before more updates can be installed"
-                return $result
-            }
-            Write-DebugLog -msg "No reboot is pending..."
-        } else {
-            # no updates to install exit here
-            return $result
-        }
-
-        Write-DebugLog -msg "Downloading updates..."
-        $update_index = 1
-        foreach ($update in $updates_to_install) {
-            $update_number = "($update_index of $($updates_to_install.Count))"
-            if ($update.IsDownloaded) {
-                Write-DebugLog -msg "Update $update_number $($update.Identity.UpdateId) already downloaded, skipping..."
-                $update_index++
-                continue
-            }
-
-            Write-DebugLog -msg "Creating downloader object..."
-            try {
-                $dl = $session.CreateUpdateDownloader()
-            } catch {
-                $result.failed = $true
-                $result.msg = "Failed to create downloader object: $($_.Exception.Message)"
-                return $result
-            }
-
-            Write-DebugLog -msg "Creating download collection..."
-            try {
-                $dl.Updates = New-Object -ComObject Microsoft.Update.UpdateColl
-            } catch {
-                $result.failed = $true
-                $result.msg = "Failed to create download collection object: $($_.Exception.Message)"
-                return $result
-            }
-
-            Write-DebugLog -msg "Adding update $update_number $($update.Identity.UpdateId)"
-            $dl.Updates.Add($update) > $null
-
-            Write-DebugLog -msg "Downloading $update_number $($update.Identity.UpdateId)"
-            try {
-                $download_result = $dl.Download()
-            } catch {
-                $result.failed = $true
-                $result.msg = "Failed to download update $update_number $($update.Identity.UpdateId) - $($update.Title): $($_.Exception.Message)"
-                return $result
-            }
-
-            Write-DebugLog -msg "Download result code for $update_number $($update.Identity.UpdateId) = $($download_result.ResultCode)"
-            # FUTURE: configurable download retry
-            if ($download_result.ResultCode -ne 2) { # OperationResultCode orcSucceeded
-                $result.failed = $true
-                $result.msg = "Failed to download update $update_number $($update.Identity.UpdateId) - $($update.Title): Download Result $($download_result.ResultCode)"
-                return $result
-            }
-
-            $result.changed = $true
-            $update_index++
-        }
-
-        # Early exit for download-only
-        if ($state -eq "downloaded") {
-            Write-DebugLog -msg "Downloaded $($updates_to_install.Count) updates..."
-            $result.failed = $false
-            $result.msg = "Downloaded $($updates_to_install.Count) updates"
-            return $result
-        }
-
-        Write-DebugLog -msg "Installing updates..."
-        # install as a batch so the reboot manager will suppress intermediate reboots
-
-        Write-DebugLog -msg "Creating installer object..."
-        try {
-            $installer = $session.CreateUpdateInstaller()
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to create Update Installer object: $($_.Exception.Message)"
-            return $result
-        }
-
-        Write-DebugLog -msg "Creating install collection..."
-        try {
-            $installer.Updates = New-Object -ComObject Microsoft.Update.UpdateColl
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to create Update Collection object: $($_.Exception.Message)"
-            return $result
-        }
-
-        foreach ($update in $updates_to_install) {
-            Write-DebugLog -msg "Adding update $($update.Identity.UpdateID)"
-            $installer.Updates.Add($update) > $null
-        }
-
-        # FUTURE: use BeginInstall w/ progress reporting so we can at least log intermediate install results
-        try {
-            $install_result = $installer.Install()
-        } catch {
-            $result.failed = $true
-            $result.msg = "Failed to install update from Update Collection: $($_.Exception.Message)"
-            return $result
-        }
-
-        $update_success_count = 0
-        $update_fail_count = 0
-
-        # WU result API requires us to index in to get the install results
-        $update_index = 0
-        foreach ($update in $updates_to_install) {
-            $update_number = "($($update_index + 1) of $($updates_to_install.Count))"
-            try {
-                $update_result = $install_result.GetUpdateResult($update_index)
-            } catch {
-                $result.failed = $true
-                $result.msg = "Failed to get update result for update $update_number $($update.Identity.UpdateID) - $($update.Title): $($_.Exception.Message)"
-                return $result
-            }
-            $update_resultcode = $update_result.ResultCode
-            $update_hresult = $update_result.HResult
-
-            $update_index++
-
-            $update_dict = $result.updates[$update.Identity.UpdateID]
-            if ($update_resultcode -eq 2) { # OperationResultCode orcSucceeded
-                $update_success_count++
-                $update_dict.installed = $true
-                Write-DebugLog -msg "Update $update_number $($update.Identity.UpdateID) succeeded"
-            } else {
-                $update_fail_count++
-                $update_dict.installed = $false
-                $update_dict.failed = $true
-                $update_dict.failure_hresult_code = $update_hresult
-                Write-DebugLog -msg "Update $update_number $($update.Identity.UpdateID) failed, resultcode: $update_resultcode, hresult: $update_hresult"
-            }
-        }
-
-        Write-DebugLog -msg "Performing post-install reboot requirement check..."
-        $result.reboot_required = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
-        $result.installed_update_count = $update_success_count
-        $result.failed_update_count = $update_fail_count
-
-        if ($updates_success_count -gt 0) {
-            $result.changed = $true
-        }
-
-        if ($update_fail_count -gt 0) {
-            $result.failed = $true
-            $result.msg = "Failed to install one or more updates"
-            return $result
-        }
-
-        Write-DebugLog -msg "Return value:`r`n$(ConvertTo-Json -InputObject $result -Depth 99)"
-
-        return $result
-    }
-
-    $check_mode = $arguments.check_mode
-    try {
-        return @{
-            job_output = Start-Updates @arguments
-        }
-    } catch {
-        Write-DebugLog -msg "Fatal exception: $($_.Exception.Message) at $($_.ScriptStackTrace)"
-        return @{
-            job_output = @{
-                failed = $true
-                msg = $_.Exception.Message
-                location = $_.ScriptStackTrace
-            }
-        }
-    }
-}
-
-Function Start-Natively($common_functions, $script) {
-    $runspace_pool = [RunspaceFactory]::CreateRunspacePool()
-    $runspace_pool.Open()
-
-    try {
-        $ps_pipeline = [PowerShell]::Create()
-        $ps_pipeline.RunspacePool = $runspace_pool
-
-        # add the common script functions
-        $ps_pipeline.AddScript($common_functions) > $null
-
-        # add the update script block and required parameters
-        $ps_pipeline.AddStatement().AddScript($script) > $null
-        $ps_pipeline.AddParameter("arguments", @{
-            category_names = $category_names
-            log_path = $log_path
-            state = $state
-            blacklist = $blacklist
-            whitelist = $whitelist
-            check_mode = $check_mode
-            server_selection = $server_selection
-        }) > $null
-
-        $output = $ps_pipeline.Invoke()
-    } finally {
-        $runspace_pool.Close()
-    }
-
-    $result = $output[0].job_output
-    if ($ps_pipeline.HadErrors) {
-        $result.failed = $true
-
-        # if the msg wasn't set, then add a generic error to at least tell the user something
-        if (-not ($result.ContainsKey("msg"))) {
-            $result.msg = "Unknown failure when executing native update script block"
-            $result.errors = $ps_pipeline.Streams.Error
+            throw  # Otherwise throw the original
         }
     }
 
-    Write-DebugLog -msg "Native job completed with output: $($result | Out-String -Width 300)"
+    Function Receive-CallbackProgress {
+        [CmdletBinding()]
+        param ($Api, $Job, $CallbackArgs)
 
-    return ,$result
-}
+        # This runs in a brand new Runspace and doesn't have access to any of vars in our normal process.
+        try {
+            $taskType = $Job.AsyncState.ToLower()
+            $progress = $CallbackArgs.Progress
+            $updateIdx = $progress.CurrentUpdateIndex
+            $updateId = $Api.IndexMap[$updateIdx]
 
-Function Remove-ScheduledJob($name) {
-    $scheduled_job = Get-ScheduledJob -Name $name -ErrorAction SilentlyContinue
-
-    if ($null -ne $scheduled_job) {
-        Write-DebugLog -msg "Scheduled Job $name exists, ensuring it is not running..."
-        $scheduler = New-Object -ComObject Schedule.Service
-        Write-DebugLog -msg "Connecting to scheduler service..."
-        $scheduler.Connect()
-        Write-DebugLog -msg "Getting running tasks named $name"
-        $running_tasks = @($scheduler.GetRunningTasks(0) | Where-Object { $_.Name -eq $name })
-
-        foreach ($task_to_stop in $running_tasks) {
-            Write-DebugLog -msg "Stopping running task $($task_to_stop.InstanceGuid)..."
-            $task_to_stop.Stop()
-        }
-
-        <# FUTURE: add a global waithandle for this to release any other waiters. Wait-Job
-        and/or polling will block forever, since the killed job object in the parent
-        session doesn't know it's been killed :( #>
-        Unregister-ScheduledJob -Name $name
-    }
-}
-
-Function Start-AsScheduledTask($common_functions, $script) {
-    $job_name = "ansible-win-updates"
-    Remove-ScheduledJob -name $job_name
-
-    $job_args = @{
-        ScriptBlock = $script
-        Name = $job_name
-        ArgumentList = @(
-            @{
-                category_names = $category_names
-                log_path = $log_path
-                state = $state
-                blacklist = $blacklist
-                whitelist = $whitelist
-                check_mode = $check_mode
-                server_selection = $server_selection
+            $progressObj = @{CurrentUpdateId = $updateId}
+            foreach ($prop in $progress.PSObject.Properties) {
+                $progressObj[$prop.Name] = $prop.Value
             }
+
+            $res = $CallbackArgs.Progress.GetUpdateResult($updateIdx)
+            $resObj = @{}
+            foreach ($prop in $res.PSObject.Properties) {
+                $resObj[$prop.Name] = $prop.Value
+            }
+
+            $finalRes = @{
+                task = $taskType
+                result = @{
+                    progress = $progressObj
+                    result = $resObj
+                }
+            }
+            $Api.WriteLog("Received $taskType progress update:`r`n$($finalRes | ConvertTo-Json)")
+            $Api.WriteProgress($taskType, $finalRes.result)
+        }
+        catch {
+            $Api.WriteLog("Progress $taskType callback failed: $($_ | Out-String)`r`n$($_.ScriptStackTrace)")
+            throw
+        }
+    }
+
+    Function Test-InList {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory)]
+            [String[]]
+            $InputObject,
+
+            [Parameter(Mandatory)]
+            [AllowEmptyCollection()]
+            [String[]]
+            $Match
         )
-        ErrorAction = "Stop"
-        ScheduledJobOption = @{ RunElevated=$True; StartIfOnBatteries=$True; StopIfGoingOnBatteries=$False }
-        InitializationScript = $common_functions
-    }
 
-    Write-DebugLog -msg "Registering scheduled job with args $($job_args | Out-String -Width 300)"
-    $scheduled_job = Register-ScheduledJob @job_args
-
-    # RunAsTask isn't available in PS3 - fall back to a 2s future trigger
-    if ($scheduled_job | Get-Member -Name RunAsTask) {
-        Write-DebugLog -msg "Starting scheduled job (PS4+ method)"
-        $scheduled_job.RunAsTask()
-    } else {
-        Write-DebugLog -msg "Starting scheduled job (PS3 method)"
-        Add-JobTrigger -InputObject $scheduled_job -trigger $(New-JobTrigger -Once -At $(Get-Date).AddSeconds(2))
-    }
-
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    $job = $null
-
-    Write-DebugLog -msg "Waiting for job completion..."
-
-    # Wait-Job can fail for a few seconds until the scheduled task starts - poll for it...
-    while ($null -eq $job) {
-        Start-Sleep -Milliseconds 100
-        if ($sw.ElapsedMilliseconds -ge 30000) { # tasks scheduled right after boot on 2008R2 can take awhile to start...
-            Fail-Json -msg "Timed out waiting for scheduled task to start"
+        if ($Match.Count -eq 0) {
+            return $true
         }
 
-        # FUTURE: configurable timeout so we don't block forever?
-        # FUTURE: add a global WaitHandle in case another instance kills our job, so we don't block forever
-        $job = Wait-Job -Name $scheduled_job.Name -ErrorAction SilentlyContinue
+        $isMatch = $false
+        :outer foreach ($entry in $InputObject) {
+            foreach ($matchEntry in $Match) {
+                if ($entry -imatch $matchEntry) {
+                    $isMatch = $true
+                    break :outer
+                }
+            }
+
+        }
+
+        $isMatch
     }
 
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    Function Format-UpdateInfo {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory)]
+            [object]
+            $Update
+        )
 
-    # NB: output from scheduled jobs is delayed after completion (including the sub-objects after the primary Output object is available)
-    while (($null -eq $job.Output -or -not ($job.Output | Get-Member -Name Key -ErrorAction Ignore) -or -not $job.Output.Key.Contains("job_output")) -and $sw.ElapsedMilliseconds -lt 15000) {
-        Write-DebugLog -msg "Waiting for job output to populate..."
-        Start-Sleep -Milliseconds 500
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/9ed3c4f7-30fc-4b7b-97e1-308b5159822c
+        $impact = switch ($Update.InstallationBehavior.Impact) {
+            0 { 'Normal' }
+            1 { 'Minor' }
+            2 { 'RequiresExclusiveHandling' }
+            default { "Unknown $($Update.InstallationBehavior.Impact)" }
+        }
+
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/eee24bbd-0be7-4a81-bed5-bff1fbb1832b
+        $rebootBehavior = switch ($Update.InstallationBehavior.RebootBehavior) {
+            0 { 'NeverReboots' }
+            1 { 'AlwaysRequiresReboot' }
+            2 { 'CanRequestReboot' }
+            default { "Unknown $($Update.InstallationBehavior.RebootBehavior)" }
+        }
+
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/a4ec1231-6523-4196-8497-7b63ecc35b61
+        $updateType = switch ($Update.Type) {
+            1 { 'Software' }
+            2 { 'Driver' }
+            default { "Unknown $($Update.Type)" }
+        }
+
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/d4dc5648-a8a9-436d-9fdd-c90730bf64b0
+        $deploymentAction = switch ($Update.DeploymentAction) {
+            0 { 'None' }
+            1 { 'Installation' }
+            2 { 'Uninstallation' }
+            3 { 'Detection' }
+            default { "Unknown $($Update.DeploymentAction)" }
+        }
+
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/012a7226-c23d-4905-b630-9a6506032aa9
+        $autoSelection = switch ($Update.AutoSelection) {
+            0 { 'LetWindowsUpdateDecide' }
+            1 { 'AutoSelectIfDownloaded' }
+            2 { 'NeverAutoSelect' }
+            3 { 'AlwaysAutoSelect' }
+            default { "Unknown $($Update.AutoSelection)" }
+        }
+
+        # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-uamg/02e59b57-4d4e-4060-ab69-8207a10271aa
+        $autoDownload = switch ($Update.AutoDownload) {
+            0 { 'LetWindowsUpdateDecide' }
+            1 { 'NeverAutoDownload' }
+            2 { 'AlwaysAutoDownload' }
+            default { "Unknown $($Update.AutoDownload)" }
+        }
+
+        [Ordered]@{
+            # User friendly info / Identifiers
+            id = $Update.Identity.UpdateID
+            title = $Update.Title
+            description = $Update.Description
+            kb = @($Update.KBArticleIDs | ForEach-Object { "KB$_" })
+
+            # Search filter critera
+            type = $updateType
+            deployment_action = $deploymentAction
+            auto_select_on_websites = $Update.AutoSelectOnWebSites
+            browse_only = $Update.BrowseOnly
+            revision_number = $Update.Identity.RevisionNumber
+            categories = @($Update.Categories | ForEach-Object { $_.Name })
+            is_installed = $Update.IsInstalled
+            is_hidden = $Update.IsHidden
+            is_present = $Update.IsPresent
+            reboot_required = $Update.RebootRequired
+
+            # Extra info
+            impact = $impact
+            reboot_behaviour = $rebootBehavior
+            is_beta = $Update.IsBeta
+            is_downloaded = $Update.IsDownloaded
+            is_mandatory = $Update.IsMandatory
+            is_uninstallable = $Update.IsUninstallable
+            auto_selection = $autoSelection
+            auto_download = $autoDownload
+        }
     }
 
-    # NB: fallthru on both timeout and success
-    $ret = @{
-        ErrorOutput = $job.Error
-        WarningOutput = $job.Warning
-        VerboseOutput = $job.Verbose
-        DebugOutput = $job.Debug
+    # Make sure the output file exists before running
+    [IO.File]::Create($OutputPath).Dispose()
+    $cancelEvent = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
+        $false,
+        [System.Threading.EventResetMode]::ManualReset,
+        $CancelId
+    )
+    [void]$cancelEvent.Reset()
+    $cancelTask = [Ansible.Windows.WinUpdates.API]::WaitHandleToTask($cancelEvent)
+    $api = New-Object -TypeName Ansible.Windows.WinUpdates.API -ArgumentList $OutputPath, $LogPath, $CheckMode, $LocalDebugger
+
+    # Make sure each exception is captured and logged to the file
+    trap {
+        if (-not $exitResult) {
+            $exitResult = @{}
+        }
+        $exitResult.failed = $true
+        $exitResult.exception = @{
+            message = $_.ToString()
+            exception = ($_ | Out-String) + "`r`n`r`n$($_.ScriptStackTrace)"
+        }
+        if ($exitResult.action) {
+            $exitResult.exception.message = $exitResult.action + ": " + $exitResult.exception.message
+            $exitResult.Remove('action')
+        }
+
+        if ($_.Exception -is [Runtime.InteropServices.COMException]) {
+            # COMExceptions don't contain any info in the error message, we make sure we return the HResult for the
+            # action plugin to properly decode
+            $exitResult.exception.hresult = $_.Exception.HResult
+        }
+
+        if ($api) {
+            $api.WriteProgress('exit', $exitResult)
+            $api.WriteLog("Exception encountered:`r`n$(ConvertTo-Json $exitResult)`r`nExiting...")
+        }
+        else {
+            # May happen if a failure occurs before $api is defined, probably due to edits during development
+            $exit = @{
+                task = 'exit'
+                result = $exitResult
+            }
+            Set-Content -LiteralPath $OutputPath -Value (ConvertTo-Json $exit -Compress)
+        }
     }
 
-    if ($null -eq $job.Output -or -not $job.Output.Keys.Contains('job_output')) {
-        $ret.Output = @{failed = $true; msg = "job output was lost"}
-    } else {
-        $ret.Output = $job.Output.job_output # sub-object returned, can only be accessed as a property for some reason
+    $rebootRequired = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
+    $exitResult.reboot_required = $rebootRequired
+    $api.WriteLog("Reboot requirement check: $rebootRequired")
+
+    $api.WriteLog("Creating Windows Update session...")
+    $session = New-Object -ComObject Microsoft.Update.Session
+
+    $api.WriteLog("Create Windows Update searcher...")
+    $searcher = $session.CreateUpdateSearcher()
+
+    $api.WriteLog("Setting the Windows Update Agent source catalog...")
+    $serverSelectionValue = switch ($ServerSelection) {
+        "default" { 0 }
+        "managed_server" { 1 }
+        "windows_update" { 2 }
+    }
+    $searcher.ServerSelection = $serverSelectionValue
+    $api.WriteLog("Search source set to '$($ServerSelection)' (ServerSelection = $($serverSelectionValue))")
+
+    $query = 'IsInstalled = 0'
+    $api.WriteLog("Searching for updates to install with query '$query'")
+    $searchResult = Invoke-AsyncMethod 'Searching for updates' { $api.SearchAsync($searcher, $query, $args[0]) }
+    $resCode = [Ansible.Windows.WinUpdates.OperationResultCode]$searchResult.ResultCode
+    if ($resCode -ne 'Succeeded') {
+        # Probably due to a cancelation request
+        throw "Failed to search for updates ($resCode $([int]$resCode))"
+    }
+    $api.WriteLog("Found $($searchResult.Updates.Count) updates")
+
+    $api.WriteLog("Filtering found updated based on input search criteria")
+    $updateCollection = New-Object -ComObject Microsoft.Update.UpdateColl
+
+    $allUpdates = [System.Collections.Generic.List[Hashtable]]@()
+    $filteredUpdates = [System.Collections.Generic.List[Hashtable]]@()
+    foreach ($update in $searchResult.Updates) {
+        $updateInfo = Format-UpdateInfo -Update $update
+        $api.WriteLog("Process filtering rules for`r`n$(ConvertTo-Json $updateInfo)")
+        $allUpdates.Add($updateInfo)
+
+        $categoryMatch = $Category.Length -eq 0
+        foreach ($matchCat in $Category) {
+            if ($matchCat -eq '*' -or $updateInfo.categories -ieq $matchCat) {
+                $categoryMatch = $true
+                break
+            }
+        }
+        $matchList = ($updateInfo.title + $updateInfo.kb)
+
+        $filteredReasons = [System.Collections.Generic.List[String]]@()
+        if (-not (Test-InList -InputObject $matchList -Match $Accept)) {
+            $filteredReasons.Add('accept_list')
+        }
+        if ($Reject.Count -gt 0 -and (Test-InList -InputObject $matchList -Match $Reject)) {
+            $filteredReasons.Add('reject_list')
+        }
+        if ($updateInfo.is_hidden) {
+            $filteredReasons.Add('hidden')
+        }
+        if (-not $categoryMatch) {
+            $filteredReasons.Add('category_names')
+        }
+
+        $updateId = "$($updateInfo.id) - $($updateInfo.title)"
+        if ($filteredReasons) {
+            $api.WriteLog("Skipping update $updateId due to $($filteredReasons -join ", ")")
+            $filteredUpdates.Add(@{id=$updateInfo.id; reasons=$filteredReasons})
+        }
+        else {
+            if (-not $update.EulaAccepted) {
+                $api.WriteLog("Accepting EULA for $updateId")
+                $update.AcceptEula()
+            }
+
+            $api.WriteLog("Adding update $updateId")
+            $updateCollection.Add($update) > $null
+        }
+    }
+    # Allows the action plugin to map update ids to human readable update info
+    $api.WriteProgress('search_result', @{
+        updates = $allUpdates
+        filtered = $filteredUpdates
+    })
+
+    $exit = $false
+    if ($CheckMode) {
+        $api.WriteLog("Check mode: exiting...")
+        $exit = $true
+    }
+    elseif ($State -eq 'searched') {
+        $api.WriteLog("Search mode: exiting...")
+        $exit = $true
+    }
+    elseif ($updateCollection.Count -eq 0) {
+        $api.WriteLog("No updated pending: exiting...")
+        $exit = $true
+    }
+    if ($exit) {
+        $exitResult.changed = $updateCollection.Count -gt 0 -and $State -ne 'searched'
+        $api.WriteProgress('exit', $exitResult)
+        return
     }
 
-    try { # this shouldn't be fatal, but can fail with both Powershell errors and COM Exceptions, hence the dual error-handling...
-        Unregister-ScheduledJob -Name $job_name -Force -ErrorAction Continue
-    } catch {
-        Write-DebugLog "Error unregistering job after execution: $($_.Exception.ToString()) $($_.ScriptStackTrace)"
+    if ($rebootRequired) {
+        throw "A reboot is required before more updates can be installed"
     }
-    Write-DebugLog -msg "Scheduled job completed with output: $($re.Output | Out-String -Width 300)"
 
-    return $ret.Output
+    $downloadCollection = New-Object -ComObject Microsoft.Update.UpdateColl
+    $api.IndexMap.Clear()
+    foreach ($update in $updateCollection) {
+        if ($update.IsDownloaded) {
+            $api.WriteLog("Update $($update.Identity.UpdateId) already downloaded, skipping...")
+            continue
+        }
+
+        $api.WriteLog("Update $($update.Identity.UpdateId) not downloaded")
+        $api.IndexMap[$downloadCollection.Count] = $update.Identity.UpdateId
+        $downloadCollection.Add($update) > $null
+    }
+
+    if ($downloadCollection.Count -gt 0) {
+        $api.WriteLog("Downloading updates...")
+        $dl = $session.CreateUpdateDownloader()
+        $dl.Updates = $downloadCollection
+        $downloadResult = Invoke-AsyncMethod 'Downloading updates' { $api.DownloadAsync($dl, ${function:Receive-CallbackProgress}, $args[0]) }
+        $exitResult.changed = $true
+
+        # FUTURE: configurable download retry
+        $failed = $false
+        $progressResult = [System.Collections.Generic.List[Object]]@()
+        for ($i = 0; $i -lt $downloadCollection.Count; $i++) {
+            $update = $downloadCollection.Item($i)
+            $res = $downloadResult.GetUpdateResult($i)
+            $updateId = $update.Identity.UpdateId
+            $resultCode = [Ansible.Windows.WinUpdates.OperationResultCode]$res.ResultCode
+            $hresult = $res.HResult
+
+            $api.WriteLog("Download result for $updateId - ResultCode: $resultCode, HResult: $hresult")
+            $progressResult.Add(@{
+                id = $updateId
+                result_code = [int]$resultCode
+                hresult = $hresult
+            })
+            if ($resultCode -ne 'Succeeded') {
+                $failed = $true
+            }
+        }
+        $api.WriteProgress('download_result', @{
+            info = $progressResult
+        })
+        if ($failed) {
+            # More details are in the downloaded list
+            throw "Failed to download all updates - see updates for more information"
+        }
+    }
+    else {
+        $api.WriteLog("All updates selected have been downloaded...")
+    }
+
+    if ($State -eq 'downloaded') {
+        $api.WriteLog("Download mode: exiting...")
+        $api.WriteProgress('exit', $exitResult)
+        return
+    }
+
+    $api.WriteLog("Installing updates...")
+    $installer = $session.CreateUpdateInstaller()
+    $installer.AllowSourcePrompts = $false
+    $installer.ClientApplicationID = "ansible.windows.win_updates"
+    $installer.Updates = $updateCollection
+
+    $api.IndexMap.Clear()
+    for ($i = 0; $i -lt $installer.Updates.Count; $i++) {
+        $api.IndexMap[$i] = $installer.Updates.Item($i).Identity.UpdateId
+    }
+
+    $installResult = Invoke-AsyncMethod 'Installing updates' { $api.InstallAsync($installer, ${function:Receive-CallbackProgress}, $args[0]) }
+    $exitResult.changed = $true
+
+    $failed = $false
+    $progressResult = [System.Collections.Generic.List[Object]]@()
+    for ($i = 0; $i -lt $updateCollection.Count; $i++) {
+        $update = $updateCollection.Item($i)
+        $res = $installResult.GetUpdateResult($i)
+        $updateId = $update.Identity.UpdateId
+        $resultCode = [Ansible.Windows.WinUpdates.OperationResultCode]$res.ResultCode
+        $hresult = $res.HResult
+        $rebootRequired = $res.RebootRequired
+
+        $api.WriteLog("Install result for $updateId - ResultCode: $resultCode, HResult: $hresult, RebootRequired: $rebootRequired")
+        $progressResult.Add(@{
+            id = $updateId
+            result_code = [int]$resultCode
+            hresult = $hresult
+            reboot_required = $rebootRequired
+        })
+        if ($resultCode -ne 'Succeeded') {
+            $failed = $true
+        }
+        if ($rebootRequired) {
+            $exitResult.reboot_required = $true
+        }
+    }
+    $api.WriteProgress('install_result', @{
+        info = $progressResult
+    })
+
+    if ($failed) {
+        # More details are in the installed list
+        throw "Failed to install all updates - see updates for more information"
+    }
+
+    $exitResult.reboot_required = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
+    $api.WriteLog("Post-install reboot requirement $($exitResult.reboot_required)")
+
+    $api.WriteProgress('exit', $exitResult)
 }
 
-# source the common code into the current scope so we can call it
-. $common_functions
-
-<# Most of the Windows Update Agent API will not run under a remote token,
-which a remote WinRM session always has. Using become can bypass this
-limitation but it is not always an option with older hosts. win_updates checks
-if WUA is available in the current logon process and does either of the below;
-
-    * If become is used then it will run the windows update process natively
-      without any of the scheduled task hackery
-    * If become is not used then it will run the windows update process under
-      a scheduled job.
+<#
+Most of the Windows Update Agent API will not run under a remote token which is typically what a WinRM process is.
+We can use a scheduled task to change the logon to a batch/service logon allowing us to bypass that restriction. The
+other benefit of a scheduled task is that it is not tied to the lifetime of the WinRM process. This allows it to
+outlive any network drops. In the case of async we need to tie the lifetime of this process to the scheduled task, in
+other situations we poll the status in a separate process.
 #>
+$outputPathDir = $module.Params._output_path
+if (-not $outputPathDir) {
+    # Running async means this won't be set, just use the module tmpdir.
+    $outputPathDir = $module.Tmpdir
+}
+$outputPath = [IO.Path]::GetFullpath((Join-Path $outputPathDir 'output.txt'))
+$cancelId = "Global\Ansible.Windows.WinUpdates-$([Guid]::NewGuid().Guid)"
+
+$invokeSplat = @{
+    Module = $module
+    ScriptBlock = ${function:Install-WindowsUpdate}
+    Parameters = @{
+        Category = $categoryNames
+        Accept = @(if ($module.Params.accept_list) { $module.Params.accept_list })
+        Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
+        ServerSelection = $module.Params.server_selection
+        State = $module.Params.state
+        CancelId = $cancelId
+        OutputPath = $outputPath
+        LogPath = $module.Params.log_path
+        CheckMode = $module.CheckMode
+    }
+    Wait = $module.Params._wait
+}
+
+# In case of a reboot the tmpdir will be shared and we need to start from scratch again.
+Remove-Item -LiteralPath $outputPath -ErrorAction SilentlyContinue -Force
+
+$eventId = 'Ansible.Windows.WinUpdatesWatcher'
+$fsWatcher = [System.IO.FileSystemWatcher]@{
+    Path = Split-Path -Path $outputPath -Parent
+    Filter = Split-Path -Path $outputPath -Leaf
+}
 try {
-    (New-Object -ComObject Microsoft.Update.Session).CreateUpdateInstaller().IsBusy > $null
-    $wua_available = $true
-} catch {
-    $wua_available = $false
+    Register-ObjectEvent -InputObject $fsWatcher -EventName Created -SourceIdentifier $eventId
+
+    # If debugging locally change this to $true
+    if ($false) {
+        $invokeSplat.Wait = $true
+        $params = $invokeSplat.Parameters
+        $null = Install-WindowsUpdate @params -LocalDebugger
+    }
+    else {
+        $taskPid = Invoke-AsBatchLogon @invokeSplat
+    }
+
+    # Make sure the output file exists before continuing (task has started)
+    $null = Wait-Event -SourceIdentifier $eventId
+}
+finally {
+    $fsWatcher.EnableRaisingEvents = $false
+    $fsWatcher.Dispose()
+    Remove-Event -SourceIdentifier $eventId -ErrorAction SilentlyContinue
+    Unregister-Event -SourceIdentifier $eventId -ErrorAction SilentlyContinue
 }
 
-if ($wua_available) {
-    Write-DebugLog -msg "WUA is available in current logon process, running natively"
-    $result = Start-Natively -common_functions $common_functions -script $update_script_block
-} else {
-    Write-DebugLog -msg "WUA is not available in current logon process, running with scheduled task"
-    $result = Start-AsScheduledTask -common_functions $common_functions -script $update_script_block
+if ($invokeSplat.Wait) {
+    # Format the output for legacy async behaviour
+    $module.Result.reboot_required = $false
+    $module.Result.changed = $false
+    $module.Result.found_update_count = 0
+    $module.Result.failed_update_count = 0
+    $module.Result.installed_update_count = 0
+    $module.Result.updates = [System.Collections.Generic.List[Hashtable]]@()
+    $module.Result.filtered_updates = [System.Collections.Generic.List[Hashtable]]@()
+
+    $updates = @{}
+    Get-Content -LiteralPath $outputPath | ForEach-Object -Process {
+        $progress = ConvertFrom-Json -InputObject $_
+        $task = $progress.task
+        $result = $progress.result
+
+        if ($task -eq 'search_result') {
+            $filterMap = @{}
+            foreach ($filteredUpdate in $result.filtered) {
+                $filterMap[$filteredUpdate.id] = $filteredUpdate.reasons
+            }
+
+            foreach ($updateInfo in $result.updates) {
+                $resultInfo = @{
+                    categories = @($updateInfo.categories)
+                    id = $updateInfo.id
+                    installed = $false
+                    downloaded = $false
+                    kb = @($updateInfo.kb | ForEach-Object { [int]$_.Substring(2) })
+                    title = $updateInfo.title
+                }
+
+                if ($updateInfo.id -in $filterMap.Keys) {
+                    $reasons = @($filterMap[$updateInfo.id])
+
+                    # This value is deprecated in favour of the full list and should be removed in 2023-06-01. We also
+                    # need to rename the whitelist/blacklist reasons for backwards compatibility.
+                    $depReason = $reasons[0]
+                    if ($depReason -eq 'accept_list') { $depReason = 'whitelist' }
+                    if ($depReason -eq 'reject_list') { $depReason = 'blacklist' }
+
+                    $resultInfo.filtered_reasons = $reasons
+                    $resultInfo.filtered_reason = $depReason
+                }
+
+                $updates[$updateInfo.id] = $resultInfo
+            }
+        }
+        elseif ($task -in @('download_result', 'install_result')) {
+            foreach ($resultInfo in $result.info) {
+                $updateInfo = $updates[$resultInfo.id]
+                if ($resultInfo.result_code -ne 2) {
+                    $updateInfo.failure_hresult_code = $resultInfo.hresult
+                }
+                else {
+                    $taskType = if ($task -eq 'download_result') { 'downloaded' } else { 'installed' }
+                    $updateInfo[$taskType] = $true
+                }
+            }
+        }
+        elseif ($task -eq 'exit') {
+            $module.Result.changed = $result.changed
+            $module.Result.reboot_required = $result.reboot_required
+            $module.Result.failed = $result.failed
+
+            if ($result.exception) {
+                $module.Result.msg = $result.exception.message
+                $module.Result.exception = $result.exception.exception
+                if ($result.exception.hresult) {
+                    $module.Result.hresult = $result.exception.hresult
+                }
+            }
+        }
+    }
+
+    foreach ($updateKvp in $updates.GetEnumerator()) {
+        $id = $updateKvp.Key
+        $info = $updateKvp.Value
+
+        if ($info.Contains('filtered_reasons')) {
+            $module.Result.filtered_updates.Add($info)
+            continue
+        }
+
+        $module.Result.found_update_count += 1
+        if ($info.Contains('failure_hresult_code')) {
+            $module.Result.failed_update_count += 1
+        }
+        elseif ($info.installed) {
+            $module.Result.installed_update_count += 1
+        }
+        $module.Result.updates.Add($info)
+    }
+}
+else {
+    $module.Result.output_path = $outputPath
+    $module.Result.task_pid = $taskPid
+    $module.Result.cancel_id = $cancelId
 }
 
-Exit-Json -obj $result
+$module.ExitJson()

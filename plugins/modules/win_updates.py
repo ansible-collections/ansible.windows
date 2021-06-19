@@ -12,15 +12,22 @@ short_description: Download and install Windows updates
 description:
     - Searches, downloads, and installs Windows updates synchronously by automating the Windows Update client.
 options:
-    blacklist:
+    accept_list:
         description:
         - A list of update titles or KB numbers that can be used to specify
-          which updates are to be excluded from installation.
-        - If an available update does match one of the entries, then it is
-          skipped and not installed.
+          which updates are to be searched or installed.
+        - If an available update does not match one of the entries, then it
+          is skipped and not installed.
         - Each entry can either be the KB article or Update title as a regex
           according to the PowerShell regex rules.
+        - The accept list is only validated on updates that were found based on
+          I(category_names). It will not force the module to install an update
+          if it was not in the category specified.
+        - The alias C(whitelist) is deprecated and will be removed in a release after C(2023-06-01).
         type: list
+        elements: str
+        aliases:
+        - whitelist
     category_names:
         description:
         - A scalar or list of categories to install updates from. To get the list
@@ -29,7 +36,9 @@ options:
         - Some possible categories are Application, Connectors, Critical Updates,
           Definition Updates, Developer Kits, Feature Packs, Guidance, Security
           Updates, Service Packs, Tools, Update Rollups, Updates, and Upgrades.
+        - Since C(v1.7.0) the value C(*) will match all categories.
         type: list
+        elements: str
         default: [ CriticalUpdates, SecurityUpdates, UpdateRollups ]
     reboot:
         description:
@@ -46,6 +55,7 @@ options:
           reboot.
         - This is only used if C(reboot=yes) and a reboot is required.
         default: 1200
+        type: int
     server_selection:
         description:
         - Defines the Windows Update source catalog.
@@ -72,33 +82,37 @@ options:
         description:
         - If set, C(win_updates) will append update progress to the specified file. The directory must already exist.
         type: path
-    whitelist:
+    reject_list:
         description:
         - A list of update titles or KB numbers that can be used to specify
-          which updates are to be searched or installed.
-        - If an available update does not match one of the entries, then it
-          is skipped and not installed.
+          which updates are to be excluded from installation.
+        - If an available update does match one of the entries, then it is
+          skipped and not installed.
         - Each entry can either be the KB article or Update title as a regex
           according to the PowerShell regex rules.
-        - The whitelist is only validated on updates that were found based on
-          I(category_names). It will not force the module to install an update
-          if it was not in the category specified.
+        - The alias C(blacklist) is deprecated and will be removed in a release after C(2023-06-01).
         type: list
+        elements: str
+        aliases:
+        - blacklist
     use_scheduled_task:
         description:
-        - Will not auto elevate the remote process with I(become) and use a
-          scheduled task instead.
-        - Set this to C(yes) when using this module with async on Server 2008,
-          2008 R2, or Windows 7, or on Server 2008 that is not authenticated
-          with basic or credssp.
-        - Can also be set to C(yes) on newer hosts where become does not work
-          due to further privilege restrictions from the OS defaults.
+        - This option is deprecated and no longer does anything since C(v1.7.0) of this collection.
+        - The option will be removed in a release after C(2023-06-01).
+        type: bool
+        default: no
+    _output_path:
+        description:
+        - Internal use only.
+        type: str
+    _wait:
+        description:
+        - Internal use only.
         type: bool
         default: no
 notes:
 - M(ansible.windows.win_updates) must be run by a user with membership in the local Administrators group.
 - M(ansible.windows.win_updates) will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).
-- M(ansible.windows.win_updates) will I(become) SYSTEM using I(runas) unless C(use_scheduled_task) is C(yes)
 - By default M(ansible.windows.win_updates) does not manage reboots, but will signal when a
   reboot is required with the I(reboot_required) return value.
   I(reboot) can be used to reboot the host if required in the one task.
@@ -121,17 +135,17 @@ author:
 '''
 
 EXAMPLES = r'''
+- name: Install all updates and reboot as many times as needed
+  ansible.windows.win_updates:
+    category_names: '*'
+    reboot: yes
+
 - name: Install all security, critical, and rollup updates without a scheduled task
   ansible.windows.win_updates:
     category_names:
       - SecurityUpdates
       - CriticalUpdates
       - UpdateRollups
-
-- name: Install only security updates as a scheduled task for Server 2008
-  ansible.windows.win_updates:
-    category_names: SecurityUpdates
-    use_scheduled_task: yes
 
 - name: Search-only, return list of found updates (if any), log to C:\ansible_wu.txt
   ansible.windows.win_updates:
@@ -149,7 +163,7 @@ EXAMPLES = r'''
   ansible.windows.win_updates:
     category_name:
     - SecurityUpdates
-    whitelist:
+    accept_list:
     - KB4056892
     - KB4073117
 
@@ -158,15 +172,9 @@ EXAMPLES = r'''
     category_name:
     - SecurityUpdates
     - CriticalUpdates
-    blacklist:
+    reject_list:
     - Windows Malicious Software Removal Tool for Windows
     - \d{4}-\d{2} Cumulative Update for Windows Server 2016
-
-# One way to ensure the system is reliable just after a reboot, is to set WinRM to a delayed startup
-- name: Ensure WinRM starts when the system has settled and is ready to work reliably
-  ansible.windows.win_service:
-    name: WinRM
-    start_mode: delayed
 
 # Optionally, you can increase the reboot_timeout to survive long updates during reboot
 - name: Ensure we wait long enough for the updates to be applied during reboot
@@ -209,6 +217,12 @@ updates:
             returned: always
             type: str
             sample: "fb95c1c8-de23-4089-ae29-fd3351d55421"
+        downloaded:
+            description: Was the update downloaded.
+            returned: always
+            type: bool
+            sample: true
+            version_added: 1.7.0
         installed:
             description: Was the update successfully installed.
             returned: always
@@ -222,9 +236,15 @@ updates:
             sample: [ 'Critical Updates', 'Windows Server 2012 R2' ]
         failure_hresult_code:
             description: The HRESULT code from a failed update.
-            returned: on install failure
+            returned: on install or download failure
             type: bool
             sample: 2147942402
+        failure_msg:
+            description: The error message with more details on the failure.
+            returned: on install or download failure and not running with async
+            type: str
+            sample: Operation did not complete because there is no logged-on interactive user (WU_E_NO_INTERACTIVE_USER 0x80240020)
+            version_added: 1.7.0
 
 filtered_updates:
     description: List of updates that were found but were filtered based on
@@ -235,10 +255,23 @@ filtered_updates:
     sample: see the updates return value
     contains:
         filtered_reason:
-            description: The reason why this update was filtered.
+            description:
+            - The reason why this update was filtered.
+            - This value has been deprecated since C(1.7.0), use C(filtered_reasons) which contain a list of all the
+              reasons why the update is filtered.
             returned: always
             type: str
             sample: 'skip_hidden'
+        filtered_reasons:
+            description:
+            - A list of reasons why the update has been filtered.
+            - Can be C(accept_list), C(reject_list), C(hidden), or C(category_names).
+            type: list
+            elements: str
+            sample:
+            - category_names
+            - accept_list
+            version_added: 1.7.0
 
 found_update_count:
     description: The number of updates found needing to be applied.
