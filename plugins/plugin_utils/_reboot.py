@@ -48,11 +48,10 @@ except ImportError:
 # Until we can guarantee we are using a version of psrp that handles all this we try to handle those issues.
 try:
     from requests.exceptions import (
-        ConnectionError as RequestsConnectionError,
-        Timeout as RequestsTimeout,
+        RequestException,
     )
 except ImportError:
-    RequestsConnectionError = RequestsTimeout = AnsibleConnectionFailure
+    RequestException = AnsibleConnectionFailure
 
 
 _LOGON_UI_KEY = r'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoLogonChecked'
@@ -141,10 +140,15 @@ def reboot_host(
     }
     host_context = {'do_close_on_reset': True}
 
-    # Get current boot time
+    # Get current boot time. A lot of tasks that require a reboot leave the WSMan stack in a bad place. Will try to
+    # get the initial boot time 3 times before giving up.
     try:
-        previous_boot_time = _get_system_boot_time(task_action, connection, boot_time_command)
+        previous_boot_time = _do_until_success_or_retry_limit(task_action, connection, host_context,
+                                                              'pre-reboot boot time check', 3, _get_system_boot_time,
+                                                              task_action, connection, boot_time_command)
+
     except Exception as e:
+        # Report a the failure based on the last exception received.
         if isinstance(e, _ReturnResultException):
             result.update(e.result)
 
@@ -257,16 +261,42 @@ def _check_boot_time(task_action, connection, host_context, previous_boot_time, 
         raise _TestCommandFailure("boot time has not changed")
 
 
+def _do_until_success_or_retry_limit(task_action, connection, host_context, action_desc, retries, func, *args,
+                                     **kwargs):
+    # type: (str, ConnectionBase, Dict, str, int, Callable, Any, Any) -> Any
+    """Runs the function multiple times ignoring errors until the retry limit is hit"""
+
+    def wait_condition(idx):
+        return idx < retries
+
+    return _do_until_success_or_condition(task_action, connection, host_context, action_desc, wait_condition,
+                                          func, *args, **kwargs)
+
+
 def _do_until_success_or_timeout(task_action, connection, host_context, action_desc, timeout, func, *args, **kwargs):
     # type: (str, ConnectionBase, Dict, str, float, Callable, Any, Any) -> Any
     """Runs the function multiple times ignoring errors until a timeout occurs"""
     max_end_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=timeout)
 
+    def wait_condition(idx):
+        return datetime.datetime.utcnow() < max_end_time
+
+    try:
+        return _do_until_success_or_condition(task_action, connection, host_context, action_desc, wait_condition,
+                                              func, *args, **kwargs)
+    except Exception:
+        raise Exception('Timed out waiting for %s (timeout=%s)' % (action_desc, timeout))
+
+
+def _do_until_success_or_condition(task_action, connection, host_context, action_desc, condition, func, *args,
+                                   **kwargs):
+    # type: (str, ConnectionBase, Dict, str, Callable, Callable, Any, Any) -> Any
+    """Runs the function multiple times ignoring errors until the condition is false"""
     fail_count = 0
     max_fail_sleep = 12
     reset_required = False
 
-    while datetime.datetime.utcnow() < max_end_time:
+    while fail_count == 0 or condition(fail_count):
         try:
             if reset_required:
                 # Keep on trying the reset until it succeeds.
@@ -307,7 +337,7 @@ def _do_until_success_or_timeout(task_action, connection, host_context, action_d
             fail_count += 1
             time.sleep(fail_sleep)
 
-    raise Exception('Timed out waiting for %s (timeout=%s)' % (action_desc, timeout))
+    raise e
 
 
 def _execute_command(task_action, connection, command):  # type: (str, ConnectionBase, str) -> Tuple[int, str, str]
@@ -321,7 +351,7 @@ def _execute_command(task_action, connection, command):  # type: (str, Connectio
 
     try:
         rc, stdout, stderr = connection.exec_command(command, in_data=None, sudoable=False)
-    except (RequestsConnectionError, RequestsTimeout) as e:
+    except RequestException as e:
         # The psrp connection plugin should be doing this but until we can guarantee it does we just convert it here
         # to ensure AnsibleConnectionFailure refers to actual connection errors.
         raise AnsibleConnectionFailure("Failed to connect to the host: %s" % to_native(e))
@@ -397,7 +427,7 @@ def _reset_connection(task_action, connection, host_context, ignore_errors=False
         try:
             func(*args, **kwargs)
 
-        except (AnsibleError, RequestsConnectionError, RequestsTimeout) as e:
+        except (AnsibleError, RequestException) as e:
             if ignore_errors:
                 return False
 
