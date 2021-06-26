@@ -1,2 +1,0 @@
-bugfixes:
-- win_reboot - Handle connection failures when getting the first boot time command

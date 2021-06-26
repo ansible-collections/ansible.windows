@@ -279,7 +279,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The time in seconds after which the failure action list begings from the start if there are no failures.</div>
+                        <div>The time in seconds after which the failure action list resets back to the start of the list if there are no failures.</div>
                         <div>To set this value, <em>failure_actions</em> must have at least 1 action present.</div>
                         <div>Specify <code>&#x27;0xFFFFFFFF&#x27;</code> to set an infinite reset period.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: failure_reset_period</div>

@@ -5,13 +5,46 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.6.0
+v1.7.0
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.6.0
+- Release summary for v1.7.0
+
+Minor Changes
+-------------
+
+- win_updates - Added ``accept_list`` and ``reject_list`` to replace ``whitelist`` and ``blacklist``
+- win_updates - Added ``failure_msg`` result to the return value of each update that gives a human readable error message if the update failed to download or install
+- win_updates - Added ``filtered_reasons`` that list all the reasons why the update has been filtered - https://github.com/ansible-collections/ansible.windows/issues/226
+- win_updates - Added progress logs to display on higher verbosities the download and install progress for each host
+- win_updates - Added the ``downloaded`` result to the return value of each update to indicate if an update was downloaded or not
+- win_updates - Added the category ``*`` that matches all categories
+- win_updates - Improve Windows Update HRESULT error messages
+- win_updates - Improve the details present in the ``log_path`` log entries for better monitoring
+
+Deprecated Features
+-------------------
+
+- win_updates - Deprecated the ``filtered_reason`` return value for each filtered up in favour of ``filtered_reasons``. This has been done to show all the reasons why an update was filtered and not just the first reason.
+- win_updates - Deprecated the ``use_scheduled_task`` option as it is no longer used.
+- win_updates - Deprecated the ``whitelist`` and ``blacklist`` options in favour of ``accept_list`` and ``reject_list`` respectively to conform to the new standards used in Ansible for these types of options.
+
+Bugfixes
+--------
+
+- win_reboot - Handle connection failures when getting the first boot time command
+- win_updates - Always return the ``failed_updates_count`` on a standard failure - https://github.com/ansible-collections/ansible.windows/issues/13
+- win_updates - Always use a scheduled task which should be less prone to random token errors when trying to connect to Windows Update - https://github.com/ansible-collections/ansible.windows/issues/193
+- win_updates - Attempt a reboot once when ``reboot=True`` is set and a failure occurred - https://github.com/ansible-collections/ansible.windows/issues/22
+- win_updates - Improve the reboot detection behaviour when ``reboot=True`` is set - https://github.com/ansible-collections/ansible.windows/issues/25
+- win_updates - Improve the reboot mechanism - https://github.com/ansible-collections/ansible.windows/issues/143
+- win_updates - Reboot the host when ``reboot=True`` if the first search result indicates a reboot is required - https://github.com/ansible-collections/ansible.windows/issues/49
+
+v1.6.0
+======
 
 Minor Changes
 -------------
