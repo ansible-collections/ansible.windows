@@ -55,7 +55,7 @@ options:
     required: true
 notes:
 - By default there are a few builtin resources that come with PowerShell 5.0,
-  see U(https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources) for
+  See U(https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources) for
   more information on these resources.
 - Custom DSC resources can be installed with M(community.windows.win_psmodule) using the I(name)
   option.
@@ -69,6 +69,10 @@ notes:
   configured as the default listener for HTTP. This is set up by default but if
   a custom HTTP port is used or only a HTTPS listener is present then the
   module will fail. See the examples for a way to check this out in PowerShell.
+- The Local Configuration Manager C(LCM) on the targeted host in question should
+  be disabled to avoid any conflicts with resources being applied by this module.
+  See U(https://devblogs.microsoft.com/powershell/invoking-powershell-dsc-resources-directly/)
+  for more information on hwo to disable C(LCM).
 author:
 - Trond Hindenes (@trondhindenes)
 '''
