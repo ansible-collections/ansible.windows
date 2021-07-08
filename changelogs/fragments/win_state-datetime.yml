@@ -1,0 +1,5 @@
+bugfixes:
+- >-
+  win_state - Fixed the ``creationtime``, ``lastaccesstime``, and ``lastwritetime`` to report the time in UTC.
+  This matches the ``stat`` module's behaviour and what many would expect for a epoch based timestamp -
+  https://github.com/ansible-collections/ansible.windows/issues/240
