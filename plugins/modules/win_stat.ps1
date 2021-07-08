@@ -76,7 +76,7 @@ $module.Result.stat = @{ exists=$false }
 Load-LinkUtils
 $info, $link_info = Get-FileInfo -Path $path -Follow:$follow
 If ($null -ne $info) {
-    $epoch_date = Get-Date -Date "01/01/1970"
+    $epoch_date = (Get-Date -Year 1970 -Month 1 -Day 1).Date
     $attributes = @()
     foreach ($attribute in ($info.Attributes -split ',')) {
         $attributes += $attribute.Trim()
@@ -99,9 +99,9 @@ If ($null -ne $info) {
         # lnk_target = islnk or isjunction Target of the symlink. Note that relative paths remain relative
         # lnk_source = islnk os isjunction Target of the symlink normalized for the remote filesystem
         hlnk_targets = @()
-        creationtime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.CreationTime)
-        lastaccesstime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastAccessTime)
-        lastwritetime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastWriteTime)
+        creationtime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.CreationTimeUtc)
+        lastaccesstime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastAccessTimeUtc)
+        lastwritetime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastWriteTimeUtc)
         # size = a file and directory - calculated below
         path = $info.FullName
         filename = $info.Name
