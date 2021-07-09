@@ -376,6 +376,25 @@ if ($params.ContainsKey("module_version")) {
 # https://github.com/ansible-collections/ansible.windows/issues/66
 Import-Module @module_params -ErrorAction SilentlyContinue
 
+# A nested module of PSDesiredStateConfiguration calls Import-LocalizedData to load some localised resources which is
+# fine in most cases but when running with Ansible the current UI culture may not match the UI culture that Windows was
+# installed with so Import-LocalizedData fails. Because our modules run with $ErrorActionPreference = 'Stop' this
+# failure cascades back and causes a fatal failure when loading PSDesiredStateConfiguration. This code does 2 things:
+#   * Resets the culture for this step only back to the install UI culture so Import-LocalizedData should not fail
+#   * Temporarily changes EAP to Continue to ensure that errors on that step don't bring down the whole import process
+# https://github.com/ansible-collections/ansible.windows/issues/83
+$existingCulture = [Threading.Thread]::CurrentThread.CurrentUICulture
+$existingAction = $ErrorActionPreference
+try {
+    [Threading.Thread]::CurrentThread.CurrentUICulture = [cultureinfo]::InstalledUICulture
+    $ErrorActionPreference = 'Continue'  # Cannot use -ErrorAction Continue for some reason - probably due to how ipmo works
+    Import-Module -Name PSDesiredStateConfiguration
+}
+finally {
+    [Threading.Thread]::CurrentThread.CurrentUICulture = $existingCulture
+    $ErrorActionPreference = $existingAction
+}
+
 $module_versions = (Get-DscResource -Name $resource_name -ErrorAction SilentlyContinue | Sort-Object -Property Version)
 $resource = $null
 if ($module_version -eq "latest" -and $null -ne $module_versions) {
