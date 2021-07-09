@@ -5,6 +5,7 @@
     test_ace_cmd: |
       # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
       Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
       $rights_key = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Registry") {
           "RegistryRights"
@@ -22,6 +23,36 @@
       }
       Pop-Location
       ConvertTo-Json -InputObject @($ace_list)
+    test_all_ace_cmd: |
+      # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
+      Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
+      $rights_key = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Registry") {
+          "RegistryRights"
+      } else {
+          "FileSystemRights"
+      }
+      $ace_list = (Get-Acl -LiteralPath $path).Access | ForEach-Object {
+          @{
+              rights = $_."$rights_key".ToString()
+              type = $_.AccessControlType.ToString()
+              identity = $_.IdentityReference.Value.ToString()
+              inherited = if($_.IsInherited){"yes"}else{"no"}
+              inheritance_flags = $_.InheritanceFlags.ToString()
+              propagation_flags = $_.PropagationFlags.ToString()
+          }
+      }
+      Pop-Location
+      ConvertTo-Json -InputObject @($ace_list)
+    break_reg_inh_cmd: |
+      # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
+      $path = (New-Object -ComObject Wscript.Shell).ExpandEnvironmentStrings($path)
+      Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
+      $acl = Get-Acl -LiteralPath $path
+      $acl.SetAccessRuleProtection($true,$false)
+      Set-ACL -LiteralPath $path -AclObject $acl
 
 - name: add write rights to Guest
   win_acl:
@@ -58,6 +89,70 @@
   assert:
     that:
     - not allow_right_again is changed
+
+- name: add read&exec rights to Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: ReadAndExecute
+  register: allow_read_right
+
+- name: add delete rights to Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Delete
+  register: allow_read_right
+
+- name: get result of add read rights to Guest
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: allow_read_right_actual
+
+- name: assert add write+read&exec+delete rights to Guest as Modify
+  assert:
+    that:
+    - allow_read_right is changed
+    - (allow_read_right_actual.stdout|from_json)|count == 1
+    - (allow_read_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (allow_read_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (allow_read_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+    - (allow_read_right_actual.stdout|from_json)[0].rights == 'Modify, Synchronize'
+    - (allow_read_right_actual.stdout|from_json)[0].type == 'Allow'
+
+- name: remove read&exec rights for Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: ReadAndExecute
+    state: absent
+  register: remove_read_right
+
+- name: remove delete rights for Guest
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Delete
+    state: absent
+  register: allow_read_right
+
+- name: get result of remove read rights to Guest
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: remove_read_right_actual
+
+- name: assert remove read&exec+delete from Modify rights to Guest should be Write
+  assert:
+    that:
+    - remove_read_right is changed
+    - (remove_read_right_actual.stdout|from_json)|count == 1
+    - (remove_read_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (remove_read_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (remove_read_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+    - (remove_read_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
+    - (remove_read_right_actual.stdout|from_json)[0].type == 'Allow'
 
 - name: remove write rights from Guest
   win_acl:
@@ -171,6 +266,36 @@
     that:
     - not remove_deny_right_again is changed
 
+- name: remove read rights from Users (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Users
+    rights: Read
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users
+
+- name: assert remove read rights from Users (should fail)
+  assert:
+    that:
+    - remove_read_right_users is failed
+
+- name: remove read rights from users - network (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_network_path }}'
+    type: allow
+    user: Users
+    rights: Read
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users_network
+
+- name: assert remove read rights from Users - network (should fail)
+  assert:
+    that:
+    - remove_read_right_users_network is failed
+
 - name: add write rights to Guest - network
   win_acl:
     path: '{{ test_acl_network_path }}'
@@ -212,6 +337,21 @@
     that:
     - remove_right is changed
     - remove_right_actual.stdout_lines == ["[", "", "]"]
+
+- name: remove read rights from users - registry (should fail because of inherited rights)
+  win_acl:
+    path: '{{ test_acl_reg_path }}'
+    type: allow
+    user: Users
+    rights: ReadKey
+    state: absent
+  ignore_errors: yes
+  register: remove_read_right_users_reg
+
+- name: assert remove read rights from Users - registry (should fail)
+  assert:
+    that:
+    - remove_read_right_users_reg is failed
 
 - name: add write rights to Guest - registry
   win_acl:
