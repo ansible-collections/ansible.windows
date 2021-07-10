@@ -122,6 +122,16 @@ public enum TASK_TRIGGER_TYPE2 // https://msdn.microsoft.com/en-us/library/windo
     TASK_TRIGGER_LOGON                 = 9,
     TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
 }
+
+public enum TASK_SESSION_STATE_CHANGE_TYPE // https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_session_state_change_type
+{
+    TASK_CONSOLE_CONNECT    = 1,
+    TASK_CONSOLE_DISCONNECT = 2,
+    TASK_REMOTE_CONNECT     = 3,
+    TASK_REMOTE_DISCONNECT  = 4,
+    TASK_SESSION_LOCK       = 7,
+    TASK_SESSION_UNLOCK     = 8
+}
 "@
 
 $original_tmp = $env:TMP
@@ -624,8 +634,8 @@ Function Compare-Triggers($task_definition) {
             optional = @('enabled', 'end_boundary', 'execution_time_limit', 'random_delay', 'weeks_interval', 'repetition')
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_SESSION_STATE_CHANGE = @{
-            mandatory = @('days_of_week', 'start_boundary')
-            optional = @('delay', 'enabled', 'end_boundary', 'execution_time_limit', 'state_change', 'user_id', 'repetition')
+            mandatory = @()
+            optional = @('delay', 'enabled', 'end_boundary', 'execution_time_limit', 'repetition', 'start_boundary', 'state_change', 'user_id' )
         }
     }
     $changes = Compare-PropertyList -collection $task_triggers -property_name "trigger" -new $triggers -existing $existing_triggers -map $map -enum TASK_TRIGGER_TYPE2
@@ -934,6 +944,19 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
             $month_value = $null
         }
         $trigger.months_of_year = $month_value
+    }
+    if ($trigger.ContainsKey("state_change")) {
+        $trigger.state_change = switch($trigger.state_change) {
+            console_connect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_CONSOLE_CONNECT }
+            console_disconnect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_CONSOLE_DISCONNECT }
+            remote_connect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_REMOTE_CONNECT }
+            remote_disconnect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_REMOTE_DISCONNECT }
+            session_lock { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_SESSION_LOCK }
+            session_unlock { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_SESSION_UNLOCK }
+            default {
+                Fail-Json -obj $result -message "invalid state_change '$($trigger.state_change)'"
+            }
+        }
     }
     $triggers[$i] = $trigger
 }
