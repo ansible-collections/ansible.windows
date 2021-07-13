@@ -1430,7 +1430,14 @@ if ($invokeSplat.Wait) {
                     id = $updateInfo.id
                     installed = $false
                     downloaded = $false
-                    kb = @($updateInfo.kb | ForEach-Object { [int]$_.Substring(2) })
+                    kb = @($updateInfo.kb | ForEach-Object {
+                        if ($_.StartsWith("KB")) {
+                            $_.Substring(2)
+                        }
+                        else {
+                            $_
+                        }
+                    })
                     title = $updateInfo.title
                 }
 

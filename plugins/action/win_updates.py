@@ -993,7 +993,7 @@ class ActionModule(ActionBase):
         raw_info = self._updates[update_id]
         info = {
             'title': raw_info['title'],
-            'kb': [int(v[2:]) for v in raw_info['kb']],
+            'kb': [(v[2:] if v.startswith("KB") else v) for v in raw_info['kb']],
             'categories': raw_info['categories'],
             'id': update_id,
             'downloaded': False,
