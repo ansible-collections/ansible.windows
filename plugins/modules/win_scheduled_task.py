@@ -319,7 +319,7 @@ options:
       is compatible with.
     - C(0) means the task is compatible with the AT command.
     - C(1) means the task is compatible with Task Scheduler 1.0(Windows Vista, Windows Server 2008 and older).
-    - C(2) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
+    - C(2) means the task is compatible with Task Scheduler 2.0(Windows Vista, Windows Server 2008).
     - C(3) means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).
     - C(4) means the task is compatible with Task Scheduler 2.0(Windows 10, Windows Server 2016, Windows Server 2019).
     type: int
