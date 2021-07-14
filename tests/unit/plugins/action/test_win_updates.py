@@ -21,58 +21,58 @@ from ansible_collections.ansible.windows.plugins.action import win_updates
 UPDATE_INFO = {
     '1abb2377-20ef-43ff-aabc-0de4711ab205': {
         'title': '2020-10 Security Update for Adobe Flash Player for Windows Server 2019 for x64-based Systems (KB4580325)',
-        'kb': 4580325,
+        'kb': '4580325',
         'categories': ['Security Updates', 'Windows Server 2019'],
     },
     '89e11227-761b-4396-bf37-37a2b641fa84': {
         'title': '2021-01 Update for Windows Server 2019 for x64-based Systems (KB4589208)',
-        'kb': 4589208,
+        'kb': '4589208',
         'categories': ['Updates', 'Windows Server 2019'],
     },
     '74819184-828b-4f97-bb4b-089a0c58e366': {
         'title': '2021-05 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB5003171)',
-        'kb': 5003171,
+        'kb': '5003171',
         'categories': ['Security Updates'],
     },
     '9e94ae7a-f0f4-4ea1-b590-9f1388ee6126': {
         'title': '2021-05 Cumulative Update Preview for .NET Framework 3.5, 4.7.2 and 4.8 for Windows Server 2019 for x64 (KB5003396)',
-        'kb': 5003396,
+        'kb': '5003396',
         'categories': ['Updates', 'Windows Server 2019'],
     },
     'a89e56f1-2002-40c6-a9af-3cf8be801df7': {
         'title': 'Security Intelligence Update for Microsoft Defender Antivirus - KB2267602 (Version 1.339.1923.0)',
-        'kb': 2267602,
+        'kb': '2267602',
         'categories': ['Definition Updates', 'Microsoft Defender Antivirus'],
     },
     '5dae3a9d-4f41-445c-83f6-15fb4534e936': {
         'title': 'Security Intelligence Update for Microsoft Defender Antivirus - KB2267602 (Version 1.341.8.0)',
-        'kb': 2267602,
+        'kb': '2267602',
         'categories': ['Definition Updates', 'Microsoft Defender Antivirus'],
     },
     '4326d7df-c256-4cca-99f7-c02a04443ec1': {
         'title': 'Security Intelligence Update for Microsoft Defender Antivirus - KB2267602 (Version 1.341.70.0)',
-        'kb': 2267602,
+        'kb': '2267602',
         'categories': ['Definition Updates', 'Microsoft Defender Antivirus'],
     },
     '81929363-530d-4ccc-b9c7-8a1b89b20fe5': {
         'title': 'Security Intelligence Update for Microsoft Defender Antivirus - KB2267602 (Version 1.341.72.0)',
-        'kb': 2267602,
+        'kb': '2267602',
         'categories': ['Definition Updates', 'Microsoft Defender Antivirus'],
     },
     '33a64099-ba99-4e7f-a2d7-cf7d7fc4029f': {
         'title': 'Security Update for Windows Server 2019 for x64-based Systems (KB4535680)',
-        'kb': 4535680,
+        'kb': '4535680',
         'categories': ['Security Updates', 'Windows Server 2019'],
     },
 
     'f26a0046-1e1a-4305-8743-19c92c3095a5': {
         'title': 'Update for Removal of Adobe Flash Player for Windows Server 2019 for x64-based systems (KB4577586)',
-        'kb': 4577586,
+        'kb': '4577586',
         'categories': ['Updates', 'Windows Server 2019'],
     },
     'd4919b6d-584d-436f-b877-dc3fc352a774': {
         'title': 'Windows Malicious Software Removal Tool x64 - v5.89 (KB890830)',
-        'kb': 890830,
+        'kb': '890830',
         'categories': ['Update Rollups', 'Windows Server 2016', 'Windows Server 2019'],
     },
 }
@@ -280,7 +280,7 @@ def test_install_without_reboot(monkeypatch):
         assert not u['downloaded']
         assert not u['installed']
 
-        if u_info['kb'] == 2267602:
+        if u_info['kb'] == '2267602':
             assert u['filtered_reason'] == 'blacklist'
             assert u['filtered_reasons'] == ['reject_list', 'category_names']
         else:
@@ -324,7 +324,7 @@ def test_install_with_initial_reboot_required(monkeypatch):
         assert u['kb'] == [u_info['kb']]
         assert u['categories'] == u_info['categories']
 
-        if u_info['kb'] == 5003171:
+        if u_info['kb'] == '5003171':
             assert not u['downloaded']
             assert not u['installed']
         else:
@@ -448,6 +448,41 @@ def test_install_with_initial_reboot_required_but_no_reboot(monkeypatch):
         assert not u['installed']
 
 
+def test_install_non_integer_kb_values(monkeypatch):
+    # custom_kb.txt contains 3 updates and 3 filtered updates an empty kb, integer kb, and string kb value.
+    actual = run_action(monkeypatch, 'custom_kb.txt', {
+        'reject_list': ['KB2267602'],
+    })
+
+    assert len(actual['filtered_updates']) == 3
+    for u in actual['filtered_updates']:
+        if u['id'] == 'f26a0046-1e1a-4305-8743-19c92c3095a5':
+            assert u['kb'] == ['']
+
+        elif u['id'] == '9e94ae7a-f0f4-4ea1-b590-9f1388ee6126':
+            assert u['kb'] == ['5003396']
+
+        elif u['id'] == '4326d7df-c256-4cca-99f7-c02a04443ec1':
+            assert u['kb'] == ['OTHER']
+
+        else:
+            assert False, ("Unknown update in filtered updates %s" % u['id'])
+
+    assert len(actual['updates']) == 3
+    for u in actual['updates']:
+        if u['id'] == '74819184-828b-4f97-bb4b-089a0c58e366':
+            assert u['kb'] == ['']
+
+        elif u['id'] == 'd4919b6d-584d-436f-b877-dc3fc352a774':
+            assert u['kb'] == ['890830']
+
+        elif u['id'] == '1abb2377-20ef-43ff-aabc-0de4711ab205':
+            assert u['kb'] == ['NET4800']
+
+        else:
+            assert False, ("Unknown update in filtered updates %s" % u['id'])
+
+
 def test_fail_install(monkeypatch):
     reboot_mock = MagicMock()
     reboot_mock.return_value = {'failed': False}
@@ -477,7 +512,7 @@ def test_fail_install(monkeypatch):
         assert not u['installed']
 
         assert u['filtered_reason'] == 'whitelist'
-        if u_info['kb'] == 4580325:
+        if u_info['kb'] == '4580325':
             assert u['filtered_reasons'] == ['accept_list']
         else:
             assert u['filtered_reasons'] == ['accept_list', 'category_names']
@@ -491,7 +526,7 @@ def test_fail_install(monkeypatch):
         assert u['categories'] == u_info['categories']
         assert u['downloaded']
 
-        if u_info['kb'] == 2267602:
+        if u_info['kb'] == '2267602':
             assert not u['installed']
             assert u['failure_hresult_code'] == 2147944003
             assert u['failure_msg'] == 'Unknown WUA HRESULT 2147944003 (UNKNOWN 80070643)'
