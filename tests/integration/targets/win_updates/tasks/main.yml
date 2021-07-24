@@ -106,3 +106,52 @@
     that:
     - not search_check is changed
     - not search_actual_check.stat.exists
+
+- name: Get current user SID
+  win_powershell:
+    script: |
+      $Ansible.Changed = $false
+      [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+  register: current_sid
+
+- name: add current user to deny batch logon right
+  win_user_right:
+    users: '{{ current_sid.output[0] }}'
+    name: SeDenyBatchLogonRight
+    action: add
+
+- block:
+  - name: search for all updates without batch logon
+    win_updates:
+      category_names: '*'
+      state: searched
+    register: search_sync
+
+  - name: search for all updates with async without batch logon
+    win_updates:
+      category_names: '*'
+      state: searched
+    register: search_async
+    async: 60
+
+  - assert:
+      that:
+      - not search_sync is changed
+      - not search_async is changed
+      - not search_sync.reboot_required
+      - not search_async.reboot_required
+      - search_sync.failed_update_count == 0
+      - search_async.failed_update_count == 0
+      - search_sync.installed_update_count == 0
+      - search_async.installed_update_count == 0
+      - search_sync.found_update_count == search_sync.updates|length
+      - search_async.found_update_count == search_async.updates|length
+      - search_sync.filtered_updates == []
+      - search_async.filtered_updates == []
+
+  always:
+  - name: remove explicit deny batch logon right
+    win_user_right:
+      users: '{{ current_sid.output[0] }}'
+      name: SeDenyBatchLogonRight
+      action: remove

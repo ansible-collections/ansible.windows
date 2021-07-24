@@ -143,15 +143,20 @@ Function New-NamedPipe {
     )
 
     $currentUser = ([Security.Principal.WindowsIdentity]::GetCurrent()).User
+    $systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
+        [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
+
     $pipeSec = New-Object -TypeName System.IO.Pipes.PipeSecurity
-    $pipeSec.AddAccessRule($pipeSec.AccessRuleFactory(
-        $currentUser,
-        [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
-        $false,
-        [System.Security.AccessControl.InheritanceFlags]::None,
-        [System.Security.AccessControl.PropagationFlags]::None,
-        [System.Security.AccessControl.AccessControlType]::Allow
-    ))
+    foreach ($sid in @($currentUser, $systemSid)) {
+        $pipeSec.AddAccessRule($pipeSec.AccessRuleFactory(
+            $sid,
+            [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
+            $false,
+            [System.Security.AccessControl.InheritanceFlags]::None,
+            [System.Security.AccessControl.PropagationFlags]::None,
+            [System.Security.AccessControl.AccessControlType]::Allow
+        ))
+    }
 
     # FUTURE: This won't work on pwsh as it doesn't take the PipeSecurity overload. Unfortunately the only way to do
     # that before .NET 5 (pwsh 7.2+) is to use PInvoke to call CreateNamedPipeW.
@@ -213,6 +218,7 @@ Function Start-EphemeralTask {
         $Arguments
     )
 
+    $errMessage = $null
     $scheduler = New-Object -ComObject Schedule.Service
     try {
         $scheduler.Connect()
@@ -246,34 +252,91 @@ Function Start-EphemeralTask {
         $taskDefinition.Settings.Enabled = $true
         $taskDefinition.Settings.StopIfGoingOnBatteries = $false
 
-        # While S4U is designed for normal user accounts it is accepted for well known service accounts
-        $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User
-        $taskDefinition.Principal.UserId = $currentSid.Value
-        $taskDefinition.Principal.LogonType = 2  # TASK_LOGON_S4U
-        $taskDefinition.Principal.RunLevel = 1  # TASK_RUNLEVEL_HIGHEST
-
-        $createdTask = $taskFolder.RegisterTaskDefinition(
-            $Name,
-            $taskDefinition,
-            2,  # TASK_CREATE
-            $null,
-            $null,
-            $taskDefinition.Principal.LogonType
+        # Try the current user first but fallback to SYSTEM in case the user isn't allowed to do batch logons.
+        $userSids = @(
+            [Security.Principal.WindowsIdentity]::GetCurrent().User
+            (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
+                [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
         )
+        foreach ($sid in $userSids) {
+            # While S4U is designed for normal user accounts it is accepted for well known service accounts
+            $taskDefinition.Principal.UserId = $sid.Value
+            $taskDefinition.Principal.LogonType = 2  # TASK_LOGON_S4U
+            $taskDefinition.Principal.RunLevel = 1  # TASK_RUNLEVEL_HIGHEST
 
-        $runningTask = $createdTask.RunEx(
-            $null,
-            2,  # TASK_RUN_IGNORE_CONSTRAINTS
-            0,
-            ""
-        )
-        # There is a change EnginePID isn't yet defined (task hasn't fully started). We want to wait until that prop
-        # is populated before returning the value and continuing on.
-        while (-not $runningTask.EnginePID) { Start-Sleep -Seconds 1 }
-        $runningTask.EnginePID
+            $registerDate = Get-Date
+            $createdTask = $taskFolder.RegisterTaskDefinition(
+                $Name,
+                $taskDefinition,
+                2,  # TASK_CREATE
+                $null,
+                $null,
+                $taskDefinition.Principal.LogonType
+            )
+            try {
+                $runningTask = $createdTask.RunEx(
+                    $null,
+                    2,  # TASK_RUN_IGNORE_CONSTRAINTS
+                    0,
+                    ""
+                )
 
-        # The task will continue to run even after it is deleted
-        $taskFolder.DeleteTask($Name, 0)
+                # Gets the task logs if there is a failure and has been logged after the register datetime.
+                $taskFilter = @"
+<QueryList>
+    <Query Id="0" Path="Microsoft-Windows-TaskScheduler/Operational">
+        <Select Path="Microsoft-Windows-TaskScheduler/Operational">
+            *[
+                EventData/Data[@Name='TaskName']='\$Name'
+            and
+                System[(Level=2)]
+            and
+                System[TimeCreated[@SystemTime&gt;='$($registerDate.ToUniversalTime().ToString("o"))']]
+            ]
+        </Select>
+    </Query>
+</QueryList>
+"@
+                # There is a chance EnginePID isn't yet defined (task hasn't fully started). We want to wait until that prop
+                # is populated before returning the value and continuing on.
+                $taskPid = 0
+                $errMessage = $null
+                while ($true) {
+                    $taskPid = $runningTask.EnginePID
+
+                    if ($taskPid) {
+                        break
+                    }
+                    if ($task.State -ne 4) {  # TASK_STATE_RUNNING
+                        $errEvent = Get-WinEvent -FilterXml $taskFilter -ErrorAction SilentlyContinue | Select-Object -First 1
+                        if ($errEvent) {
+                            $errMessage = $errEvent.Message
+                        }
+                        else {
+                            # If event logs are disabled for tasks we can only rely on the State property to see if the
+                            # task is still running/starting up.
+                            $errMessage = "Unknown failure trying to start win_updates tasks - enable task event logs to see more info"
+                        }
+
+                        break
+                    }
+                    Start-Sleep -Seconds 1
+                }
+
+                if ($taskPid) {
+                    $taskPid
+                    break
+                }
+            }
+            finally {
+                # The task will continue to run even after it is deleted
+                $taskFolder.DeleteTask($Name, 0)
+            }
+        }
+
+        if ($errMessage) {
+            throw "Failed to start task: $errMessage"
+        }
     }
     finally {
         [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($scheduler)
@@ -1351,6 +1414,22 @@ if (-not $outputPathDir) {
     # Running async means this won't be set, just use the module tmpdir.
     $outputPathDir = $module.Tmpdir
 }
+
+# The scheduled task might need to fallback to run as SYSTEM so grant that SID rights to OutputDir
+$systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
+        [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
+$outputDirAcl = Get-Acl -LiteralPath $outputPathDir
+$systemAce = $outputDirAcl.AccessRuleFactory(
+    $systemSid,
+    [System.Security.AccessControl.FileSystemRights]'Modify,Read,ExecuteFile,Synchronize',
+    $false,
+    [System.Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit',
+    [System.Security.AccessControl.PropagationFlags]::None,
+    [System.Security.AccessControl.AccessControlType]::Allow
+)
+$outputDirAcl.AddAccessRule($systemAce)
+Set-Acl -LiteralPath $outputPathDir -AclObject $outputDirAcl
+
 $outputPath = [IO.Path]::GetFullpath((Join-Path $outputPathDir 'output.txt'))
 $cancelId = "Global\Ansible.Windows.WinUpdates-$([Guid]::NewGuid().Guid)"
 
