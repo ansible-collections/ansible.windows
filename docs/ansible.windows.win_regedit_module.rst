@@ -289,7 +289,7 @@ Examples
         path: HKLM:\ANSIBLE\Control Panel\Mouse
         name: MouseTrails
         data: 10
-        type: str
+        type: string
         state: present
         hive: C:\Users\Default\NTUSER.dat
 

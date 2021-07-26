@@ -99,11 +99,12 @@ Notes
 -----
 
 .. note::
-   - By default there are a few builtin resources that come with PowerShell 5.0, see https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources for more information on these resources.
+   - By default there are a few builtin resources that come with PowerShell 5.0, See https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources for more information on these resources.
    - Custom DSC resources can be installed with :ref:`community.windows.win_psmodule <community.windows.win_psmodule_module>` using the *name* option.
    - The DSC engine run's each task as the SYSTEM account, any resources that need to be accessed with a different account need to have ``PsDscRunAsCredential`` set.
    - To see the valid options for a DSC resource, run the module with ``-vvv`` to show the possible module invocation. Default values are not shown in this output but are applied within the DSC engine.
    - The DSC engine requires the HTTP WSMan listener to be online and its port configured as the default listener for HTTP. This is set up by default but if a custom HTTP port is used or only a HTTPS listener is present then the module will fail. See the examples for a way to check this out in PowerShell.
+   - The Local Configuration Manager ``LCM`` on the targeted host in question should be disabled to avoid any conflicts with resources being applied by this module. See https://devblogs.microsoft.com/powershell/invoking-powershell-dsc-resources-directly/ for more information on hwo to disable ``LCM``.
 
 
 
