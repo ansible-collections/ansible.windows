@@ -304,10 +304,29 @@ releases:
       - win_updates - Improve Windows Update HRESULT error messages
       - win_updates - Improve the details present in the ``log_path`` log entries
         for better monitoring
-      release_summary:
-      - Release summary for v1.7.0
     fragments:
     - release-summary.yml
     - win_reboot-flaky-connection.yml
     - win_updates-refactor.yml
     release_date: '2021-06-26'
+  1.7.1:
+    changes:
+      bugfixes:
+      - win_dsc - Fix import errors when running against host that wasn't installed
+        with the ``en-US`` locale - https://github.com/ansible-collections/ansible.windows/issues/83
+      - win_state - Fixed the ``creationtime``, ``lastaccesstime``, and ``lastwritetime``
+        to report the time in UTC. This matches the ``stat`` module's behaviour and
+        what many would expect for a epoch based timestamp - https://github.com/ansible-collections/ansible.windows/issues/240
+      - win_updates - Fixed ``win_updates`` output to not cast to an integer to preserve
+        original behaviour and issues with non integer values - https://github.com/ansible-collections/ansible.windows/issues/247
+      - win_updates - fallback to run as SYSTEM if current user does not have batch
+        logon rights - https://github.com/ansible-collections/ansible.windows/issues/253
+      release_summary:
+      - Release summary for v1.7.1
+    fragments:
+    - release_summary.yml
+    - win_dsc-locale.yml
+    - win_state-datetime.yml
+    - win_updates-batch.yml
+    - win_updates-kb.yml
+    release_date: '2021-07-27'

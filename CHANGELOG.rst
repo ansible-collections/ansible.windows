@@ -5,13 +5,24 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.7.0
+v1.7.1
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.7.0
+- Release summary for v1.7.1
+
+Bugfixes
+--------
+
+- win_dsc - Fix import errors when running against host that wasn't installed with the ``en-US`` locale - https://github.com/ansible-collections/ansible.windows/issues/83
+- win_state - Fixed the ``creationtime``, ``lastaccesstime``, and ``lastwritetime`` to report the time in UTC. This matches the ``stat`` module's behaviour and what many would expect for a epoch based timestamp - https://github.com/ansible-collections/ansible.windows/issues/240
+- win_updates - Fixed ``win_updates`` output to not cast to an integer to preserve original behaviour and issues with non integer values - https://github.com/ansible-collections/ansible.windows/issues/247
+- win_updates - fallback to run as SYSTEM if current user does not have batch logon rights - https://github.com/ansible-collections/ansible.windows/issues/253
+
+v1.7.0
+======
 
 Minor Changes
 -------------
