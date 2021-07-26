@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - fallback to run as SYSTEM if current user does not have batch logon rights - https://github.com/ansible-collections/ansible.windows/issues/253
