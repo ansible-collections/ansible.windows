@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 module: win_scheduled_task
 short_description: Manage scheduled tasks
 description:
-- Creates/modified or removes Windows scheduled tasks.
+- Creates/modifies or removes Windows scheduled tasks.
 options:
   # module definition options
   name:
