@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - win_group - fixed ``description`` setting for a group that doesn't exist when running in check_mode (https://github.com/ansible-collections/ansible.windows/pull/260).
