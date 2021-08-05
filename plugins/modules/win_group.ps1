@@ -32,8 +32,8 @@ try {
 
         If ($null -ne $description) {
             IF (-not $group.description -or $group.description -ne $description) {
-                $group.description = $description
                 If (-not $check_mode) {
+                    $group.description = $description
                     $group.SetInfo()
                 }
                 $result.changed = $true
