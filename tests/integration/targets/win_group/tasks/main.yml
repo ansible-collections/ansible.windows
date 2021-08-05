@@ -34,6 +34,7 @@
 
 - name: set a group description on a missing group in check mode
   win_group:
+    name: "{{test_win_group_name}}"
     description: "{{test_win_group_description}}"
   check_mode: true
   register: win_group_checkmode_description
@@ -43,6 +44,7 @@
   assert:
     that:
       - "win_group_checkmode_description is changed"
+      - "win_group_checkmode_description is not failed"
 
 - name: create test group with invalid state parameter
   win_group:
