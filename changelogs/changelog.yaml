@@ -321,8 +321,6 @@ releases:
         original behaviour and issues with non integer values - https://github.com/ansible-collections/ansible.windows/issues/247
       - win_updates - fallback to run as SYSTEM if current user does not have batch
         logon rights - https://github.com/ansible-collections/ansible.windows/issues/253
-      release_summary:
-      - Release summary for v1.7.1
     fragments:
     - release_summary.yml
     - win_dsc-locale.yml
@@ -330,3 +328,15 @@ releases:
     - win_updates-batch.yml
     - win_updates-kb.yml
     release_date: '2021-07-27'
+  1.7.2:
+    changes:
+      bugfixes:
+      - win_group - fixed ``description`` setting for a group that doesn't exist when
+        running in check_mode (https://github.com/ansible-collections/ansible.windows/pull/260).
+      release_summary:
+      - Release summary for v1.7.2
+      - First release for Automation Hub
+    fragments:
+    - 260-description-checkmode.yml
+    - release.yml
+    release_date: '2021-08-07'

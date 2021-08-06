@@ -5,13 +5,22 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.7.1
+v1.7.2
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.7.1
+- First release for Automation Hub
+- Release summary for v1.7.2
+
+Bugfixes
+--------
+
+- win_group - fixed ``description`` setting for a group that doesn't exist when running in check_mode (https://github.com/ansible-collections/ansible.windows/pull/260).
+
+v1.7.1
+======
 
 Bugfixes
 --------
