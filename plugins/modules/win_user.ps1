@@ -183,7 +183,7 @@ Function Test-LocalCredential {
     )
 
     try {
-        $handle = [Ansible.AccessToken.TokenUtil]::LogonUser($Username, $null, $Password, "Network", "Default")
+        $handle = [Ansible.AccessToken.TokenUtil]::LogonUser($Username, ".", $Password, "Network", "Default")
         $handle.Dispose()
         $isValid = $true
     } catch [Ansible.AccessToken.Win32Exception] {
