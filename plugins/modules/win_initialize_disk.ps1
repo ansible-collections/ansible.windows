@@ -144,7 +144,7 @@ if ("RAW" -eq $ansible_part_style) {
     } elseif ($force_init) {
         $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
         Clear-AnsibleDisk -AnsibleDisk $ansible_disk
-        Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style
+        if ( $bring_online ) { Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style }
     }
 }
 
