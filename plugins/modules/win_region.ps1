@@ -45,6 +45,67 @@ namespace Ansible.WinRegion {
         public static extern int GetUserDefaultLocaleName(
             IntPtr lpLocaleName,
             int cchLocaleName);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        public static extern int RegLoadKeyW(
+            UInt32 hKey,
+            string lpSubKey,
+            string lpFile);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        public static extern int RegUnLoadKeyW(
+            UInt32 hKey,
+            string lpSubKey);
+    }
+
+    public class Win32Exception : System.ComponentModel.Win32Exception
+    {
+        private string _msg;
+        public Win32Exception(string message) : this(Marshal.GetLastWin32Error(), message) { }
+        public Win32Exception(int errorCode, string message) : base(errorCode)
+        {
+            _msg = String.Format("{0} ({1}, Win32ErrorCode {2})", message, base.Message, errorCode);
+        }
+        public override string Message { get { return _msg; } }
+        public static explicit operator Win32Exception(string message) { return new Win32Exception(message); }
+    }
+
+    public class Hive : IDisposable
+    {
+        private const UInt32 SCOPE = 0x80000003;  // HKU
+        private string hiveKey;
+        private bool loaded = false;
+
+        public Hive(string hiveKey, string hivePath)
+        {
+            this.hiveKey = hiveKey;
+            int ret = NativeMethods.RegLoadKeyW(SCOPE, hiveKey, hivePath);
+            if (ret != 0)
+                throw new Win32Exception(ret, String.Format("Failed to load registry hive at {0}", hivePath));
+            loaded = true;
+        }
+
+        public static void UnloadHive(string hiveKey)
+        {
+            int ret = NativeMethods.RegUnLoadKeyW(SCOPE, hiveKey);
+            if (ret != 0)
+                throw new Win32Exception(ret, String.Format("Failed to unload registry hive at {0}", hiveKey));
+        }
+
+        public void Dispose()
+        {
+            if (loaded)
+            {
+                // Make sure the garbage collector disposes all unused handles and waits until it is complete
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                UnloadHive(hiveKey);
+                loaded = false;
+            }
+            GC.SuppressFinalize(this);
+        }
+        ~Hive() { this.Dispose(); }
     }
 
     public class LocaleHelper {
@@ -58,7 +119,7 @@ namespace Ansible.WinRegion {
             StringBuilder data = new StringBuilder(500);
             int result = NativeMethods.GetLocaleInfoEx(Locale, LCType, data, 500);
             if (result == 0)
-                throw new Exception(String.Format("Error getting locale info with legacy method: {0}", new Win32Exception(Marshal.GetLastWin32Error()).Message));
+                throw new Win32Exception("Error getting locale info with legacy method");
 
             return data.ToString();
         }
@@ -69,6 +130,7 @@ $original_tmp = $env:TMP
 $env:TMP = $_remote_tmp
 Add-Type -TypeDefinition $lctype_util
 $env:TMP = $original_tmp
+
 
 Function Get-LastWin32ExceptionMessage {
     param([int]$ErrorCode)
@@ -344,20 +406,27 @@ if ($null -ne $unicode_language) {
 
 if ($copy_settings -eq $true -and $result.changed -eq $true) {
     if (-not $check_mode) {
-        $defaultHiveKey = 'HKU\TEMP'
-        reg load $defaultHiveKey 'C:\Users\Default\NTUSER.DAT'
         New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS
 
-        $sids = 'TEMP', '.DEFAULT', 'S-1-5-19', 'S-1-5-20'
-        foreach ($sid in $sids) {
-            Copy-RegistryKey -source "HKCU:\Keyboard Layout" -target "HKU:\$sid"
-            Copy-RegistryKey -source "HKCU:\Control Panel\International" -target "HKU:\$sid\Control Panel"
-            Copy-RegistryKey -source "HKCU:\Control Panel\Input Method" -target "HKU:\$sid\Control Panel"
+        if (Test-Path -LiteralPath HKU:\ANSIBLE) {
+            $module.Warn("hive already loaded at HKU:\ANSIBLE, had to unload hive for win_region to continue")
+            [Ansible.WinRegion.Hive]::UnloadHive("ANSIBLE")
+        }
+
+        $loaded_hive = New-Object -TypeName Ansible.WinRegion.Hive -ArgumentList "ANSIBLE", 'C:\Users\Default\NTUSER.DAT'
+        try {
+            $sids = 'ANSIBLE', '.DEFAULT', 'S-1-5-19', 'S-1-5-20'
+            foreach ($sid in $sids) {
+                Copy-RegistryKey -source "HKCU:\Keyboard Layout" -target "HKU:\$sid"
+                Copy-RegistryKey -source "HKCU:\Control Panel\International" -target "HKU:\$sid\Control Panel"
+                Copy-RegistryKey -source "HKCU:\Control Panel\Input Method" -target "HKU:\$sid\Control Panel"
+            }
+        }
+        finally {
+            $loaded_hive.Dispose()
         }
 
         Remove-PSDrive HKU
-        [gc]::collect()
-        reg unload $defaultHiveKey
     }
     $result.changed = $true
 }
