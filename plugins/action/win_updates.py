@@ -977,7 +977,7 @@ class ActionModule(ActionBase):
             '-%s %s' % (k, v if isinstance(v, int) else quote_pwsh(v))
             for k, v in parameters.items()
         )
-        cmd = '$cmd = Get-Content -LiteralPath %s; &([ScriptBlock]::Create($cmd)) %s' \
+        cmd = '$cmd = Get-Content -LiteralPath %s -Raw; &([ScriptBlock]::Create($cmd)) %s' \
               % (quote_pwsh(script), encoded_parameters)
         return self._execute_command(cmd)
 
