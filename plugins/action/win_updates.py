@@ -923,8 +923,7 @@ class ActionModule(ActionBase):
         except Exception as e:
             # Try our best to cancel the update task on an unknown failure.
             display.warning("Unknown failure when polling update result - attempting to cancel task: %s" % to_text(e))
-            cmd = '&%s -CancelId %s -TaskPid %d' % (quote_pwsh(cancel_script_path), quote_pwsh(cancel_id), task_pid)
-            self._execute_command(cmd)
+            self._execute_script(cancel_script_path, {"CancelId": cancel_id, "TaskPid": task_pid})
 
             raise
 
@@ -954,8 +953,7 @@ class ActionModule(ActionBase):
 
     def _poll_result(self, script_path, output_path, offset):  # type: (str, str, int) -> Tuple[List[Dict], int]
         """Reads the update scheduled task output results path and returns any new results."""
-        cmd = '&%s -OutputPath %s -Offset %d' % (quote_pwsh(script_path), quote_pwsh(output_path), offset)
-        rc, stdout, stderr = self._execute_command(cmd)
+        rc, stdout, stderr = self._execute_script(script_path, {'OutputPath': output_path, 'Offset': offset})
 
         if rc != 0:
             msg = "Failed to poll update task, see rc, stdout, stderr for more info"
@@ -972,6 +970,16 @@ class ActionModule(ActionBase):
                 raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
         return entries, offset
+
+    def _execute_script(self, script, parameters):  # typing: (str, typing.Dict) -> Tuple[int, str, str]
+        # The script is read from a file and executed as a scriptblock to avoid any execution policy shenanigans
+        encoded_parameters = ' '.join(
+            '-%s %s' % (k, v if isinstance(v, int) else quote_pwsh(v))
+            for k, v in parameters.items()
+        )
+        cmd = '$cmd = Get-Content -LiteralPath %s -Raw; &([ScriptBlock]::Create($cmd)) %s' \
+              % (quote_pwsh(script), encoded_parameters)
+        return self._execute_command(cmd)
 
     def _execute_command(self, command):  # type: (str) -> Tuple[int, str, str]
         """Runs a command on the Windows host and returned the result"""
