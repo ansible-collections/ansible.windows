@@ -295,6 +295,7 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
     fail_count = 0
     max_fail_sleep = 12
     reset_required = False
+    last_error = None
 
     while fail_count == 0 or condition(fail_count):
         try:
@@ -310,6 +311,8 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
                 return res
 
         except Exception as e:
+            last_error = e
+
             if not isinstance(e, _TestCommandFailure):
                 # The error may be due to a connection problem, just reset the connection just in case
                 reset_required = True
@@ -337,7 +340,8 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
             fail_count += 1
             time.sleep(fail_sleep)
 
-    raise e
+    if last_error:
+        raise last_error
 
 
 def _execute_command(task_action, connection, command):  # type: (str, ConnectionBase, str) -> Tuple[int, str, str]
