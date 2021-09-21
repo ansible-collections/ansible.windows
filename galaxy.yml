@@ -3,7 +3,7 @@ name: windows
 version: 1.7.2
 readme: README.md
 authors:
-- Jordan Borean @jborean93
+- Jordan Borean test @jborean93
 - Matt Davis @nitzmahone
 description: |
   Ansible collection for core Windows plugins.
