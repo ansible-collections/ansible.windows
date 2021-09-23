@@ -30,16 +30,18 @@ catch {
     Fail-Json $result "win_firewall requires Get-NetFirewallProfile and Set-NetFirewallProfile Cmdlets."
 }
 
+$FIREWALL_ENABLED = [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetSecurity.GpoBoolean]::True
+$FIREWALL_DISABLED = [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetSecurity.GpoBoolean]::False
+
 Try {
 
     ForEach ($profile in $firewall_profiles) {
-
         $current_profile = Get-NetFirewallProfile -Name $profile
         $currentstate = $current_profile.Enabled
         $current_inboundaction = $current_profile.DefaultInboundAction
         $current_outboundaction = $current_profile.DefaultOutboundAction
         $result.$profile = @{
-            enabled = ($currentstate -eq 1)
+            enabled = ($currentstate -eq $FIREWALL_ENABLED)
             considered = ($profiles -contains $profile)
             currentstate = $currentstate
         }
@@ -50,7 +52,7 @@ Try {
 
         if ($state -eq 'enabled') {
 
-            if ($currentstate -eq $false) {
+            if ($currentstate -eq $FIREWALL_DISABLED) {
                 Set-NetFirewallProfile -name $profile -Enabled true -WhatIf:$check_mode
                 $result.changed = $true
                 $result.$profile.enabled = $true
@@ -71,7 +73,7 @@ Try {
             }
         } else {
 
-            if ($currentstate -eq $true) {
+            if ($currentstate -eq $FIREWALL_ENABLED) {
                 Set-NetFirewallProfile -name $profile -Enabled false -WhatIf:$check_mode
                 $result.changed = $true
                 $result.$profile.enabled = $false
