@@ -333,10 +333,22 @@ releases:
       bugfixes:
       - win_group - fixed ``description`` setting for a group that doesn't exist when
         running in check_mode (https://github.com/ansible-collections/ansible.windows/pull/260).
-      release_summary:
-      - Release summary for v1.7.2
-      - First release for Automation Hub
     fragments:
     - 260-description-checkmode.yml
     - release.yml
     release_date: '2021-08-07'
+  1.7.3:
+    changes:
+      bugfixes:
+      - win_reboot - Fix local variable referenced before assignment issue - https://github.com/ansible-collections/ansible.windows/issues/276
+      - win_updates - Bypass execution policy checks when polling or cancelling the
+        update task - https://github.com/ansible-collections/ansible.windows/issues/272
+      - win_user - Set validate user logic to always check local database
+      release_summary:
+      - Release summary for v1.7.3
+    fragments:
+    - reboot_error_outside_block.yml
+    - release_summary.yml
+    - win_updates-executionpolicy.yml
+    - win_user-domain.yml
+    release_date: '2021-09-23'

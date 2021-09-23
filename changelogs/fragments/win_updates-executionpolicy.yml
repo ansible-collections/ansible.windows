@@ -1,2 +1,0 @@
-bugfixes:
-- win_updates - Bypass execution policy checks when polling or cancelling the update task - https://github.com/ansible-collections/ansible.windows/issues/272
