@@ -1,2 +1,0 @@
-bugfixes:
-- win_user - Set validate user logic to always check local database

@@ -5,14 +5,23 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.7.2
+v1.7.3
 ======
 
 Release Summary
 ---------------
 
-- First release for Automation Hub
-- Release summary for v1.7.2
+- Release summary for v1.7.3
+
+Bugfixes
+--------
+
+- win_reboot - Fix local variable referenced before assignment issue - https://github.com/ansible-collections/ansible.windows/issues/276
+- win_updates - Bypass execution policy checks when polling or cancelling the update task - https://github.com/ansible-collections/ansible.windows/issues/272
+- win_user - Set validate user logic to always check local database
+
+v1.7.2
+======
 
 Bugfixes
 --------
