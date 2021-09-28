@@ -156,28 +156,27 @@ Function Get-NetAdapterInfo {
 Function Get-RegistryNameServerInfo {
     [CmdletBinding()]
     Param (
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
+        [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Mandatory=$true)]
         [System.Guid]
         $InterfaceGuid
     )
 
     Begin {
         $protoItems = @{
-            
-            [System.Net.Sockets.AddressFamily]::InterNetwork   = @{
-                Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{0}}}'
+            [System.Net.Sockets.AddressFamily]::InterNetwork = @{
+                Interface = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{0}}}'
                 StaticNameServer = 'NameServer'
-                DhcpNameServer   = 'DhcpNameServer'
-                EnableDhcp       = 'EnableDHCP'
-                BinaryLength     = 4
+                DhcpNameServer = 'DhcpNameServer'
+                EnableDhcp = 'EnableDHCP'
+                BinaryLength = 4
             }
 
             [System.Net.Sockets.AddressFamily]::InterNetworkV6 = @{
-                Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\{{{0}}}'
+                Interface = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\{{{0}}}'
                 StaticNameServer = 'NameServer'
-                DhcpNameServer   = 'Dhcpv6DNSServers'
-                EnableDhcp       = 'EnableDHCP'
-                BinaryLength     = 16
+                DhcpNameServer = 'Dhcpv6DNSServers'
+                EnableDhcp = 'EnableDHCP'
+                BinaryLength = 16
             }
         }
     }
@@ -188,31 +187,27 @@ Function Get-RegistryNameServerInfo {
             $regPath = $items.Interface -f $InterfaceGuid
 
             if (($iface = Get-Item -LiteralPath $regPath -ErrorAction Ignore)) {
-
                 $iprop = $iface | Get-ItemProperty
                 $famInfo = @{
-                    AddressFamily           = $addrFamily
-                    UsingDhcp               = Get-OptionalProperty -InputObject $iprop -Name $items.EnableDhcp -As bool
-                    EffectiveNameServers    = @()
+                    AddressFamily = $addrFamily
+                    UsingDhcp = Get-OptionalProperty -InputObject $iprop -Name $items.EnableDhcp -As bool
+                    EffectiveNameServers = @()
                     DhcpAssignedNameServers = @()
-                    NameServerBadFormat     = $false
+                    NameServerBadFormat = $false
                 }
 
-                if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.DhcpNameServer)) {
-                    # IPv6 are stored as 16 bytes REG_BINARY values. If multiple IPv6 are configured
-                    # those ips are contiguous
-                    $famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers = 
-                    @(if ($ns -is [System.Object[]]) {
-                        for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
-                            [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
-                            (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
-                        }
-                    # IPv4 are stored as space delimited string properties in the registry
-                    } else {
-                        $ns.Split(' ')
-                    })
-
-                }
+		# IPv6 are stored as 16 bytes REG_BINARY values. If multiple IPv6 are configured
+		# those ips are contiguous
+		$famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers =
+		@(if ($ns -is [System.Object[]]) {
+		for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
+		    [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
+		    (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
+		}
+		# IPv4 are stored as space delimited string properties in the registry
+		} else {
+		    $ns.Split(' ')
+		})
 
                 if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
                     $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns -split '[,;\ ]'
