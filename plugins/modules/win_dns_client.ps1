@@ -154,75 +154,75 @@ Function Get-NetAdapterInfo {
 }
 
 Function Get-RegistryNameServerInfo {
-  [CmdletBinding()]
-  Param (
-    [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
-    [System.Guid]
-    $InterfaceGuid
-  )
+    [CmdletBinding()]
+    Param (
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
+        [System.Guid]
+        $InterfaceGuid
+    )
 
-  Begin {
-    $protoItems = @{
+    Begin {
+        $protoItems = @{
             
-      [System.Net.Sockets.AddressFamily]::InterNetwork   = @{
-        Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{0}}}'
-        StaticNameServer = 'NameServer'
-        DhcpNameServer   = 'DhcpNameServer'
-        EnableDhcp       = 'EnableDHCP'
-        BinaryLength     = 4
-      }
-
-      [System.Net.Sockets.AddressFamily]::InterNetworkV6 = @{
-        Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\{{{0}}}'
-        StaticNameServer = 'NameServer'
-        DhcpNameServer   = 'Dhcpv6DNSServers'
-        EnableDhcp       = 'EnableDHCP'
-        BinaryLength     = 16
-      }
-    }
-  }
-
-  Process {
-    foreach ($addrFamily in $AddressFamilies.Keys) {
-      $items = $protoItems[$addrFamily]
-      $regPath = $items.Interface -f $InterfaceGuid
-
-      if (($iface = Get-Item -LiteralPath $regPath -ErrorAction Ignore)) {
-
-        $iprop = $iface | Get-ItemProperty
-        $famInfo = @{
-          AddressFamily           = $addrFamily
-          UsingDhcp               = Get-OptionalProperty -InputObject $iprop -Name $items.EnableDhcp -As bool
-          EffectiveNameServers    = @()
-          DhcpAssignedNameServers = @()
-          NameServerBadFormat     = $false
-        }
-
-        if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.DhcpNameServer)) {
-          $famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers = 
-          # IPv6 are stored as 16 bytes separated REG_BINARY properties in the registry
-          @(if ($ns -is [System.Object[]]) {
-              for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
-                [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
-                (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
-              }
+            [System.Net.Sockets.AddressFamily]::InterNetwork   = @{
+                Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{0}}}'
+                StaticNameServer = 'NameServer'
+                DhcpNameServer   = 'DhcpNameServer'
+                EnableDhcp       = 'EnableDHCP'
+                BinaryLength     = 4
             }
-            # IPv4 are stored as space delimited string properties in the registry
-            else {
-              $ns.Split(' ')
-            })
-        }
 
-        if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
-          $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns -split '[,;\ ]'
-          $famInfo.UsingDhcp = $false
-          $famInfo.NameServerBadFormat = $ns -match '[;\ ]'
+            [System.Net.Sockets.AddressFamily]::InterNetworkV6 = @{
+                Interface        = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\{{{0}}}'
+                StaticNameServer = 'NameServer'
+                DhcpNameServer   = 'Dhcpv6DNSServers'
+                EnableDhcp       = 'EnableDHCP'
+                BinaryLength     = 16
+            }
         }
-
-        $famInfo
-      }
     }
-  }
+
+    Process {
+        foreach ($addrFamily in $AddressFamilies.Keys) {
+            $items = $protoItems[$addrFamily]
+            $regPath = $items.Interface -f $InterfaceGuid
+
+            if (($iface = Get-Item -LiteralPath $regPath -ErrorAction Ignore)) {
+
+                $iprop = $iface | Get-ItemProperty
+                $famInfo = @{
+                    AddressFamily           = $addrFamily
+                    UsingDhcp               = Get-OptionalProperty -InputObject $iprop -Name $items.EnableDhcp -As bool
+                    EffectiveNameServers    = @()
+                    DhcpAssignedNameServers = @()
+                    NameServerBadFormat     = $false
+                }
+
+                if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.DhcpNameServer)) {
+                    $famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers = 
+                    # IPv6 are stored as 16 bytes separated REG_BINARY properties in the registry
+                    @(if ($ns -is [System.Object[]]) {
+                            for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
+                                [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
+                (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
+                            }
+                        }
+                        # IPv4 are stored as space delimited string properties in the registry
+                        else {
+                            $ns.Split(' ')
+                        })
+                }
+
+                if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
+                    $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns -split '[,;\ ]'
+                    $famInfo.UsingDhcp = $false
+                    $famInfo.NameServerBadFormat = $ns -match '[;\ ]'
+                }
+
+                $famInfo
+            }
+        }
+    }
 }
 
 # minimal impl of Set-DnsClientServerAddress for 2008/2008R2
