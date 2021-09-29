@@ -196,18 +196,20 @@ Function Get-RegistryNameServerInfo {
                     NameServerBadFormat = $false
                 }
 
+            if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.DhcpNameServer)) {
 		# IPv6 are stored as 16 bytes REG_BINARY values. If multiple IPv6 are configured
 		# those ips are contiguous
 		$famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers =
 		@(if ($ns -is [System.Object[]]) {
-		for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
-		    [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
-		    (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
-		}
+			for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
+				[byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
+				(New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
+			}
 		# IPv4 are stored as space delimited string properties in the registry
 		} else {
 		    $ns.Split(' ')
 		})
+            }    
 
                 if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
                     $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns -split '[,;\ ]'
