@@ -40,6 +40,10 @@ options:
         type: list
         elements: str
         default: [ CriticalUpdates, SecurityUpdates, UpdateRollups ]
+    skip_optional:
+        description:
+        - Skip optional updates where the update has BrowseOnly set.  This will match
+          the Windows Updates GUI where optional updates are not selected by default.
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required
