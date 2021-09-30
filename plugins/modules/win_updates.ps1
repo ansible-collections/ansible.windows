@@ -1246,6 +1246,11 @@ namespace Ansible.Windows.WinUpdates
         if (-not $categoryMatch) {
             $filteredReasons.Add('category_names')
         }
+        if ($skip_optional) {
+            If ($update.BrowseOnly) {
+                $filteredReasons.Add('browse_only')
+            }
+        }
 
         $updateId = "$($updateInfo.id) - $($updateInfo.title)"
         if ($filteredReasons) {
