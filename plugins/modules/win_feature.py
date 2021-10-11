@@ -133,7 +133,9 @@ feature_result:
             type: bool
             sample: true
 reboot_required:
-    description: True when the target server requires a reboot to complete updates (no further updates can be installed until after a reboot).
+    description:
+    - True when the target server indicates a reboot is required (no further updates can be installed until after a reboot).
+    - This my be true even if not change had occurred as the value is derived from the server state.
     returned: success
     type: bool
     sample: true
