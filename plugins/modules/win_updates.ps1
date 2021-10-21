@@ -507,6 +507,10 @@ Function Install-WindowsUpdate {
         $Accept = @(),
 
         [Parameter()]
+        [Switch]
+        $SkipOptional,
+
+        [Parameter()]
         [AllowEmptyCollection()]
         [String[]]
         $Reject = @(),
@@ -1109,8 +1113,6 @@ namespace Ansible.Windows.WinUpdates
             default { "Unknown $($Update.AutoDownload)" }
         }
 
-        $Api.WriteLog("BrowseOnly = $BrowseOnly")
-        
         [Ordered]@{
             # User friendly info / Identifiers
             id = $Update.Identity.UpdateID
@@ -1250,7 +1252,8 @@ namespace Ansible.Windows.WinUpdates
         if (-not $categoryMatch) {
             $filteredReasons.Add('category_names')
         }
-        if ($skip_optional) {
+
+        if ($SkipOptional) {
             If ($updateInfo.browse_only) {
                 $filteredReasons.Add('skip_optional')
             }
@@ -1451,6 +1454,7 @@ $invokeSplat = @{
         Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
         ServerSelection = $module.Params.server_selection
         State = $module.Params.state
+        SkipOptional = $module.Params.skip_optional
         CancelId = $cancelId
         OutputPath = $outputPath
         LogPath = $module.Params.log_path
