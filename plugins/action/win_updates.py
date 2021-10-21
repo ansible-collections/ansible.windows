@@ -689,6 +689,7 @@ class ActionModule(ActionBase):
         'category_names',
         'log_path',
         'reboot',
+        'skip_optional',
         'reboot_timeout',
         'reject_list', 'blacklist',
         'server_selection',

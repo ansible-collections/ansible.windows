@@ -18,6 +18,7 @@ $spec = @{
         reject_list = @{ type = 'list'; elements = 'str'; aliases = 'blacklist' }
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
         state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
+        skip_optional = @{ type = 'bool'; default = $false }
 
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
@@ -1108,6 +1109,8 @@ namespace Ansible.Windows.WinUpdates
             default { "Unknown $($Update.AutoDownload)" }
         }
 
+        $Api.WriteLog("BrowseOnly = $BrowseOnly")
+        
         [Ordered]@{
             # User friendly info / Identifiers
             id = $Update.Identity.UpdateID
@@ -1120,6 +1123,7 @@ namespace Ansible.Windows.WinUpdates
             deployment_action = $deploymentAction
             auto_select_on_websites = $Update.AutoSelectOnWebSites
             browse_only = $Update.BrowseOnly
+
             revision_number = $Update.Identity.RevisionNumber
             categories = @($Update.Categories | ForEach-Object { $_.Name })
             is_installed = $Update.IsInstalled
@@ -1247,8 +1251,8 @@ namespace Ansible.Windows.WinUpdates
             $filteredReasons.Add('category_names')
         }
         if ($skip_optional) {
-            If ($update.BrowseOnly) {
-                $filteredReasons.Add('browse_only')
+            If ($updateInfo.browse_only) {
+                $filteredReasons.Add('skip_optional')
             }
         }
 
