@@ -82,11 +82,29 @@ Function Invoke-TaskInfo {
     # $Id as the filter part because old Win versions (2008/08R2) do not seem to support filtering for pipes there.
     # While we don't guarantee support for these versions I'm not ready to fully drop it when there's a simple
     # workaround.
-    $pipeCheck = [System.IO.Directory]::EnumerateFiles('\\.\pipe\', '*') |
-        Where-Object { $_ -eq "\\.\pipe\$Id" } |
-        Select-Object -First 1
-    if (-not $pipeCheck) {
-        throw "Pipe $Id does not exist"
+    # Also need to enumerate the output manually to ignore illegal paths in .NET logic
+    # https://github.com/ansible-collections/ansible.windows/issues/291
+    $pipeEnumerator = [System.IO.Directory]::EnumerateFiles('\\.\pipe\', '*').GetEnumerator()
+    try {
+        while ($true) {
+            try {
+                $remaining = $pipeEnumerator.MoveNext()
+            }
+            catch {
+                continue
+            }
+
+            if (-not $remaining) {
+                throw "Pipe $Id does not exist"
+            }
+
+            if ($pipeEnumerator.Current -eq "\\.\pipe\$Id") {
+                break
+            }
+        }
+    }
+    finally {
+        $pipeEnumerator.Dispose()
     }
 
     $clientReader = $null
@@ -302,20 +320,28 @@ Function Start-EphemeralTask {
                 $taskPid = 0
                 $errMessage = $null
                 while ($true) {
+                    # The task might still be initialising, wait until it is no longer queued
+                    if ($createdTask.LastTaskResult -eq 0x00041325) {  # SCHED_S_TASK_QUEUED
+                        Start-Sleep -Seconds 1
+                        continue
+                    }
+
                     $taskPid = $runningTask.EnginePID
 
                     if ($taskPid) {
                         break
                     }
-                    if ($task.State -ne 4) {  # TASK_STATE_RUNNING
+
+                    if ($createdTask.State -ne 4) {  # TASK_STATE_RUNNING
                         $errEvent = Get-WinEvent -FilterXml $taskFilter -ErrorAction SilentlyContinue | Select-Object -First 1
                         if ($errEvent) {
                             $errMessage = $errEvent.Message
                         }
                         else {
-                            # If event logs are disabled for tasks we can only rely on the State property to see if the
-                            # task is still running/starting up.
-                            $errMessage = "Unknown failure trying to start win_updates tasks - enable task event logs to see more info"
+                            # If event logs are disabled for tasks we can only use the last run result for information.
+                            $errMessage = "Unknown failure trying to start win_updates tasks '0x{0:X8}'- enable task event logs to see more info" -f (
+                                $createdTask.LastTaskResult
+                            )
                         }
 
                         break
@@ -388,6 +414,7 @@ Function Invoke-AsBatchLogon {
     try {
         $pipeName = "ansible-$($Module.ModuleName)-$([Guid]::NewGuid().Guid)"
         $server = New-NamedPipe -Name $pipeName
+        $waitConnect = $server.BaseStream.BeginWaitForConnection($null, $null)
 
         $eventHandle = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
             $false,
@@ -406,7 +433,6 @@ Function Invoke-AsBatchLogon {
         $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path $pwsh -Arguments $arguments
 
         # Wait for the task to connect to our pipe or for the process to end (failed and should be reported)
-        $waitConnect = $server.BaseStream.BeginWaitForConnection($null, $null)
         $waitProcPS = [PowerShell]::Create()
         [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id=$taskPid; ErrorAction='SilentlyContinue'})
         $waitProcTask = $waitProcPS.BeginInvoke()
