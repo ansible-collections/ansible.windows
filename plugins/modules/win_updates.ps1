@@ -1125,7 +1125,6 @@ namespace Ansible.Windows.WinUpdates
             deployment_action = $deploymentAction
             auto_select_on_websites = $Update.AutoSelectOnWebSites
             browse_only = $Update.BrowseOnly
-
             revision_number = $Update.Identity.RevisionNumber
             categories = @($Update.Categories | ForEach-Object { $_.Name })
             is_installed = $Update.IsInstalled
