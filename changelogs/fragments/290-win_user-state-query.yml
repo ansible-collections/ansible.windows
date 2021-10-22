@@ -1,0 +1,3 @@
+bugfixes:
+- >-
+  win_user - Fix ``msg`` return value when setting ``state: query``
