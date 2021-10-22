@@ -42,8 +42,12 @@ options:
         default: [ CriticalUpdates, SecurityUpdates, UpdateRollups ]
     skip_optional:
         description:
-        - Skip optional updates where the update has BrowseOnly set.  This will match
-          the Windows Updates GUI where optional updates are not selected by default.
+        - Skip optional updates where the update has BrowseOnly set by Microsoft.
+          Setting this to yes will skip updates that microsoft have set to
+          BrowseOnly.  Microsoft documents show that BrowseOnly means that the
+          update should not be installed automatically.
+        type: bool
+        default: no
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required
