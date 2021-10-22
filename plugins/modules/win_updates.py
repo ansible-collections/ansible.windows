@@ -43,11 +43,11 @@ options:
     skip_optional:
         description:
         - Skip optional updates where the update has BrowseOnly set by Microsoft.
-          Setting this to yes will skip updates that microsoft have set to
-          BrowseOnly.  Microsoft documents show that BrowseOnly means that the
-          update should not be installed automatically.
+        - Microsoft documents show that BrowseOnly means that the update
+          should not be installed automatically and appear as optional updates.
         type: bool
         default: no
+        version_added: 1.8.0
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required
@@ -273,7 +273,7 @@ filtered_updates:
         filtered_reasons:
             description:
             - A list of reasons why the update has been filtered.
-            - Can be C(accept_list), C(reject_list), C(hidden), or C(category_names).
+            - Can be C(accept_list), C(reject_list), C(hidden), C(category_names), or C(skip_optional).
             type: list
             elements: str
             sample:
