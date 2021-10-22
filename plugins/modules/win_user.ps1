@@ -424,7 +424,7 @@ if ($state -eq 'present') {
     $module.Diff.after = ""
 
 } else {
-    $module.Result.msg = "User '$name' was not found"
+    $module.Result.msg = "Querying user '$name'"
     $module.Result.state = if ($user) { 'present' } else { 'absent' }
     $module.Diff.after = $module.Diff.before
 }

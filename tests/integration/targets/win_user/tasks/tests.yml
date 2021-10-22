@@ -94,6 +94,7 @@
   assert:
     that:
       - "win_user_query_result is not changed"
+      - win_user_query_result.msg == "Querying user '" + test_win_user_name + "'"
       - "win_user_query_result.state == 'present'"
       - "win_user_query_result.name == '{{ test_win_user_name }}'"
       - "win_user_query_result.fullname == 'Test user'"
