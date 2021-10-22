@@ -18,6 +18,7 @@ $spec = @{
         reject_list = @{ type = 'list'; elements = 'str'; aliases = 'blacklist' }
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
         state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
+        skip_optional = @{ type = 'bool'; default = $false }
 
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
@@ -504,6 +505,10 @@ Function Install-WindowsUpdate {
         [AllowEmptyCollection()]
         [String[]]
         $Accept = @(),
+
+        [Parameter()]
+        [Switch]
+        $SkipOptional,
 
         [Parameter()]
         [AllowEmptyCollection()]
@@ -1247,6 +1252,12 @@ namespace Ansible.Windows.WinUpdates
             $filteredReasons.Add('category_names')
         }
 
+        if ($SkipOptional) {
+            If ($updateInfo.browse_only) {
+                $filteredReasons.Add('skip_optional')
+            }
+        }
+
         $updateId = "$($updateInfo.id) - $($updateInfo.title)"
         if ($filteredReasons) {
             $api.WriteLog("Skipping update $updateId due to $($filteredReasons -join ", ")")
@@ -1442,6 +1453,7 @@ $invokeSplat = @{
         Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
         ServerSelection = $module.Params.server_selection
         State = $module.Params.state
+        SkipOptional = $module.Params.skip_optional
         CancelId = $cancelId
         OutputPath = $outputPath
         LogPath = $module.Params.log_path
