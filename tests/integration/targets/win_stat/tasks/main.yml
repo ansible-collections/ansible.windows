@@ -5,8 +5,11 @@
 
 - name: remove win_stat testing directories for clean slate
   win_file:
-    path: '{{win_stat_dir}}'
+    path: '{{ item }}'
     state: absent
+  loop:
+  - '{{ win_stat_dir }}'
+  - '{{ win_stat_underprivileged_dir }}'
 
 # while most of the setup can be done with modules, it is quicker to do them
 # all in bulk than with with_items to save each round trip over WinRM
@@ -56,7 +59,9 @@
     cmd.exe /c mklink /D "{{win_stat_dir}}\nested\nested\link-rel" "..\..\link-dest"
     cmd.exe /c mklink /D "{{win_stat_dir}}\outer-link" "{{win_stat_dir}}\nested\nested\link-rel"
 
-    $date = Get-Date -Year 2016 -Month 11 -Day 1 -Hour 7 -Minute 10 -Second 5 -Millisecond 0
+    $date = New-Object -TypeName System.DateTime -ArgumentList @(
+      2016, 11, 1, 7, 10, 5, 0, 'Utc'
+    )
     Get-ChildItem -Path "{{win_stat_dir}}" -Recurse | ForEach-Object {
         $_.CreationTime = $date
         $_.LastAccessTime = $date
@@ -81,6 +86,19 @@
 
     # weird issue, need to access the file in anyway to get the correct date stats
     Test-Path {{win_stat_dir}}\nested\hard-link.ps1
+
+    # Set up underprivileged directory for become test
+    New-Item -Path "{{ win_stat_underprivileged_dir }}" -ItemType Directory
+    New-Item -Path "{{ win_stat_underprivileged_dir }}\link-dest" -ItemType Directory
+    New-Item -Path "{{ win_stat_underprivileged_dir }}\file.ps1" -ItemType File
+    [System.IO.File]::WriteAllText("{{ win_stat_underprivileged_dir }}\file.ps1", $normal_content)
+    cmd.exe /c mklink /D "{{ win_stat_underprivileged_dir }}\link" "{{ win_stat_underprivileged_dir }}\link-dest"
+
+    Get-ChildItem -Path "{{ win_stat_underprivileged_dir }}" -Recurse | ForEach-Object {
+        $_.CreationTime = $date
+        $_.LastAccessTime = $date
+        $_.LastWriteTime = $date
+    }
 
 # mklink.exe and win_file cannot do this right now so we need a custom module
 - name: create file symlink
@@ -113,3 +131,8 @@
     args:
       executable: cmd.exe
     when: win_stat_user in profile_dir_out.stdout_lines[0]
+
+  - name: remove temp global file
+    win_file:
+      path: '{{ win_stat_underprivileged_dir }}'
+      state: absent

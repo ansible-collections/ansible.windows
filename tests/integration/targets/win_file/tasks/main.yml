@@ -570,17 +570,17 @@
 
 # Need to use shell to create the file as win_file doesn't support setting attributes
 - name: create hidden file
-  win_shell: $file = New-Item -Path "{{ win_output_dir }}\hidden.txt" -ItemType File; $file.Attributes = "Hidden"
+  win_shell: $file = New-Item -Path "{{ remote_tmp_dir }}\hidden.txt" -ItemType File; $file.Attributes = "Hidden"
 
 - name: delete hidden file
   win_file:
-    path: '{{ win_output_dir }}\hidden.txt'
+    path: '{{ remote_tmp_dir }}\hidden.txt'
     state: absent
   register: delete_hidden
 
 - name: get result of delete hidden file
   win_stat:
-    path: '{{ win_output_dir }}\hidden.txt'
+    path: '{{ remote_tmp_dir }}\hidden.txt'
   register: delete_hidden_actual
 
 - name: assert delete hidden file

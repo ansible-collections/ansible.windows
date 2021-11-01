@@ -1,2 +1,3 @@
-win_stat_dir: '{{win_output_dir}}\win_stat'
+win_stat_dir: '{{ remote_tmp_dir }}\win_stat'
+win_stat_underprivileged_dir: C:\ansible\win_stat
 win_stat_user: test-stat

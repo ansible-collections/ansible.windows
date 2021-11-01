@@ -517,7 +517,7 @@
   register: win_stat_missing
 
 - name: check win_stat missing result
-  assert: 
+  assert:
     that:
       - not win_stat_missing.stat.exists
       - win_stat_missing is not failed
@@ -585,7 +585,7 @@
 - name: test stat with non admin user on a normal file
   vars: *become_vars
   win_stat:
-    path: '{{win_stat_dir}}\nested\file.ps1'
+    path: '{{ win_stat_underprivileged_dir }}\file.ps1'
   register: user_file
 
 - name: asert test stat with non admin user on a normal file
@@ -610,13 +610,13 @@
     - user_file.stat.lastwritetime == 1477984205
     - user_file.stat.nlink == 1
     - user_file.stat.owner == 'BUILTIN\\Administrators'
-    - user_file.stat.path == win_stat_dir + '\\nested\\file.ps1'
+    - user_file.stat.path == win_stat_underprivileged_dir + '\\file.ps1'
     - user_file.stat.size == 3
 
 - name: test stat on a symbolic link as normal user
   vars: *become_vars
   win_stat:
-    path: '{{win_stat_dir}}\link'
+    path: '{{ win_stat_underprivileged_dir }}\link'
   register: user_symlink
 
 - name: assert test stat on a symbolic link as normal user
@@ -637,9 +637,9 @@
     - user_symlink.stat.isshared == False
     - user_symlink.stat.lastaccesstime is defined
     - user_symlink.stat.lastwritetime is defined
-    - user_symlink.stat.lnk_source == win_stat_dir + '\\link-dest'
-    - user_symlink.stat.lnk_target == win_stat_dir + '\\link-dest'
+    - user_symlink.stat.lnk_source == win_stat_underprivileged_dir + '\\link-dest'
+    - user_symlink.stat.lnk_target == win_stat_underprivileged_dir + '\\link-dest'
     - user_symlink.stat.nlink == 1
     - user_symlink.stat.owner == 'BUILTIN\\Administrators'
-    - user_symlink.stat.path == win_stat_dir + '\\link'
+    - user_symlink.stat.path == win_stat_underprivileged_dir + '\\link'
     - user_symlink.stat.checksum is not defined
