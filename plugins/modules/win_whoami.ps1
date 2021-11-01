@@ -3,15 +3,19 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 #Requires -Module Ansible.ModuleUtils.CamelConversion
 
 $ErrorActionPreference = "Stop"
 
-$params = Parse-Args $args -supports_check_mode $true
-$_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
+$spec = @{
+    options = @{}
+    supports_check_mode = $true
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-$session_util = @'
+Add-CSharpType -AnsibleModule $module -References @'
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -782,11 +786,6 @@ namespace Ansible
 }
 '@
 
-$original_tmp = $env:TMP
-$env:TMP = $_remote_tmp
-Add-Type -TypeDefinition $session_util
-$env:TMP = $original_tmp
-
 $session_info = [Ansible.SessionUtil]::GetSessionInfo()
 
 Function Convert-Value($value) {
@@ -821,17 +820,14 @@ Function Convert-Value($value) {
     return ,$new_value
 }
 
-$result = @{
-    changed = $false
-}
-
 $properties = [type][Ansible.SessionInfo]
 foreach ($property in $properties.DeclaredProperties) {
     $property_name = $property.Name
     $property_value = $session_info.$property_name
     $snake_name = Convert-StringToSnakeCase -string $property_name
 
-    $result.$snake_name = Convert-Value -value $property_value
+    $module.Result.$snake_name = Convert-Value -value $property_value
 }
 
-Exit-Json -obj $result
+$module.ExitJson()
+

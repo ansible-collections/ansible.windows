@@ -4,6 +4,7 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
 $spec = @{
@@ -126,21 +127,43 @@ Function Invoke-TaskInfo {
         $client.Dispose()
     }
 
-    $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$Id")
+    $rs = $null
     try {
-        $runInfo = [System.Management.Automation.PSSerializer]::Deserialize($details)
-        $ps = [PowerShell]::Create()
-        [void]$ps.AddScript($runInfo.ScriptBlock).AddParameters($runInfo.Parameters)
-        $task = $ps.BeginInvoke()
+        $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$Id")
+        try {
+            $runInfo = [System.Management.Automation.PSSerializer]::Deserialize($details)
 
-        # Signal parent that the data was received/decoded and is running.
-        [void]$eventHandle.Set()
+            $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+            foreach ($funcInfo in $runInfo.Commands.GetEnumerator()) {
+                $cmd = New-Object -TypeName System.Management.Automation.Runspaces.SessionStateFunctionEntry -ArgumentList @(
+                    $funcInfo.Key,
+                    $funcInfo.Value,
+                    [System.Management.Automation.ScopedItemOptions]::AllScope,
+                    $null
+                )
+                $iss.Commands.Add($cmd)
+            }
+
+            $rs = [RunspaceFactory]::CreateRunspace($iss)
+            $rs.Open()
+
+            $ps = [PowerShell]::Create()
+            $ps.Runspace = $rs
+            [void]$ps.AddScript($runInfo.ScriptBlock).AddParameters($runInfo.Parameters)
+            $task = $ps.BeginInvoke()
+
+            # Signal parent that the data was received/decoded and is running.
+            [void]$eventHandle.Set()
+        }
+        finally {
+            $eventHandle.Dispose()
+        }
+
+        $ps.EndInvoke($task)
     }
     finally {
-        $eventHandle.Dispose()
+        if ($rs) { $rs.Dispose() }
     }
-
-    $ps.EndInvoke($task)
 }
 
 Function New-NamedPipe {
@@ -402,6 +425,10 @@ Function Invoke-AsBatchLogon {
         [Hashtable]
         $Parameters,
 
+        [Parameter()]
+        [Hashtable]
+        $Commands = @{},
+
         [Switch]
         $Wait
     )
@@ -447,6 +474,7 @@ Function Invoke-AsBatchLogon {
 
         $server.BaseStream.EndWaitForConnection($waitConnect)
         $runInfo = [System.Management.Automation.PSSerializer]::Serialize(@{
+            Commands = $Commands
             ScriptBlock = $ScriptBlock.ToString()
             Parameters = $Parameters
         })
@@ -562,7 +590,8 @@ Function Install-WindowsUpdate {
         exception = $null  # Exception info in case of a failure @{message, exception, hresult}
     }
 
-    Add-Type -TypeDefinition @'
+    $tmpDir = Split-Path -Path $outputPath -Parent
+    Add-CSharpType -TempPath $tmpDir -References @'
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1472,6 +1501,9 @@ $cancelId = "Global\Ansible.Windows.WinUpdates-$([Guid]::NewGuid().Guid)"
 
 $invokeSplat = @{
     Module = $module
+    Commands = @{
+        'Add-CSharpType' = ${function:Add-CSharpType}
+    }
     ScriptBlock = ${function:Install-WindowsUpdate}
     Parameters = @{
         Category = $categoryNames

@@ -4,6 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 $ErrorActionPreference = "Stop"
 
@@ -26,7 +27,7 @@ $result = @{
 }
 
 # Used to delete symlinks as powershell cannot delete broken symlinks
-$symlink_util = @"
+Add-CSharpType -TempPath $_remote_tmp -References @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -50,11 +51,7 @@ namespace Ansible.Command {
         }
     }
 }
-"@
-$original_tmp = $env:TMP
-$env:TMP = $_remote_tmp
-Add-Type -TypeDefinition $symlink_util
-$env:TMP = $original_tmp
+'@
 
 # Used to delete directories and files with logic on handling symbolic links
 function Remove-File($file, $checkmode) {

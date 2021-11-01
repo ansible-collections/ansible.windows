@@ -73,7 +73,12 @@ $follow = $module.Params.follow
 
 $module.Result.stat = @{ exists=$false }
 
+# https://github.com/ansible-collections/ansible.windows/issues/297
+$oldLib = $env:LIB
+$env:LIB = $null
 Load-LinkUtils
+$env:LIB = $oldLib
+
 $info, $link_info = Get-FileInfo -Path $path -Follow:$follow
 If ($null -ne $info) {
     $epoch_date = (Get-Date -Year 1970 -Month 1 -Day 1).Date

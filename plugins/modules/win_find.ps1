@@ -43,7 +43,11 @@ $module.Result.examined = 0
 $module.Result.files = @()
 $module.Result.matched = 0
 
+# https://github.com/ansible-collections/ansible.windows/issues/297
+$oldLib = $env:LIB
+$env:LIB = $null
 Load-LinkUtils
+$env:LIB = $oldLib
 
 Function Assert-Age {
     Param (
