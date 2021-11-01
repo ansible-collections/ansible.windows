@@ -5,6 +5,7 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.SID
 
@@ -70,7 +71,7 @@ if ($diff_mode) {
     $result.diff = @{}
 }
 
-$task_enums = @"
+Add-CSharpType -TempPath $_remote_tmp -References @'
 public enum TASK_ACTION_TYPE // https://msdn.microsoft.com/en-us/library/windows/desktop/aa383553(v=vs.85).aspx
 {
     TASK_ACTION_EXEC          = 0,
@@ -132,12 +133,7 @@ public enum TASK_SESSION_STATE_CHANGE_TYPE // https://docs.microsoft.com/en-us/w
     TASK_SESSION_LOCK       = 7,
     TASK_SESSION_UNLOCK     = 8
 }
-"@
-
-$original_tmp = $env:TMP
-$env:TMP = $_remote_tmp
-Add-Type -TypeDefinition $task_enums
-$env:TMP = $original_tmp
+'@
 
 ########################
 ### HELPER FUNCTIONS ###
