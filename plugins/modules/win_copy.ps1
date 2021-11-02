@@ -330,9 +330,9 @@ if ($copy_mode -eq "query") {
             }
         } else {
             # copying the folder and it's contents to dest
-            $dest = Join-Path -Path $dest -ChildPath (Get-Item -LiteralPath $src -Force).Name
-            $result.dest = $dest
-            $diff = Copy-Folder -source $src -dest $dest
+            $remote_dest = Join-Path -Path $dest -ChildPath (Get-Item -LiteralPath $src -Force).Name
+            $result.dest = $remote_dest
+            $diff = Copy-Folder -source $src -dest $remote_dest
         }
     } else {
         # we are just copying a single file to dest
