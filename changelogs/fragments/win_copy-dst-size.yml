@@ -1,0 +1,2 @@
+bugfixes:
+- win_copy - Fix remote dest size calculation logic
