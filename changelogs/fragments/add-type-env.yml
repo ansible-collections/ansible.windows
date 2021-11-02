@@ -1,6 +1,0 @@
-bugfixes:
-- win_file - Fix conflicts with existing ``LIB`` environment variable
-- win_find - Fix conflicts with existing ``LIB`` environment variable
-- win_stat - Fix conflicts with existing ``LIB`` environment variable
-- win_updates - Fix conflicts with existing ``LIB`` environment variable
-- win_whoami - Fix conflicts with existing ``LIB`` environment variable

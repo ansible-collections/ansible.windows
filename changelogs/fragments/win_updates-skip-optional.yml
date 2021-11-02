@@ -1,2 +1,0 @@
-minor_changes:
-- win_updates - Added the ``skip_optional`` module option to skip optional updates

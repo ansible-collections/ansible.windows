@@ -344,11 +344,37 @@ releases:
       - win_updates - Bypass execution policy checks when polling or cancelling the
         update task - https://github.com/ansible-collections/ansible.windows/issues/272
       - win_user - Set validate user logic to always check local database
-      release_summary:
-      - Release summary for v1.7.3
     fragments:
     - reboot_error_outside_block.yml
     - release_summary.yml
     - win_updates-executionpolicy.yml
     - win_user-domain.yml
     release_date: '2021-09-23'
+  1.8.0:
+    changes:
+      bugfixes:
+      - win_copy - Fix remote dest size calculation logic
+      - win_dns_client - Fix method used to read IPv6 DNS settings given by DHCP -
+        https://github.com/ansible-collections/ansible.windows/issues/283
+      - win_file - Fix conflicts with existing ``LIB`` environment variable
+      - win_find - Fix conflicts with existing ``LIB`` environment variable
+      - win_stat - Fix conflicts with existing ``LIB`` environment variable
+      - win_updates - Fix conflicts with existing ``LIB`` environment variable
+      - win_updates - Ignore named pipes with illegal filenames when checking for
+        the task named pipe during bootstrapping - https://github.com/ansible-collections/ansible.windows/issues/291
+      - win_updates - Improve error handling when starting background update task
+      - 'win_user - Fix ``msg`` return value when setting ``state: query``'
+      - win_whoami - Fix conflicts with existing ``LIB`` environment variable
+      minor_changes:
+      - win_updates - Added the ``skip_optional`` module option to skip optional updates
+      release_summary:
+      - Release summary for v1.8.0
+    fragments:
+    - 283-win_dns_client_IPv6_DNS.yml
+    - 290-win_user-state-query.yml
+    - 291-win_updates-illegal-pipe-path.yml
+    - add-type-env.yml
+    - release.yml
+    - win_copy-dst-size.yml
+    - win_updates-skip-optional.yml
+    release_date: '2021-11-03'
