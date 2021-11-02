@@ -359,7 +359,8 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>True when the target server requires a reboot to complete updates (no further updates can be installed until after a reboot).</div>
+                            <div>True when the target server indicates a reboot is required (no further updates can be installed until after a reboot).</div>
+                            <div>This my be true even if not change had occurred as the value is derived from the server state.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">True</div>

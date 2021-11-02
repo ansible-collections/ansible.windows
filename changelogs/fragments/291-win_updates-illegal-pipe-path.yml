@@ -1,5 +1,0 @@
-bugfixes:
-- >-
-  win_updates - Ignore named pipes with illegal filenames when checking for the task named pipe during bootstrapping
-  - https://github.com/ansible-collections/ansible.windows/issues/291
-- win_updates - Improve error handling when starting background update task

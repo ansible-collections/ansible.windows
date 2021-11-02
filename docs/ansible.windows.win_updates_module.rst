@@ -205,6 +205,27 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>skip_optional</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 1.8.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Skip optional updates where the update has BrowseOnly set by Microsoft.</div>
+                        <div>Microsoft documents show that BrowseOnly means that the update should not be installed automatically and appear as optional updates.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -412,7 +433,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 <td></td>
                 <td>
                             <div>A list of reasons why the update has been filtered.</div>
-                            <div>Can be <code>accept_list</code>, <code>reject_list</code>, <code>hidden</code>, or <code>category_names</code>.</div>
+                            <div>Can be <code>accept_list</code>, <code>reject_list</code>, <code>hidden</code>, <code>category_names</code>, or <code>skip_optional</code>.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;category_names&#x27;, &#x27;accept_list&#x27;]</div>

@@ -1,2 +1,0 @@
-bugfixes:
-- win_dns_client - Fix method used to read IPv6 DNS settings given by DHCP - https://github.com/ansible-collections/ansible.windows/issues/283

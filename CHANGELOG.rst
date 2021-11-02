@@ -5,13 +5,35 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.7.3
+v1.8.0
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.7.3
+- Release summary for v1.8.0
+
+Minor Changes
+-------------
+
+- win_updates - Added the ``skip_optional`` module option to skip optional updates
+
+Bugfixes
+--------
+
+- win_copy - Fix remote dest size calculation logic
+- win_dns_client - Fix method used to read IPv6 DNS settings given by DHCP - https://github.com/ansible-collections/ansible.windows/issues/283
+- win_file - Fix conflicts with existing ``LIB`` environment variable
+- win_find - Fix conflicts with existing ``LIB`` environment variable
+- win_stat - Fix conflicts with existing ``LIB`` environment variable
+- win_updates - Fix conflicts with existing ``LIB`` environment variable
+- win_updates - Ignore named pipes with illegal filenames when checking for the task named pipe during bootstrapping - https://github.com/ansible-collections/ansible.windows/issues/291
+- win_updates - Improve error handling when starting background update task
+- win_user - Fix ``msg`` return value when setting ``state: query``
+- win_whoami - Fix conflicts with existing ``LIB`` environment variable
+
+v1.7.3
+======
 
 Bugfixes
 --------
