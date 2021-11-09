@@ -129,17 +129,49 @@ Function Copy-Folder($source, $dest) {
     return $diff
 }
 
-Function Get-FileSize($path) {
-    $file = Get-Item -LiteralPath $path -Force
-    if ($file.PSIsContainer) {
-        $size = (Get-ChildItem -Literalpath $file.FullName -Recurse -Force | `
-            Where-Object { $_.PSObject.Properties.Name -contains 'Length' } | `
-            Measure-Object -Property Length -Sum).Sum
-        if ($null -eq $size) {
-            $size = 0
+Function Get-FileSize {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String]
+        $Path
+    )
+
+    # Avoids the complex code below if the initial Path is a file.
+    $initialItem = (Get-Item -LiteralPath $Path -Force)
+    if ($initialItem -is [System.IO.FileInfo]) {
+        $initialItem.Length
+        return
+    }
+
+    # Otherwise keep on enumerating the directory and collect the size of all the files in it.
+    $toProcess = New-Object -TypeName System.Collections.Generic.Queue[System.IO.FileSystemInfo]
+    $toProcess.Enqueue($initialItem)
+
+    $size = 0
+    while ($toProcess.Count) {
+        $entry = $toProcess.Dequeue()
+
+        try {
+            foreach ($dirEntry in $entry.EnumerateFileSystemInfos("*", [System.IO.SearchOption]::TopDirectoryOnly)) {
+                if ($dirEntry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                    # Do not include links in the count as they either point to a file in the dir or something outside
+                    # the dir which should not be counted in the size. While not all reparse points are links they
+                    # are typically treated as special placeholders on the filesystem so all are ignored.
+                    continue
+                }
+                elseif ($dirEntry -is [System.IO.DirectoryInfo]) {
+                    $toProcess.Enqueue($dirEntry)
+                }
+                else {
+                    $size += $dirEntry.Length
+                }
+            }
         }
-    } else {
-        $size = $file.Length
+        catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+            # In the case of a permissions or other unknown IO error just ignore this entry and move on.
+            continue
+        }
     }
 
     $size
@@ -364,7 +396,7 @@ if ($copy_mode -eq "query") {
 
     # the file might not exist if running in check mode
     if (-not $check_mode -or (Test-Path -LiteralPath $remote_dest -PathType Leaf)) {
-        $result.size = Get-FileSize -path $remote_dest
+        $result.size = Get-FileSize -Path $remote_dest
     } else {
         $result.size = $null
     }
