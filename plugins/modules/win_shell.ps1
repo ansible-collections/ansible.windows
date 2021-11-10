@@ -127,8 +127,8 @@ $result.stderr = Format-Stderr $command_result.stderr
 $result.rc = $command_result.rc
 
 $end_datetime = [DateTime]::UtcNow
-$result.start = $start_datetime.ToString("yyyy-MM-dd hh:mm:ss.ffffff")
-$result.end = $end_datetime.ToString("yyyy-MM-dd hh:mm:ss.ffffff")
+$result.start = $start_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
+$result.end = $end_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
 $result.delta = $($end_datetime - $start_datetime).ToString("h\:mm\:ss\.ffffff")
 
 If ($result.rc -ne 0) {
