@@ -60,7 +60,7 @@ options:
     - If the value can be a NetBIOS name, DNS server name, DNS host name suffix
       with a wildcard character (C(*)), a NetBIOS of DNS domain name that
       contains a wildcard character sequence, or an asterisk.
-    - See C(TargetName) in U(https://docs.microsoft.com/en-us/windows/desktop/api/wincred/ns-wincred-_credentiala)
+    - See C(TargetName) in U(https://docs.microsoft.com/en-us/windows/win32/api/wincred/ns-wincred-credentiala)
       for more details on what this value can be.
     - This is used with I(type) to produce a unique credential.
     type: str
