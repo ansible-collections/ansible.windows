@@ -13,91 +13,99 @@ $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default
 $dest = Get-AnsibleParam -obj $params -name "destination" -type "str" -failifempty $true
 $gateway = Get-AnsibleParam -obj $params -name "gateway" -type "str"
 $metric = Get-AnsibleParam -obj $params -name "metric" -type "int" -default 1
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateSet "present","absent"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateSet "present", "absent"
 $result = @{
-             "changed" = $false
-             "output" = ""
-           }
+    "changed" = $false
+    "output" = ""
+}
 
 Function Add-Route {
-  Param (
-    [Parameter(Mandatory=$true)]
-    [string]$Destination,
-    [Parameter(Mandatory=$true)]
-    [string]$Gateway,
-    [Parameter(Mandatory=$true)]
-    [int]$Metric,
-    [Parameter(Mandatory=$true)]
-    [bool]$CheckMode
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$Destination,
+        [Parameter(Mandatory = $true)]
+        [string]$Gateway,
+        [Parameter(Mandatory = $true)]
+        [int]$Metric,
+        [Parameter(Mandatory = $true)]
+        [bool]$CheckMode
     )
 
 
-  $IpAddress = $Destination.split('/')[0]
+    $IpAddress = $Destination.split('/')[0]
 
-  # Check if the static route is already present
-  $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
-  if (!($Route)){
-    try {
-      # Find Interface Index
-      $InterfaceIndex = Find-NetRoute -RemoteIPAddress $Gateway | Select-Object -First 1 -ExpandProperty InterfaceIndex
+    # Check if the static route is already present
+    $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
+    if (!($Route)) {
+        try {
+            # Find Interface Index
+            $InterfaceIndex = Find-NetRoute -RemoteIPAddress $Gateway | Select-Object -First 1 -ExpandProperty InterfaceIndex
 
-      # Add network route
-      New-NetRoute -DestinationPrefix $Destination -NextHop $Gateway -InterfaceIndex $InterfaceIndex -RouteMetric $Metric -ErrorAction Stop -WhatIf:$CheckMode|out-null
-      $result.changed = $true
-      $result.output = "Route added"
+            # Add network route
+            $routeParams = @{
+                DestinationPrefix = $Destination
+                NextHop = $Gateway
+                InterfaceIndex = $InterfaceIndex
+                RouteMetric = $Metric
+                ErrorAction = "Stop"
+                WhatIf = $CheckMode
+            }
+            New-NetRoute @routeParams | Out-Null
+            $result.changed = $true
+            $result.output = "Route added"
 
+        }
+        catch {
+            $ErrorMessage = $_.Exception.Message
+            Fail-Json $result $ErrorMessage
+        }
     }
-    catch {
-      $ErrorMessage = $_.Exception.Message
-      Fail-Json $result $ErrorMessage
+    else {
+        $result.output = "Static route already exists"
     }
-  }
-  else {
-    $result.output = "Static route already exists"
-  }
 
 }
 
 Function Remove-Route {
-  Param (
-    [Parameter(Mandatory=$true)]
-    [string]$Destination,
-    [bool]$CheckMode
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$Destination,
+        [bool]$CheckMode
     )
-  $IpAddress = $Destination.split('/')[0]
-  $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
-  if ($Route){
-    try {
+    $IpAddress = $Destination.split('/')[0]
+    $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
+    if ($Route) {
+        try {
 
-      Remove-NetRoute -DestinationPrefix $Destination -Confirm:$false -ErrorAction Stop -WhatIf:$CheckMode
-      $result.changed = $true
-      $result.output = "Route removed"
+            Remove-NetRoute -DestinationPrefix $Destination -Confirm:$false -ErrorAction Stop -WhatIf:$CheckMode
+            $result.changed = $true
+            $result.output = "Route removed"
+        }
+        catch {
+            $ErrorMessage = $_.Exception.Message
+            Fail-Json $result $ErrorMessage
+        }
     }
-    catch {
-      $ErrorMessage = $_.Exception.Message
-      Fail-Json $result $ErrorMessage
+    else {
+        $result.output = "No route to remove"
     }
-  }
-  else {
-    $result.output = "No route to remove"
-  }
 
 }
 
 # Set gateway if null
-if(!($gateway)){
-  $gateway = "0.0.0.0"
+if (!($gateway)) {
+    $gateway = "0.0.0.0"
 }
 
 
-if ($state -eq "present"){
+if ($state -eq "present") {
 
-  Add-Route -Destination $dest -Gateway $gateway -Metric $metric -CheckMode $check_mode
+    Add-Route -Destination $dest -Gateway $gateway -Metric $metric -CheckMode $check_mode
 
 }
 else {
 
-  Remove-Route -Destination $dest -CheckMode $check_mode
+    Remove-Route -Destination $dest -CheckMode $check_mode
 
 }
 
