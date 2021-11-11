@@ -475,7 +475,8 @@ if ($null -ne $credential) {
 
     if ($null -ne $credential.Secret) {
         $module.Result.secret = [System.Convert]::ToBase64String($credential.Secret)
-    } else {
+    }
+    else {
         $module.Result.secret = $null
     }
 
@@ -485,12 +486,14 @@ if ($null -ne $credential) {
         }
         if ($null -ne $attribute.Value) {
             $attribute_info.data = [System.Convert]::ToBase64String($attribute.Value)
-        } else {
+        }
+        else {
             $attribute_info.data = $null
         }
         $module.Result.attributes.Add($attribute_info) > $null
     }
-} else {
+}
+else {
     $module.Result.exists = $false
 }
 
