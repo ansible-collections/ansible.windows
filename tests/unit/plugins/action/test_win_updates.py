@@ -187,8 +187,8 @@ def test_failed_to_start_module(monkeypatch):
     assert actual['found_update_count'] == 0
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
-    assert actual['updates'] == []
+    assert actual['filtered_updates'] == {}
+    assert actual['updates'] == {}
 
 
 def test_failure_with_poll_script(monkeypatch):
@@ -203,8 +203,8 @@ def test_failure_with_poll_script(monkeypatch):
     assert actual['found_update_count'] == 0
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
-    assert actual['updates'] == []
+    assert actual['filtered_updates'] == {}
+    assert actual['updates'] == {}
 
 
 def test_poll_script_invalid_json_output(monkeypatch):
@@ -219,8 +219,8 @@ def test_poll_script_invalid_json_output(monkeypatch):
     assert actual['found_update_count'] == 0
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
-    assert actual['updates'] == []
+    assert actual['filtered_updates'] == {}
+    assert actual['updates'] == {}
 
 
 def test_install_with_multiple_reboots(monkeypatch):
@@ -241,10 +241,11 @@ def test_install_with_multiple_reboots(monkeypatch):
     assert actual['found_update_count'] == 8
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 8
-    assert actual['filtered_updates'] == []
+    assert actual['filtered_updates'] == {}
     assert len(actual['updates']) == 8
 
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -271,7 +272,8 @@ def test_install_without_reboot(monkeypatch):
     assert actual['installed_update_count'] == 3
 
     assert len(actual['filtered_updates']) == 3
-    for u in actual['filtered_updates']:
+    for u_id, u in actual['filtered_updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -288,7 +290,8 @@ def test_install_without_reboot(monkeypatch):
             assert u['filtered_reasons'] == ['category_names']
 
     assert len(actual['updates']) == 3
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -314,10 +317,11 @@ def test_install_with_initial_reboot_required(monkeypatch):
     assert actual['found_update_count'] == 6
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 5  # 1 found update was already installed at the beginning
-    assert actual['filtered_updates'] == []
+    assert actual['filtered_updates'] == {}
 
     assert len(actual['updates']) == 6
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -350,10 +354,11 @@ def test_install_with_reboot_fail(monkeypatch):
     assert actual['found_update_count'] == 6
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
+    assert actual['filtered_updates'] == {}
 
     assert len(actual['updates']) == 6
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -381,10 +386,11 @@ def test_install_with_reboot_check_mode(monkeypatch):
     assert actual['found_update_count'] == 6
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
+    assert actual['filtered_updates'] == {}
 
     assert len(actual['updates']) == 6
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -414,8 +420,8 @@ def test_install_reboot_with_two_failures(monkeypatch):
     assert actual['found_update_count'] == 0
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
-    assert actual['updates'] == []
+    assert actual['filtered_updates'] == {}
+    assert actual['updates'] == {}
 
 
 def test_install_with_initial_reboot_required_but_no_reboot(monkeypatch):
@@ -435,10 +441,11 @@ def test_install_with_initial_reboot_required_but_no_reboot(monkeypatch):
     assert actual['found_update_count'] == 5
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
-    assert actual['filtered_updates'] == []
+    assert actual['filtered_updates'] == {}
 
     assert len(actual['updates']) == 5
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -455,7 +462,8 @@ def test_install_non_integer_kb_values(monkeypatch):
     })
 
     assert len(actual['filtered_updates']) == 3
-    for u in actual['filtered_updates']:
+    for u_id, u in actual['filtered_updates'].items():
+        assert u['id'] == u_id
         if u['id'] == 'f26a0046-1e1a-4305-8743-19c92c3095a5':
             assert u['kb'] == ['']
 
@@ -469,7 +477,8 @@ def test_install_non_integer_kb_values(monkeypatch):
             assert False, ("Unknown update in filtered updates %s" % u['id'])
 
     assert len(actual['updates']) == 3
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         if u['id'] == '74819184-828b-4f97-bb4b-089a0c58e366':
             assert u['kb'] == ['']
 
@@ -502,7 +511,8 @@ def test_fail_install(monkeypatch):
     assert actual['installed_update_count'] == 1
 
     assert len(actual['filtered_updates']) == 4
-    for u in actual['filtered_updates']:
+    for u_id, u in actual['filtered_updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']
@@ -518,7 +528,8 @@ def test_fail_install(monkeypatch):
             assert u['filtered_reasons'] == ['accept_list', 'category_names']
 
     assert len(actual['updates']) == 2
-    for u in actual['updates']:
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
         assert u['id'] in UPDATE_INFO
         u_info = UPDATE_INFO[u['id']]
         assert u['title'] == u_info['title']

@@ -204,9 +204,11 @@ reboot_required:
     sample: true
 
 updates:
-    description: List of updates that were found/installed.
+    description:
+    - Updates that were found/installed.
+    - The key for each update is the C(id) of the update.
     returned: success
-    type: complex
+    type: dict
     sample:
     contains:
         title:
@@ -255,11 +257,11 @@ updates:
             version_added: 1.7.0
 
 filtered_updates:
-    description: List of updates that were found but were filtered based on
+    description: Updates that were found but were filtered based on
       I(blacklist), I(whitelist) or I(category_names). The return value is in
       the same form as I(updates), along with I(filtered_reason).
     returned: success
-    type: complex
+    type: dict
     sample: see the updates return value
     contains:
         filtered_reason:

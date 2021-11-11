@@ -777,11 +777,11 @@ class ActionModule(ActionBase):
             result['found_update_count'] = 0
             result['failed_update_count'] = 0
             result['installed_update_count'] = 0
-            result['updates'] = []
-            result['filtered_updates'] = []
+            result['updates'] = {}
+            result['filtered_updates'] = {}
             for update_id in self._selected_updates:
                 update_info = self._get_update_info(update_id)
-                result['updates'].append(update_info)
+                result['updates'][update_id] = update_info
                 result['found_update_count'] += 1
 
                 if 'failure_hresult_code' in update_info:
@@ -804,7 +804,7 @@ class ActionModule(ActionBase):
 
                 update_info['filtered_reasons'] = reasons
 
-                result['filtered_updates'].append(update_info)
+                result['filtered_updates'][update_id] = update_info
 
         if self._invocation and 'invocation' not in result:
             result['invocation'] = self._invocation
