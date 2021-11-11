@@ -7,13 +7,19 @@
 
 ########
 
-Function Remove-Pagefile($path, $whatif)
-{
-    Get-CIMInstance Win32_PageFileSetting | Where-Object { $_.Name -eq $path } | Remove-CIMInstance -WhatIf:$whatif
+Function Remove-Pagefile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        $path
+    )
+    Get-CIMInstance Win32_PageFileSetting | Where-Object { $_.Name -eq $path } | ForEach-Object {
+        if ($PSCmdlet.ShouldProcess($Path, "remove pagefile")) {
+            $_ | Remove-CIMInstance
+        }
+    }
 }
 
-Function Get-Pagefile($path)
-{
+Function Get-Pagefile($path) {
     Get-CIMInstance Win32_PageFileSetting | Where-Object { $_.Name -eq $path }
 }
 
@@ -27,9 +33,9 @@ $drive = Get-AnsibleParam -obj $params -name "drive" -type "str"
 $fullPath = $drive + ":\pagefile.sys"
 $initialSize = Get-AnsibleParam -obj $params -name "initial_size" -type "int"
 $maximumSize = Get-AnsibleParam -obj $params -name "maximum_size" -type "int"
-$override =  Get-AnsibleParam -obj $params -name "override" -type "bool" -default $true
+$override = Get-AnsibleParam -obj $params -name "override" -type "bool" -default $true
 $removeAll = Get-AnsibleParam -obj $params -name "remove_all" -type "bool" -default $false
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "query" -validateset "present","absent","query"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "query" -validateset "present", "absent", "query"
 $systemManaged = Get-AnsibleParam -obj $params -name "system_managed" -type "bool" -default $false
 $test_path = Get-AnsibleParam -obj $params -name "test_path" -type "bool" -default $true
 
@@ -45,18 +51,22 @@ if ($removeAll) {
     }
 }
 
+$regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+
 if ($null -ne $automatic) {
     # change autmoatic managed pagefile
     try {
         $computerSystem = Get-CIMInstance -Class win32_computersystem
-    } catch {
+    }
+    catch {
         Fail-Json $result "Failed to query WMI computer system object $($_.Exception.Message)"
     }
     if ($computerSystem.AutomaticManagedPagefile -ne $automatic) {
         if (-not $check_mode) {
             try {
-            	$computerSystem | Set-CimInstance -Property @{automaticmanagedpagefile="$automatic"} > $null
-            } catch {
+                $computerSystem | Set-CimInstance -Property @{automaticmanagedpagefile = "$automatic" } > $null
+            }
+            catch {
                 Fail-Json $result "Failed to set AutomaticManagedPagefile $($_.Exception.Message)"
             }
         }
@@ -66,23 +76,24 @@ if ($null -ne $automatic) {
 
 if ($state -eq "absent") {
     # Remove pagefile
-    if ($null -ne (Get-Pagefile $fullPath))
-    {
+    if ($null -ne (Get-Pagefile $fullPath)) {
         try {
             Remove-Pagefile $fullPath -whatif:$check_mode
-        } catch {
+        }
+        catch {
             Fail-Json $result "Failed to remove pagefile $($_.Exception.Message)"
         }
         $result.changed = $true
     }
-} elseif ($state -eq "present") {
+}
+elseif ($state -eq "present") {
     # Remove current pagefile
     if ($override) {
-        if ($null -ne (Get-Pagefile $fullPath))
-        {
+        if ($null -ne (Get-Pagefile $fullPath)) {
             try {
                 Remove-Pagefile $fullPath -whatif:$check_mode
-            } catch {
+            }
+            catch {
                 Fail-Json $result "Failed to remove current pagefile $($_.Exception.Message)"
             }
             $result.changed = $true
@@ -99,83 +110,112 @@ if ($state -eq "absent") {
     # Set pagefile
     if ($null -eq $curPagefile) {
         try {
-            $pagefile = New-CIMInstance -Class Win32_PageFileSetting -Arguments @{name = $fullPath;} -WhatIf:$check_mode
-        } catch {
+            $pagefile = New-CIMInstance -Class Win32_PageFileSetting -Arguments @{name = $fullPath; } -WhatIf:$check_mode
+        }
+        catch {
             Fail-Json $result "Failed to create pagefile $($_.Exception.Message)"
         }
         if (-not ($systemManaged -or $check_mode)) {
             try {
-                $pagefile | Set-CimInstance -Property @{ InitialSize = $initialSize; MaximumSize = $maximumSize}
-            } catch {
+                $pagefile | Set-CimInstance -Property @{ InitialSize = $initialSize; MaximumSize = $maximumSize }
+            }
+            catch {
                 $originalExceptionMessage = $($_.Exception.Message)
                 # Try workaround before failing
                 try {
                     Remove-Pagefile $fullPath -whatif:$check_mode
-                } catch {
+                }
+                catch {
                     Fail-Json $result "Failed to remove pagefile before workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
                 try {
-                    $pagingFilesValues = (Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
-                } catch {
-                    Fail-Json $result "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
+                    $pagingFilesValues = (Get-ItemProperty -LiteralPath $regPath).PagingFiles
+                }
+                catch {
+                    $msg = -join @(
+                        "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) "
+                        "Original exception: $originalExceptionMessage"
+                    )
+                    Fail-Json $result $msg
                 }
                 $pagingFilesValues += "$fullPath $initialSize $maximumSize"
                 try {
-                    Set-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "PagingFiles" $pagingFilesValues
-                } catch {
-                    Fail-Json $result "Failed to set pagefile settings to the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
+                    Set-ItemProperty -LiteralPath $regPath "PagingFiles" $pagingFilesValues
+                }
+                catch {
+                    $msg = -join @(
+                        "Failed to set pagefile settings to the registry for workaround $($_.Exception.Message) "
+                        "Original exception: $originalExceptionMessage"
+                    )
+                    Fail-Json $result $msg
                 }
             }
         }
         $result.changed = $true
-    }else
-    {
+    }
+    else {
         if ((-not $check_mode) -and
             -not ($systemManaged) -and
             -not ( ($curPagefile.InitialSize -eq 0) -and ($curPagefile.maximumSize -eq 0) ) -and
             ( ($curPagefile.InitialSize -ne $initialSize) -or ($curPagefile.maximumSize -ne $maximumSize) )
-           )
-        {
+        ) {
             $curPagefile.InitialSize = $initialSize
             $curPagefile.MaximumSize = $maximumSize
             try {
                 $curPagefile.Put() | out-null
-            } catch {
+            }
+            catch {
                 $originalExceptionMessage = $($_.Exception.Message)
                 # Try workaround before failing
                 try {
                     Remove-Pagefile $fullPath -whatif:$check_mode
-                } catch {
+                }
+                catch {
                     Fail-Json $result "Failed to remove pagefile before workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
                 }
                 try {
-                    $pagingFilesValues = (Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management").PagingFiles
-                } catch {
-                    Fail-Json $result "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
+                    $pagingFilesValues = (Get-ItemProperty -LiteralPath $regPath).PagingFiles
+                }
+                catch {
+                    $msg = -join @(
+                        "Failed to get pagefile settings from the registry for workaround $($_.Exception.Message) "
+                        "Original exception: $originalExceptionMessage"
+                    )
+                    Fail-Json $result $msg
                 }
                 $pagingFilesValues += "$fullPath $initialSize $maximumSize"
                 try {
-                    Set-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "PagingFiles" -Value $pagingFilesValues
-                } catch {
-                    Fail-Json $result "Failed to set pagefile settings to the registry for workaround $($_.Exception.Message) Original exception: $originalExceptionMessage"
+
+                    Set-ItemProperty -LiteralPath $regPath -Name "PagingFiles" -Value $pagingFilesValues
+                }
+                catch {
+                    $msg = -join @(
+                        "Failed to set pagefile settings to the registry for workaround $($_.Exception.Message) "
+                        "Original exception: $originalExceptionMessage"
+                    )
+                    Fail-Json $result $msg
                 }
             }
             $result.changed = $true
         }
     }
-} elseif ($state -eq "query") {
+}
+elseif ($state -eq "query") {
     $result.pagefiles = @()
 
     if ($null -eq $drive) {
         try {
             $pagefiles = Get-CIMInstance Win32_PageFileSetting
-        } catch {
+        }
+        catch {
             Fail-Json $result "Failed to query all pagefiles $($_.Exception.Message)"
         }
-    } else {
+    }
+    else {
         try {
             $pagefiles = Get-Pagefile $fullPath
-        } catch {
+        }
+        catch {
             Fail-Json $result "Failed to query specific pagefile $($_.Exception.Message)"
         }
     }
@@ -189,13 +229,14 @@ if ($state -eq "absent") {
             caption = $currentPagefile.Caption
             description = $currentPagefile.Description
         }
-        $result.pagefiles += ,$currentPagefileObject
+        $result.pagefiles += , $currentPagefileObject
     }
 
     # Get automatic managed pagefile state
     try {
         $result.automatic_managed_pagefiles = (Get-CIMInstance -Class win32_computersystem).AutomaticManagedPagefile
-    } catch {
+    }
+    catch {
         Fail-Json $result "Failed to query automatic managed pagefile state $($_.Exception.Message)"
     }
 }
