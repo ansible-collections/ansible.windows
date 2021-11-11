@@ -132,7 +132,7 @@ notes:
 - More information about PowerShell and how it handles RegEx strings can be
   found at U(https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx).
 - The current module doesn't support Systems Center Configuration Manager (SCCM).
-  See L(https://github.com/ansible-collections/ansible.windows/issues/194)
+  See U(https://github.com/ansible-collections/ansible.windows/issues/194)
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: ansible.windows.win_feature
