@@ -26,7 +26,7 @@ $force = $module.Params.force
 
 $module.Result.rc = 0
 
-if(-not (Test-Path -LiteralPath $path)) {
+if (-not (Test-Path -LiteralPath $path)) {
     $module.FailJson("Path to item, $path, does not exist.")
 }
 
@@ -70,13 +70,13 @@ function Get-EscapedFileName {
     param(
         [string]$FullName
     )
-    return $FullName.Replace("\","\\").Replace("'","\'")
+    return $FullName.Replace("\", "\\").Replace("'", "\'")
 }
 
 $is_compressed = ($item.Attributes -band [System.IO.FileAttributes]::Compressed) -eq [System.IO.FileAttributes]::Compressed
 $needs_changed = $is_compressed -ne ($state -eq 'present')
 
-if($force -and $recurse -and $item.PSIsContainer) {
+if ($force -and $recurse -and $item.PSIsContainer) {
     if (-not $needs_changed) {
         # Check the subfolders and files
         $entries_to_check = $item.EnumerateFileSystemInfos("*", [System.IO.SearchOption]::AllDirectories)
@@ -90,20 +90,22 @@ if($force -and $recurse -and $item.PSIsContainer) {
     }
 }
 
-if($needs_changed) {
+if ($needs_changed) {
     $module.Result.changed = $true
     if ($item.PSIsContainer) {
         $cim_obj = Get-CimInstance -ClassName 'Win32_Directory' -Filter "Name='$(Get-EscapedFileName -FullName $item.FullName)'"
-    } else {
+    }
+    else {
         $cim_obj = Get-CimInstance -ClassName 'CIM_LogicalFile' -Filter "Name='$(Get-EscapedFileName -FullName $item.FullName)'"
     }
-    if($state -eq 'present') {
-        if(-not $module.CheckMode) {
+    if ($state -eq 'present') {
+        if (-not $module.CheckMode) {
             $ret = Invoke-CimMethod -InputObject $cim_obj -MethodName 'CompressEx' -Arguments @{ Recursive = $recurse }
             $module.Result.rc = $ret.ReturnValue
         }
-    } else {
-        if(-not $module.CheckMode) {
+    }
+    else {
+        if (-not $module.CheckMode) {
             $ret = $ret = Invoke-CimMethod -InputObject $cim_obj -MethodName 'UnCompressEx' -Arguments @{ Recursive = $recurse }
             $module.Result.rc = $ret.ReturnValue
         }
@@ -111,7 +113,7 @@ if($needs_changed) {
 }
 
 $module.Result.msg = Get-ReturnCodeMessage -code $module.Result.rc
-if($module.Result.rc -ne 0) {
+if ($module.Result.rc -ne 0) {
     $module.FailJson($module.Result.msg)
 }
 
