@@ -12,9 +12,9 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
 $profiles = Get-AnsibleParam -obj $params -name "profiles" -type "list" -default @("Domain", "Private", "Public")
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -failifempty $true -validateset 'disabled','enabled'
-$inbound_action = Get-AnsibleParam -obj $params -name "inbound_action" -type "str" -validateset 'allow','block','not_configured'
-$outbound_action = Get-AnsibleParam -obj $params -name "outbound_action" -type "str" -validateset 'allow','block','not_configured'
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -failifempty $true -validateset 'disabled', 'enabled'
+$inbound_action = Get-AnsibleParam -obj $params -name "inbound_action" -type "str" -validateset 'allow', 'block', 'not_configured'
+$outbound_action = Get-AnsibleParam -obj $params -name "outbound_action" -type "str" -validateset 'allow', 'block', 'not_configured'
 
 $result = @{
     changed = $false
@@ -57,21 +57,22 @@ Try {
                 $result.changed = $true
                 $result.$profile.enabled = $true
             }
-            if($null -ne $inbound_action) {
+            if ($null -ne $inbound_action) {
                 $inbound_action = [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($inbound_action.ToLower()) -replace '_', ''
                 if ($inbound_action -ne $current_inboundaction) {
-                  Set-NetFirewallProfile -name $profile -DefaultInboundAction $inbound_action -WhatIf:$check_mode
-                  $result.changed = $true
+                    Set-NetFirewallProfile -name $profile -DefaultInboundAction $inbound_action -WhatIf:$check_mode
+                    $result.changed = $true
                 }
             }
-            if($null -ne $outbound_action) {
+            if ($null -ne $outbound_action) {
                 $outbound_action = [Globalization.CultureInfo]::InvariantCulture.TextInfo.ToTitleCase($outbound_action.ToLower()) -replace '_', ''
                 if ($outbound_action -ne $current_outboundaction) {
-                  Set-NetFirewallProfile -name $profile -DefaultOutboundAction $outbound_action -WhatIf:$check_mode
-                  $result.changed = $true
+                    Set-NetFirewallProfile -name $profile -DefaultOutboundAction $outbound_action -WhatIf:$check_mode
+                    $result.changed = $true
                 }
             }
-        } else {
+        }
+        else {
 
             if ($currentstate -eq $FIREWALL_ENABLED) {
                 Set-NetFirewallProfile -name $profile -Enabled false -WhatIf:$check_mode
@@ -81,7 +82,8 @@ Try {
 
         }
     }
-} Catch {
+}
+Catch {
     Fail-Json $result "an error occurred when attempting to change firewall status for profile $profile $($_.Exception.Message)"
 }
 
