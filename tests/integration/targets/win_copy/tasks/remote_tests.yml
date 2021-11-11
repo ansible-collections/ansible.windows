@@ -484,3 +484,55 @@
   assert:
     that:
     - not copy_empty_dir_again is changed
+
+# https://github.com/ansible-collections/ansible.windows/issues/298
+- name: create complex dest directory
+  win_powershell:
+    parameters:
+      Path: '{{ test_win_copy_path }}\target\weird'
+    error_action: stop
+    script: |
+      [CmdletBinding()]
+      param (
+          [String]
+          $Path
+      )
+
+      New-Item -Path $Path -ItemType Directory | Out-Null
+
+      cmd.exe /c mklink "$Path\missing-link-file" missing
+      cmd.exe /c mklink /D "$Path\missing-link-dir" missing
+      cmd.exe /c mklink /D "$Path\recursive-link" $Path
+      cmd.exe /c mklink "$Path\link-file" file.txt
+      New-Item -Path (Join-Path $Path "folder") -ItemType Directory | Out-Null
+      $nestedFolder = New-Item -Path (Join-Path $Path "nested") -ItemType Directory
+      $lockedFolder = New-Item -Path (Join-Path $Path "locked") -ItemType Directory
+
+      [IO.File]::WriteAllText((Join-Path $Path "file.txt"), "text")
+      [IO.File]::WriteAllText((Join-Path $nestedFolder "file.txt"), "text")
+      [IO.File]::WriteAllText((Join-Path $lockedFolder "file.txt"), "text")
+
+      $sd = Get-Acl -LiteralPath $lockedFolder
+      $sd.SetAccessRuleProtection($true, $false)
+      $sd.SetOwner([System.Security.Principal.SecurityIdentifier]'S-1-5-18')
+      $sd | Set-Acl -LiteralPath $lockedFolder
+
+- name: copy across file to complex dest
+  win_copy:
+    src: '{{ test_win_copy_path }}\source\foo.txt'
+    dest: '{{ test_win_copy_path }}\target\weird\'
+    remote_src: yes
+  register: copy_complex
+
+- name: get result of copy across file to complex dest
+  win_stat:
+    path: '{{ test_win_copy_path }}\target\weird\foo.txt'
+  register: copy_complex_actual
+
+- name: assert copy across file to complex dest
+  assert:
+    that:
+    - copy_complex is changed
+    - copy_complex.size == 8  # 4 bytes for copy and (4 + 4) bytes for existing files in dest
+    - copy_complex_actual.stat.exists
+    - copy_complex_actual.stat.checksum == 'c79a6506c1c948be0d456ab5104d5e753ab2f3e6'
