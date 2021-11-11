@@ -83,9 +83,9 @@
     - search_sync.found_update_count == search_sync.updates|length
     - search_async.found_update_count == search_async.updates|length
     - search_become.found_update_count == search_become.updates|length
-    - search_sync.filtered_updates == []
-    - search_async.filtered_updates == []
-    - search_become.filtered_updates == []
+    - search_sync.filtered_updates == {}
+    - search_async.filtered_updates == {}
+    - search_become.filtered_updates == {}
 
 - name: search updates - check mode
   win_updates:
@@ -146,8 +146,8 @@
       - search_async.installed_update_count == 0
       - search_sync.found_update_count == search_sync.updates|length
       - search_async.found_update_count == search_async.updates|length
-      - search_sync.filtered_updates == []
-      - search_async.filtered_updates == []
+      - search_sync.filtered_updates == {}
+      - search_async.filtered_updates == {}
 
   always:
   - name: remove explicit deny batch logon right
