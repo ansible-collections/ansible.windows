@@ -12,7 +12,7 @@ $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "b
 
 $hotfix_kb = Get-AnsibleParam -obj $params -name "hotfix_kb" -type "str"
 $hotfix_identifier = Get-AnsibleParam -obj $params -name "hotfix_identifier" -type "str"
-$state = Get-AnsibleParam -obj $params -name "state" -type "state" -default "present" -validateset "absent","present"
+$state = Get-AnsibleParam -obj $params -name "state" -type "state" -default "present" -validateset "absent", "present"
 $source = Get-AnsibleParam -obj $params -name "source" -type "path"
 
 $result = @{
@@ -22,12 +22,14 @@ $result = @{
 
 if (Get-Module -Name DISM -ListAvailable) {
     Import-Module -Name DISM
-} else {
+}
+else {
     # Server 2008 R2 doesn't have the DISM module installed on the path, check the Windows ADK path
     $adk_root = [System.Environment]::ExpandEnvironmentVariables("%PROGRAMFILES(X86)%\Windows Kits\*\Assessment and Deployment Kit\Deployment Tools\amd64\DISM")
     if (Test-Path -LiteralPath $adk_root) {
         Import-Module -Name (Get-Item -LiteralPath $adk_root).FullName
-    } else {
+    }
+    else {
         Fail-Json $result "The DISM PS module needs to be installed, this can be done through the windows-adk chocolately package"
     }
 }
@@ -43,7 +45,8 @@ Function Expand-MSU($msu) {
 
     try {
         &expand.exe $expand_args | Out-NUll
-    } catch {
+    }
+    catch {
         Fail-Json $result "failed to run expand.exe $($expand_args): $($_.Exception.Message)"
     }
     if ($LASTEXITCODE -ne 0) {
@@ -56,7 +59,8 @@ Function Expand-MSU($msu) {
 Function Get-HotfixMetadataFromName($name) {
     try {
         $dism_package_info = Get-WindowsPackage -Online -PackageName $name
-    } catch {
+    }
+    catch {
         # build a basic stub for a missing result
         $dism_package_info = @{
             PackageState = "NotPresent"
@@ -67,7 +71,8 @@ Function Get-HotfixMetadataFromName($name) {
 
     if ($dism_package_info.Description -match "(KB\d*)") {
         $hotfix_kb = $Matches[0]
-    } else {
+    }
+    else {
         $hotfix_kb = "UNKNOWN"
     }
 
@@ -94,7 +99,8 @@ Function Get-HotfixMetadataFromFile($extract_path) {
 
     try {
         $dism_package_info = Get-WindowsPackage -Online -PackagePath $cab_file
-    } catch {
+    }
+    catch {
         Fail-Json $result "failed to get DISM package metadata from path $($extract_path): $($_.Exception.Message)"
     }
     if ($dism_package_info.Applicable -eq $false) {
@@ -104,12 +110,14 @@ Function Get-HotfixMetadataFromFile($extract_path) {
     $package_properties_path = Get-ChildItem -LiteralPath $extract_path | Where-Object { $_.Extension -eq ".txt" }
     if ($null -eq $package_properties_path) {
         $hotfix_kb = "UNKNOWN"
-    } else {
+    }
+    else {
         $package_ini = Get-Content -LiteralPath $package_properties_path.FullName
         $entry = $package_ini | Where-Object { $_.StartsWith("KB Article Number") }
         if ($null -eq $entry) {
             $hotfix_kb = "UNKNOWN"
-        } else {
+        }
+        else {
             $hotfix_kb = ($entry -split '=')[-1]
             $hotfix_kb = "KB$($hotfix_kb.Substring(1, $hotfix_kb.Length - 2))"
         }
@@ -144,7 +152,8 @@ Function Get-HotfixMetadataFromKB($kb) {
         if ($null -eq $metadata) {
             Fail-Json $result "failed to get DISM package from KB, to continue specify hotfix_identifier instead"
         }
-    } else {
+    }
+    else {
         $metadata = Get-HotfixMetadataFromName -name $identifier.PackageName
     }
 
@@ -157,14 +166,17 @@ if ($state -eq "absent") {
 
     if ($null -ne $hotfix_identifier) {
         $hotfix_metadata = Get-HotfixMetadataFromName -name $hotfix_identifier
-    } elseif ($null -ne $hotfix_kb) {
+    }
+    elseif ($null -ne $hotfix_kb) {
         $hotfix_install_info = Get-Hotfix -Id $hotfix_kb -ErrorAction SilentlyContinue
         if ($null -ne $hotfix_install_info) {
             $hotfix_metadata = Get-HotfixMetadataFromKB -kb $hotfix_kb
-        } else {
-            $hotfix_metadata = @{state = "NotPresent"}
         }
-    } else {
+        else {
+            $hotfix_metadata = @{state = "NotPresent" }
+        }
+    }
+    else {
         Fail-Json $result "either hotfix_identifier or hotfix_kb needs to be set when state=absent"
     }
 
@@ -173,14 +185,16 @@ if ($state -eq "absent") {
         $result.identifier = $hotfix_metadata.name
         $result.kb = $hotfix_metadata.kb
         $result.reboot_required = $true
-    } elseif ($hotfix_metadata.state -eq "Installed") {
+    }
+    elseif ($hotfix_metadata.state -eq "Installed") {
         $result.identifier = $hotfix_metadata.name
         $result.kb = $hotfix_metadata.kb
 
         if (-not $check_mode) {
             try {
                 $remove_result = Remove-WindowsPackage -Online -PackageName $hotfix_metadata.name -NoRestart
-            } catch {
+            }
+            catch {
                 Fail-Json $result "failed to remove package $($hotfix_metadata.name): $($_.Exception.Message)"
             }
             $result.reboot_required = $remove_Result.RestartNeeded
@@ -188,7 +202,8 @@ if ($state -eq "absent") {
 
         $result.changed = $true
     }
-} else {
+}
+else {
     if ($null -eq $source) {
         Fail-Json $result "source must be set when state=present"
     }
@@ -204,12 +219,20 @@ if ($state -eq "absent") {
         # validate the hotfix matches if the hotfix id has been passed in
         if ($null -ne $hotfix_identifier) {
             if ($hotfix_metadata.name -ne $hotfix_identifier) {
-                Fail-Json $result "the hotfix identifier $hotfix_identifier does not match with the source msu identifier $($hotfix_metadata.name), please omit or specify the correct identifier to continue"
+                $msg = -join @(
+                    "the hotfix identifier $hotfix_identifier does not match with the source msu identifier $($hotfix_metadata.name), "
+                    "please omit or specify the correct identifier to continue"
+                )
+                Fail-Json $result $msg
             }
         }
         if ($null -ne $hotfix_kb) {
             if ($hotfix_metadata.kb -ne $hotfix_kb) {
-                Fail-Json $result "the hotfix KB $hotfix_kb does not match with the source msu KB $($hotfix_metadata.kb), please omit or specify the correct KB to continue"
+                $msg = -join @(
+                    "the hotfix KB $hotfix_kb does not match with the source msu KB $($hotfix_metadata.kb), "
+                    "please omit or specify the correct KB to continue"
+                )
+                Fail-Json $result $msg
             }
         }
 
@@ -220,18 +243,21 @@ if ($state -eq "absent") {
         if ($hotfix_metadata.state -eq "InstallPending") {
             # return the reboot required flag, should we fail here instead
             $result.reboot_required = $true
-        } elseif ($hotfix_metadata.state -ne "Installed") {
+        }
+        elseif ($hotfix_metadata.state -ne "Installed") {
             if (-not $check_mode) {
                 try {
                     $install_result = Add-WindowsPackage -Online -PackagePath $hotfix_metadata.path -NoRestart
-                } catch {
+                }
+                catch {
                     Fail-Json $result "failed to add windows package from path $($hotfix_metadata.path): $($_.Exception.Message)"
                 }
                 $result.reboot_required = $install_result.RestartNeeded
             }
             $result.changed = $true
         }
-    } finally {
+    }
+    finally {
         Remove-Item -LiteralPath $extract_path -Force -Recurse
     }
 }
