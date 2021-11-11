@@ -391,7 +391,3 @@ changelogs/.plugin-cache.yaml
 
 # ansible-test ignores
 tests/integration/inventory*
-
-
-# VSCode
-.vscode/
