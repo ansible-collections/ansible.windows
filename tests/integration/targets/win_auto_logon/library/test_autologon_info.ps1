@@ -207,7 +207,8 @@ $handle = [Ansible.TestAutoLogonInfo.LsaUtil]::OpenPolicy(0x00000004)
 try {
     $password = [Ansible.TestAutoLogonInfo.LsaUtil]::RetrievePrivateData($handle, 'DefaultPassword')
     $module.Result.LsaPassword = $password
-} finally {
+}
+finally {
     $handle.Dispose()
 }
 
