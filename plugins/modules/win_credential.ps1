@@ -33,7 +33,7 @@ $spec = @{
         username = @{ type = "str" }
     }
     required_if = @(
-        ,@("state", "present", @("username"))
+        , @("state", "present", @("username"))
     )
     supports_check_mode = $true
 }
@@ -504,14 +504,15 @@ Function ConvertTo-CredentialAttribute {
         if ($null -ne $attribute.data) {
             if ($attribute.data_format -eq "base64") {
                 $new_attribute.Value = [System.Convert]::FromBase64String($attribute.data)
-            } else {
+            }
+            else {
                 $new_attribute.Value = [System.Text.Encoding]::UTF8.GetBytes($attribute.data)
             }
         }
         $converted_attributes.Add($new_attribute) > $null
     }
 
-    return ,$converted_attributes
+    return , $converted_attributes
 }
 
 Function Get-DiffInfo {
@@ -538,7 +539,7 @@ Function Get-DiffInfo {
         $diff.attributes.Add($attribute_info) > $null
     }
 
-    return ,$diff
+    return , $diff
 }
 
 # If the username is a certificate thumbprint, verify it's a valid cert in the CurrentUser/Personal store
@@ -556,7 +557,8 @@ if ($null -ne $username -and $type -in @("domain_certificate", "generic_certific
 if ($null -ne $secret) {
     if ($secret_format -eq "base64") {
         $secret = [System.Convert]::FromBase64String($secret)
-    } else {
+    }
+    else {
         $secret = [System.Text.Encoding]::Unicode.GetBytes($secret)
     }
 }
@@ -585,7 +587,8 @@ if ($state -eq "absent") {
         }
         $module.Result.changed = $true
     }
-} else {
+}
+else {
     if ($null -eq $existing_credential) {
         $new_credential = New-Object -TypeName Ansible.CredentialManager.Credential
         $new_credential.Type = $type
@@ -604,7 +607,8 @@ if ($state -eq "absent") {
             $new_credential.Write($false)
         }
         $module.Result.changed = $true
-    } else {
+    }
+    else {
         $changed = $false
         $preserve_blob = $false
 
@@ -635,13 +639,15 @@ if ($state -eq "absent") {
             $new_attributes = ConvertTo-CredentialAttribute -Attributes $attributes
             if ($new_attributes.Count -ne $existing_credential.Attributes.Count) {
                 $attribute_changed = $true
-            } else {
+            }
+            else {
                 for ($i = 0; $i -lt $new_attributes.Count; $i++) {
                     $new_keyword = $new_attributes[$i].Keyword
                     $new_value = $new_attributes[$i].Value
                     if ($null -eq $new_value) {
                         $new_value = ""
-                    } else {
+                    }
+                    else {
                         $new_value = [System.Convert]::ToBase64String($new_value)
                     }
 
@@ -649,7 +655,8 @@ if ($state -eq "absent") {
                     $existing_value = $existing_credential.Attributes[$i].Value
                     if ($null -eq $existing_value) {
                         $existing_value = ""
-                    } else {
+                    }
+                    else {
                         $existing_value = [System.Convert]::ToBase64String($existing_value)
                     }
 
@@ -670,13 +677,15 @@ if ($state -eq "absent") {
             # If we haven't explicitly set a secret, tell Windows to preserve the existing blob
             $preserve_blob = $true
             $existing_credential.Secret = $null
-        } elseif ($update_secret -eq "always") {
+        }
+        elseif ($update_secret -eq "always") {
             # We should only set the password if we can't read the existing one or it doesn't match our secret
             if ($existing_credential.Secret.Length -eq 0) {
                 # We cannot read the secret so don't know if its the configured secret
                 $existing_credential.Secret = $secret
                 $changed = $true
-            } else {
+            }
+            else {
                 # We can read the secret so compare with our input
                 $input_secret_b64 = [System.Convert]::ToBase64String($secret)
                 $actual_secret_b64 = [System.Convert]::ToBase64String($existing_credential.Secret)
@@ -704,7 +713,8 @@ if ($state -eq "absent") {
             type = $type.ToString()
             username = $username
         }
-    } else {
+    }
+    else {
         # Get a new copy of the credential and use that to set the after diff
         $new_credential = [Ansible.CredentialManager.Credential]::GetCredential($name, $type)
         $module.Diff.after = Get-DiffInfo -AnsibleCredential $new_credential
