@@ -91,7 +91,8 @@ $profiles = Get-ChildItem -LiteralPath "HKLM:\SOFTWARE\Microsoft\Windows NT\Curr
 if ($state -eq "absent") {
     if ($null -ne $username) {
         $user_profiles = $profiles | Where-Object { $_.PSChildName -eq $username.Value }
-    } else {
+    }
+    else {
         # If the username was not provided, or we are removing a profile for a deleted user, we need to try and find
         # the correct SID to delete. We just verify that the path matches based on the name passed in
         $expected_profile_path = Get-ExpectedProfilePath -BaseName $name
@@ -102,7 +103,8 @@ if ($state -eq "absent") {
         }
 
         if ($user_profiles.Length -gt 1 -and -not $remove_multiple) {
-            $module.FailJson("Found multiple profiles matching the path '$expected_profile_path', set 'remove_multiple=True' to remove all the profiles for this match")
+            $msg = "Found multiple profiles matching the path '$expected_profile_path', set 'remove_multiple=True' to remove all the profiles for this match"
+            $module.FailJson($msg)
         }
     }
 
@@ -122,14 +124,16 @@ if ($state -eq "absent") {
         $module.Result.path = $profile_path
         $module.Result.changed = $true
     }
-} elseif ($state -eq "present") {
+}
+elseif ($state -eq "present") {
     # Now we know the SID, see if the profile already exists
     $user_profile = $profiles | Where-Object { $_.PSChildName -eq $username.Value }
     if ($null -eq $user_profile) {
         # In case a SID was set as the username we still need to make sure the SID is mapped to a valid local account
         try {
             $account_name = $username.Translate([System.Security.Principal.NTAccount])
-        } catch [System.Security.Principal.IdentityNotMappedException] {
+        }
+        catch [System.Security.Principal.IdentityNotMappedException] {
             $module.FailJson("Fail to map the account '$($username.Value)' to a valid user")
         }
 
@@ -140,7 +144,8 @@ if ($state -eq "absent") {
 
         if ($module.CheckMode) {
             $profile_path = Get-ExpectedProfilePath -BaseName $name
-        } else {
+        }
+        else {
             $raw_profile_path = New-Object -TypeName System.Text.StringBuilder -ArgumentList 260
             $res = [Ansible.WinUserProfile.NativeMethods]::CreateProfile($username.Value, $name, $raw_profile_path,
                 $raw_profile_path.Capacity)
@@ -154,7 +159,8 @@ if ($state -eq "absent") {
 
         $module.Result.changed = $true
         $module.Result.path = $profile_path
-    } else {
+    }
+    else {
         $module.Result.path = (Get-ItemProperty -LiteralPath $user_profile.PSPath -Name ProfileImagePath).ProfileImagePath
     }
 }
