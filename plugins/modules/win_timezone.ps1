@@ -26,7 +26,8 @@ Try {
 
     if ( $result.previous_timezone -eq $timezone ) {
         Exit-Json $result "Timezone '$timezone' is already set on this machine"
-    } Else {
+    }
+    Else {
         # Check that timezone is listed as an available timezone to the machine
         $tzList = $(tzutil.exe /l).ToLower()
         If ($LASTEXITCODE -ne 0) {
@@ -40,7 +41,8 @@ Try {
 
         if ($check_mode) {
             $result.changed = $true
-        } else {
+        }
+        else {
             tzutil.exe /s "$timezone"
             if ($LASTEXITCODE -ne 0) {
                 Throw "An error occurred when setting the specified timezone with tzutil."
@@ -63,7 +65,8 @@ Try {
             }
         }
     }
-} Catch {
+}
+Catch {
     Fail-Json $result "Error setting timezone to: $timezone."
 }
 
