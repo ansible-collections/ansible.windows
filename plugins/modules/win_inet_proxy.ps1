@@ -52,7 +52,8 @@ if ($proxy -is [System.Collections.IDictionary]) {
         }
     }
     $proxy = $proxy_list -join ";"
-} elseif ($null -ne $proxy) {
+}
+elseif ($null -ne $proxy) {
     $proxy = $proxy.ToString()
 }
 
@@ -417,7 +418,7 @@ if ($null -ne $connection -and -not [Ansible.WinINetProxy.WinINetProxy]::IsValid
     $module.FailJson("The connection '$connection' does not exist.")
 }
 
-$actual_proxy = New-Object -TypeName Ansible.WinINetProxy.WinINetProxy -ArgumentList @(,$connection)
+$actual_proxy = New-Object -TypeName Ansible.WinINetProxy.WinINetProxy -ArgumentList @(, $connection)
 $module.Diff.before = @{
     auto_config_url = $actual_proxy.AutoConfigUrl
     auto_detect = $actual_proxy.AutoDetect

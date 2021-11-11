@@ -266,7 +266,7 @@ namespace Ansible.WinINetProxyInfo
 '@
 Add-CSharpType -References $win_inet_invoke -AnsibleModule $module
 
-$proxy = New-Object -TypeName Ansible.WinINetProxyInfo.WinINetProxy -ArgumentList @(,$connection)
+$proxy = New-Object -TypeName Ansible.WinINetProxyInfo.WinINetProxy -ArgumentList @(, $connection)
 $module.Result.auto_config_url = $proxy.AutoConfigUrl
 $module.Result.auto_detect = $proxy.AutoDetect
 $module.Result.proxy = $proxy.Proxy

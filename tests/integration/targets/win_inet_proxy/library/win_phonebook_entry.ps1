@@ -22,10 +22,10 @@ $spec = @{
         name = @{ type = "str"; required = $true }
         options = @{ type = "list" }
         state = @{ type = "str"; choices = @("absent", "present"); default = "present" }
-        type = @{ type = "str"; choices = @("broadband", "direct", "phone", "vpn")}
+        type = @{ type = "str"; choices = @("broadband", "direct", "phone", "vpn") }
     }
     required_if = @(
-        ,@("state", "present", @("type", "device_name", "device_type", "framing_protocol"))
+        , @("state", "present", @("type", "device_name", "device_type", "framing_protocol"))
     )
     supports_check_mode = $false
 }
@@ -494,7 +494,8 @@ if ($state -eq "present") {
         # Once created we then get the entry object again to retrieve the unique GUID ID to return
         $entry = [Ansible.WinPhonebookEntry.Phonebook]::GetEntry($name)
         $module.Result.guid = $entry.guidId
-    } else {
+    }
+    else {
         $entry = [Ansible.WinPhonebookEntry.Phonebook]::GetEntry($name)
         $changed = $false
         foreach ($kvp in $property_map.GetEnumerator()) {
@@ -511,7 +512,8 @@ if ($state -eq "present") {
             $module.Result.changed = $true
         }
     }
-} else {
+}
+else {
     if ($exists) {
         [Ansible.WinPhonebookEntry.Phonebook]::DeleteEntry($name)
         $module.Result.changed = $true
