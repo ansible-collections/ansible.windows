@@ -52,7 +52,8 @@ if ($proxy -is [System.Collections.IDictionary]) {
         }
     }
     $proxy = $proxy_list -join ";"
-} elseif ($null -ne $proxy) {
+}
+elseif ($null -ne $proxy) {
     $proxy = $proxy.ToString()
 }
 
