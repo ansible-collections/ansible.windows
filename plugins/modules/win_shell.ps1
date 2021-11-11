@@ -16,15 +16,20 @@ $ErrorActionPreference = "Stop"
 Function Format-Stderr($raw_stderr) {
     Try {
         # NB: this regex isn't perfect, but is decent at finding CLIXML amongst other stderr noise
-        If($raw_stderr -match "(?s)(?<prenoise1>.*)#< CLIXML(?<prenoise2>.*)(?<clixml><Objs.+</Objs>)(?<postnoise>.*)") {
+        If ($raw_stderr -match "(?s)(?<prenoise1>.*)#< CLIXML(?<prenoise2>.*)(?<clixml><Objs.+</Objs>)(?<postnoise>.*)") {
             $clixml = [xml]$matches["clixml"]
+            $filtered = $clixml.Objs.ChildNodes |
+                Where-Object { $_.Name -eq 'S' } |
+                Where-Object { $_.S -eq 'Error' } |
+                ForEach-Object { $_.'#text'.Replace('_x000D__x000A_', '') } |
+                Out-String
 
             $merged_stderr = "{0}{1}{2}{3}" -f @(
-               $matches["prenoise1"],
-               $matches["prenoise2"],
-               # filter out just the Error-tagged strings for now, and zap embedded CRLF chars
-               ($clixml.Objs.ChildNodes | Where-Object  { $_.Name -eq 'S' } | Where-Object { $_.S -eq 'Error' } | ForEach-Object { $_.'#text'.Replace('_x000D__x000A_','') } | Out-String),
-               $matches["postnoise"]) | Out-String
+                $matches["prenoise1"],
+                $matches["prenoise2"],
+                # filter out just the Error-tagged strings for now, and zap embedded CRLF chars
+                $filtered,
+                $matches["postnoise"]) | Out-String
 
             return $merged_stderr.Trim()
 
@@ -58,15 +63,15 @@ $result = @{
 }
 
 if ($creates -and $(Test-AnsiblePath -Path $creates)) {
-    Exit-Json @{msg="skipped, since $creates exists";cmd=$raw_command_line;changed=$false;skipped=$true;rc=0}
+    Exit-Json @{ msg = "skipped, since $creates exists"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
 if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
-    Exit-Json @{msg="skipped, since $removes does not exist";cmd=$raw_command_line;changed=$false;skipped=$true;rc=0}
+    Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
 $exec_args = $null
-If(-not $executable -or $executable -eq "powershell") {
+If (-not $executable -or $executable -eq "powershell") {
     $exec_application = "powershell.exe"
 
     # force input encoding to preamble-free UTF8 so PS sub-processes (eg, Start-Job) don't blow up
@@ -77,7 +82,8 @@ If(-not $executable -or $executable -eq "powershell") {
 
     if ($stdin) {
         $exec_args = "-encodedcommand $encoded_command"
-    } else {
+    }
+    else {
         $exec_args = "-noninteractive -encodedcommand $encoded_command"
     }
 
@@ -111,11 +117,13 @@ if ($output_encoding_override) {
 $start_datetime = [DateTime]::UtcNow
 try {
     $command_result = Run-Command @run_command_arg
-} catch {
+}
+catch {
     $result.changed = $false
     try {
         $result.rc = $_.Exception.NativeErrorCode
-    } catch {
+    }
+    catch {
         $result.rc = 2
     }
     Fail-Json -obj $result -message $_.Exception.Message

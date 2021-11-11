@@ -10,9 +10,9 @@ $ErrorActionPreference = "Stop"
 # FUTURE: Consider action wrapper to manage reboots and credential changes
 
 # Set of features required for a domain controller
-$dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
+$dc_required_features = @("AD-Domain-Services", "RSAT-ADDS")
 
-Function Get-MissingFeatures {
+Function Get-MissingFeature {
     Param(
         [string[]]$required_features
     )
@@ -29,8 +29,8 @@ Function Get-MissingFeatures {
     return @($missing_features)
 }
 
-Function Install-Prereqs {
-    $missing_features = Get-MissingFeatures $dc_required_features
+Function Install-Prereq {
+    $missing_features = Get-MissingFeature $dc_required_features
     if ($missing_features) {
         $result.changed = $true
 
@@ -53,7 +53,7 @@ Function Get-DomainForest {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]$DnsName
     )
 
@@ -62,9 +62,11 @@ Function Get-DomainForest {
             'Forest', $DnsName
         )
         [System.DirectoryServices.ActiveDirectory.Forest]::GetForest($forest_context)
-    } catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryObjectNotFoundException] {
+    }
+    catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryObjectNotFoundException] {
         Write-Error -Message "AD Object not found: $($_.Exception.Message)" -Exception $_.Exception
-    } catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryOperationException] {
+    }
+    catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryOperationException] {
         Write-Error -Message "AD Operation Exception: $($_.Exception.Message)" -Exception $_.Exception
     }
 }
@@ -93,12 +95,12 @@ if ($domain_netbios_name -and $domain_netbios_name.length -gt 15) {
 }
 
 $result = @{
-    changed=$false;
-    reboot_required=$false;
+    changed = $false;
+    reboot_required = $false;
 }
 
 # FUTURE: Any sane way to do the detection under check-mode *without* installing the feature?
-$installed = Install-Prereqs
+$installed = Install-Prereq
 
 # when in check mode and the prereq was "installed" we need to exit early as
 # the AD cmdlets weren't really installed
@@ -125,13 +127,13 @@ if (-not $forest) {
     $sm_cred = ConvertTo-SecureString $safe_mode_admin_password -AsPlainText -Force
 
     $install_params = @{
-        DomainName=$dns_domain_name;
-        SafeModeAdministratorPassword=$sm_cred;
-        Confirm=$false;
-        SkipPreChecks=$true;
-        InstallDns=$install_dns;
-        NoRebootOnCompletion=$true;
-        WhatIf=$check_mode;
+        DomainName = $dns_domain_name;
+        SafeModeAdministratorPassword = $sm_cred;
+        Confirm = $false;
+        SkipPreChecks = $true;
+        InstallDns = $install_dns;
+        NoRebootOnCompletion = $true;
+        WhatIf = $check_mode;
     }
 
     if ($database_path) {
@@ -165,12 +167,15 @@ if (-not $forest) {
     $iaf = $null
     try {
         $iaf = Install-ADDSForest @install_params
-    } catch [Microsoft.DirectoryServices.Deployment.DCPromoExecutionException] {
+    }
+    catch [Microsoft.DirectoryServices.Deployment.DCPromoExecutionException] {
         # ExitCode 15 == 'Role change is in progress or this computer needs to be restarted.'
-        # DCPromo exit codes details can be found at https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/troubleshooting-domain-controller-deployment
+        # DCPromo exit codes details can be found at
+        # https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/troubleshooting-domain-controller-deployment
         if ($_.Exception.ExitCode -in @(15, 19)) {
             $result.reboot_required = $true
-        } else {
+        }
+        else {
             Fail-Json -obj $result -message "Failed to install ADDSForest, DCPromo exited with $($_.Exception.ExitCode): $($_.Exception.Message)"
         }
     }
@@ -179,7 +184,8 @@ if (-not $forest) {
         # the return value after -WhatIf does not have RebootRequired populated
         # manually set to True as the domain would have been installed
         $result.reboot_required = $true
-    } elseif ($null -ne $iaf) {
+    }
+    elseif ($null -ne $iaf) {
         $result.reboot_required = $iaf.RebootRequired
 
         # The Netlogon service is set to auto start but is not started. This is
@@ -189,8 +195,13 @@ if (-not $forest) {
         # this fails.
         try {
             Start-Service -Name Netlogon
-        } catch {
-            Add-Warning -obj $result -message "Failed to start the Netlogon service after promoting the host, Ansible may be unable to connect until the host is manually rebooting: $($_.Exception.Message)"
+        }
+        catch {
+            $msg = -join @(
+                "Failed to start the Netlogon service after promoting the host, "
+                "Ansible may be unable to connect until the host is manually rebooting: $($_.Exception.Message)"
+            )
+            Add-Warning -obj $result -message $msg
         }
     }
 }

@@ -5,7 +5,7 @@
 
 $params = Parse-Args $args
 
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent", "present"
 $src = Get-AnsibleParam -obj $params -name "src" -type "path" -failifempty $true
 $target = Get-AnsibleParam -obj $params -name "target" -type "path" -failifempty $($state -eq "present")
 
@@ -19,7 +19,8 @@ if ($state -eq "absent") {
         Remove-Link -link_path $src
         $result.changed = $true
     }
-} else {
+}
+else {
     if (-not (Test-Path -LiteralPath $src)) {
         Load-LinkUtils
         New-Link -link_path $src -link_target $target -link_type "link"

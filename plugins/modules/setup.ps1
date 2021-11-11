@@ -22,7 +22,8 @@ $spec = @{
 # we need to make sure the module doesn't break if it does. To do this we need to add any options in the input args
 if ($args.Length -gt 0) {
     $params = Get-Content -LiteralPath $args[0] | ConvertFrom-AnsibleJson
-} else {
+}
+else {
     $params = $complex_args
 }
 if ($params) {
@@ -543,14 +544,14 @@ $factMeta = @(
         Subsets = 'all_ipv4_addresses', 'all_ipv6_addresses'
         Code = {
             $interfaces = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()
-            $ips = @(foreach($interface in $interfaces) {
-                # Win32_NetworkAdapterConfiguration did not return the local IPs so we replicate that here.
-                $interface.GetIPProperties().UnicastAddresses | Where-Object {
-                    $_.Address.ToString() -notin @('::1', '127.0.0.1')
-                } | ForEach-Object -Process {
-                    $_.Address.ToString()
-                }
-            })
+            $ips = @(foreach ($interface in $interfaces) {
+                    # Win32_NetworkAdapterConfiguration did not return the local IPs so we replicate that here.
+                    $interface.GetIPProperties().UnicastAddresses | Where-Object {
+                        $_.Address.ToString() -notin @('::1', '127.0.0.1')
+                    } | ForEach-Object -Process {
+                        $_.Address.ToString()
+                    }
+                })
 
             $ansibleFacts.ansible_ip_addresses = $ips
         }
@@ -608,7 +609,7 @@ $factMeta = @(
             $osversion = [Environment]::OSVersion.Version
 
             $osProductType = (New-Object -TypeName Ansible.Windows.Setup.OSVersionInfo).ProductType
-            $productType = switch($osProductType) {
+            $productType = switch ($osProductType) {
                 1 { "workstation" }
                 2 { "domain_controller" }
                 3 { "server" }
@@ -675,7 +676,7 @@ $factMeta = @(
                 $facterOutput = &$facter -j
                 $facts = "$facterOutput" | ConvertFrom-Json
 
-                ForEach($fact in $facts.PSObject.Properties) {
+                ForEach ($fact in $facts.PSObject.Properties) {
                     $ansibleFacts."facter_$($fact.Name)" = $fact.Value
                 }
             }
@@ -686,48 +687,51 @@ $factMeta = @(
         Code = {
             $interfaces = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()
 
-            $formattedNetCfg = @(foreach($interface in $interfaces) {
-                $ipProps = $interface.GetIPProperties()
+            $formattedNetCfg = @(foreach ($interface in $interfaces) {
+                    $ipProps = $interface.GetIPProperties()
 
-                try {
-                    $ipv4 = $ipProps.GetIPv4Properties()
-                } catch [System.Net.NetworkInformation.NetworkInformationException] {
-                    $ipv4 = $null
-                }
-                try {
-                    $ipv6 = $ipProps.GetIPv6Properties()
-                } catch [System.Net.NetworkInformation.NetworkInformationException] {
-                    $ipv6 = $null
-                }
+                    try {
+                        $ipv4 = $ipProps.GetIPv4Properties()
+                    }
+                    catch [System.Net.NetworkInformation.NetworkInformationException] {
+                        $ipv4 = $null
+                    }
+                    try {
+                        $ipv6 = $ipProps.GetIPv6Properties()
+                    }
+                    catch [System.Net.NetworkInformation.NetworkInformationException] {
+                        $ipv6 = $null
+                    }
 
-                # Do not repo on either the loopback interface or any interfaces that did not have an IP address.
-                if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -in @('Loopback', 'Tunnel')) {
-                    continue
-                }
+                    # Do not repo on either the loopback interface or any interfaces that did not have an IP address.
+                    if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -in @('Loopback', 'Tunnel')) {
+                        continue
+                    }
 
-                $defaultGateway = if ($ipProps.GatewayAddresses) {
-                    $ipProps.GatewayAddresses[0].Address.IPAddressToString
-                }
-                $dnsDomain = $null
-                if ($ipProps.DnsSuffix) {
-                    $dnsDomain = $ipProps.DnsSuffix
-                }
-                $index = if ($ipv4) {
-                    $ipv4.Index
-                } elseif ($ipv6) {
-                    $ipv6.Index
-                }
-                $mac = ($interface.GetPhysicalAddress() -replace '(..)','$1:').ToUpperInvariant().Trim(':')
+                    $defaultGateway = if ($ipProps.GatewayAddresses) {
+                        $ipProps.GatewayAddresses[0].Address.IPAddressToString
+                    }
+                    $dnsDomain = $null
+                    if ($ipProps.DnsSuffix) {
+                        $dnsDomain = $ipProps.DnsSuffix
+                    }
+                    $index = if ($ipv4) {
+                        $ipv4.Index
+                    }
+                    elseif ($ipv6) {
+                        $ipv6.Index
+                    }
+                    $mac = ($interface.GetPhysicalAddress() -replace '(..)', '$1:').ToUpperInvariant().Trim(':')
 
-                @{
-                    connection_name = $interface.Name
-                    default_gateway = $defaultGateway
-                    dns_domain = $dnsDomain
-                    interface_index = $index
-                    interface_name = $interface.Description
-                    macaddress = $mac
-                }
-            })
+                    @{
+                        connection_name = $interface.Name
+                        default_gateway = $defaultGateway
+                        dns_domain = $dnsDomain
+                        interface_index = $index
+                        interface_name = $interface.Description
+                        macaddress = $mac
+                    }
+                })
 
             $ansibleFacts.ansible_interfaces = $formattedNetCfg
         }
@@ -748,7 +752,8 @@ $factMeta = @(
                     $out = & $($FactsFile.FullName)
                     $ansibleFacts."ansible_$(($factsFile.Name).Split('.')[0])" = $out
                 }
-            } else {
+            }
+            else {
                 $module.Warn("Non existing path was set for local facts - $factPath")
             }
         }
@@ -771,7 +776,8 @@ $factMeta = @(
                 )
                 $ansibleFacts.ansible_pagefiletotal_mb = ([Math]::Round($win32OS.SizeStoredInPagingFiles / 1024))
                 $ansibleFacts.ansible_pagefilefree_mb = ([Math]::Round($win32OS.FreeSpaceInPagingFiles / 1024))
-            } else {
+            }
+            else {
                 $ansibleFacts.ansible_pagefiletotal_mb = $null
                 $ansibleFacts.ansible_pagefilefree_mb = $null
             }
@@ -791,7 +797,7 @@ $factMeta = @(
             $machineSid = $null
             try {
                 $adminGroup = (New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @(
-                    "S-1-5-32-544")).Translate([System.Security.Principal.NTAccount]).Value
+                        "S-1-5-32-544")).Translate([System.Security.Principal.NTAccount]).Value
 
                 $namespace = 'System.DirectoryServices.AccountManagement'
 
@@ -808,7 +814,8 @@ $factMeta = @(
                         break
                     }
                 }
-            } catch {
+            }
+            catch {
                 $module.Warn("Error during machine sid retrieval: $($_.Exception.Message)")
             }
 
@@ -875,7 +882,8 @@ $factMeta = @(
 
                 # I don't even know if this even returns anything on Windows, cannot find any documentation for it.
                 $ansibleFacts.ansible_owner_contact = ([string]$win32CS.PrimaryOwnerContact)
-            } else {
+            }
+            else {
                 $ansibleFacts.ansible_architecture = $null
                 $ansibleFacts.ansible_owner_contact = ""
             }
@@ -884,7 +892,7 @@ $factMeta = @(
             # This is a non-localized value that tries to match the POSIX setup.py values. We cannot replace
             # ansible_architecture without a deprecation period so have both side by side. When we can deprecate facts
             # returned by a module we should deprecate the format and rename this.
-            $ansibleFacts.ansible_architecture2 = switch($systemInfo.ProcessorArchitecture) {
+            $ansibleFacts.ansible_architecture2 = switch ($systemInfo.ProcessorArchitecture) {
                 0 { 'i386' }  # PROCESSOR_ARCHITECTURE_INTEL (x86)
                 5 { 'arm' }  # PROCESSOR_ARCHITECTURE_ARM (ARM)
                 6 { 'ia64' }  # PROCESSOR_ARCHITECTURE_IA64 (Intel Ithanium-based)
@@ -912,21 +920,21 @@ $factMeta = @(
             }
             $processorKeys = Get-ChildItem @getParams | Select-Object -Property @(
                 'PSPath', @{ N = 'ID'; E = { [int]$_.PSChildName } }
-             ) | Sort-Object -Property Id
+            ) | Sort-Object -Property Id
 
-             $processors = @(foreach ($proc in $processorKeys) {
-                 $names = 'ProcessorNameString', 'VendorIdentifier'
-                 $info = Get-ItemProperty -LiteralPath $proc.PSPath -Name $names -ErrorAction SilentlyContinue
-                 [string]$proc.ID
-                 $info.VendorIdentifier
-                 $info.ProcessorNameString
-             })
+            $processors = @(foreach ($proc in $processorKeys) {
+                    $names = 'ProcessorNameString', 'VendorIdentifier'
+                    $info = Get-ItemProperty -LiteralPath $proc.PSPath -Name $names -ErrorAction SilentlyContinue
+                    [string]$proc.ID
+                    $info.VendorIdentifier
+                    $info.ProcessorNameString
+                })
 
-             $ansibleFacts.ansible_processor = $processors
-             $ansibleFacts.ansible_processor_cores = $bios.ProcessorInfo[0].Item1
-             $ansibleFacts.ansible_processor_count = $bios.ProcessorInfo.Count
-             $ansibleFacts.ansible_processor_threads_per_core = $bios.ProcessorInfo[0].Item2
-             $ansibleFacts.ansible_processor_vcpus = $systemInfo.NumberOfProcessors
+            $ansibleFacts.ansible_processor = $processors
+            $ansibleFacts.ansible_processor_cores = $bios.ProcessorInfo[0].Item1
+            $ansibleFacts.ansible_processor_count = $bios.ProcessorInfo.Count
+            $ansibleFacts.ansible_processor_threads_per_core = $bios.ProcessorInfo[0].Item2
+            $ansibleFacts.ansible_processor_vcpus = $systemInfo.NumberOfProcessors
         }
     },
     @{
@@ -955,7 +963,7 @@ $factMeta = @(
         Code = {
             $domainInfo = New-Object -TypeName Ansible.Windows.Setup.DomainInfo
 
-            $domainRole = switch($domainInfo.DomainRole) {
+            $domainRole = switch ($domainInfo.DomainRole) {
                 0 { "Stand-alone workstation" }
                 1 { "Member workstation" }
                 2 { "Stand-alone server" }
@@ -976,11 +984,12 @@ $factMeta = @(
         Code = {
             try {
                 $certs = @(Get-ChildItem -Path WSMan:\localhost\Listener\* -ErrorAction SilentlyContinue | Where-Object {
-                    'Transport=HTTPS' -in $_.Keys
-                } | Get-ChildItem | Where-Object Name -eq 'CertificateThumbprint' | ForEach-Object {
-                    Get-Item -LiteralPath Cert:\LocalMachine\My\$($_.Value)
-                })
-            } catch {
+                        'Transport=HTTPS' -in $_.Keys
+                    } | Get-ChildItem | Where-Object Name -eq 'CertificateThumbprint' | ForEach-Object {
+                        Get-Item -LiteralPath Cert:\LocalMachine\My\$($_.Value)
+                    })
+            }
+            catch {
                 $certs = @()
                 $module.Warn("Error during certificate expiration retrieval: $($_.Exception.Message)")
             }
@@ -1034,15 +1043,15 @@ $factMeta = @(
 )
 
 $groupedSubsets = @{
-    min = [System.Collections.Generic.List[string]]@('date_time','distribution','dns','env','local','platform','powershell_version','user')
-    network = [System.Collections.Generic.List[string]]@('all_ipv4_addresses','all_ipv6_addresses','interfaces','windows_domain', 'winrm')
-    hardware = [System.Collections.Generic.List[string]]@('bios','memory','processor','uptime','virtual')
+    min = [System.Collections.Generic.List[string]]@('date_time', 'distribution', 'dns', 'env', 'local', 'platform', 'powershell_version', 'user')
+    network = [System.Collections.Generic.List[string]]@('all_ipv4_addresses', 'all_ipv6_addresses', 'interfaces', 'windows_domain', 'winrm')
+    hardware = [System.Collections.Generic.List[string]]@('bios', 'memory', 'processor', 'uptime', 'virtual')
     external = [System.Collections.Generic.List[string]]@('facter')
 }
 # build "all" set from everything mentioned in the group- this means every value must be in at least one subset to be considered legal
 $allSet = [System.Collections.Generic.HashSet[string]]@()
 
-foreach($kv in $groupedSubsets.GetEnumerator()) {
+foreach ($kv in $groupedSubsets.GetEnumerator()) {
     $null = $allSet.UnionWith($kv.Value)
 }
 
@@ -1063,21 +1072,26 @@ foreach ($item in $gatherSubset) {
             $null = $allMinusMin.ExceptWith($groupedSubsets.min)
             $null = $excludeSubset.UnionWith($allMinusMin)
 
-        } elseif ($groupedSubsets.ContainsKey($item)) {
+        }
+        elseif ($groupedSubsets.ContainsKey($item)) {
             $null = $excludeSubset.UnionWith($groupedSubsets[$item])
 
-        } elseif ($allSet.Contains($item)) {
+        }
+        elseif ($allSet.Contains($item)) {
             $null = $excludeSubset.Add($item)
         }
         # NB: invalid exclude values are ignored, since that's what posix setup does
-    } else {
+    }
+    else {
         if ($groupedSubsets.ContainsKey($item)) {
             $null = $explicitSubset.UnionWith($groupedSubsets.$item)
 
-        } elseif ($allSet.Contains($item)) {
+        }
+        elseif ($allSet.Contains($item)) {
             $null = $explicitSubset.Add($item)
 
-        } else {
+        }
+        else {
             # NB: POSIX setup fails on invalid value; we warn, because we don't implement the same set as POSIX
             # and we don't have platform-specific config for this...
             $module.Warn("invalid value $item specified in gather_subset")
@@ -1118,7 +1132,7 @@ foreach ($meta in $factMeta.GetEnumerator()) {
 
     foreach ($varName in @('ansibleFacts', 'factPath', 'module')) {
         $val = Get-Variable -Name $varName -ValueOnly
-        $null = $ps.AddCommand('Set-Variable').AddParameters(@{Name = $varName; Value = $val})
+        $null = $ps.AddCommand('Set-Variable').AddParameters(@{Name = $varName; Value = $val })
     }
 
     $name = $metaSubsets -join ', '
@@ -1129,7 +1143,8 @@ foreach ($meta in $factMeta.GetEnumerator()) {
 $end = (Get-Date) - $time
 $ansibleFacts.measure_info.$subset = $end.TotalSeconds
 '@)
-    } else {
+    }
+    else {
         $null = $ps.AddScript($meta.Code)
     }
 
@@ -1140,7 +1155,8 @@ $ansibleFacts.measure_info.$subset = $end.TotalSeconds
         # We don't care about any actual output as each scriptblock sets the ansibleFacts hashtable in the code.
         try {
             $null = $ps.EndInvoke($asyncResult)
-        } catch {
+        }
+        catch {
             # We want to inner error record not the outer error from .EndInvoke()
             $errorRecord = $_.Exception.InnerException.ErrorRecord
             $err = "{0}`n{1}" -f (($errorRecord | Out-String), $errorRecord.ScriptStackTrace)
@@ -1154,7 +1170,8 @@ $ansibleFacts.measure_info.$subset = $end.TotalSeconds
         }
 
         $ps.Dispose()
-    } else {
+    }
+    else {
         # Give a best effort chance to stop it, we can't call .Stop() in case it blocks.
         $null = $ps.BeginStop($null, $null)
         $module.Warn("Failed to collection $($name) due to timeout")

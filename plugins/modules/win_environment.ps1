@@ -15,30 +15,30 @@ $spec = @{
         variables = @{ type = "dict" }
     }
     mutually_exclusive = @(
-        ,@("variables", "name")
-        ,@("variables", "value")
-        ,@("variables", "state")
+        , @("variables", "name")
+        , @("variables", "value")
+        , @("variables", "state")
     )
-    required_one_of = @(,@("name", "variables"))
+    required_one_of = @(, @("name", "variables"))
     supports_check_mode = $true
 }
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 function Set-EnvironmentVariableState {
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([hashtable])]
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.EnvironmentVariableTarget]
         $Level ,
 
-        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [Alias('Key')]
         [String]
         $Name ,
 
-        [Parameter(ValueFromPipelineByPropertyName=$true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [String]
         $Value,
 
@@ -70,7 +70,8 @@ function Set-EnvironmentVariableState {
                 [Environment]::SetEnvironmentVariable($Name, $Value, $Level)
             }
             $ret.changed = $true
-        } elseif ($State -eq "absent" -and $null -ne $before_value) {
+        }
+        elseif ($State -eq "absent" -and $null -ne $before_value) {
             if ($PSCmdlet.ShouldProcess($Name, 'Remove environment variable')) {
                 [Environment]::SetEnvironmentVariable($Name, $null, $Level)
             }
@@ -106,7 +107,8 @@ foreach ($kv in $envvars.GetEnumerator()) {
     if ($state -eq "absent" -and $value) {
         $module.Warn("When removing environment variable '$name' it should not have a value '$value' set")
         $value = $null
-    } elseif ($state -eq "present" -and (-not $value)) {
+    }
+    elseif ($state -eq "present" -and (-not $value)) {
         $module.FailJson("When state=present, value must be defined and not an empty string, if you wish to remove the envvar, set state=absent")
     }
 

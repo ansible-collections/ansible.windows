@@ -26,7 +26,8 @@ function Get-FileChecksum($path, $algorithm) {
     $fp = [System.IO.File]::Open($path, [System.IO.Filemode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
     try {
         $hash = [System.BitConverter]::ToString($sp.ComputeHash($fp)).Replace("-", "").ToLower()
-    } finally {
+    }
+    finally {
         $fp.Dispose()
     }
 
@@ -41,7 +42,8 @@ function Get-FileInfo {
     if ($null -ne $info) {
         try {
             $link_info = Get-Link -link_path $info.FullName
-        } catch {
+        }
+        catch {
             $module.Warn("Failed to check/get link info for file: $($_.Exception.Message)")
         }
 
@@ -56,10 +58,10 @@ function Get-FileInfo {
 
 $spec = @{
     options = @{
-        path = @{ type='path'; required=$true; aliases=@( 'dest', 'name' ) }
-        get_checksum = @{ type='bool'; default=$true }
-        checksum_algorithm = @{ type='str'; default='sha1'; choices=@( 'md5', 'sha1', 'sha256', 'sha384', 'sha512' ) }
-        follow = @{ type='bool'; default=$false }
+        path = @{ type = 'path'; required = $true; aliases = @( 'dest', 'name' ) }
+        get_checksum = @{ type = 'bool'; default = $true }
+        checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @( 'md5', 'sha1', 'sha256', 'sha384', 'sha512' ) }
+        follow = @{ type = 'bool'; default = $false }
     }
     supports_check_mode = $true
 }
@@ -71,7 +73,7 @@ $get_checksum = $module.Params.get_checksum
 $checksum_algorithm = $module.Params.checksum_algorithm
 $follow = $module.Params.follow
 
-$module.Result.stat = @{ exists=$false }
+$module.Result.stat = @{ exists = $false }
 
 # https://github.com/ansible-collections/ansible.windows/issues/297
 $oldLib = $env:LIB
@@ -117,7 +119,8 @@ If ($null -ne $info) {
     }
     try {
         $stat.owner = $info.GetAccessControl().Owner
-    } catch {
+    }
+    catch {
         # may not have rights, historical behaviour was to just set to $null
         # due to ErrorActionPreference being set to "Continue"
         $stat.owner = $null
@@ -138,10 +141,12 @@ If ($null -ne $info) {
                 $size += $file.Length
             }
             $stat.size = $size
-        } catch {
+        }
+        catch {
             $stat.size = 0
         }
-    } else {
+    }
+    else {
         $stat.extension = $info.Extension
         $stat.isreg = $true
         $stat.size = $info.Length
@@ -149,7 +154,8 @@ If ($null -ne $info) {
         if ($get_checksum) {
             try {
                 $stat.checksum = Get-FileChecksum -path $path -algorithm $checksum_algorithm
-            } catch {
+            }
+            catch {
                 $module.FailJson("Failed to get hash of file, set get_checksum to False to ignore this error: $($_.Exception.Message)", $_)
             }
         }

@@ -4,25 +4,24 @@
 
 #Requires -Module Ansible.ModuleUtils.Legacy
 
-$results = @{changed=$false}
+$results = @{ changed = $false }
 
 $parsed_args = Parse-Args $args
 $jid = Get-AnsibleParam $parsed_args "jid" -failifempty $true -resultobj $results
-$mode = Get-AnsibleParam $parsed_args "mode" -Default "status" -ValidateSet "status","cleanup"
+$mode = Get-AnsibleParam $parsed_args "mode" -Default "status" -ValidateSet "status", "cleanup"
 
 # parsed in from the async_status action plugin
 $async_dir = Get-AnsibleParam $parsed_args "_async_dir" -type "path" -failifempty $true
 
 $log_path = [System.IO.Path]::Combine($async_dir, $jid)
 
-If(-not $(Test-Path -LiteralPath $log_path))
-{
-    Fail-Json @{ansible_job_id=$jid; started=1; finished=1} "could not find job at '$async_dir'"
+If (-not $(Test-Path -LiteralPath $log_path)) {
+    Fail-Json @{ ansible_job_id = $jid; started = 1; finished = 1 } "could not find job at '$async_dir'"
 }
 
-If($mode -eq "cleanup") {
+If ($mode -eq "cleanup") {
     Remove-Item -LiteralPath $log_path -Recurse
-    Exit-Json @{ansible_job_id=$jid; erased=$log_path}
+    Exit-Json @{ ansible_job_id = $jid; erased = $log_path }
 }
 
 # NOT in cleanup mode, assume regular status mode
@@ -38,12 +37,12 @@ Try {
     $data = $jss.DeserializeObject($data_raw)
 }
 Catch {
-    If(-not $data_raw) {
+    If (-not $data_raw) {
         # file not written yet?  That means it is running
-        Exit-Json @{results_file=$log_path; ansible_job_id=$jid; started=1; finished=0}
+        Exit-Json @{ results_file = $log_path; ansible_job_id = $jid; started = 1; finished = 0 }
     }
     Else {
-        Fail-Json @{ansible_job_id=$jid; results_file=$log_path; started=1; finished=1} "Could not parse job output: $data"
+        Fail-Json @{ ansible_job_id = $jid; results_file = $log_path; started = 1; finished = 1 } "Could not parse job output: $data"
     }
 }
 

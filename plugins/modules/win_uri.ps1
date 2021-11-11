@@ -74,7 +74,7 @@ Function ConvertFrom-SafeJson {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [AllowNull()]
         [String]
@@ -87,8 +87,9 @@ Function ConvertFrom-SafeJson {
 
     try {
         # Make sure we output the actual object without unpacking with the unary comma
-        ,[Ansible.Basic.AnsibleModule]::FromJson($InputObject)
-    } catch [System.ArgumentException] {
+        , [Ansible.Basic.AnsibleModule]::FromJson($InputObject)
+    }
+    catch [System.ArgumentException] {
         Write-Error -Message "Invalid json string as input object: $($_.Exception.Message)" -Exception $_.Exception
     }
 }
@@ -176,13 +177,15 @@ $response_script = {
                     $file_stream = [System.IO.File]::Create($dest)
                     try {
                         $memory_st.CopyTo($file_stream)
-                    } finally {
+                    }
+                    finally {
                         $file_stream.Flush()
                         $file_stream.Close()
                     }
                 }
             }
-        } finally {
+        }
+        finally {
             $memory_st.Close()
         }
     }
@@ -196,21 +199,25 @@ $body_st = $null
 if ($null -ne $body) {
     if ($body -is [System.Collections.IDictionary] -or $body -is [System.Collections.IList]) {
         $body_string = ConvertTo-Json -InputObject $body -Compress
-    } elseif ($body -isnot [String]) {
+    }
+    elseif ($body -isnot [String]) {
         $body_string = $body.ToString()
-    } else {
+    }
+    else {
         $body_string = $body
     }
     $buffer = [System.Text.Encoding]::UTF8.GetBytes($body_string)
 
-    $body_st = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(,$buffer)
+    $body_st = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(, $buffer)
 }
 
 try {
     Invoke-AnsibleWindowsWebRequest -Module $module -Request $client -Script $response_script -Body $body_st -IgnoreBadResponse
-} catch {
+}
+catch {
     $module.FailJson("Unhandled exception occurred when sending web request. Exception: $($_.Exception.Message)", $_)
-} finally {
+}
+finally {
     if ($null -ne $body_st) {
         $body_st.Dispose()
     }

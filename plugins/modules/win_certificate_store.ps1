@@ -155,17 +155,17 @@ namespace ansible.windows.win_certificate_store
 '@
 
 Function Get-CertStore {
-    [CmdletBinding(DefaultParameterSetName='System')]
+    [CmdletBinding(DefaultParameterSetName = 'System')]
     param (
-        [Parameter(Mandatory=$true, ParameterSetName='System')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'System')]
         [Security.Cryptography.X509Certificates.Storelocation]
         $Location,
 
-        [Parameter(Mandatory=$true, ParameterSetName='Service')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Service')]
         [string]
         $Service,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Name,
 
@@ -202,7 +202,7 @@ Function Get-CertFile($module, $path, $password, $key_exportable, $key_storage) 
     # is gone.
     $store_flags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet
 
-    $key_storage = $key_storage.substring(0,1).ToUpper() + $key_storage.substring(1).ToLower()
+    $key_storage = $key_storage.substring(0, 1).ToUpper() + $key_storage.substring(1).ToLower()
     $store_flags = $store_flags -bor [Enum]::Parse([System.Security.Cryptography.X509Certificates.X509KeyStorageFlags], "$($key_storage)KeySet")
     if ($key_exportable) {
         $store_flags = $store_flags -bor [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
@@ -214,7 +214,8 @@ Function Get-CertFile($module, $path, $password, $key_exportable, $key_storage) 
 
     try {
         $certs.Import($path, $password, $store_flags)
-    } catch {
+    }
+    catch {
         $module.FailJson("Failed to load cert from file: $($_.Exception.Message)", $_)
     }
 
@@ -231,7 +232,8 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         $missing_key = $false
         if ($null -eq $cert.PrivateKey) {
             $missing_key = $true
-        } elseif ($cert.PrivateKey.CspKeyContainerInfo.Exportable -eq $false) {
+        }
+        elseif ($cert.PrivateKey.CspKeyContainerInfo.Exportable -eq $false) {
             $missing_key = $true
         }
         if ($missing_key) {
@@ -245,7 +247,8 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
     }
     try {
         $cert_bytes = $cert.Export($content_type, $password)
-    } catch {
+    }
+    catch {
         $module.FailJson("Failed to export certificate as bytes: $($_.Exception.Message)", $_)
     }
 
@@ -257,7 +260,8 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         $cert_content += "`r`n-----END CERTIFICATE-----"
         $file_encoding = [System.Text.Encoding]::ASCII
         $cert_bytes = $file_encoding.GetBytes($cert_content)
-    } elseif ($type -eq "pkcs12") {
+    }
+    elseif ($type -eq "pkcs12") {
         $module.Result.key_exported = $false
         if ($null -ne $cert.PrivateKey) {
             $module.Result.key_exportable = $cert.PrivateKey.CspKeyContainerInfo.Exportable
@@ -267,13 +271,17 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
     if (-not $module.CheckMode) {
         try {
             [System.IO.File]::WriteAllBytes($path, $cert_bytes)
-        } catch [System.ArgumentNullException] {
+        }
+        catch [System.ArgumentNullException] {
             $module.FailJson("Failed to write cert to file, cert was null: $($_.Exception.Message)", $_)
-        } catch [System.IO.IOException] {
+        }
+        catch [System.IO.IOException] {
             $module.FailJson("Failed to write cert to file due to IO Exception: $($_.Exception.Message)", $_)
-        } catch [System.UnauthorizedAccessException] {
+        }
+        catch [System.UnauthorizedAccessException] {
             $module.FailJson("Failed to write cert to file due to permissions: $($_.Exception.Message)", $_)
-        } catch {
+        }
+        catch {
             $module.FailJson("Failed to write cert to file: $($_.Exception.Message)", $_)
         }
     }
@@ -284,28 +292,35 @@ Function Get-CertFileType($path, $password) {
     $certs = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2Collection
     try {
         $certs.Import($path, $password, 0)
-    } catch [System.Security.Cryptography.CryptographicException] {
+    }
+    catch [System.Security.Cryptography.CryptographicException] {
         # the file is a pkcs12 we just had the wrong password
         return "pkcs12"
-    } catch {
+    }
+    catch {
         return "unknown"
     }
 
     $file_contents = Get-Content -LiteralPath $path -Raw
     if ($file_contents.StartsWith("-----BEGIN CERTIFICATE-----")) {
         return "pem"
-    } elseif ($file_contents.StartsWith("-----BEGIN PKCS7-----")) {
+    }
+    elseif ($file_contents.StartsWith("-----BEGIN PKCS7-----")) {
         return "pkcs7-ascii"
-    } elseif ($certs.Count -gt 1) {
+    }
+    elseif ($certs.Count -gt 1) {
         # multiple certs must be pkcs7
         return "pkcs7-binary"
-    } elseif ($certs[0].HasPrivateKey) {
+    }
+    elseif ($certs[0].HasPrivateKey) {
         return "pkcs12"
-    } elseif ($path.EndsWith(".pfx") -or $path.EndsWith(".p12")) {
+    }
+    elseif ($path.EndsWith(".pfx") -or $path.EndsWith(".p12")) {
         # no way to differenciate a pfx with a der file so we must rely on the
         # extension
         return "pkcs12"
-    } else {
+    }
+    else {
         return "der"
     }
 }
@@ -374,10 +389,12 @@ try {
 
 }
 catch [ansible.windows.win_certificate_store.Win32Exception] {
-    if ($_.Exception.NativeErrorCode -in @(2, 3)) {  # ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND
+    if ($_.Exception.NativeErrorCode -in @(2, 3)) {
+        # ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND
         $msg = "unable to find store '$store_name'"
     }
-    elseif ($_.Exception.NativeErrorCode -eq 5) {  # ERROR_ACCESS_DENIED
+    elseif ($_.Exception.NativeErrorCode -eq 5) {
+        # ERROR_ACCESS_DENIED
         $msg = "unable to open the store with the current permissions"
     }
     else {
@@ -397,7 +414,8 @@ try {
             foreach ($cert in $certs) {
                 $cert_thumbprints += $cert.Thumbprint
             }
-        } elseif ($null -ne $thumbprint) {
+        }
+        elseif ($null -ne $thumbprint) {
             $cert_thumbprints += $thumbprint
         }
 
@@ -410,30 +428,35 @@ try {
                         if (-not $module.CheckMode) {
                             $store.Remove($found_cert)
                         }
-                    } catch [System.Security.SecurityException] {
+                    }
+                    catch [System.Security.SecurityException] {
                         $module.FailJson("Unable to remove cert with thumbprint '$cert_thumbprint' with current permissions: $($_.Exception.Message)", $_)
-                    } catch {
+                    }
+                    catch {
                         $module.FailJson("Unable to remove cert with thumbprint '$cert_thumbprint': $($_.Exception.Message)", $_)
                     }
                     $module.Result.changed = $true
                 }
             }
         }
-    } elseif ($state -eq "exported") {
+    }
+    elseif ($state -eq "exported") {
         # TODO: Add support for PKCS7 and exporting a cert chain
         $module.Result.thumbprints += $thumbprint
         $export = $true
         if (Test-Path -LiteralPath $path -PathType Container) {
             $module.FailJson("Cannot export cert to path '$path' as it is a directory")
-        } elseif (Test-Path -LiteralPath $path -PathType Leaf) {
+        }
+        elseif (Test-Path -LiteralPath $path -PathType Leaf) {
             $actual_cert_type = Get-CertFileType -path $path -password $password
             if ($actual_cert_type -eq $file_type) {
                 try {
                     $certs = Get-CertFile -module $module -path $path -password $password -key_exportable $key_exportable -key_storage $key_storage
-                } catch {
+                }
+                catch {
                     # failed to load the file so we set the thumbprint to something
                     # that will fail validation
-                    $certs = @{Thumbprint = $null}
+                    $certs = @{Thumbprint = $null }
                 }
 
                 if ($certs.Thumbprint -eq $thumbprint) {
@@ -450,7 +473,8 @@ try {
 
             New-CertFile -module $module -cert $found_certs -path $path -type $file_type -password $password
         }
-    } else {
+    }
+    else {
         $certs = Get-CertFile -module $module -path $path -password $password -key_exportable $key_exportable -key_storage $key_storage
         foreach ($cert in $certs) {
             $module.Result.thumbprints += $cert.Thumbprint
@@ -460,16 +484,20 @@ try {
                     if (-not $module.CheckMode) {
                         $store.Add($cert)
                     }
-                } catch [System.Security.Cryptography.CryptographicException] {
-                    $module.FailJson("Unable to import certificate with thumbprint '$($cert.Thumbprint)' with the current permissions: $($_.Exception.Message)", $_)
-                } catch {
+                }
+                catch [System.Security.Cryptography.CryptographicException] {
+                    $msg = "Unable to import certificate with thumbprint '$($cert.Thumbprint)' with the current permissions: $($_.Exception.Message)"
+                    $module.FailJson($msg, $_)
+                }
+                catch {
                     $module.FailJson("Unable to import certificate with thumbprint '$($cert.Thumbprint)': $($_.Exception.Message)", $_)
                 }
                 $module.Result.changed = $true
             }
         }
     }
-} finally {
+}
+finally {
     $store.Close()
 }
 

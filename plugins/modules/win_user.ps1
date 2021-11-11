@@ -61,7 +61,7 @@ $ADSI = [ADSI]"WinNT://$env:COMPUTERNAME"
 Function Get-AnsibleLocalGroup {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Sid
     )
@@ -88,7 +88,7 @@ Function Get-AnsibleLocalGroup {
 Function Get-AnsibleLocalUser {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Name
     )
@@ -114,16 +114,17 @@ Function Get-AnsibleLocalUser {
             AccountDisabled = $_.AccountDisabled
             IsAccountLocked = $_.IsAccountLocked
             SecurityIdentifier = $sid
-            Groups = @($_.Groups() | ForEach-Object -Process {
-                $rawSid = $_.GetType().InvokeMember('ObjectSid', 'GetProperty', $null, $_, $null)
-                $groupSid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $rawSid, 0
+            Groups = @(
+                $_.Groups() | ForEach-Object -Process {
+                    $rawSid = $_.GetType().InvokeMember('ObjectSid', 'GetProperty', $null, $_, $null)
+                    $groupSid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $rawSid, 0
 
-                [PSCustomObject]@{
-                    Name = $_.GetType().InvokeMember('Name', 'GetProperty', $null, $_, $null)
-                    Path = $_.GetType().InvokeMember('ADsPath', 'GetProperty', $null, $_, $null)
-                    SecurityIdentifier = $groupSid
-                }
-            })
+                    [PSCustomObject]@{
+                        Name = $_.GetType().InvokeMember('Name', 'GetProperty', $null, $_, $null)
+                        Path = $_.GetType().InvokeMember('ADsPath', 'GetProperty', $null, $_, $null)
+                        SecurityIdentifier = $groupSid
+                    }
+                })
             BaseObject = $_
         }
     }
@@ -132,7 +133,7 @@ Function Get-AnsibleLocalUser {
 Function Get-UserDiff {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowNull()]
         $User
     )
@@ -140,7 +141,8 @@ Function Get-UserDiff {
     if (-not $User) {
         ""
 
-    } else {
+    }
+    else {
         $groups = [System.Collections.Generic.List[String]]@()
         foreach ($group in $User.Groups) {
             try {
@@ -173,11 +175,11 @@ Function Get-UserDiff {
 Function Test-LocalCredential {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Username,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Password
     )
@@ -186,22 +188,25 @@ Function Test-LocalCredential {
         $handle = [Ansible.AccessToken.TokenUtil]::LogonUser($Username, ".", $Password, "Network", "Default")
         $handle.Dispose()
         $isValid = $true
-    } catch [Ansible.AccessToken.Win32Exception] {
+    }
+    catch [Ansible.AccessToken.Win32Exception] {
         # following errors indicate the creds are correct but the user was
         # unable to log on for other reasons, which we don't care about
         $successCodes = @(
-            0x0000052F,  # ERROR_ACCOUNT_RESTRICTION
-            0x00000530,  # ERROR_INVALID_LOGON_HOURS
-            0x00000531,  # ERROR_INVALID_WORKSTATION
+            0x0000052F, # ERROR_ACCOUNT_RESTRICTION
+            0x00000530, # ERROR_INVALID_LOGON_HOURS
+            0x00000531, # ERROR_INVALID_WORKSTATION
             0x00000569  # ERROR_LOGON_TYPE_GRANTED
         )
 
         if ($_.Exception.NativeErrorCode -eq 0x0000052E) {
             # ERROR_LOGON_FAILURE - the user or pass was incorrect
             $isValid = $false
-        } elseif ($_.Exception.NativeErrorCode -in $successCodes) {
+        }
+        elseif ($_.Exception.NativeErrorCode -in $successCodes) {
             $isValid = $true
-        } else {
+        }
+        else {
             # an unknown failure, reraise exception
             throw $_
         }
@@ -215,7 +220,7 @@ $module.Diff.before = Get-UserDiff -User $user
 
 if ($state -eq 'present') {
     if (-not $user) {
-        $module.Diff.after = @{name = $name}
+        $module.Diff.after = @{name = $name }
 
         $userAdsi = $ADSI.Create('User', $name)
         if ($null -ne $password) {
@@ -240,10 +245,12 @@ if ($state -eq 'present') {
             if ($user.AccountDisabled -or $user.PasswordExpired) {
                 $passwordMatch = $false
 
-            } else {
+            }
+            else {
                 try {
                     $passwordMatch = Test-LocalCredential -Username $user.Name -Password $password
-                } catch [System.ComponentModel.Win32Exception] {
+                }
+                catch [System.ComponentModel.Win32Exception] {
                     $module.FailJson("Failed to validate the user's credentials: $($_.Exception.Message)", $_)
                 }
             }
@@ -302,7 +309,8 @@ if ($state -eq 'present') {
         if ($null -ne $passwordNeverExpires -and $passwordNeverExpires -ne $user.PasswordNeverExpires) {
             if ($passwordNeverExpires) {
                 $newFlags = $user.BaseObject.UserFlags.Value -bor $ADS_UF_DONT_EXPIRE_PASSWD
-            } else {
+            }
+            else {
                 $newFlags = $user.BaseObject.UserFlags.Value -bxor $ADS_UF_DONT_EXPIRE_PASSWD
             }
             $user.BaseObject.UserFlags = $newFlags
@@ -319,7 +327,8 @@ if ($state -eq 'present') {
         if ($null -ne $userCannotChangePassword -and $userCannotChangePassword -ne $user.UserCannotChangePassword) {
             if ($userCannotChangePassword) {
                 $newFlags = $user.BaseObject.UserFlags.Value -bor $ADS_UF_PASSWD_CANT_CHANGE
-            } else {
+            }
+            else {
                 $newFlags = $user.BaseObject.UserFlags.Value -bxor $ADS_UF_PASSWD_CANT_CHANGE
             }
             $user.BaseObject.UserFlags = $newFlags
@@ -333,28 +342,29 @@ if ($state -eq 'present') {
 
         if ($null -ne $groups) {
             $desiredGroups = [string[]]@($groups | Where-Object { -not [String]::IsNullOrWhiteSpace($_) } | ForEach-Object -Process {
-                $inputGroup = $_
-
-                try {
-                    $sid = New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList $inputGroup
-                } catch [ArgumentException] {
-                    $account = New-Object -TypeName Security.Principal.NTAccount -ArgumentList $inputGroup
+                    $inputGroup = $_
 
                     try {
-                        $sid = $account.Translate([Security.Principal.SecurityIdentifier])
+                        $sid = New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList $inputGroup
                     }
-                    catch [Security.Principal.IdentityNotMappedException] {
+                    catch [ArgumentException] {
+                        $account = New-Object -TypeName Security.Principal.NTAccount -ArgumentList $inputGroup
+
+                        try {
+                            $sid = $account.Translate([Security.Principal.SecurityIdentifier])
+                        }
+                        catch [Security.Principal.IdentityNotMappedException] {
+                            $module.FailJson("group '$inputGroup' not found")
+                        }
+                    }
+
+                    # Make sure the group specified in the module args are an actual local group.
+                    if (-not (Get-AnsibleLocalGroup -Sid $sid.Value)) {
                         $module.FailJson("group '$inputGroup' not found")
                     }
-                }
 
-                # Make sure the group specified in the module args are an actual local group.
-                if (-not (Get-AnsibleLocalGroup -Sid $sid.Value)) {
-                    $module.FailJson("group '$inputGroup' not found")
-                }
-
-                $sid.Value
-            })
+                    $sid.Value
+                })
             $existingGroups = [string[]]@($user.Groups.SecurityIdentifier.Value)
 
             $toAdd = [string[]]@()
@@ -362,10 +372,12 @@ if ($state -eq 'present') {
             if ($groupsAction -eq 'add') {
                 $toAdd = [Linq.Enumerable]::Except($desiredGroups, $existingGroups)
 
-            } elseif ($groupsAction -eq 'remove') {
+            }
+            elseif ($groupsAction -eq 'remove') {
                 $toRemove = [Linq.Enumerable]::Intersect($desiredGroups, $existingGroups)
 
-            } else {
+            }
+            else {
                 $toAdd = [Linq.Enumerable]::Except($desiredGroups, $existingGroups)
                 $toRemove = [Linq.Enumerable]::Except($existingGroups, $desiredGroups)
             }
@@ -384,11 +396,13 @@ if ($state -eq 'present') {
                     if (-not $module.CheckMode) {
                         try {
                             if ($action.Key -eq 'Add') {
-                                    $groupAdsi.BaseObject.Add($user.Path)
-                                } else {
-                                    $groupAdsi.BaseObject.Remove($user.Path)
-                                }
-                        } catch {
+                                $groupAdsi.BaseObject.Add($user.Path)
+                            }
+                            else {
+                                $groupAdsi.BaseObject.Remove($user.Path)
+                            }
+                        }
+                        catch {
                             $module.FailJson(
                                 "Failed to $($action.Key.ToLower()) $($groupAdsi.Name): $($_.Exception.Message)", $_
                             )
@@ -398,7 +412,8 @@ if ($state -eq 'present') {
 
                     if ($action.Key -eq 'Add') {
                         $module.Diff.after.groups.Add($groupAdsi.Name)
-                    } else {
+                    }
+                    else {
                         $null = $module.Diff.after.groups.Remove($groupAdsi.Name)
                     }
                 }
@@ -407,7 +422,8 @@ if ($state -eq 'present') {
     }
     $module.Result.state = 'present'
 
-} elseif ($state -eq 'absent') {
+}
+elseif ($state -eq 'absent') {
     if ($user) {
         if (-not $module.CheckMode) {
             $ADSI.Delete('User', $user.Name)
@@ -416,14 +432,16 @@ if ($state -eq 'present') {
         $module.Result.msg = "User '$($user.Name)' deleted successfully"
         $user = $null
 
-    } else {
+    }
+    else {
         $module.Result.msg = "User '$name' was not found"
     }
 
     $module.Result.state = 'absent'
     $module.Diff.after = ""
 
-} else {
+}
+else {
     $module.Result.msg = "Querying user '$name'"
     $module.Result.state = if ($user) { 'present' } else { 'absent' }
     $module.Diff.after = $module.Diff.before
@@ -442,9 +460,11 @@ if ($user) {
     $module.Result.account_disabled = $user.AccountDisabled
     $module.Result.account_locked = $user.IsAccountLocked
     $module.Result.sid = $user.SecurityIdentifier.Value
-    $module.Result.groups = @(foreach ($grp in $user.Groups) {
-        @{ name = $grp.Name; path = $grp.Path }
-    })
+    $module.Result.groups = @(
+        foreach ($grp in $user.Groups) {
+            @{ name = $grp.Name; path = $grp.Path }
+        }
+    )
 }
 
 $module.ExitJson()

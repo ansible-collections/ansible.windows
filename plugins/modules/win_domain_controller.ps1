@@ -23,15 +23,15 @@ $spec = @{
             removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
             removed_from_collection = 'ansible.windows'
         }
-        read_only = @{ type = 'bool'; default = $false}
+        read_only = @{ type = 'bool'; default = $false }
         site_name = @{ type = 'str' }
         state = @{ type = 'str'; required = $true; choices = 'domain_controller', 'member_server' }
         sysvol_path = @{ type = 'path' }
         safe_mode_password = @{ type = 'str'; no_log = $true }
     }
     required_if = @(
-        ,@('state', 'domain_controller', @('dns_domain_name', 'safe_mode_password'))
-        ,@('state', 'member_server', @(,'local_admin_password'))
+        , @('state', 'domain_controller', @('dns_domain_name', 'safe_mode_password'))
+        , @('state', 'member_server', @(, 'local_admin_password'))
     )
     supports_check_mode = $true
 }
@@ -57,7 +57,7 @@ Set-Variable -Name log_path -Scope Global -Value $module.Params.log_path
 $module.Result.reboot_required = $false
 
 # Set of features required for a domain controller
-$dc_required_features = @("AD-Domain-Services","RSAT-ADDS")
+$dc_required_features = @("AD-Domain-Services", "RSAT-ADDS")
 
 Function Write-DebugLog {
     Param(
@@ -71,12 +71,12 @@ Function Write-DebugLog {
 
     Write-Debug $msg
     $log_path = Get-Variable -Name log_path -Scope Global -ValueOnly -ErrorAction SilentlyContinue
-    if($log_path) {
+    if ($log_path) {
         Add-Content -LiteralPath $log_path -Value $msg
     }
 }
 
-Function Get-MissingFeatures {
+Function Get-MissingFeature {
     Param(
         [string[]]$required_features
     )
@@ -92,7 +92,7 @@ Function Get-MissingFeatures {
 
     $missing_features = @($features | Where-Object InstallState -ne Installed)
 
-    return ,$missing_features # comma needed to force array type output
+    return , $missing_features # comma needed to force array type output
 }
 
 Function Install-FeatureInstallation {
@@ -106,7 +106,7 @@ Function Install-FeatureInstallation {
     $feature_result = Install-WindowsFeature $required_features
     $module.Result.reboot_required = $feature_result.RestartNeeded
 
-    If(-not $feature_result.Success) {
+    If (-not $feature_result.Success) {
         $module.FailJson("Error installing AD-Domain-Services, RSAT-ADDS, and RSAT-AD-AdminCenter features: {0}" -f ($feature_result | Out-String))
     }
 }
@@ -117,11 +117,11 @@ Function Get-DomainControllerDomain {
 
     $sys_cim = Get-CIMInstance Win32_ComputerSystem
 
-    $is_dc = $sys_cim.DomainRole -in (4,5) # backup/primary DC
+    $is_dc = $sys_cim.DomainRole -in (4, 5) # backup/primary DC
     # this will be our workgroup or joined-domain if we're not a DC
     $domain = $sys_cim.Domain
 
-    Switch($is_dc) {
+    Switch ($is_dc) {
         $true { return $domain }
         Default { return $null }
     }
@@ -138,15 +138,15 @@ Function New-Credential {
     Return $cred
 }
 
-Function Get-OperationMasterRoles {
+Function Get-OperationMasterRole {
     $assigned_roles = @((Get-ADDomainController -Server localhost).OperationMasterRoles)
 
-    Return ,$assigned_roles # no, the comma's not a typo- allows us to return an empty array
+    Return , $assigned_roles # no, the comma's not a typo- allows us to return an empty array
 }
 
 Try {
     # ensure target OS support; < 2012 doesn't have cmdlet support for DC promotion
-    If(-not (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue)) {
+    If (-not (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue)) {
         $module.FailJson("win_domain_controller requires at least Windows Server 2012")
     }
 
@@ -154,18 +154,18 @@ Try {
 
     $current_dc_domain = Get-DomainControllerDomain
 
-    If($state -eq "member_server" -and -not $current_dc_domain) {
+    If ($state -eq "member_server" -and -not $current_dc_domain) {
         $module.ExitJson()
     }
 
     # all other operations will require the AD-DS and RSAT-ADDS features...
 
-    $missing_features = Get-MissingFeatures $dc_required_features
+    $missing_features = Get-MissingFeature $dc_required_features
 
-    If($missing_features.Count -gt 0) {
+    If ($missing_features.Count -gt 0) {
         Write-DebugLog ("Missing Windows features ({0}), need to install" -f ($missing_features -join ", "))
         $module.Result.changed = $true # we need to install features
-        If($module.CheckMode) {
+        If ($module.CheckMode) {
             # bail out here- we can't proceed without knowing the features are installed
             Write-DebugLog "check-mode, exiting early"
             $module.ExitJson()
@@ -176,26 +176,26 @@ Try {
 
     $domain_admin_cred = New-Credential -cred_user $domain_admin_user -cred_password $domain_admin_password
 
-    switch($state) {
+    switch ($state) {
         domain_controller {
             # ensure that domain admin user is in UPN or down-level domain format (prevent hang from https://support.microsoft.com/en-us/kb/2737935)
-            If(-not $domain_admin_user.Contains("\") -and -not $domain_admin_user.Contains("@")) {
+            If (-not $domain_admin_user.Contains("\") -and -not $domain_admin_user.Contains("@")) {
                 $module.FailJson("domain_admin_user must be in domain\user or user@domain.com format")
             }
 
-            If($current_dc_domain) {
+            If ($current_dc_domain) {
                 # FUTURE: implement managed Remove/Add to change domains?
 
-                If($current_dc_domain -ne $dns_domain_name) {
+                If ($current_dc_domain -ne $dns_domain_name) {
                     $module.FailJson("$(hostname) is a domain controller for domain $current_dc_domain; changing DC domains is not implemented")
                 }
             }
 
             # need to promote to DC
-            If(-not $current_dc_domain) {
+            If (-not $current_dc_domain) {
                 Write-DebugLog "Not currently a domain controller; needs promotion"
                 $module.Result.changed = $true
-                If($module.CheckMode) {
+                If ($module.CheckMode) {
                     Write-DebugLog "check-mode, exiting early"
                     $module.ExitJson()
                 }
@@ -232,20 +232,20 @@ Try {
                 if ($null -ne $install_dns) {
                     $install_params.InstallDns = $install_dns
                 }
-                try
-                {
+                try {
                     $null = Install-ADDSDomainController -NoRebootOnCompletion -Force @install_params
-                } catch [Microsoft.DirectoryServices.Deployment.DCPromoExecutionException] {
+                }
+                catch [Microsoft.DirectoryServices.Deployment.DCPromoExecutionException] {
                     # ExitCode 15 == 'Role change is in progress or this computer needs to be restarted.'
-                    # DCPromo exit codes details can be found at https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/troubleshooting-domain-controller-deployment
+                    # DCPromo exit codes details can be found at
+                    # https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/troubleshooting-domain-controller-deployment
                     if ($_.Exception.ExitCode -eq 15) {
                         $module.Result.reboot_required = $true
-                    } else {
+                    }
+                    else {
                         $module.FailJson("Failed to install ADDSDomainController with DCPromo: $($_.Exception.Message)", $_)
                     }
                 }
-                # If $_.FullyQualifiedErrorId -eq 'Test.VerifyUserCredentialPermissions.DCPromo.General.25,Microsoft.DirectoryServices.Deployment.PowerShell.Commands.InstallADDSDomainControllerCommand'
-                # the module failed to resolve the given dns domain name
 
                 Write-DebugLog "Installation complete, trying to start the Netlogon service"
                 # The Netlogon service is set to auto start but is not started. This is
@@ -255,9 +255,14 @@ Try {
                 # this fails.
                 try {
                     Start-Service -Name Netlogon
-                } catch {
+                }
+                catch {
                     Write-DebugLog "Failed to start the Netlogon service: $($_.Exception.Message)"
-                    $module.Warn("Failed to start the Netlogon service after promoting the host, Ansible may be unable to connect until the host is manually rebooting: $($_.Exception.Message)")
+                    $msg = -join @(
+                        "Failed to start the Netlogon service after promoting the host, Ansible may be unable to "
+                        "connect until the host is manually rebooting: $($_.Exception.Message)"
+                    )
+                    $module.Warn($msg)
                 }
 
                 Write-DebugLog "Domain Controller setup completed, needs reboot..."
@@ -270,14 +275,18 @@ Try {
 
             Write-DebugLog "Checking for operation master roles assigned to this DC..."
 
-            $assigned_roles = Get-OperationMasterRoles
+            $assigned_roles = Get-OperationMasterRole
 
             # FUTURE: figure out a sane way to hand off roles automatically (designated recipient server, randomly look one up?)
-            If($assigned_roles.Count -gt 0) {
-                $module.FailJson("This domain controller has operation master role(s) ({0}) assigned; they must be moved to other DCs before demotion (see Move-ADDirectoryServerOperationMasterRole)" -f ($assigned_roles -join ", "))
+            If ($assigned_roles.Count -gt 0) {
+                $msg = -join @(
+                    "This domain controller has operation master role(s) ({0}) assigned; they must be moved to other "
+                    "DCs before demotion (see Move-ADDirectoryServerOperationMasterRole)" -f ($assigned_roles -join ", ")
+                )
+                $module.FailJson($msg)
             }
 
-            If($module.CheckMode) {
+            If ($module.CheckMode) {
                 Write-DebugLog "check-mode, exiting early"
                 $module.ExitJson()
             }

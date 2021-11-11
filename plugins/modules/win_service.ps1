@@ -7,7 +7,7 @@
 #AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.SCManager
 
 # Need to be able to specify values larger than [Int32]::MaxValue for certain time based options.
-$uint32Type = [Func[[Object], [UInt32]]]{ [UInt32]$args[0] }
+$uint32Type = [Func[[Object], [UInt32]]] { [UInt32]$args[0] }
 $spec = @{
     options = @{
         dependencies = @{ type = 'list'; elements = 'str' }
@@ -15,25 +15,25 @@ $spec = @{
         description = @{ type = 'str' }
         desktop_interact = @{ type = 'bool'; default = $false }
         display_name = @{ type = 'str' }
-        error_control = @{ type = 'str'; choices = 'critical', 'ignore', 'normal', 'severe'}
+        error_control = @{ type = 'str'; choices = 'critical', 'ignore', 'normal', 'severe' }
         failure_actions = @{
             type = 'list'
             elements = 'dict'
             options = @{
-                delay_ms = @{ aliases = ,'delay'; type = $uint32Type; default = 0 }
+                delay_ms = @{ aliases = , 'delay'; type = $uint32Type; default = 0 }
                 type = @{ type = 'str'; choices = 'none', 'reboot', 'restart', 'run_command'; required = $true }
             }
         }
         failure_actions_on_non_crash_failure = @{ type = 'bool' }
         failure_command = @{ type = 'str' }
         failure_reboot_msg = @{ type = 'str' }
-        failure_reset_period_sec = @{ aliases = ,'failure_reset_period'; type = $uint32Type }
+        failure_reset_period_sec = @{ aliases = , 'failure_reset_period'; type = $uint32Type }
         force_dependent_services = @{ type = 'bool'; default = $false }
         load_order_group = @{ type = 'str' }
         name = @{ type = 'str'; required = $true }
         password = @{ type = 'str'; no_log = $true }
         path = @{ type = 'str'; }
-        pre_shutdown_timeout_ms = @{ aliases = ,'pre_shutdown_timeout'; type = $uint32Type }
+        pre_shutdown_timeout_ms = @{ aliases = , 'pre_shutdown_timeout'; type = $uint32Type }
         required_privileges = @{ type = 'list'; elements = 'str' }
         service_type = @{
             type = 'str'
@@ -87,9 +87,9 @@ if ($null -ne $path) {
 Function ConvertTo-SecurityIdentifier {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '',
-        Justification='Ignore a SID conversion eror and try alternative, we do not care about the error')]
+        Justification = 'Ignore a SID conversion eror and try alternative, we do not care about the error')]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]$Name
     )
 
@@ -97,7 +97,8 @@ Function ConvertTo-SecurityIdentifier {
     try {
         New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $Name
         return
-    } catch [ArgumentException] {}
+    }
+    catch [ArgumentException] {}
 
     # win_service allows LocalSystem as a way of specifying SYSTEM as that is what the GUI shows. This name cannot be
     # translated so we have a manual check for it.
@@ -111,13 +112,15 @@ Function ConvertTo-SecurityIdentifier {
         $nameSplit = $Name.Split('\', 2)
         if ($nameSplit[0] -eq '.') {
             $domain = $env:COMPUTERNAME
-        } else {
+        }
+        else {
             $domain = $nameSplit[0]
         }
         $username = $nameSplit[1]
 
         $ntAccount = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $domain, $username
-    } else {
+    }
+    else {
         $ntAccount = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $Name
     }
 
@@ -127,7 +130,7 @@ Function ConvertTo-SecurityIdentifier {
 Function ConvertTo-ServiceFailureActionsDiff {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [Object[]]
         $FailureActions
@@ -149,7 +152,7 @@ Function ConvertTo-ServiceFailureActionsDiff {
 Function ConvertTo-ServiceStartModeDiff {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Ansible.Windows.SCManager.ServiceStartType]
         $StartMode
     )
@@ -168,7 +171,7 @@ Function ConvertTo-ServiceStartModeDiff {
 Function ConvertTo-ServiceStateDiff {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Ansible.Windows.SCManager.ServiceStatus]
         $State
     )
@@ -188,7 +191,7 @@ Function ConvertTo-ServiceStateDiff {
 Function ConvertTo-ServiceTypeDiff {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Ansible.Windows.SCManager.ServiceType]
         $ServiceType
     )
@@ -218,7 +221,8 @@ Function Get-ServiceDiff {
 
     if (-not $Service) {
         ""
-    } else {
+    }
+    else {
         $diff = @{
             dependencies = $Service.DependentOn
             description = $Service.Description
@@ -243,10 +247,12 @@ Function Get-ServiceDiff {
         }
 
         # Only set the username/password diff if we have the proper type.
-        if ( -not (
-            $Service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
-            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
-        )) {
+        if (
+            -not (
+                $Service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
+                $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
+            )
+        ) {
             $diff.username = $Service.Account.Value
             $diff.password = 'REDACTED'
         }
@@ -258,7 +264,7 @@ Function Get-ServiceDiff {
 Function Get-ServiceFromName {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Name
     )
@@ -307,7 +313,8 @@ Function Set-ServiceAccount {
 
         if ($null -eq $desiredSid) {
             $Module.Diff.after.username = $Service.Account.Value
-        } elseif (-not $desiredSid.Equals($actualSid)) {
+        }
+        elseif (-not $desiredSid.Equals($actualSid)) {
             # We need to remove the desktop interact flag if we are changing from SYSTEM to another account
             $systemSid = ConvertTo-SecurityIdentifier -Name 'LocalSystem'
             if (-not $desiredSid.Equals($systemSid)) {
@@ -334,7 +341,7 @@ Function Set-ServiceAccount {
     }
 }
 
-Function Set-ServiceDependencies {
+Function Set-ServiceDependency {
     [CmdletBinding()]
     param (
         [String[]]
@@ -361,9 +368,11 @@ Function Set-ServiceDependencies {
 
             if ($DependencyAction -eq 'add') {
                 $addedDependents = [Linq.Enumerable]::Except($Dependencies, $existingDependencies)
-            } elseif ($DependencyAction -eq 'remove') {
+            }
+            elseif ($DependencyAction -eq 'remove') {
                 $removedDependents = [Linq.Enumerable]::Intersect($Dependencies, $existingDependencies)
-            } else {
+            }
+            else {
                 $addedDependents = [Linq.Enumerable]::Except($Dependencies, $existingDependencies)
                 $removedDependents = [Linq.Enumerable]::Except($existingDependencies, $Dependencies)
             }
@@ -404,7 +413,8 @@ Function Set-ServiceDescription {
     if ($null -ne $Service) {
         if ($null -eq $Description) {
             $Module.Diff.after.description = $Service.Description
-        } else {
+        }
+        else {
             if (-not $Description) {
                 $Description = $null
             }
@@ -436,7 +446,8 @@ Function Set-ServiceDisplayName {
     if ($null -ne $Service) {
         if (-not $DisplayName) {
             $Module.Diff.after.display_name = $Service.DisplayName
-        } elseif ($DisplayName -cne $Service.DisplayName) {
+        }
+        elseif ($DisplayName -cne $Service.DisplayName) {
             if (-not $Module.CheckMode) {
                 $Service.DisplayName = $DisplayName
             }
@@ -462,7 +473,8 @@ Function Set-ServiceErrorControl {
     if ($null -ne $Service) {
         if (-not $ErrorControl) {
             $Module.Diff.after.error_control = $Service.ErrorControl.ToString().ToLowerInvariant()
-        } elseif ([Ansible.Windows.SCManager.ErrorControl]$ErrorControl -ne $Service.ErrorControl) {
+        }
+        elseif ([Ansible.Windows.SCManager.ErrorControl]$ErrorControl -ne $Service.ErrorControl) {
             if (-not $Module.CheckMode) {
                 $Service.ErrorControl = $ErrorControl
             }
@@ -471,7 +483,7 @@ Function Set-ServiceErrorControl {
     }
 }
 
-Function Set-ServiceFailureActions {
+Function Set-ServiceFailureAction {
     [CmdletBinding()]
     param (
         [Object[]]
@@ -505,7 +517,8 @@ Function Set-ServiceFailureActions {
     if ($null -ne $Service) {
         if ($null -eq $ActionOnNonCrashFailure) {
             $Module.Diff.after.failure_actions_on_non_crash_failure = $Service.FailureActionsOnNonCrashFailures
-        } elseif ($ActionOnNonCrashFailure -ne $Service.FailureActionsOnNonCrashFailures) {
+        }
+        elseif ($ActionOnNonCrashFailure -ne $Service.FailureActionsOnNonCrashFailures) {
             if (-not $Module.CheckMode) {
                 $Service.FailureActionsOnNonCrashFailures = $ActionOnNonCrashFailure
             }
@@ -518,18 +531,19 @@ Function Set-ServiceFailureActions {
         if ($null -eq $Actions) {
             $diff = @(ConvertTo-ServiceFailureActionsDiff -FailureActions $Service.FailureActions.Actions)
             $Module.Diff.after.failure_actions = $diff
-        } else {
+        }
+        else {
             $newActions = [System.Collections.Generic.List[Ansible.Windows.SCManager.Action]]@()
             foreach ($action in $Actions) {
                 $newActions.Add([Ansible.Windows.SCManager.Action]@{
-                    Type = switch ($action.type) {
-                        none { 'None' }
-                        reboot { 'Reboot' }
-                        restart { 'Restart' }
-                        run_command { 'RunCommand' }
-                    }
-                    Delay = $action.delay_ms
-                })
+                        Type = switch ($action.type) {
+                            none { 'None' }
+                            reboot { 'Reboot' }
+                            restart { 'Restart' }
+                            run_command { 'RunCommand' }
+                        }
+                        Delay = $action.delay_ms
+                    })
             }
 
             $changed = $newActions.Count -ne $Service.FailureActions.Actions.Count
@@ -552,8 +566,10 @@ Function Set-ServiceFailureActions {
 
         if ($null -eq $Command) {
             $Module.Diff.after.failure_command = $Service.FailureActions.Command
-        } else {
-            if (-not $Command) {  # Empty string resets the value but we still want idempotency.
+        }
+        else {
+            if (-not $Command) {
+                # Empty string resets the value but we still want idempotency.
                 $Command = $null
             }
 
@@ -565,8 +581,10 @@ Function Set-ServiceFailureActions {
 
         if ($null -eq $RebootMsg) {
             $Module.Diff.after.failure_reboot_msg = $Service.FailureActions.RebootMsg
-        } else {
-            if (-not $RebootMsg) {  # See Command
+        }
+        else {
+            if (-not $RebootMsg) {
+                # See Command
                 $RebootMsg = $null
             }
 
@@ -578,7 +596,8 @@ Function Set-ServiceFailureActions {
 
         if ($null -eq $ResetPeriod) {
             $Module.Diff.after.failure_reset_period_sec = $Service.FailureActions.ResetPeriod
-        } elseif ($ResetPeriod -ne $Service.FailureActions.ResetPeriod) {
+        }
+        elseif ($ResetPeriod -ne $Service.FailureActions.ResetPeriod) {
             $newFailures.ResetPeriod = $ResetPeriod
             $changed = $true
         }
@@ -609,7 +628,8 @@ Function Set-ServiceLoadOrderGroup {
     if ($null -ne $Service) {
         if ($null -eq $LoadOrderGroup) {
             $Module.Diff.after.load_order_group = $Service.LoadOrderGroup
-        } else {
+        }
+        else {
             if ($LoadOrderGroup -cne $Service.LoadOrderGroup) {
                 if (-not $Module.CheckMode) {
                     $Service.LoadOrderGroup = $LoadOrderGroup
@@ -638,7 +658,8 @@ Function Set-ServicePath {
     if ($null -ne $Service) {
         if (-not $Path) {
             $Module.Diff.after.path = $Service.Path
-        } elseif ($Path -cne $Service.Path) {
+        }
+        elseif ($Path -cne $Service.Path) {
             if (-not $Module.CheckMode) {
                 $Service.Path = $Path
             }
@@ -647,7 +668,7 @@ Function Set-ServicePath {
     }
 }
 
-Function Set-ServicePreShutdownTimeoutMs {
+Function Set-ServicePreShutdownTimeout {
     [CmdletBinding()]
     param (
         # [UInt32] - Need to be able to pass $Null in
@@ -664,7 +685,8 @@ Function Set-ServicePreShutdownTimeoutMs {
     if ($null -ne $Service) {
         if ($null -eq $PreShutdownTimeoutMs) {
             $Module.Diff.after.pre_shutdown_timeout_ms = $Service.PreShutdownTimeout
-        } elseif ($PreShutdownTimeoutMs -ne $Service.PreShutdownTimeout) {
+        }
+        elseif ($PreShutdownTimeoutMs -ne $Service.PreShutdownTimeout) {
             if (-not $Module.CheckMode) {
                 $Service.PreShutdownTimeout = $PreShutdownTimeoutMs
             }
@@ -673,7 +695,7 @@ Function Set-ServicePreShutdownTimeoutMs {
     }
 }
 
-Function Set-ServiceRequiredPrivileges {
+Function Set-ServiceRequiredPrivilege {
     [CmdletBinding()]
     param (
         [String[]]
@@ -690,7 +712,8 @@ Function Set-ServiceRequiredPrivileges {
     if ($null -ne $Service) {
         if ($null -eq $RequiredPrivileges) {
             $Module.Diff.after.required_privileges = $Service.RequiredPrivileges
-        } else {
+        }
+        else {
             $existingPrivis = $Service.RequiredPrivileges.ToArray()
             $extraPrivs = [String[]][Linq.Enumerable]::Except($RequiredPrivileges, $existingPrivis)
             $missingPrivs = [String[]][Linq.Enumerable]::Except($existingPrivis, $RequiredPrivileges)
@@ -722,7 +745,8 @@ Function Set-ServiceSidInfo {
     if ($null -ne $Service) {
         if (-not $SidInfo) {
             $Module.Diff.after.sid_info = $Service.ServiceSidInfo.ToString().ToLowerInvariant()
-        } elseif ([Ansible.Windows.SCManager.ServiceSidInfo]$SidInfo -ne $Service.ServiceSidInfo) {
+        }
+        elseif ([Ansible.Windows.SCManager.ServiceSidInfo]$SidInfo -ne $Service.ServiceSidInfo) {
             if (-not $Module.CheckMode) {
                 $Service.ServiceSidInfo = $SidInfo
             }
@@ -748,7 +772,8 @@ Function Set-ServiceStartMode {
     if ($null -ne $Service) {
         if (-not $StartMode) {
             $Module.Diff.after.start_mode = ConvertTo-ServiceStartModeDiff -StartMode $Service.StartType
-        } else {
+        }
+        else {
             $stateMap = @{
                 auto = [Ansible.Windows.SCManager.ServiceStartType]::AutoStart
                 delayed = [Ansible.Windows.SCManager.ServiceStartType]::AutoStartDelayed
@@ -800,35 +825,42 @@ Function Set-ServiceState {
         if (-not $State) {
             $Module.Diff.after.state = ConvertTo-ServiceStateDiff -State $Service.State
 
-        } elseif ($State -eq 'started' -and $Service.State -ne $stateEnum::Running) {
+        }
+        elseif ($State -eq 'started' -and $Service.State -ne $stateEnum::Running) {
             if ($Service.State -eq $stateEnum::Paused) {
                 try {
                     $winService | Resume-Service -WhatIf:$Module.CheckMode
-                } catch {
+                }
+                catch {
                     $msg = "failed to start service from paused state $($Service.ServiceName): $($_.Exception.Message)"
                     $Module.FailJson($msg, $_)
                 }
-            } else {
+            }
+            else {
                 $winService | Start-Service -WhatIf:$Module.CheckMode
             }
             $Module.Result.changed = $true
 
-        } elseif ($State -eq 'stopped' -and $Service.State -ne $stateEnum::Stopped) {
+        }
+        elseif ($State -eq 'stopped' -and $Service.State -ne $stateEnum::Stopped) {
             $winService | Stop-Service -Force:$ForceDependentServices.IsPresent -WhatIf:$Module.CheckMode
             $Module.Result.changed = $true
 
-        } elseif ($State -eq 'restarted') {
+        }
+        elseif ($State -eq 'restarted') {
             $winService | Restart-Service -Force:$ForceDependentServices.IsPresent -WhatIf:$Module.CheckMode
             $Module.Result.changed = $true
 
-        } elseif ($State -eq 'paused' -and $Service.State -ne $stateEnum::Paused) {
+        }
+        elseif ($State -eq 'paused' -and $Service.State -ne $stateEnum::Paused) {
             if (-not $Service.ControlsAccepted.HasFlag([Ansible.Windows.SCManager.ControlsAccepted]::PauseContinue)) {
                 $Module.FailJson("failed to pause service $($Service.ServiceName): The service does not support pausing")
             }
 
             try {
                 $winService | Suspend-Service -WhatIf:$Module.CheckMode
-            } catch {
+            }
+            catch {
                 $Module.FailJson("failed to pause service $($Service.ServiceName): $($_.Exception.Message)", $_)
             }
             $Module.Result.changed = $true
@@ -858,7 +890,7 @@ Function Set-ServiceType {
     $Module.Diff.after.desktop_interact = $DesktopInteract
     $Module.Diff.after.service_type = $ServiceType
     if ($null -ne $Service) {
-        [Ansible.Windows.SCManager.ServiceType]$desiredType = switch($ServiceType) {
+        [Ansible.Windows.SCManager.ServiceType]$desiredType = switch ($ServiceType) {
             kernel_driver { [Ansible.Windows.SCManager.ServiceType]::KernelDriver }
             file_system_driver { [Ansible.Windows.SCManager.ServiceType]::FileSystemDriver }
             adapter { [Ansible.Windows.SCManager.ServiceType]::Adapter }
@@ -875,7 +907,8 @@ Function Set-ServiceType {
         if ($DesktopInteract) {
             if ($Username) {
                 $actualAccount = ConvertTo-SecurityIdentifier -Name $Username
-            } else {
+            }
+            else {
                 $actualAccount = $Service.Account.Translate([System.Security.Principal.SecurityIdentifier])
             }
             $systemSid = ConvertTo-SecurityIdentifier -Name 'LocalSystem'
@@ -885,7 +918,8 @@ Function Set-ServiceType {
             }
 
             $desiredType = [uint32]$desiredType -bor $interactive
-        } else {
+        }
+        else {
             $desiredType = [uint32]$desiredType -band -bnot $interactive
         }
 
@@ -934,7 +968,8 @@ if ($state -eq 'absent') {
     }
 
     $module.Diff.after = ""
-} else {
+}
+else {
     # win_service can be used as a way to get info from an existing service by not setting any of these parameters.
     # This should be deprecated in the future in favour of win_service_info to simplify this module.
     $detectChanges = (
@@ -981,7 +1016,8 @@ if ($state -eq 'absent') {
                     $service = New-Object -TypeName Ansible.Windows.SCManager.Service -ArgumentList $name
                 }
                 $module.Result.changed = $true
-            } else {
+            }
+            else {
                 $module.FailJson("Service '$name' is not installed, need to set 'path' to create a new service")
             }
         }
@@ -991,18 +1027,18 @@ if ($state -eq 'absent') {
             name = if ($service) { $service.ServiceName } else { $name }
         }
 
-        $common = @{Service = $service; Module = $module}
+        $common = @{Service = $service; Module = $module }
 
         # The ServiceStartName for these types of services aren't the account it runs on so running this will fail
         # to convert it to an account. While this could be configured in the future for now we just ignore the values.
         if ( -not (
-            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
-            $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
-        )) {
+                $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::KernelDriver) -or
+                $service.ServiceType.HasFlag([Ansible.Windows.SCManager.ServiceType]::FileSystemDriver)
+            )) {
             Set-ServiceAccount -Username $username -Password $password -UpdatePassword:$updatePassword @common
         }
 
-        Set-ServiceDependencies -Dependencies $dependencies -DependencyAction $dependencyAction @common
+        Set-ServiceDependency -Dependencies $dependencies -DependencyAction $dependencyAction @common
         Set-ServiceDescription -Description $description @common
         Set-ServiceDisplayName -DisplayName $displayName @common
         Set-ServiceErrorControl -ErrorControl $errorControl @common
@@ -1014,19 +1050,20 @@ if ($state -eq 'absent') {
             RebootMsg = $failureRebootMsg
             ResetPeriod = $failureResetPeriodSec
         }
-        Set-ServiceFailureActions @failureParams @common
+        Set-ServiceFailureAction @failureParams @common
 
         Set-ServiceLoadOrderGroup -LoadOrderGroup $loadOrderGroup @common
         Set-ServicePath -Path $path @common
-        Set-ServicePreShutdownTimeoutMs -PreShutdownTimeoutMs $preShutdownTimeoutMs @common
-        Set-ServiceRequiredPrivileges -RequiredPrivileges $requiredPrivileges @common
+        Set-ServicePreShutdownTimeout -PreShutdownTimeoutMs $preShutdownTimeoutMs @common
+        Set-ServiceRequiredPrivilege -RequiredPrivileges $requiredPrivileges @common
         Set-ServiceSidInfo -SidInfo $sidInfo @common
         Set-ServiceStartMode -StartMode $startMode @common
         Set-ServiceType -ServiceType $serviceType -DesktopInteract $desktopInteract -Username $username @common
 
         # This should always be set last in case one of the config options above changes
         Set-ServiceState -State $state -ForceDependentServices:$forceDependentServices @common
-    } else {
+    }
+    else {
         # TODO: deprecate this scenario as state != 'absent' should require one of the params in $detectChanges.
         $module.Diff.after = $module.Diff.before
     }

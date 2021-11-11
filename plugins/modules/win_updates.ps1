@@ -23,8 +23,8 @@ $spec = @{
 
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
-        reboot_timeout = @{ type = 'int'; default = 1200}
-        use_scheduled_task = @{ type = 'bool'; default = $false}
+        reboot_timeout = @{ type = 'int'; default = 1200 }
+        use_scheduled_task = @{ type = 'bool'; default = $false }
         _wait = @{ type = 'bool'; default = $false }
         _output_path = @{ type = 'str' }
     }
@@ -175,7 +175,7 @@ Function New-NamedPipe {
     The pipe name to create.
     #>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
-        Justification="We don't care about failures on dispoable, especially ones we know will occur")]
+        Justification = "We don't care about failures on dispoable, especially ones we know will occur")]
     [OutputType([System.IO.StreamWriter])]
     [CmdletBinding()]
     param (
@@ -186,18 +186,18 @@ Function New-NamedPipe {
 
     $currentUser = ([Security.Principal.WindowsIdentity]::GetCurrent()).User
     $systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
-        [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
+            [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
 
     $pipeSec = New-Object -TypeName System.IO.Pipes.PipeSecurity
     foreach ($sid in @($currentUser, $systemSid)) {
         $pipeSec.AddAccessRule($pipeSec.AccessRuleFactory(
-            $sid,
-            [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
-            $false,
-            [System.Security.AccessControl.InheritanceFlags]::None,
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
+                $sid,
+                [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
+                $false,
+                [System.Security.AccessControl.InheritanceFlags]::None,
+                [System.Security.AccessControl.PropagationFlags]::None,
+                [System.Security.AccessControl.AccessControlType]::Allow
+            ))
     }
 
     # FUTURE: This won't work on pwsh as it doesn't take the PipeSecurity overload. Unfortunately the only way to do
@@ -217,15 +217,17 @@ Function New-NamedPipe {
 
     # Calling Dispose() on the stream will throw an exception is no client has connected to the server. It still
     # closes the stream which is what we want so we just ignore the exception.
-    $sw.PSObject.Members.Add((New-Object -TypeName System.Management.Automation.PSScriptMethod -ArgumentList @(
-        'Dispose',
-        {
-            try {
-                $this.PSBase.Dispose()
-            }
-            catch [System.InvalidOperationException] {}
-        }
-    )))
+    $sw.PSObject.Members.Add(
+        (
+            New-Object -TypeName System.Management.Automation.PSScriptMethod -ArgumentList @(
+                'Dispose',
+                {
+                    try {
+                        $this.PSBase.Dispose()
+                    }
+                    catch [System.InvalidOperationException] {}
+                }
+            )))
 
     $sw
 }
@@ -276,7 +278,8 @@ Function Start-EphemeralTask {
             }
         }
         if ($task) {
-            if ($task.State -eq 4) {  # TASK_STATE_RUNNING
+            if ($task.State -eq 4) {
+                # TASK_STATE_RUNNING
                 $task.Stop(0)
             }
             $taskFolder.DeleteTask($Name, 0)
@@ -310,7 +313,7 @@ Function Start-EphemeralTask {
             $createdTask = $taskFolder.RegisterTaskDefinition(
                 $Name,
                 $taskDefinition,
-                2,  # TASK_CREATE
+                2, # TASK_CREATE
                 $null,
                 $null,
                 $taskDefinition.Principal.LogonType
@@ -318,7 +321,7 @@ Function Start-EphemeralTask {
             try {
                 $runningTask = $createdTask.RunEx(
                     $null,
-                    2,  # TASK_RUN_IGNORE_CONSTRAINTS
+                    2, # TASK_RUN_IGNORE_CONSTRAINTS
                     0,
                     ""
                 )
@@ -345,7 +348,8 @@ Function Start-EphemeralTask {
                 $errMessage = $null
                 while ($true) {
                     # The task might still be initialising, wait until it is no longer queued
-                    if ($createdTask.LastTaskResult -eq 0x00041325) {  # SCHED_S_TASK_QUEUED
+                    if ($createdTask.LastTaskResult -eq 0x00041325) {
+                        # SCHED_S_TASK_QUEUED
                         Start-Sleep -Seconds 1
                         continue
                     }
@@ -356,7 +360,8 @@ Function Start-EphemeralTask {
                         break
                     }
 
-                    if ($createdTask.State -ne 4) {  # TASK_STATE_RUNNING
+                    if ($createdTask.State -ne 4) {
+                        # TASK_STATE_RUNNING
                         $errEvent = Get-WinEvent -FilterXml $taskFilter -ErrorAction SilentlyContinue | Select-Object -First 1
                         if ($errEvent) {
                             $errMessage = $errEvent.Message
@@ -462,22 +467,22 @@ Function Invoke-AsBatchLogon {
 
         # Wait for the task to connect to our pipe or for the process to end (failed and should be reported)
         $waitProcPS = [PowerShell]::Create()
-        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id=$taskPid; ErrorAction='SilentlyContinue'})
+        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id = $taskPid; ErrorAction = 'SilentlyContinue' })
         $waitProcTask = $waitProcPS.BeginInvoke()
 
         $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
-            $waitProcTask.AsyncWaitHandle, $waitConnect.AsyncWaitHandle
-        ))
+                $waitProcTask.AsyncWaitHandle, $waitConnect.AsyncWaitHandle
+            ))
         if ($waitIdx -eq 0) {
             throw "Task failed to connect to pipe"
         }
 
         $server.BaseStream.EndWaitForConnection($waitConnect)
         $runInfo = [System.Management.Automation.PSSerializer]::Serialize(@{
-            Commands = $Commands
-            ScriptBlock = $ScriptBlock.ToString()
-            Parameters = $Parameters
-        })
+                Commands = $Commands
+                ScriptBlock = $ScriptBlock.ToString()
+                Parameters = $Parameters
+            })
         $server.WriteLine($runInfo)
         $server.BaseStream.WaitForPipeDrain()
         # Close the named pipe so the client knows it's reached the end
@@ -485,8 +490,8 @@ Function Invoke-AsBatchLogon {
 
         # Wait for confirmation the task has received the data and has started the task or failed (proc has ended)
         $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
-            $waitProcTask.AsyncWaitHandle, $eventHandle
-        ))
+                $waitProcTask.AsyncWaitHandle, $eventHandle
+            ))
 
         if ($waitIdx -eq 0) {
             throw "Task failed to invoke script"
@@ -998,14 +1003,14 @@ namespace Ansible.Windows.WinUpdates
 
     Function Invoke-AsyncMethod {
         [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSPossibleIncorrectUsageOfAssignmentOperator", "",
-            Justification="False positive, the syntax is valid and works")]
+            Justification = "False positive, the syntax is valid and works")]
         [CmdletBinding()]
         param (
-            [Parameter(Mandatory, Position=0)]
+            [Parameter(Mandatory, Position = 0)]
             [String]
             $Action,
 
-            [Parameter(Mandatory, Position=1)]
+            [Parameter(Mandatory, Position = 1)]
             [ScriptBlock]
             $ScriptBlock
         )
@@ -1015,8 +1020,8 @@ namespace Ansible.Windows.WinUpdates
             $task = &$ScriptBlock $cancelToken.Token
 
             $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
-                $cancelTask, $task
-            ))
+                    $cancelTask, $task
+                ))
             if ($waitIdx -eq 0) {
                 if (-not $task.IsCompleted) {
                     # Sends the COM RequestAbort signal to the job
@@ -1053,7 +1058,7 @@ namespace Ansible.Windows.WinUpdates
             $updateIdx = $progress.CurrentUpdateIndex
             $updateId = $Api.IndexMap[$updateIdx]
 
-            $progressObj = @{CurrentUpdateId = $updateId}
+            $progressObj = @{CurrentUpdateId = $updateId }
             foreach ($prop in $progress.PSObject.Properties) {
                 $progressObj[$prop.Name] = $prop.Value
             }
@@ -1316,7 +1321,7 @@ namespace Ansible.Windows.WinUpdates
         $updateId = "$($updateInfo.id) - $($updateInfo.title)"
         if ($filteredReasons) {
             $api.WriteLog("Skipping update $updateId due to $($filteredReasons -join ", ")")
-            $filteredUpdates.Add(@{id=$updateInfo.id; reasons=$filteredReasons})
+            $filteredUpdates.Add(@{id = $updateInfo.id; reasons = $filteredReasons })
         }
         else {
             if (-not $update.EulaAccepted) {
@@ -1330,9 +1335,9 @@ namespace Ansible.Windows.WinUpdates
     }
     # Allows the action plugin to map update ids to human readable update info
     $api.WriteProgress('search_result', @{
-        updates = $allUpdates
-        filtered = $filteredUpdates
-    })
+            updates = $allUpdates
+            filtered = $filteredUpdates
+        })
 
     $exit = $false
     if ($CheckMode) {
@@ -1389,17 +1394,17 @@ namespace Ansible.Windows.WinUpdates
 
             $api.WriteLog("Download result for $updateId - ResultCode: $resultCode, HResult: $hresult")
             $progressResult.Add(@{
-                id = $updateId
-                result_code = [int]$resultCode
-                hresult = $hresult
-            })
+                    id = $updateId
+                    result_code = [int]$resultCode
+                    hresult = $hresult
+                })
             if ($resultCode -ne 'Succeeded') {
                 $failed = $true
             }
         }
         $api.WriteProgress('download_result', @{
-            info = $progressResult
-        })
+                info = $progressResult
+            })
         if ($failed) {
             # More details are in the downloaded list
             throw "Failed to download all updates - see updates for more information"
@@ -1441,11 +1446,11 @@ namespace Ansible.Windows.WinUpdates
 
         $api.WriteLog("Install result for $updateId - ResultCode: $resultCode, HResult: $hresult, RebootRequired: $rebootRequired")
         $progressResult.Add(@{
-            id = $updateId
-            result_code = [int]$resultCode
-            hresult = $hresult
-            reboot_required = $rebootRequired
-        })
+                id = $updateId
+                result_code = [int]$resultCode
+                hresult = $hresult
+                reboot_required = $rebootRequired
+            })
         if ($resultCode -ne 'Succeeded') {
             $failed = $true
         }
@@ -1454,8 +1459,8 @@ namespace Ansible.Windows.WinUpdates
         }
     }
     $api.WriteProgress('install_result', @{
-        info = $progressResult
-    })
+            info = $progressResult
+        })
 
     if ($failed) {
         # More details are in the installed list
@@ -1580,13 +1585,13 @@ if ($invokeSplat.Wait) {
                     installed = $false
                     downloaded = $false
                     kb = @($updateInfo.kb | ForEach-Object {
-                        if ($_.StartsWith("KB")) {
-                            $_.Substring(2)
-                        }
-                        else {
-                            $_
-                        }
-                    })
+                            if ($_.StartsWith("KB")) {
+                                $_.Substring(2)
+                            }
+                            else {
+                                $_
+                            }
+                        })
                     title = $updateInfo.title
                 }
 

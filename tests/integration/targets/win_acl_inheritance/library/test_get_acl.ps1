@@ -22,7 +22,8 @@ $acl.Access | ForEach-Object {
     $user = $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value
     if ($user_details.ContainsKey($user)) {
         $details = $user_details.$user
-    } else {
+    }
+    else {
         $details = @{
             isinherited = $false
         }

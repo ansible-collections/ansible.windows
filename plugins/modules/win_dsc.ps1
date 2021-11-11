@@ -13,39 +13,39 @@ Function ConvertTo-ArgSpecType {
     Converts the DSC parameter type to the arg spec type required for Ansible.
     #>
     param(
-        [Parameter(Mandatory=$true)][String]$CimType
+        [Parameter(Mandatory = $true)][String]$CimType
     )
 
-    $arg_type = switch($CimType) {
+    $arg_type = switch ($CimType) {
         Boolean { "bool" }
-        Char16 { [Func[[Object], [Char]]]{ [System.Char]::Parse($args[0].ToString()) } }
-        DateTime { [Func[[Object], [DateTime]]]{ [System.DateTime]($args[0].ToString()) } }
+        Char16 { [Func[[Object], [Char]]] { [System.Char]::Parse($args[0].ToString()) } }
+        DateTime { [Func[[Object], [DateTime]]] { [System.DateTime]($args[0].ToString()) } }
         Instance { "dict" }
         Real32 { "float" }
-        Real64 { [Func[[Object], [Double]]]{ [System.Double]::Parse($args[0].ToString()) } }
+        Real64 { [Func[[Object], [Double]]] { [System.Double]::Parse($args[0].ToString()) } }
         Reference { "dict" }
-        SInt16 { [Func[[Object], [Int16]]]{ [System.Int16]::Parse($args[0].ToString()) } }
+        SInt16 { [Func[[Object], [Int16]]] { [System.Int16]::Parse($args[0].ToString()) } }
         SInt32 { "int" }
-        SInt64 { [Func[[Object], [Int64]]]{ [System.Int64]::Parse($args[0].ToString()) } }
-        SInt8 { [Func[[Object], [SByte]]]{ [System.SByte]::Parse($args[0].ToString()) } }
+        SInt64 { [Func[[Object], [Int64]]] { [System.Int64]::Parse($args[0].ToString()) } }
+        SInt8 { [Func[[Object], [SByte]]] { [System.SByte]::Parse($args[0].ToString()) } }
         String { "str" }
-        UInt16 { [Func[[Object], [UInt16]]]{ [System.UInt16]::Parse($args[0].ToString()) } }
-        UInt32 { [Func[[Object], [UInt32]]]{ [System.UInt32]::Parse($args[0].ToString()) } }
-        UInt64 { [Func[[Object], [UInt64]]]{ [System.UInt64]::Parse($args[0].ToString()) } }
-        UInt8 { [Func[[Object], [Byte]]]{ [System.Byte]::Parse($args[0].ToString()) } }
+        UInt16 { [Func[[Object], [UInt16]]] { [System.UInt16]::Parse($args[0].ToString()) } }
+        UInt32 { [Func[[Object], [UInt32]]] { [System.UInt32]::Parse($args[0].ToString()) } }
+        UInt64 { [Func[[Object], [UInt64]]] { [System.UInt64]::Parse($args[0].ToString()) } }
+        UInt8 { [Func[[Object], [Byte]]] { [System.Byte]::Parse($args[0].ToString()) } }
         Unknown { "raw" }
         default { "raw" }
     }
     return $arg_type
 }
 
-Function Get-DscCimClassProperties {
+Function Get-DscCimClassProperty {
     <#
     .SYNOPSIS
     Get's a list of CimProperties of a CIM Class. It filters out any magic or
     read only properties that we don't need to know about.
     #>
-    param([Parameter(Mandatory=$true)][String]$ClassName)
+    param([Parameter(Mandatory = $true)][String]$ClassName)
 
     $resource = Get-CimClass -ClassName $ClassName -Namespace root\Microsoft\Windows\DesiredStateConfiguration
 
@@ -58,7 +58,7 @@ Function Get-DscCimClassProperties {
         -not $_.Flags.HasFlag([Microsoft.Management.Infrastructure.CimFlags]::ReadOnly)
     }
 
-    return ,$properties
+    return , $properties
 }
 
 Function Add-PropertyOption {
@@ -67,8 +67,8 @@ Function Add-PropertyOption {
     Adds the spec for the property type to the existing module specification.
     #>
     param(
-        [Parameter(Mandatory=$true)][Hashtable]$Spec,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)][Hashtable]$Spec,
+        [Parameter(Mandatory = $true)]
         [Microsoft.Management.Infrastructure.CimPropertyDeclaration]$Property
     )
 
@@ -90,7 +90,8 @@ Function Add-PropertyOption {
     if ($property_name -eq "Name") {
         # For backwards compatibility we support specifying the Name DSC property as item_name
         $option.aliases = @("item_name")
-    } elseif ($property_name -ceq "key") {
+    }
+    elseif ($property_name -ceq "key") {
         # There seems to be a bug in the CIM property parsing when the property name is 'Key'. The CIM instance will
         # think the name is 'key' when the MOF actually defines it as 'Key'. We set the proper casing so the module arg
         # validator won't fire a case sensitive warning
@@ -110,17 +111,25 @@ Function Add-PropertyOption {
 
         $property_name = "$($property_name)_username"
         $option.type = "str"
-    } elseif ($Property.ReferenceClassName -eq "MSFT_KeyValuePair") {
+    }
+    elseif ($Property.ReferenceClassName -eq "MSFT_KeyValuePair") {
         $option.type = "dict"
-    } elseif ($property_type.EndsWith("Array")) {
+    }
+    elseif ($property_type.EndsWith("Array")) {
         $option.type = "list"
         $option.elements = ConvertTo-ArgSpecType -CimType $property_type.Substring(0, $property_type.Length - 5)
-    } else {
+    }
+    else {
         $option.type = ConvertTo-ArgSpecType -CimType $property_type
     }
 
-    if (($option.type -eq "dict" -or ($option.type -eq "list" -and $option.elements -eq "dict")) -and
-            $Property.ReferenceClassName -ne "MSFT_KeyValuePair") {
+    if (
+        (
+            $option.type -eq "dict" -or
+            ($option.type -eq "list" -and $option.elements -eq "dict")
+        ) -and
+        $Property.ReferenceClassName -ne "MSFT_KeyValuePair"
+    ) {
         # Get the sub spec if the type is a Instance (CimInstance/dict)
         $sub_option_spec = Get-OptionSpec -ClassName $Property.ReferenceClassName
         $option += $sub_option_spec
@@ -140,14 +149,14 @@ Function Get-OptionSpec {
     on what they are automatically.
     #>
     param(
-        [Parameter(Mandatory=$true)][String]$ClassName
+        [Parameter(Mandatory = $true)][String]$ClassName
     )
 
     $spec = @{
         options = @{}
         required_together = [System.Collections.ArrayList]@()
     }
-    $properties = Get-DscCimClassProperties -ClassName $ClassName
+    $properties = Get-DscCimClassProperty -ClassName $ClassName
     foreach ($property in $properties) {
         Add-PropertyOption -Spec $spec -Property $property
     }
@@ -162,10 +171,10 @@ Function ConvertTo-CimInstance {
     better error message if this fails that contains the option name that failed.
     #>
     param(
-        [Parameter(Mandatory=$true)][String]$Name,
-        [Parameter(Mandatory=$true)][String]$ClassName,
-        [Parameter(Mandatory=$true)][System.Collections.IDictionary]$Value,
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module,
+        [Parameter(Mandatory = $true)][String]$Name,
+        [Parameter(Mandatory = $true)][String]$ClassName,
+        [Parameter(Mandatory = $true)][System.Collections.IDictionary]$Value,
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
         [Switch]$Recurse
     )
 
@@ -185,7 +194,8 @@ Function ConvertTo-CimInstance {
 
     try {
         return (New-CimInstance -ClassName $ClassName -Property $properties -ClientOnly)
-    } catch {
+    }
+    catch {
         # New-CimInstance raises a poor error message, make sure we mention what option it is for
         $Module.FailJson("Failed to cast dict value for option '$Name' to a CimInstance: $($_.Exception.Message)", $_)
     }
@@ -199,11 +209,11 @@ Function ConvertTo-DscProperty {
     types like PSCredential and Dictionaries.
     #>
     param(
-        [Parameter(Mandatory=$true)][String]$ClassName,
-        [Parameter(Mandatory=$true)][System.Collections.IDictionary]$Params,
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module
+        [Parameter(Mandatory = $true)][String]$ClassName,
+        [Parameter(Mandatory = $true)][System.Collections.IDictionary]$Params,
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module
     )
-    $properties = Get-DscCimClassProperties -ClassName $ClassName
+    $properties = Get-DscCimClassProperty -ClassName $ClassName
 
     $dsc_properties = @{}
     foreach ($property in $properties) {
@@ -220,7 +230,8 @@ Function ConvertTo-DscProperty {
             }
             $sec_password = ConvertTo-SecureString -String $password -AsPlainText -Force
             $value = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $username, $sec_password
-        } else {
+        }
+        else {
             $value = $Params.$property_name
 
             # The actual value wasn't set, skip adding this property
@@ -231,13 +242,14 @@ Function ConvertTo-DscProperty {
             if ($property.ReferenceClassName -eq "MSFT_KeyValuePair") {
                 $key_value_pairs = [System.Collections.Generic.List`1[CimInstance]]@()
                 foreach ($value_info in $value.GetEnumerator()) {
-                    $kvp = @{Key = $value_info.Key; Value = $value_info.Value.ToString()}
+                    $kvp = @{Key = $value_info.Key; Value = $value_info.Value.ToString() }
                     $cim_instance = ConvertTo-CimInstance -Name $property_name -ClassName MSFT_KeyValuePair `
                         -Value $kvp -Module $Module
                     $key_value_pairs.Add($cim_instance) > $null
                 }
                 $value = $key_value_pairs.ToArray()
-            } elseif ($null -ne $property.ReferenceClassName) {
+            }
+            elseif ($null -ne $property.ReferenceClassName) {
                 # Convert the dict to a CimInstance (or list of CimInstances)
                 $convert_args = @{
                     ClassName = $property.ReferenceClassName
@@ -252,7 +264,8 @@ Function ConvertTo-DscProperty {
                         $value.Add($cim_instance) > $null
                     }
                     $value = $value.ToArray()  # Need to make sure we are dealing with an Array not a List
-                } else {
+                }
+                else {
                     $value = ConvertTo-CimInstance -Value $value @convert_args
                 }
             }
@@ -271,9 +284,9 @@ Function Invoke-DscMethod {
     for futher debugging.
     #>
     param(
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module,
-        [Parameter(Mandatory=$true)][String]$Method,
-        [Parameter(Mandatory=$true)][Hashtable]$Arguments
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
+        [Parameter(Mandatory = $true)][String]$Method,
+        [Parameter(Mandatory = $true)][Hashtable]$Arguments
     )
 
     # Invoke the DSC resource in a separate runspace so we can capture the Verbose output
@@ -316,14 +329,15 @@ Function Invoke-SafeDscResource {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.Collections.IDictionary]
         $Parameters
     )
 
     try {
         Invoke-DscResource @Parameters
-    } catch {
+    }
+    catch {
         Write-Error -Message $_.Exception.Message -Exception $_.Exception
     }
 }
@@ -349,7 +363,8 @@ if (-not (Test-WSMan -Port $wsman_http_port -ErrorAction SilentlyContinue)) {
 # we need to read the resource_name and module_version value which is done outside of Ansible.Basic
 if ($args.Length -gt 0) {
     $params = Get-Content -LiteralPath $args[0] | ConvertFrom-Json
-} else {
+}
+else {
     $params = $complex_args
 }
 if (-not $params.ContainsKey("resource_name")) {
@@ -366,7 +381,8 @@ $module_params = @{ Name = $resource_name }
 if ($params.ContainsKey("module_version")) {
     $module_version = $params.module_version
     $module_params.RequiredVersion = $params.module_version
-} else {
+}
+else {
     $module_version = "latest"
 }
 
@@ -399,14 +415,16 @@ $module_versions = (Get-DscResource -Name $resource_name -ErrorAction SilentlyCo
 $resource = $null
 if ($module_version -eq "latest" -and $null -ne $module_versions) {
     $resource = $module_versions[-1]
-} elseif ($module_version -ne "latest") {
+}
+elseif ($module_version -ne "latest") {
     $resource = $module_versions | Where-Object { $_.Version -eq $module_version }
 }
 
 if (-not $resource) {
     if ($module_version -eq "latest") {
         $msg = "Resource '$resource_name' not found."
-    } else {
+    }
+    else {
         $msg = "Resource '$resource_name' with version '$module_version' not found."
         $msg += " Versions installed: '$($module_versions.Version -join "', '")'."
     }
@@ -428,7 +446,8 @@ if ($resource.Module) {
         ModuleVersion = $resource.Module.Version
     }
     $module_version = $resource.Module.Version.ToString()
-} else {
+}
+else {
     $dsc_args.ModuleName = "PSDesiredStateConfiguration"
 }
 
@@ -436,7 +455,7 @@ if ($resource.Module) {
 # engine updates the metadata propery. We don't care about any errors here
 $get_args = $dsc_args.Clone()
 $get_args.Method = 'Get'
-$get_args.Property = @{Fake = 'Fake'}
+$get_args.Property = @{ Fake = 'Fake' }
 $null = Invoke-SafeDscResource -Parameters $get_args -ErrorAction SilentlyContinue
 
 # Dynamically build the option spec based on the resource_name specified and create the module object

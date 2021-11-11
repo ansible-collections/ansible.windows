@@ -20,7 +20,7 @@ Function Write-DebugLog {
 
     Write-Debug $msg
     $log_path = Get-Variable -Name log_path -Scope Global -ValueOnly -ErrorAction SilentlyContinue
-    if($log_path) {
+    if ($log_path) {
         Add-Content -LiteralPath $log_path -Value $msg
     }
 }
@@ -57,7 +57,8 @@ Function Get-DomainMembershipMatch {
             return $domain_match
         }
         Else {
-            Fail-Json -obj $result -message "Failed to authenticate with domain controller and cannot retrieve the existing domain name: $($_.Exception.Message)"
+            $msg = "Failed to authenticate with domain controller and cannot retrieve the existing domain name: $($_.Exception.Message)"
+            Fail-Json -obj $result -message $msg
         }
     }
     Catch [System.DirectoryServices.ActiveDirectory.ActiveDirectoryObjectNotFoundException] {
@@ -107,19 +108,19 @@ Function Join-Domain {
     $domain_cred = New-Credential $domain_admin_user $domain_admin_password
 
     $add_args = @{
-        ComputerName="."
-        Credential=$domain_cred
-        DomainName=$dns_domain_name
-        Force=$null
+        ComputerName = "."
+        Credential = $domain_cred
+        DomainName = $dns_domain_name
+        Force = $null
     }
 
     Write-DebugLog "adding hostname set arg to Add-Computer args"
-    If($new_hostname) {
+    If ($new_hostname) {
         $add_args["NewName"] = $new_hostname
     }
 
 
-    if($domain_ou_path){
+    if ($domain_ou_path) {
         Write-DebugLog "adding OU destination arg to Add-Computer args"
         $add_args["OUPath"] = $domain_ou_path
     }
@@ -127,7 +128,8 @@ Function Join-Domain {
     Write-DebugLog "calling Add-Computer with args: $argstr"
     try {
         $add_result = Add-Computer @add_args
-    } catch {
+    }
+    catch {
         Fail-Json -obj $result -message "failed to join domain: $($_.Exception.Message)"
     }
 
@@ -145,8 +147,9 @@ Function Set-Workgroup {
 
     Write-DebugLog ("Calling JoinDomainOrWorkgroup with workgroup {0}" -f $workgroup_name)
     try {
-        $swg_result = Get-CimInstance Win32_ComputerSystem | Invoke-CimMethod -MethodName JoinDomainOrWorkgroup -Arguments @{Name="$workgroup_name"}
-    } catch {
+        $swg_result = Get-CimInstance Win32_ComputerSystem | Invoke-CimMethod -MethodName JoinDomainOrWorkgroup -Arguments @{Name = "$workgroup_name" }
+    }
+    catch {
         Fail-Json -obj $result -message "failed to call Win32_ComputerSystem.JoinDomainOrWorkgroup($workgroup_name): $($_.Exception.Message)"
     }
 
@@ -162,13 +165,15 @@ Function Join-Workgroup {
         [string] $domain_admin_password
     )
 
-    If(Test-DomainJoined) { # if we're on a domain, unjoin it (which forces us to join a workgroup)
+    If (Test-DomainJoined) {
+        # if we're on a domain, unjoin it (which forces us to join a workgroup)
         $domain_cred = New-Credential $domain_admin_user $domain_admin_password
 
         # 2012+ call the Workgroup arg WorkgroupName, but seem to accept
         try {
             Remove-Computer -Workgroup $workgroup_name -Credential $domain_cred -Force
-        } catch {
+        }
+        catch {
             Fail-Json -obj $result -message "failed to remove computer from domain: $($_.Exception.Message)"
         }
     }
@@ -187,7 +192,7 @@ $result = @{
 
 $params = Parse-Args -arguments $args -supports_check_mode $true
 
-$state = Get-AnsibleParam $params "state" -validateset @("domain","workgroup") -failifempty $result
+$state = Get-AnsibleParam $params "state" -validateset @("domain", "workgroup") -failifempty $result
 
 $dns_domain_name = Get-AnsibleParam $params "dns_domain_name"
 $hostname = Get-AnsibleParam $params "hostname"
@@ -200,12 +205,13 @@ $log_path = Get-AnsibleParam $params "log_path"
 $_ansible_check_mode = Get-AnsibleParam $params "_ansible_check_mode" -default $false
 
 If ($state -eq "domain") {
-    If(-not $dns_domain_name) {
+    If (-not $dns_domain_name) {
         Fail-Json @{} "dns_domain_name is required when state is 'domain'"
     }
 }
-Else { # workgroup
-    If(-not $workgroup_name) {
+Else {
+    # workgroup
+    If (-not $workgroup_name) {
         Fail-Json @{} "workgroup_name is required when state is 'workgroup'"
     }
 }
@@ -214,19 +220,19 @@ Set-Variable -Name log_path -Scope Global -Value $log_path
 
 Try {
 
-    $hostname_match = If($hostname) { Get-HostnameMatch $hostname } Else { $true }
+    $hostname_match = If ($hostname) { Get-HostnameMatch $hostname } Else { $true }
 
     $result.changed = $result.changed -or (-not $hostname_match)
 
-    Switch($state) {
+    Switch ($state) {
         domain {
             $domain_match = Get-DomainMembershipMatch $dns_domain_name
 
             $result.changed = $result.changed -or (-not $domain_match)
 
-            If($result.changed -and -not $_ansible_check_mode) {
-                If(-not $domain_match) {
-                    If(Test-DomainJoined) {
+            If ($result.changed -and -not $_ansible_check_mode) {
+                If (-not $domain_match) {
+                    If (Test-DomainJoined) {
                         Write-DebugLog "domain doesn't match, and we're already joined to another domain"
                         throw "switching domains is not implemented"
                     }
@@ -239,11 +245,12 @@ Try {
 
                     Write-DebugLog "not a domain member, joining..."
 
-                    If(-not $hostname_match) {
+                    If (-not $hostname_match) {
                         Write-DebugLog "adding hostname change to domain-join args"
                         $join_args.new_hostname = $hostname
                     }
-                    If($null -ne $domain_ou_path){ # If OU Path is not empty
+                    If ($null -ne $domain_ou_path) {
+                        # If OU Path is not empty
                         Write-DebugLog "adding domain_ou_path to domain-join args"
                         $join_args.domain_ou_path = $domain_ou_path
                     }
@@ -253,10 +260,11 @@ Try {
                     # this change requires a reboot
                     $result.reboot_required = $true
                 }
-                ElseIf(-not $hostname_match) { # domain matches but hostname doesn't, just do a rename
+                ElseIf (-not $hostname_match) {
+                    # domain matches but hostname doesn't, just do a rename
                     Write-DebugLog ("domain matches, setting hostname to {0}" -f $hostname)
 
-                    $rename_args = @{NewName=$hostname}
+                    $rename_args = @{NewName = $hostname }
 
                     If (Test-DomainJoined) {
                         $domain_cred = New-Credential $domain_admin_user $domain_admin_password
@@ -267,7 +275,8 @@ Try {
 
                     # this change requires a reboot
                     $result.reboot_required = $true
-                } Else {
+                }
+                Else {
                     # no change is needed
                 }
 
@@ -283,15 +292,15 @@ Try {
 
             $result.changed = $result.changed -or (-not $workgroup_match)
 
-            If(-not $_ansible_check_mode) {
-                If(-not $workgroup_match) {
+            If (-not $_ansible_check_mode) {
+                If (-not $workgroup_match) {
                     Write-DebugLog ("setting workgroup to {0}" -f $workgroup_name)
                     Join-Workgroup -workgroup_name $workgroup_name -domain_admin_user $domain_admin_user -domain_admin_password $domain_admin_password
 
                     # this change requires a reboot
                     $result.reboot_required = $true
                 }
-                If(-not $hostname_match) {
+                If (-not $hostname_match) {
                     Write-DebugLog ("setting hostname to {0}" -f $hostname)
                     Rename-Computer -NewName $hostname
 

@@ -12,7 +12,7 @@ $spec = @{
     }
     required_if = @(
         @("state", "present", @("path", "hardware_id"), $true),
-        @("state", "absent", @(,"name"))
+        @("state", "absent", @(, "name"))
     )
     supports_check_mode = $true
 }
@@ -394,7 +394,8 @@ try {
 
             if (-not $res) {
                 $dev_info = $null
-                if ($err -eq 0x00000103) {  # ERROR_NO_MORE_ITEMS
+                if ($err -eq 0x00000103) {
+                    # ERROR_NO_MORE_ITEMS
                     break
                 }
 
@@ -427,7 +428,8 @@ try {
         }
 
         $module.Result.changed = $true
-    } elseif ($state -eq "present" -and $null -eq $dev_info) {
+    }
+    elseif ($state -eq "present" -and $null -eq $dev_info) {
         # Populate the class guid and display name if the path to an inf file was set.
         $class_id = [Guid]::Empty
         $class_name = $null
@@ -526,13 +528,15 @@ try {
 
             # Now get the name of the newly created device which we return back to Ansible.
             $name = [Ansible.Device.DeviceUtil]::GetDeviceFriendlyName($dev_info_set, $dev_info)
-        } else {
+        }
+        else {
             # Generate random name for check mode output
             $name = "Check mode generated device for $($class_name)"
         }
         $module.Result.changed = $true
     }
-} finally {
+}
+finally {
     $dev_info_set.Dispose()
 }
 

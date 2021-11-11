@@ -30,7 +30,8 @@ if ($state -eq "absent") {
         Remove-MpPreference -ExclusionPath $path
         $result.changed = $true
     }
-} else {
+}
+else {
     if ($path -notin $exclusions) {
         Add-MpPreference -ExclusionPath $path
         $result.changed = $true

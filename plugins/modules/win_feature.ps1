@@ -15,7 +15,7 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
 $name = Get-AnsibleParam -obj $params -name "name" -type "list" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present","absent"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
 
 $include_sub_features = Get-AnsibleParam -obj $params -name "include_sub_features" -type "bool" -default $false
 $include_management_tools = Get-AnsibleParam -obj $params -name "include_management_tools" -type "bool" -default $false
@@ -26,10 +26,12 @@ if (Get-Command -Name Install-WindowsFeature -ErrorAction SilentlyContinue) {
     Set-Alias -Name Install-AnsibleWindowsFeature -Value Install-WindowsFeature
     Set-Alias -Name Uninstall-AnsibleWindowsFeature -Value Uninstall-WindowsFeature
     $install_cmdlet = $true
-} elseif (Get-Command -Name Add-WindowsFeature -ErrorAction SilentlyContinue) {
+}
+elseif (Get-Command -Name Add-WindowsFeature -ErrorAction SilentlyContinue) {
     Set-Alias -Name Install-AnsibleWindowsFeature -Value Add-WindowsFeature
     Set-Alias -Name Uninstall-AnsibleWindowsFeature -Value Remove-WindowsFeature
-} else {
+}
+else {
     Fail-Json -obj $result -message "This version of Windows does not support the cmdlets Install-WindowsFeature or Add-WindowsFeature"
 }
 
@@ -55,10 +57,12 @@ if ($state -eq "present") {
 
     try {
         $action_results = Install-AnsibleWindowsFeature @install_args
-    } catch {
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to install Windows Feature: $($_.Exception.Message)"
     }
-} else {
+}
+else {
     $uninstall_args = @{
         Name = $name
         Restart = $false
@@ -71,7 +75,8 @@ if ($state -eq "present") {
 
     try {
         $action_results = Uninstall-AnsibleWindowsFeature @uninstall_args
-    } catch {
+    }
+    catch {
         Fail-Json -obj $result -message "Failed to uninstall Windows Feature: $($_.Exception.Message)"
     }
 }

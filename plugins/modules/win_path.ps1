@@ -14,7 +14,7 @@ $user_path = "Environment"
 Function Get-IndexOfPathElement ($list, [string]$value) {
     $idx = 0
     $value = $value.Trim('"').Trim('\')
-    ForEach($el in $list) {
+    ForEach ($el in $list) {
         If ([string]$el.Trim('"').Trim('\') -ieq $value) {
             return $idx
         }
@@ -26,11 +26,11 @@ Function Get-IndexOfPathElement ($list, [string]$value) {
 }
 
 # alters list in place, returns true if at least one element was added
-Function Add-Elements ($existing_elements, $elements_to_add) {
+Function Add-Element ($existing_elements, $elements_to_add) {
     $last_idx = -1
     $changed = $false
 
-    ForEach($el in $elements_to_add) {
+    ForEach ($el in $elements_to_add) {
         $idx = Get-IndexOfPathElement $existing_elements $el
 
         # add missing elements at the end
@@ -53,10 +53,10 @@ Function Add-Elements ($existing_elements, $elements_to_add) {
 }
 
 # alters list in place, returns true if at least one element was removed
-Function Remove-Elements ($existing_elements, $elements_to_remove) {
+Function Remove-Element ($existing_elements, $elements_to_remove) {
     $count = $existing_elements.Count
 
-    ForEach($el in $elements_to_remove) {
+    ForEach ($el in $elements_to_remove) {
         $idx = Get-IndexOfPathElement $existing_elements $el
         $result.removed_idx = $idx
         If ($idx -gt -1) {
@@ -94,12 +94,12 @@ Function Set-RawPathVar($path_value, $scope) {
 
 $parsed_args = Parse-Args $args -supports_check_mode $true
 
-$result = @{changed=$false}
+$result = @{changed = $false }
 
 $var_name = Get-AnsibleParam $parsed_args "name" -Default "PATH"
 $elements = Get-AnsibleParam $parsed_args "elements" -FailIfEmpty $result
-$state = Get-AnsibleParam $parsed_args "state" -Default "present" -ValidateSet "present","absent"
-$scope = Get-AnsibleParam $parsed_args "scope" -Default "machine" -ValidateSet "machine","user"
+$state = Get-AnsibleParam $parsed_args "state" -Default "present" -ValidateSet "present", "absent"
+$scope = Get-AnsibleParam $parsed_args "scope" -Default "machine" -ValidateSet "machine", "user"
 
 $check_mode = Get-AnsibleParam $parsed_args "_ansible_check_mode" -Default $false
 
@@ -128,10 +128,10 @@ ForEach ($m in $pathsplit_re.Matches($current_value)) {
 }
 
 If ($state -eq "absent") {
-    $result.changed = Remove-Elements $existing_elements $elements
+    $result.changed = Remove-Element $existing_elements $elements
 }
 ElseIf ($state -eq "present") {
-    $result.changed = Add-Elements $existing_elements $elements
+    $result.changed = Add-Element $existing_elements $elements
 }
 
 # calculate the new path value from the existing elements

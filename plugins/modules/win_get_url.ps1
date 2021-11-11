@@ -13,12 +13,12 @@
 
 $spec = @{
     options = @{
-        url = @{ type="str"; required=$true }
-        dest = @{ type='path'; required=$true }
-        force = @{ type='bool'; default=$true }
-        checksum = @{ type='str' }
-        checksum_algorithm = @{ type='str'; default='sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
-        checksum_url = @{ type='str' }
+        url = @{ type = "str"; required = $true }
+        dest = @{ type = 'path'; required = $true }
+        force = @{ type = 'bool'; default = $true }
+        checksum = @{ type = 'str' }
+        checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
+        checksum_url = @{ type = 'str' }
 
         # Defined for ease of use and backwards compatibility
         url_method = @{
@@ -44,7 +44,7 @@ $spec = @{
         }
     }
     mutually_exclusive = @(
-        ,@('checksum', 'checksum_url')
+        , @('checksum', 'checksum_url')
     )
     supports_check_mode = $true
 }
@@ -62,8 +62,8 @@ $module.Result.url = $url
 
 Function Get-ChecksumFromUri {
     param(
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module,
-        [Parameter(Mandatory=$true)][Uri]$Uri,
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
+        [Parameter(Mandatory = $true)][Uri]$Uri,
         [Uri]$SourceUri
     )
 
@@ -90,7 +90,8 @@ Function Get-ChecksumFromUri {
 
     try {
         Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $script
-    } catch {
+    }
+    catch {
         $Module.FailJson("Error when getting the remote checksum from '$Uri'. $($_.Exception.Message)", $_)
     }
 }
@@ -103,9 +104,9 @@ Function Compare-ModifiedFile {
     newer than the local resource date.
     #>
     param(
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module,
-        [Parameter(Mandatory=$true)][Uri]$Uri,
-        [Parameter(Mandatory=$true)][String]$Dest
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
+        [Parameter(Mandatory = $true)][Uri]$Uri,
+        [Parameter(Mandatory = $true)][String]$Dest
     )
 
     $dest_last_mod = (Get-AnsibleItem -Path $Dest).LastWriteTimeUtc
@@ -113,7 +114,8 @@ Function Compare-ModifiedFile {
     # If the URI is a file we don't need to go through the whole WebRequest
     if ($Uri.IsFile) {
         $src_last_mod = (Get-AnsibleItem -Path $Uri.AbsolutePath).LastWriteTimeUtc
-    } else {
+    }
+    else {
         $web_request = Get-AnsibleWindowsWebRequest -Uri $Uri -Module $Module
         $web_request.Method = switch ($web_request.GetType().Name) {
             FtpWebRequest { [System.Net.WebRequestMethods+Ftp]::GetDateTimestamp }
@@ -123,7 +125,8 @@ Function Compare-ModifiedFile {
 
         try {
             $src_last_mod = Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $script
-        } catch {
+        }
+        catch {
             $Module.FailJson("Error when requesting 'Last-Modified' date from '$Uri'. $($_.Exception.Message)", $_)
         }
     }
@@ -134,7 +137,7 @@ Function Compare-ModifiedFile {
 
 Function Get-Checksum {
     param(
-        [Parameter(Mandatory=$true)][String]$Path,
+        [Parameter(Mandatory = $true)][String]$Path,
         [String]$Algorithm = "sha1"
     )
 
@@ -150,7 +153,8 @@ Function Get-Checksum {
         [System.IO.FileShare]::ReadWrite)
     try {
         $hash = [System.BitConverter]::ToString($sp.ComputeHash($fs)).Replace("-", "").ToLower()
-    } finally {
+    }
+    finally {
         $fs.Dispose()
     }
     return $hash
@@ -158,9 +162,9 @@ Function Get-Checksum {
 
 Function Invoke-DownloadFile {
     param(
-        [Parameter(Mandatory=$true)][Ansible.Basic.AnsibleModule]$Module,
-        [Parameter(Mandatory=$true)][Uri]$Uri,
-        [Parameter(Mandatory=$true)][String]$Dest,
+        [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
+        [Parameter(Mandatory = $true)][Uri]$Uri,
+        [Parameter(Mandatory = $true)][String]$Dest,
         [String]$Checksum,
         [String]$ChecksumAlgorithm
     )
@@ -168,7 +172,11 @@ Function Invoke-DownloadFile {
     # Check $dest parent folder exists before attempting download, which avoids unhelpful generic error message.
     $dest_parent = Split-Path -LiteralPath $Dest
     if (-not (Test-Path -LiteralPath $dest_parent -PathType Container)) {
-        $module.FailJson("The path '$dest_parent' does not exist for destination '$Dest', or is not visible to the current user.  Ensure download destination folder exists (perhaps using win_file state=directory) before win_get_url runs.")
+        $msg = -join @(
+            "The path '$dest_parent' does not exist for destination '$Dest', or is not visible to the current user. "
+            "Ensure download destination folder exists (perhaps using win_file state=directory) before win_get_url runs."
+        )
+        $module.FailJson($msg)
     }
 
     $download_script = {
@@ -180,7 +188,8 @@ Function Invoke-DownloadFile {
         try {
             $Stream.CopyTo($fs)
             $fs.Flush()
-        } finally {
+        }
+        finally {
             $fs.Dispose()
         }
         $tmp_checksum = Get-Checksum -Path $tmp_dest -Algorithm $ChecksumAlgorithm
@@ -214,7 +223,8 @@ Function Invoke-DownloadFile {
 
     try {
         Invoke-AnsibleWindowsWebRequest -Module $Module -Request $web_request -Script $download_script
-    } catch {
+    }
+    catch {
         $Module.FailJson("Error downloading '$Uri' to '$Dest': $($_.Exception.Message)", $_)
     }
 }
@@ -226,15 +236,21 @@ if (Test-Path -LiteralPath $dest -PathType Container) {
     if ($uri.LocalPath -and $uri.LocalPath -ne '/' -and $basename) {
         $url_basename = Split-Path -Path $uri.LocalPath -Leaf
         $dest = Join-Path -Path $dest -ChildPath $url_basename
-    } else {
+    }
+    else {
         $dest = Join-Path -Path $dest -ChildPath $uri.Host
     }
 
     # Ensure we have a string instead of a PS object to avoid serialization issues
     $dest = $dest.ToString()
-} elseif (([System.IO.Path]::GetFileName($dest)) -eq '') {
+}
+elseif (([System.IO.Path]::GetFileName($dest)) -eq '') {
     # We have a trailing path separator
-    $module.FailJson("The destination path '$dest' does not exist, or is not visible to the current user.  Ensure download destination folder exists (perhaps using win_file state=directory) before win_get_url runs.")
+    $msg = -join @(
+        "The destination path '$dest' does not exist, or is not visible to the current user. "
+        "Ensure download destination folder exists (perhaps using win_file state=directory) before win_get_url runs."
+    )
+    $module.FailJson($msg)
 }
 
 $module.Result.dest = $dest
@@ -264,13 +280,14 @@ if ($force -or -not (Test-Path -LiteralPath $dest)) {
     # Note: Invoke-DownloadFile will compare the checksums internally if dest exists
     Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
         -ChecksumAlgorithm $checksum_algorithm
-} else {
+}
+else {
     # force=no, we want to check the last modified dates and only download if they don't match
     $is_modified = Compare-ModifiedFile -Module $module -Uri $url -Dest $dest
     if ($is_modified) {
         Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
             -ChecksumAlgorithm $checksum_algorithm
-   }
+    }
 }
 
 if ((-not $module.Result.ContainsKey("checksum_dest")) -and (Test-Path -LiteralPath $dest)) {

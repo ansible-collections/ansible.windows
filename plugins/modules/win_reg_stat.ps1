@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 $params = Parse-Args -arguments $args -supports_check_mode $true
 
 $path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true -aliases "key"
-$name = Get-AnsibleParam -obj $params -name "name" -type "str" -aliases "entry","value"
+$name = Get-AnsibleParam -obj $params -name "name" -type "str" -aliases "entry", "value"
 
 $result = @{
     changed = $false
@@ -17,7 +17,7 @@ $result = @{
 
 Function Get-PropertyValue {
     param(
-        [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryKey]$Key,
+        [Parameter(Mandatory = $true)][Microsoft.Win32.RegistryKey]$Key,
         [String]$Name
     )
 
@@ -32,7 +32,8 @@ Function Get-PropertyValue {
     if ($Name -eq "") {
         # The key's (Default) will fail on GetValueKind
         $type = [Microsoft.Win32.RegistryValueKind]::String
-    } else {
+    }
+    else {
         $type = $Key.GetValueKind($Name)
     }
 
@@ -42,16 +43,18 @@ Function Get-PropertyValue {
             $formatted_raw_value.Add("0x{0:x2}" -f $byte)
         }
         $raw_value = $formatted_raw_value
-    } elseif ($type -eq [Microsoft.Win32.RegistryValueKind]::DWord) {
+    }
+    elseif ($type -eq [Microsoft.Win32.RegistryValueKind]::DWord) {
         # .NET returns the value as a signed integer, we need to make it unsigned
         $value = [UInt32]("0x{0:x}" -f $value)
         $raw_value = $value
-    } elseif ($type -eq [Microsoft.Win32.RegistryValueKind]::QWord) {
+    }
+    elseif ($type -eq [Microsoft.Win32.RegistryValueKind]::QWord) {
         $value = [UInt64]("0x{0:x}" -f $value)
         $raw_value = $value
     }
 
-    $return_type = switch($type.ToString()) {
+    $return_type = switch ($type.ToString()) {
         "Binary" { "REG_BINARY" }
         "String" { "REG_SZ" }
         "DWord" { "REG_DWORD" }
@@ -75,7 +78,7 @@ if ($path -notmatch "^HK(CC|CR|CU|LM|U):\\") {
 }
 
 $registry_path = (Split-Path -Path $path -NoQualifier).Substring(1)  # removes the hive: and leading \
-$registry_hive = switch(Split-Path -Path $path -Qualifier) {
+$registry_hive = switch (Split-Path -Path $path -Qualifier) {
     "HKCR:" { [Microsoft.Win32.Registry]::ClassesRoot }
     "HKCC:" { [Microsoft.Win32.Registry]::CurrentConfig }
     "HKCU:" { [Microsoft.Win32.Registry]::CurrentUser }
@@ -103,19 +106,23 @@ try {
             $result.exists = $true
             $result.properties = $property_info
             $result.sub_keys = $key.GetSubKeyNames()
-        } else {
+        }
+        else {
             $property_value = Get-PropertyValue -Key $key -Name $name
             if ($null -ne $property_value) {
                 $result.exists = $true
                 $result += $property_value
-            } else {
+            }
+            else {
                 $result.exists = $false
             }
         }
-    } else {
+    }
+    else {
         $result.exists = $false
     }
-} finally {
+}
+finally {
     if ($key) {
         $key.Dispose()
     }

@@ -2,30 +2,25 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscTestsPresent", "")]
 param()
 
-enum Ensure
-{
+enum Ensure {
     Absent
     Present
 }
 
 [DscResource()]
-class xTestClassDsc
-{
+class xTestClassDsc {
     [DscProperty(Key)]
     [Ensure]$Ensure
 
-    [xTestClassDsc] Get()
-    {
+    [xTestClassDsc] Get() {
         return $this
     }
 
-    [bool] Test()
-    {
+    [bool] Test() {
         return $true
     }
 
-    [void] Set()
-    {
+    [void] Set() {
         [System.ServiceProcess.ServiceControllerStatus] $stopped = [System.ServiceProcess.ServiceControllerStatus]::Stopped
         if (-not $stopped) {
             throw "test"

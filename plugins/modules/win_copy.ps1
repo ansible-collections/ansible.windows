@@ -18,10 +18,10 @@ $diff_mode = Get-AnsibleParam -obj $params -name "_ansible_diff" -type "bool" -d
 #   query: win_copy action plugin wants to get the state of remote files to check whether it needs to send them
 #   remote: all copy action is happening remotely (remote_src=True)
 #   single: a single file has been copied, also used with template
-$copy_mode = Get-AnsibleParam -obj $params -name "_copy_mode" -type "str" -default "single" -validateset "explode","query","remote","single"
+$copy_mode = Get-AnsibleParam -obj $params -name "_copy_mode" -type "str" -default "single" -validateset "explode", "query", "remote", "single"
 
 # used in explode, remote and single mode
-$src = Get-AnsibleParam -obj $params -name "src" -type "path" -failifempty ($copy_mode -in @("explode","process","single"))
+$src = Get-AnsibleParam -obj $params -name "src" -type "path" -failifempty ($copy_mode -in @("explode", "process", "single"))
 $dest = Get-AnsibleParam -obj $params -name "dest" -type "path" -failifempty $true
 $backup = Get-AnsibleParam -obj $params -name "backup" -type "bool" -default $false
 
@@ -53,14 +53,16 @@ Function Copy-File($source, $dest) {
 
     if (Test-Path -LiteralPath $dest -PathType Container) {
         Fail-Json -obj $result -message "cannot copy file from '$source' to '$dest': dest is already a folder"
-    } elseif (Test-Path -LiteralPath $dest -PathType Leaf) {
+    }
+    elseif (Test-Path -LiteralPath $dest -PathType Leaf) {
         if ($force) {
             $target_checksum = Get-FileChecksum -path $dest
             if ($source_checksum -ne $target_checksum) {
                 $copy_file = $true
             }
         }
-    } else {
+    }
+    else {
         $copy_file = $true
     }
 
@@ -69,7 +71,8 @@ Function Copy-File($source, $dest) {
         # validate the parent dir is not a file and that it exists
         if (Test-Path -LiteralPath $file_dir -PathType Leaf) {
             Fail-Json -obj $result -message "cannot copy file from '$source' to '$dest': object at dest parent dir is not a folder"
-        } elseif (-not (Test-Path -LiteralPath $file_dir)) {
+        }
+        elseif (-not (Test-Path -LiteralPath $file_dir)) {
             # directory doesn't exist, need to create
             New-Item -Path $file_dir -ItemType Directory -WhatIf:$check_mode | Out-Null
             $diff += "+$file_dir\`n"
@@ -96,7 +99,7 @@ Function Copy-File($source, $dest) {
 
     # ugly but to save us from running the checksum twice, let's return it for
     # the main code to add it to $result
-    return ,@{ diff = $diff; checksum = $source_checksum }
+    return , @{ diff = $diff; checksum = $source_checksum }
 }
 
 Function Copy-Folder($source, $dest) {
@@ -121,7 +124,8 @@ Function Copy-Folder($source, $dest) {
         $dest_child_path = Join-Path -Path $dest -ChildPath $child_item.Name
         if ($child_item.PSIsContainer) {
             $diff += (Copy-Folder -source $child_item.Fullname -dest $dest_child_path)
-        } else {
+        }
+        else {
             $diff += (Copy-File -source $child_item.Fullname -dest $dest_child_path).diff
         }
     }
@@ -187,14 +191,17 @@ Function Expand-Zip($src, $dest) {
         if ($padding_length -eq 0) {
             $is_dir = $false
             $base64_name = $archive_name
-        } elseif ($padding_length -eq 1) {
+        }
+        elseif ($padding_length -eq 1) {
             $is_dir = $true
             if ($archive_name.EndsWith("/") -or $archive_name.EndsWith("`\")) {
                 $base64_name = $archive_name.Substring(0, $archive_name.Length - 1)
-            } else {
+            }
+            else {
                 throw "invalid base64 archive name '$archive_name'"
             }
-        } else {
+        }
+        else {
             throw "invalid base64 length '$archive_name'"
         }
 
@@ -284,9 +291,11 @@ if ($copy_mode -eq "query") {
                     $changed_files += $file
                 }
             }
-        } elseif (Test-Path -LiteralPath $filepath -PathType Container) {
+        }
+        elseif (Test-Path -LiteralPath $filepath -PathType Container) {
             Fail-Json -obj $result -message "cannot copy file to dest '$filepath': object at path is already a directory"
-        } else {
+        }
+        else {
             $changed_files += $file
         }
     }
@@ -301,7 +310,8 @@ if ($copy_mode -eq "query") {
         }
         if (Test-Path -LiteralPath $dirpath -PathType Leaf) {
             Fail-Json -obj $result -message "cannot copy folder to dest '$dirpath': object at path is already a file"
-        } elseif (-not (Test-Path -LiteralPath $dirpath -PathType Container)) {
+        }
+        elseif (-not (Test-Path -LiteralPath $dirpath -PathType Container)) {
             $changed_directories += $directory
         }
     }
@@ -311,7 +321,8 @@ if ($copy_mode -eq "query") {
     $result.files = $changed_files
     $result.directories = $changed_directories
     $result.symlinks = $changed_symlinks
-} elseif ($copy_mode -eq "explode") {
+}
+elseif ($copy_mode -eq "explode") {
     # a single zip file containing the files and directories needs to be
     # expanded this will always result in a change as the calculation is done
     # on the win_copy action plugin and is only run if a change needs to occur
@@ -324,17 +335,20 @@ if ($copy_mode -eq "query") {
     try {
         Add-Type -AssemblyName System.IO.Compression.FileSystem | Out-Null
         Add-Type -AssemblyName System.IO.Compression | Out-Null
-    } catch {
+    }
+    catch {
         $use_legacy = $true
     }
     if ($use_legacy) {
         Expand-ZipLegacy -src $src -dest $dest
-    } else {
+    }
+    else {
         Expand-Zip -src $src -dest $dest
     }
 
     $result.changed = $true
-} elseif ($copy_mode -eq "remote") {
+}
+elseif ($copy_mode -eq "remote") {
     # all copy actions are happening on the remote side (windows host), need
     # too copy source and dest using PS code
     $result.src = $src
@@ -356,17 +370,20 @@ if ($copy_mode -eq "query") {
                 $dest_child_path = Join-Path -Path $dest -ChildPath $child_file.Name
                 if ($child_file.PSIsContainer) {
                     $diff += Copy-Folder -source $child_file.FullName -dest $dest_child_path
-                } else {
+                }
+                else {
                     $diff += (Copy-File -source $child_file.FullName -dest $dest_child_path).diff
                 }
             }
-        } else {
+        }
+        else {
             # copying the folder and it's contents to dest
             $remote_dest = Join-Path -Path $dest -ChildPath (Get-Item -LiteralPath $src -Force).Name
             $result.dest = $remote_dest
             $diff = Copy-Folder -source $src -dest $remote_dest
         }
-    } else {
+    }
+    else {
         # we are just copying a single file to dest
         $result.operation = 'file_copy'
 
@@ -381,10 +398,12 @@ if ($copy_mode -eq "query") {
 
         if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
             Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
-        } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+        }
+        elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
             if ($dest -eq $remote_dest) {
                 Fail-Json -obj $result -message "Destination directory '$parent_dir' does not exist"
-            } else {
+            }
+            else {
                 $null = New-Item -Path $parent_dir -ItemType Directory
             }
         }
@@ -397,13 +416,15 @@ if ($copy_mode -eq "query") {
     # the file might not exist if running in check mode
     if (-not $check_mode -or (Test-Path -LiteralPath $remote_dest -PathType Leaf)) {
         $result.size = Get-FileSize -Path $remote_dest
-    } else {
+    }
+    else {
         $result.size = $null
     }
     if ($diff_mode) {
         $result.diff.prepared = $diff
     }
-} elseif ($copy_mode -eq "single") {
+}
+elseif ($copy_mode -eq "single") {
     # a single file is located in src and we need to copy to dest, this will
     # always result in a change as the calculation is done on the Ansible side
     # before this is run. This should also never run in check mode
@@ -421,10 +442,12 @@ if ($copy_mode -eq "query") {
     # check if the dest parent dirs exist, need to fail if they don't
     if (Test-Path -LiteralPath $parent_dir -PathType Leaf) {
         Fail-Json -obj $result -message "object at destination parent dir '$parent_dir' is currently a file"
-    } elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
+    }
+    elseif (-not (Test-Path -LiteralPath $parent_dir -PathType Container)) {
         if ($dest -eq $remote_dest) {
             Fail-Json -obj $result -message "Destination directory '$parent_dir' does not exist"
-        } else {
+        }
+        else {
             $null = New-Item -Path $parent_dir -ItemType Directory
         }
     }

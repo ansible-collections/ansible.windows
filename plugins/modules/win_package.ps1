@@ -17,7 +17,7 @@ Function Import-PInvokeCode {
         [Object]
         $Module
     )
-        Add-CSharpType -AnsibleModule $Module -References @'
+    Add-CSharpType -AnsibleModule $Module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
@@ -405,10 +405,10 @@ namespace Ansible.WinPackage
 
 Function Add-SystemReadAce {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '',
-        Justification='Failing to get or set the ACE is not critical, SYSTEM could still have access without it.')]
+        Justification = 'Failing to get or set the ACE is not critical, SYSTEM could still have access without it.')]
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Path
     )
@@ -423,7 +423,8 @@ Function Add-SystemReadAce {
     # https://github.com/ansible-collections/ansible.windows/issues/142
     try {
         $acl = Get-Acl -LiteralPath $Path
-    } catch {
+    }
+    catch {
         return
     }
 
@@ -436,11 +437,12 @@ Function Add-SystemReadAce {
 
     try {
         $acl | Set-Acl -LiteralPath $path
-    } catch {}
+    }
+    catch {}
 }
 
 Function Copy-ItemWithCredential {
-    [CmdletBinding(SupportsShouldProcess=$false)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [String]
         $Path,
@@ -476,7 +478,8 @@ Function Copy-ItemWithCredential {
         $impersonated = $true
 
         Copy-Item -LiteralPath $Path -Destination $targetPath
-    } finally {
+    }
+    finally {
         if ($impersonated) {
             [Ansible.AccessToken.TokenUtil]::RevertToSelf()
         }
@@ -489,11 +492,11 @@ Function Copy-ItemWithCredential {
 Function Get-UrlFile {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]
         $Module,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Url
     )
@@ -507,7 +510,8 @@ Function Get-UrlFile {
         try {
             $Stream.CopyTo($fs)
             $fs.Flush()
-        } finally {
+        }
+        finally {
             $fs.Dispose()
         }
 
@@ -518,12 +522,12 @@ Function Get-UrlFile {
 Function Format-PackageStatus {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]
         $Id,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Provider,
 
@@ -583,10 +587,12 @@ Function Get-InstalledStatus {
         }
 
         $status = &$providerInfo."$Provider".Test -Path $Path -Id $Id
-    } else {
+    }
+    else {
         if ($Provider -eq 'auto') {
             $providerList = [String[]]$providerInfo.Keys
-        } else {
+        }
+        else {
             $providerList = @($Provider)
         }
 
@@ -612,7 +618,8 @@ Function Get-InstalledStatus {
                     $versionRaw.FilePrivatePart
                 )
                 $status.Installed = $CreatesVersion -eq $existingVersion
-            } else {
+            }
+            else {
                 throw "creates_path must be a file not a directory when creates_version is set"
             }
         }
@@ -629,11 +636,11 @@ Function Get-InstalledStatus {
 Function Invoke-Executable {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]
         $Module,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $CommandLine,
 
@@ -679,7 +686,8 @@ Function Invoke-Executable {
         }
 
         $module.FailJson("unexpected rc from '$($result.Command)': see rc, stdout, and stderr for more details")
-    } else {
+    }
+    else {
         $module.Result.failed = $false
     }
 
@@ -691,11 +699,11 @@ Function Invoke-Executable {
 Function Invoke-Msiexec {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]
         $Module,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String[]]
         $Actions,
 
@@ -725,8 +733,8 @@ Function Invoke-Msiexec {
         $cmd = [System.Collections.Generic.List[String]]@("$env:SystemRoot\System32\msiexec.exe")
         $cmd.AddRange([System.Collections.Generic.List[String]]$Actions)
         $cmd.AddRange([System.Collections.Generic.List[String]]@(
-            '/L*V', $LogPath, '/qn', '/norestart'
-        ))
+                '/L*V', $LogPath, '/qn', '/norestart'
+            ))
         $commandLine = @($cmd | ConvertTo-EscapedArgument) -join ' '
         if ($Arguments) {
             $commandLine += " $Arguments"
@@ -746,7 +754,8 @@ Function Invoke-Msiexec {
         }
 
         Invoke-Executable @invokeParams
-    } finally {
+    }
+    finally {
         if ($tempFile -and (Test-Path -LiteralPath $tempFile)) {
             Remove-Item -LiteralPath $tempFile -Force
         }
@@ -779,7 +788,8 @@ $providerInfo = [Ordered]@{
                 $msiHandle = [Ansible.WinPackage.MsiHelper]::OpenPackage($Path, $true)
                 try {
                     $Id = [Ansible.WinPackage.MsiHelper]::GetProperty($msiHandle, 'ProductCode')
-                } finally {
+                }
+                finally {
                     $msiHandle.Dispose()
                 }
             }
@@ -829,7 +839,8 @@ $providerInfo = [Ordered]@{
 
                 # $Module.Tmpdir only gives rights to the current user but msiexec (as SYSTEM) needs access.
                 Add-SystemReadAce -Path $Path
-            } else {
+            }
+            else {
                 $actions = @('/x', $Id)
             }
 
@@ -875,10 +886,12 @@ $providerInfo = [Ordered]@{
                     $manifestStream = New-Object -TypeName System.IO.StreamReader -ArgumentList $manifestEntry.Open()
                     try {
                         $manifest = [xml]$manifestStream.ReadToEnd()
-                    } finally {
+                    }
+                    finally {
                         $manifestStream.Dispose()
                     }
-                } finally {
+                }
+                finally {
                     $archive.Dispose()
                 }
 
@@ -903,7 +916,8 @@ $providerInfo = [Ordered]@{
                         [Ansible.WinPackage.MsixHelper]::GetPackageFullName($name, $version, $publisher, $architecture,
                             $resourceId)
                     }
-                } else {
+                }
+                else {
                     # https://docs.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity
                     $name = $manifest.Package.Identity.Name
                     $version = $manifest.Package.Identity.Version
@@ -919,11 +933,12 @@ $providerInfo = [Ordered]@{
                         $resourceId = $manifest.$identityParent.Identity.ResourceId
                     }
 
-                    $Ids = @(,[Ansible.WinPackage.MsixHelper]::GetPackageFullName($name, $version, $publisher,
-                        $architecture, $resourceId)
+                    $Ids = @(, [Ansible.WinPackage.MsixHelper]::GetPackageFullName($name, $version, $publisher,
+                            $architecture, $resourceId)
                     )
                 }
-            } else {
+            }
+            else {
                 $package = Get-AppxPackage -Name $Id -ErrorAction SilentlyContinue
                 $Ids = @($Id)
             }
@@ -967,10 +982,12 @@ $providerInfo = [Ordered]@{
                     # Add-AppxPackage does not support a -LiteralPath parameter and it chokes on wildcard characters.
                     # We need to escape those characters when calling the cmdlet.
                     Add-AppxPackage -Path ([WildcardPattern]::Escape($Path))
-                } else {
+                }
+                else {
                     Remove-AppxPackage -Package $Id
                 }
-            } catch {
+            }
+            catch {
                 # Replicate the same return values as the other providers.
                 $module.Result.rc = $_.Exception.HResult
                 $module.Result.stdout = ""
@@ -978,7 +995,8 @@ $providerInfo = [Ordered]@{
 
                 $msg = "unexpected status from $($_.InvocationInfo.InvocationName): see rc and stderr for more details"
                 $module.FailJson($msg, $_)
-            } finally {
+            }
+            finally {
                 $ProgressPreference = $originalProgress
             }
 
@@ -1024,10 +1042,12 @@ $providerInfo = [Ordered]@{
                     # which we don't care about.
                     $Id = [Ansible.WinPackage.MsiHelper]::GetSummaryPropertyString($summaryInfo,
                         [Ansible.WinPackage.MsiHelper]::SUMMARY_PID_REVNUMBER).Substring(0, 38)
-                } finally {
+                }
+                finally {
                     $summaryInfo.Dispose()
                 }
-            } else {
+            }
+            else {
                 foreach ($patch in ([Ansible.WinPackage.MsiHelper]::EnumPatches($null, $null, 'All', 'All'))) {
                     if ($patch.PatchCode -eq $Id) {
                         # We append "{guid}:{context}" so the check below checks the proper context, the context
@@ -1040,41 +1060,45 @@ $providerInfo = [Ordered]@{
             # Filter the product list even further to only ones that are applied and not obsolete.
             $skipCodes = [System.Collections.Generic.List[System.String]]@()
             $productCodes = @(@(foreach ($product in $productCodes) {
-                if ($product.Length -eq 38) {  # Guid length with braces is 38
-                    $contextList = @('UserManaged', 'UserUnmanaged', 'Machine')
-                } else {
-                    # We already know the context and was appended to the product guid with ';context'
-                    $productInfo = $product.Split(':', 2)
-                    $product = $productInfo[0]
-                    $contextList = @($productInfo[1])
-                }
-
-                foreach ($context in $contextList) {
-                    try {
-                        # GetPatchInfo('State') returns a string that is a number of an enum value.
-                        $state = [Ansible.WinPackage.PatchState][UInt32]([Ansible.WinPackage.MsiHelper]::GetPatchInfo(
-                            $Id, $product, $null, $context, 'State'
-                        ))
-                    } catch [System.ComponentModel.Win32Exception] {
-                        if ($_.Exception.NativeErrorCode -in @(0x00000645, 0x0000066F)) {
-                            # ERROR_UNKNOWN_PRODUCT can be raised if the product is not installed in the context
-                            # specified, just try the next one.
-                            # ERROR_UNKNOWN_PATCH can be raised if the patch is not installed but the product is.
-                            continue
+                        if ($product.Length -eq 38) {
+                            # Guid length with braces is 38
+                            $contextList = @('UserManaged', 'UserUnmanaged', 'Machine')
                         }
-                        throw
-                    }
+                        else {
+                            # We already know the context and was appended to the product guid with ';context'
+                            $productInfo = $product.Split(':', 2)
+                            $product = $productInfo[0]
+                            $contextList = @($productInfo[1])
+                        }
 
-                    if ($state -eq [Ansible.WinPackage.PatchState]::Applied) {
-                        # The patch is applied to the product code, output the code for the outer list to capture.
-                        $product
-                    } elseif ($state.ToString() -in @('Obsoleted', 'Superseded')) {
-                        # If the patch is obsoleted or suprseded we cannot install or remove but consider it equal to
-                        # state=absent and present so we skip the set step.
-                        $skipCodes.Add($product)
-                    }
-                }
-            }) | Select-Object -Unique)
+                        foreach ($context in $contextList) {
+                            try {
+                                # GetPatchInfo('State') returns a string that is a number of an enum value.
+                                $state = [Ansible.WinPackage.PatchState][UInt32]([Ansible.WinPackage.MsiHelper]::GetPatchInfo(
+                                        $Id, $product, $null, $context, 'State'
+                                    ))
+                            }
+                            catch [System.ComponentModel.Win32Exception] {
+                                if ($_.Exception.NativeErrorCode -in @(0x00000645, 0x0000066F)) {
+                                    # ERROR_UNKNOWN_PRODUCT can be raised if the product is not installed in the context
+                                    # specified, just try the next one.
+                                    # ERROR_UNKNOWN_PATCH can be raised if the patch is not installed but the product is.
+                                    continue
+                                }
+                                throw
+                            }
+
+                            if ($state -eq [Ansible.WinPackage.PatchState]::Applied) {
+                                # The patch is applied to the product code, output the code for the outer list to capture.
+                                $product
+                            }
+                            elseif ($state.ToString() -in @('Obsoleted', 'Superseded')) {
+                                # If the patch is obsoleted or suprseded we cannot install or remove but consider it equal to
+                                # state=absent and present so we skip the set step.
+                                $skipCodes.Add($product)
+                            }
+                        }
+                    }) | Select-Object -Unique)
 
             @{
                 Provider = 'msp'
@@ -1124,30 +1148,32 @@ $providerInfo = [Ordered]@{
             $tempLink = $null
             try {
                 $actions = @(if ($state -eq 'present') {
-                    # $Module.Tmpdir only gives rights to the current user but msiexec (as SYSTEM) needs access.
-                    Add-SystemReadAce -Path $Path
+                        # $Module.Tmpdir only gives rights to the current user but msiexec (as SYSTEM) needs access.
+                        Add-SystemReadAce -Path $Path
 
-                    # MsiApplyPatchW fails if the path contains a ';', we need to use a temporary symlink instead.
-                    # https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiapplypatchw
-                    if ($Path.Contains(';')) {
-                        $tempLink = Join-Path -Path $env:TEMP -ChildPath "win_package-$([System.IO.Path]::GetRandomFileName()).msp"
-                        $res = Start-AnsibleWindowsProcess -FilePath cmd.exe -ArgumentList @('/c', 'mklink', $tempLink, $Path)
-                        if ($res.ExitCode -ne 0) {
-                            $Module.Result.rc = $res.ExitCode
-                            $Module.Result.stdout = $res.Stdout
-                            $Module.Result.stderr = $res.Stderr
+                        # MsiApplyPatchW fails if the path contains a ';', we need to use a temporary symlink instead.
+                        # https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiapplypatchw
+                        if ($Path.Contains(';')) {
+                            $tempLink = Join-Path -Path $env:TEMP -ChildPath "win_package-$([System.IO.Path]::GetRandomFileName()).msp"
+                            $res = Start-AnsibleWindowsProcess -FilePath cmd.exe -ArgumentList @('/c', 'mklink', $tempLink, $Path)
+                            if ($res.ExitCode -ne 0) {
+                                $Module.Result.rc = $res.ExitCode
+                                $Module.Result.stdout = $res.Stdout
+                                $Module.Result.stderr = $res.Stderr
 
-                            $Module.FailJson("Failed to create temporary symlink '$tempLink' -> '$Path' for msiexec patch install as path contains semicolon")
+                                $msg = "Failed to create temporary symlink '$tempLink' -> '$Path' for msiexec patch install as path contains semicolon"
+                                $Module.FailJson($msg)
+                            }
+                            $Path = $tempLink
                         }
-                        $Path = $tempLink
-                    }
 
-                    ,@('/update', $Path)
-                } else {
-                    foreach ($code in $ProductCodes) {
-                        ,@('/uninstall', $Id, '/package', $code)
+                        , @('/update', $Path)
                     }
-                })
+                    else {
+                        foreach ($code in $ProductCodes) {
+                            , @('/uninstall', $Id, '/package', $code)
+                        }
+                    })
 
                 $invokeParams = @{
                     Arguments = $Arguments
@@ -1160,7 +1186,8 @@ $providerInfo = [Ordered]@{
                 foreach ($action in $actions) {
                     Invoke-Msiexec -Actions $action @invokeParams
                 }
-            } finally {
+            }
+            finally {
                 if ($tempLink -and (Test-Path -LiteralPath $tempLink)) {
                     Remove-Item -LiteralPath $tempLink -Force
                 }
@@ -1185,8 +1212,10 @@ $providerInfo = [Ordered]@{
             }
 
             if ($Id) {
-                :regLoop foreach ($hive in @("HKLM", "HKCU")) {  # Search machine wide and user specific.
-                    foreach ($key in @("SOFTWARE", "SOFTWARE\Wow6432Node")) {  # Search the 32 and 64-bit locations.
+                :regLoop foreach ($hive in @("HKLM", "HKCU")) {
+                    # Search machine wide and user specific.
+                    foreach ($key in @("SOFTWARE", "SOFTWARE\Wow6432Node")) {
+                        # Search the 32 and 64-bit locations.
                         $regPath = "$($hive):\$key\Microsoft\Windows\CurrentVersion\Uninstall\$Id"
                         if (Test-Path -LiteralPath $regPath) {
                             $status.Installed = $true
@@ -1236,14 +1265,17 @@ $providerInfo = [Ordered]@{
 
             if ($Path) {
                 $invokeParams.CommandLine = ConvertTo-EscapedArgument -InputObject $Path
-            } else {
+            }
+            else {
                 $registryProperties = Get-ItemProperty -LiteralPath $RegistryPath
 
                 if ('QuietUninstallString' -in $registryProperties.PSObject.Properties.Name) {
                     $command = $registryProperties.QuietUninstallString
-                } elseif ('UninstallString' -in $registryProperties.PSObject.Properties.Name) {
+                }
+                elseif ('UninstallString' -in $registryProperties.PSObject.Properties.Name) {
                     $command = $registryProperties.UninstallString
-                } else {
+                }
+                else {
                     $module.FailJson("Failed to find registry uninstall string at registry path '$RegistryPath'")
                 }
 
@@ -1264,10 +1296,12 @@ $providerInfo = [Ordered]@{
                             $exe = $executable.ToString()
                             if (Test-Path -LiteralPath $exe -PathType Leaf) {
                                 $rawArguments.Add($exe)
-                            } else {
+                            }
+                            else {
                                 $null = $executable.Append(" ")  # The arg had a space and we need to preserve that.
                             }
-                        } else {
+                        }
+                        else {
                             $rawArguments.Add($cmd)
                         }
                     }
@@ -1295,7 +1329,7 @@ $spec = @{
     options = @{
         arguments = @{ type = "raw" }
         expected_return_code = @{ type = "list"; elements = "int"; default = @(0, 3010) }
-        path = @{ type = "str"}
+        path = @{ type = "str" }
         chdir = @{ type = "path" }
         product_id = @{
             type = "str"
@@ -1308,21 +1342,21 @@ $spec = @{
             type = "str"
             default = "present"
             choices = "absent", "present"
-            aliases = @(,"ensure")
+            aliases = @(, "ensure")
             deprecated_aliases = @(
                 @{ name = "ensure"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
             )
         }
         username = @{
             type = "str"
-            aliases = @(,"user_name")
+            aliases = @(, "user_name")
             removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
             removed_from_collection = 'ansible.windows'
         }
         password = @{
             type = "str"
             no_log = $true
-            aliases = @(,"user_password")
+            aliases = @(, "user_password")
             removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
             removed_from_collection = 'ansible.windows'
         }
@@ -1340,7 +1374,7 @@ $spec = @{
         @("state", "present", @("path")),
         @("state", "absent", @("path", "product_id"), $true)
     )
-    required_together = @(,@("username", "password"))
+    required_together = @(, @("username", "password"))
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
@@ -1381,7 +1415,8 @@ Import-PInvokeCode -Module $module
 $pathType = $null
 if ($path -and $path.StartsWith('http', [System.StringComparison]::InvariantCultureIgnoreCase)) {
     $pathType = 'url'
-} elseif ($path -and ($path.StartsWith('\\') -or $path.StartsWith('//') -and $username)) {
+}
+elseif ($path -and ($path.StartsWith('\\') -or $path.StartsWith('//') -and $username)) {
     $pathType = 'unc'
 }
 
@@ -1403,7 +1438,8 @@ try {
         }
         $path = $tempFile
         $getParams.Path = $path
-    } elseif ($path -and -not $pathType) {
+    }
+    elseif ($path -and -not $pathType) {
         if (-not (Test-Path -LiteralPath $path)) {
             $module.FailJson("the file at the path '$path' cannot be reached")
         }
@@ -1439,7 +1475,8 @@ try {
         &$providerInfo."$($packageStatus.Provider)".Set @setParams
     }
     $module.Result.changed = $changed
-} finally {
+}
+finally {
     if ($tempFile -and (Test-Path -LiteralPath $tempFile)) {
         Remove-Item -LiteralPath $tempFile -Force
     }
