@@ -34,7 +34,8 @@ foreach ($line in $secedit_ini) {
         foreach ($user in $existing_users) {
             if ($user.StartsWith("*S")) {
                 $result.users += Get-Username -sid $user.substring(1)
-            } else {
+            }
+            else {
                 $result.users += $user
             }
         }

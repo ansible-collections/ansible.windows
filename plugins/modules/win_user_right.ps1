@@ -267,7 +267,7 @@ namespace Ansible
 
 Function ConvertFrom-SecurityIdentifier {
     param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $InputObject
     )
@@ -277,7 +277,8 @@ Function ConvertFrom-SecurityIdentifier {
 
         try {
             $sid.Translate([System.Security.Principal.NTAccount]).Value
-        } catch [System.Security.Principal.IdentityNotMappedException] {
+        }
+        catch [System.Security.Principal.IdentityNotMappedException] {
             # The SID isn't valid, just return the raw SID back
             $sid.Value
         }
@@ -286,9 +287,9 @@ Function ConvertFrom-SecurityIdentifier {
 
 Function ConvertTo-SecurityIdentifier {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
-        Justification="We don't care if converting to a SID fails, just that it failed or not")]
+        Justification = "We don't care if converting to a SID fails, just that it failed or not")]
     param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $InputObject
     )
@@ -298,7 +299,8 @@ Function ConvertTo-SecurityIdentifier {
         try {
             $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $InputObject
             return $sid
-        } catch {}
+        }
+        catch {}
 
         # In the Netlogon form (DOMAIN\user). Check if the domain part is . and convert it to the current hostname.
         # Otherwise just treat the value as the full username and let Windows parse it.
@@ -306,7 +308,8 @@ Function ConvertTo-SecurityIdentifier {
             $nameSplit = $InputObject -split '\\', 2
             if ($nameSplit[0] -eq '.') {
                 $domain = $env:COMPUTERNAME
-            } else {
+            }
+            else {
                 $domain = $nameSplit[0]
             }
             $account = $nameSplit[1]
@@ -322,20 +325,23 @@ Function ConvertTo-SecurityIdentifier {
                     $domain = $null
                 }
             }
-        } else {
+        }
+        else {
             $domain = $null
             $account = $InputObject
         }
 
         if ($domain) {
             $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $domain, $account
-        } else {
+        }
+        else {
             $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $account
         }
 
         try {
             $account.Translate([System.Security.Principal.SecurityIdentifier])
-        } catch [System.Security.Principal.IdentityNotMappedException] {
+        }
+        catch [System.Security.Principal.IdentityNotMappedException] {
             $module.FailJson("Failed to translate the account '$InputObject' to a SID", $_)
         }
     }
@@ -347,9 +353,11 @@ $userSids = [String[]]@($users | ConvertTo-SecurityIdentifier | ForEach-Object {
 
 try {
     $existingSids = $lsaHelper.EnumerateAccountsWithUserRight($name)
-} catch [ArgumentException] {
+}
+catch [ArgumentException] {
     $module.FailJson("the specified right $name is not a valid right", $_)
-} catch {
+}
+catch {
     $module.FailJson("failed to enumerate eixsting accounts with the right $($name): $($_.Exception.Message)", $_)
 }
 
@@ -362,10 +370,12 @@ $toRemove = [String[]]@()
 if ($action -eq 'add') {
     $toAdd = [Linq.Enumerable]::Except($userSids, $existingSids)
 
-} elseif ($action -eq 'remove') {
+}
+elseif ($action -eq 'remove') {
     $toRemove = [Linq.Enumerable]::Intersect($userSids, $existingSids)
 
-} else {
+}
+else {
     $toAdd = [Linq.Enumerable]::Except($userSids, $existingSids)
     $toRemove = [Linq.Enumerable]::Except($existingSids, $userSids)
 }
@@ -377,7 +387,8 @@ foreach ($sid in $toAdd) {
     if (-not $module.CheckMode) {
         try {
             $lsaHelper.AddPrivilege($sid, $name)
-        } catch [System.ComponentModel.Win32Exception] {
+        }
+        catch [System.ComponentModel.Win32Exception] {
             $msg = "Failed to add account $sidName to right $name"
             $module.FailJson("$($msg): $($_.Exception.Message)", $_)
         }
@@ -394,7 +405,8 @@ foreach ($sid in $toRemove) {
     if (-not $module.CheckMode) {
         try {
             $lsaHelper.RemovePrivilege($sid, $name)
-        } catch [System.ComponentModel.Win32Exception] {
+        }
+        catch [System.ComponentModel.Win32Exception] {
             $msg = "Failed to remove account $sidName from right $name"
             $module.FailJson("$($msg): $($_.Exception.Message)", $_)
         }

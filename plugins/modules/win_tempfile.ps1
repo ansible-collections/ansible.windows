@@ -21,11 +21,13 @@ Function New-TempFile {
             # Makes sure we get the full absolute path of the created temp file and not a relative or DOS 8.3 dir
             if (-not $checkmode) {
                 $temppath = $file.FullName
-            } else {
+            }
+            else {
                 # Just rely on GetFulLpath for check mode
                 $temppath = [System.IO.Path]::GetFullPath($temppath)
             }
-        } Catch {
+        }
+        Catch {
             $temppath = $null
             $curerror = $_
         }
@@ -41,10 +43,10 @@ Function New-TempFile {
 
 $spec = @{
     options = @{
-        path = @{ type='path'; default='%TEMP%'; aliases=@( 'dest' ) }
-        state = @{ type='str'; default='file'; choices=@( 'directory', 'file') }
-        prefix = @{ type='str'; default='ansible.' }
-        suffix = @{ type='str' }
+        path = @{ type = 'path'; default = '%TEMP%'; aliases = @( 'dest' ) }
+        state = @{ type = 'str'; default = 'file'; choices = @( 'directory', 'file') }
+        prefix = @{ type = 'str'; default = 'ansible.' }
+        suffix = @{ type = 'str' }
     }
     supports_check_mode = $true
 }

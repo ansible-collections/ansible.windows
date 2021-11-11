@@ -9,25 +9,25 @@ Set-StrictMode -Version 2
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
-Set-Variable -Visibility Public -Option ReadOnly,AllScope,Constant -Name "AddressFamilies" -Value @{
+Set-Variable -Visibility Public -Option ReadOnly, AllScope, Constant -Name "AddressFamilies" -Value @{
     [System.Net.Sockets.AddressFamily]::InterNetworkV6 = 'IPv6'
     [System.Net.Sockets.AddressFamily]::InterNetwork = 'IPv4'
 }
 
-$result = @{changed=$false}
+$result = @{ changed = $false }
 
 $params = Parse-Args -arguments $args -supports_check_mode $true
-Set-Variable -Visibility Public -Option ReadOnly,AllScope,Constant -Name "log_path" -Value (
+Set-Variable -Visibility Public -Option ReadOnly, AllScope, Constant -Name "log_path" -Value (
     Get-AnsibleParam $params "log_path"
 )
 $adapter_names = Get-AnsibleParam $params "adapter_names" -Default "*"
-$dns_servers = Get-AnsibleParam $params "dns_servers" -aliases "ipv4_addresses","ip_addresses","addresses" -FailIfEmpty $result
+$dns_servers = Get-AnsibleParam $params "dns_servers" -aliases "ipv4_addresses", "ip_addresses", "addresses" -FailIfEmpty $result
 $check_mode = Get-AnsibleParam $params "_ansible_check_mode" -Default $false
 
 
 Function Write-DebugLog {
     Param(
-    [string]$msg
+        [string]$msg
     )
 
     $DebugPreference = "Continue"
@@ -36,7 +36,7 @@ Function Write-DebugLog {
     $msg = "$date_str $msg"
 
     Write-Debug $msg
-    if($log_path) {
+    if ($log_path) {
         Add-Content -LiteralPath $log_path -Value $msg
     }
 }
@@ -51,11 +51,11 @@ Function Get-OptionalProperty {
     #>
     [CmdletBinding()]
     param(
-        [Parameter(ValueFromPipeline=$true)]
+        [Parameter(ValueFromPipeline = $true)]
         [Object]
         $InputObject ,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]
         $Name ,
@@ -77,7 +77,8 @@ Function Get-OptionalProperty {
 
         $value = if ($InputObject.PSObject.Properties.Name -contains $Name) {
             $InputObject.$Name
-        } else {
+        }
+        else {
             $Default
         }
 
@@ -92,14 +93,15 @@ Function Get-OptionalProperty {
 Function Get-NetAdapterInfo {
     [CmdletBinding()]
     Param (
-        [Parameter(ValueFromPipeline=$true)]
+        [Parameter(ValueFromPipeline = $true)]
         [String]$Name = "*"
     )
 
     Process {
         if (Get-Command -Name Get-NetAdapter -ErrorAction SilentlyContinue) {
             $adapter_info = Get-NetAdapter @PSBoundParameters | Select-Object -Property Name, InterfaceIndex
-        } else {
+        }
+        else {
             # Older hosts 2008/2008R2 don't have Get-NetAdapter, fallback to deprecated Win32_NetworkAdapter
             $cim_params = @{
                 ClassName = "Win32_NetworkAdapter"
@@ -108,13 +110,14 @@ Function Get-NetAdapterInfo {
 
             if ($Name.Contains("*")) {
                 $cim_params.Filter = "NetConnectionID LIKE '$($Name.Replace("*", "%"))'"
-            } else {
+            }
+            else {
                 $cim_params.Filter = "NetConnectionID = '$Name'"
             }
 
             $adapter_info = Get-CimInstance @cim_params | Select-Object -Property @(
-                @{Name="Name"; Expression={$_.NetConnectionID}},
-                @{Name="InterfaceIndex"; Expression={$_.InterfaceIndex}}
+                @{ Name = "Name"; Expression = { $_.NetConnectionID } },
+                @{ Name = "InterfaceIndex"; Expression = { $_.InterfaceIndex } }
             )
         }
 
@@ -125,11 +128,15 @@ Function Get-NetAdapterInfo {
                 Filter = "InterfaceIndex = $($_.InterfaceIndex)"
                 Property = "DNSServerSearchOrder", "IPEnabled", "SettingID"
             }
-            $adapter_config = Get-CimInstance @cim_params |
-                Select-Object -Property DNSServerSearchOrder, IPEnabled, @{
+            $select_props = @(
+                "DNSServerSearchOrder",
+                "IPEnabled",
+                @{
                     Name = 'InterfaceGuid'
                     Expression = { $_.SettingID }
                 }
+            )
+            $adapter_config = Get-CimInstance @cim_params | Select-Object -Property $select_props
 
             if ($adapter_config.IPEnabled -eq $false) {
                 return
@@ -156,7 +163,7 @@ Function Get-NetAdapterInfo {
 Function Get-RegistryNameServerInfo {
     [CmdletBinding()]
     Param (
-        [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
         [System.Guid]
         $InterfaceGuid
     )
@@ -200,15 +207,18 @@ Function Get-RegistryNameServerInfo {
                     # IPv6 are stored as 16 bytes REG_BINARY values. If multiple IPv6 are configured
                     # those ips are contiguous
                     $famInfo.EffectiveNameServers = $famInfo.DhcpAssignedNameServers =
-                    @(if ($ns -is [System.Object[]]) {
-                        for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
-                            [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
-                            (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
+                    @(
+                        if ($ns -is [System.Object[]]) {
+                            for ($i = 0; $i -lt $ns.Length; $i += $items.BinaryLength) {
+                                [byte[]]$ipBytes = $ns[$i..($i + $items.BinaryLength - 1)]
+                                (New-Object -TypeName System.Net.IPAddress -ArgumentList @(, $ipBytes)).IPAddressToString
+                            }
                         }
-                    # IPv4 are stored as space delimited string properties in the registry
-                    } else {
-                        $ns.Split(' ')
-                    })
+                        else {
+                            # IPv4 are stored as space delimited string properties in the registry
+                            $ns.Split(' ')
+                        }
+                    )
                 }
 
                 if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
@@ -227,7 +237,7 @@ Function Get-RegistryNameServerInfo {
 Function Set-DnsClientServerAddressLegacy {
     Param(
         [int]$InterfaceIndex,
-        [Array]$ServerAddresses=@(),
+        [Array]$ServerAddresses = @(),
         [switch]$ResetServerAddresses
     )
     $cim_params = @{
@@ -237,7 +247,7 @@ Function Set-DnsClientServerAddressLegacy {
     }
     $adapter_config = Get-CimInstance @cim_params
 
-    If($ResetServerAddresses) {
+    If ($ResetServerAddresses) {
         $arguments = @{}
     }
     Else {
@@ -245,12 +255,12 @@ Function Set-DnsClientServerAddressLegacy {
     }
     $res = Invoke-CimMethod -InputObject $adapter_config -MethodName SetDNSServerSearchOrder -Arguments $arguments
 
-    If($res.ReturnValue -ne 0) {
+    If ($res.ReturnValue -ne 0) {
         throw "Set-DnsClientServerAddressLegacy: Error calling SetDNSServerSearchOrder, code $($res.ReturnValue))"
     }
 }
 
-If(-not $(Get-Command Set-DnsClientServerAddress -ErrorAction SilentlyContinue)) {
+If (-not $(Get-Command Set-DnsClientServerAddress -ErrorAction SilentlyContinue)) {
     New-Alias Set-DnsClientServerAddress Set-DnsClientServerAddressLegacy
 }
 
@@ -263,11 +273,11 @@ Function Test-DnsClientMatch {
 
     foreach ($proto in $AdapterInfo.RegInfo) {
         $desired_dns = if ($dns_servers) {
-            $dns_servers | Where-Object -FilterScript {$_.AddressFamily -eq $proto.AddressFamily}
+            $dns_servers | Where-Object -FilterScript { $_.AddressFamily -eq $proto.AddressFamily }
         }
 
         $current_dns = [System.Net.IPAddress[]]($proto.EffectiveNameServers)
-        Write-DebugLog ("Current DNS settings for '{1}' Address Family: {0}" -f ([string[]]$current_dns -join ", "),$AddressFamilies[$proto.AddressFamily])
+        Write-DebugLog ("Current DNS settings for '{1}' Address Family: {0}" -f ([string[]]$current_dns -join ", "), $AddressFamilies[$proto.AddressFamily])
 
         if ($proto.NameServerBadFormat) {
             Write-DebugLog "Malicious DNS server format detected. Will set DNS desired state."
@@ -277,7 +287,8 @@ Function Test-DnsClientMatch {
 
         if ($proto.UsingDhcp -and -not $desired_dns) {
             Write-DebugLog "DHCP DNS Servers are in use and no DNS servers were requested (DHCP is desired)."
-        } else {
+        }
+        else {
             if ($desired_dns -and -not $current_dns) {
                 Write-DebugLog "There are currently no DNS servers in use, but they should be present."
                 return $false
@@ -290,7 +301,7 @@ Function Test-DnsClientMatch {
 
             if ($null -ne $current_dns -and
                 $null -ne $desired_dns -and
-                (Compare-Object -ReferenceObject $current_dns -DifferenceObject $desired_dns -SyncWindow 0)) {
+            (Compare-Object -ReferenceObject $current_dns -DifferenceObject $desired_dns -SyncWindow 0)) {
                 Write-DebugLog "Static DNS servers are not in the desired state (incorrect or in the wrong order)."
                 return $false
             }
@@ -310,8 +321,7 @@ Function Assert-IPAddress {
     return [System.Net.IPAddress]::TryParse($address, [ref] $addrout)
 }
 
-Function Set-DnsClientAddresses
-{
+Function Set-DnsClientAddress {
     Param(
         [PSCustomObject]$AdapterInfo,
         [System.Net.IPAddress[]] $dns_servers
@@ -321,22 +331,25 @@ Function Set-DnsClientAddresses
 
     If ($dns_servers) {
         Set-DnsClientServerAddress -InterfaceIndex $AdapterInfo.InterfaceIndex -ServerAddresses $dns_servers
-    } Else {
+    }
+    Else {
         Set-DnsClientServerAddress -InterfaceIndex $AdapterInfo.InterfaceIndex -ResetServerAddress
     }
 }
 
-if($dns_servers -is [string]) {
-    if($dns_servers.Length -gt 0) {
+if ($dns_servers -is [string]) {
+    if ($dns_servers.Length -gt 0) {
         $dns_servers = @($dns_servers)
-    } else {
+    }
+    else {
         $dns_servers = @()
     }
 }
 # Using object equals here, to check for exact match (without implicit type conversion)
-if([System.Object]::Equals($adapter_names, "*")) {
+if ([System.Object]::Equals($adapter_names, "*")) {
     $adapters = Get-NetAdapterInfo
-} else {
+}
+else {
     $adapters = $adapter_names | Get-NetAdapterInfo
 }
 
@@ -344,18 +357,19 @@ Try {
 
     Write-DebugLog ("Validating IP addresses ({0})" -f ($dns_servers -join ", "))
     $invalid_addresses = @($dns_servers | Where-Object { -not (Assert-IPAddress $_) })
-    if($invalid_addresses.Count -gt 0) {
+    if ($invalid_addresses.Count -gt 0) {
         throw "Invalid IP address(es): ({0})" -f ($invalid_addresses -join ", ")
     }
 
-    foreach($adapter_info in $adapters) {
+    foreach ($adapter_info in $adapters) {
         Write-DebugLog ("Validating adapter name {0}" -f $adapter_info.Name)
 
-        if(-not (Test-DnsClientMatch $adapter_info $dns_servers)) {
+        if (-not (Test-DnsClientMatch $adapter_info $dns_servers)) {
             $result.changed = $true
-            if(-not $check_mode) {
-                Set-DnsClientAddresses $adapter_info $dns_servers
-            } else {
+            if (-not $check_mode) {
+                Set-DnsClientAddress $adapter_info $dns_servers
+            }
+            else {
                 Write-DebugLog "Check mode, skipping"
             }
         }

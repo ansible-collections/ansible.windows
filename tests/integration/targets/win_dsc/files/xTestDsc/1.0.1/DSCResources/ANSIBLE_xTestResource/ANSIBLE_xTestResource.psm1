@@ -6,7 +6,7 @@ param()
 
 Function ConvertFrom-CimInstance {
     param(
-        [Parameter(Mandatory=$true)][CimInstance]$Instance
+        [Parameter(Mandatory = $true)][CimInstance]$Instance
     )
     $hashtable = @{
         _cim_instance = $Instance.CimSystemProperties.ClassName
@@ -22,39 +22,45 @@ Function ConvertTo-OutputValue {
 
     if ($Value -is [DateTime[]]) {
         $Value = $Value | ForEach-Object { $_.ToString("o") }
-    } elseif ($Value -is [DateTime]) {
+    }
+    elseif ($Value -is [DateTime]) {
         $Value = $Value.ToString("o")
-    } elseif ($Value -is [Double]) {
+    }
+    elseif ($Value -is [Double]) {
         $Value = $Value.ToString()  # To avoid Python 2 double parsing issues on test validation
-    } elseif ($Value -is [Double[]]) {
+    }
+    elseif ($Value -is [Double[]]) {
         $Value = $Value | ForEach-Object { $_.ToString() }
-    } elseif ($Value -is [PSCredential]) {
+    }
+    elseif ($Value -is [PSCredential]) {
         $password = $null
         $password_ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToGlobalAllocUnicode($Value.Password)
         try {
             $password = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($password_ptr)
-        } finally {
+        }
+        finally {
             [System.Runtime.InteropServices.Marshal]::ZeroFreeGlobalAllocUnicode($password_ptr)
         }
         $Value = @{
             username = $Value.Username
             password = $password
         }
-    } elseif ($Value -is [CimInstance[]]) {
+    }
+    elseif ($Value -is [CimInstance[]]) {
         $value_list = [System.Collections.Generic.List`1[Hashtable]]@()
         foreach ($cim_instance in $Value) {
             $value_list.Add((ConvertFrom-CimInstance -Instance $cim_instance))
         }
         $Value = $value_list.ToArray()
-    } elseif ($Value -is [CimInstance]) {
+    }
+    elseif ($Value -is [CimInstance]) {
         $Value = ConvertFrom-CimInstance -Instance $Value
     }
 
-    return ,$Value
+    return , $Value
 }
 
-Function Get-TargetResource
-{
+Function Get-TargetResource {
     [CmdletBinding()]
     [OutputType([Hashtable])]
     param(
@@ -73,8 +79,7 @@ Function Get-TargetResource
     }
 }
 
-Function Set-TargetResource
-{
+Function Set-TargetResource {
     [CmdletBinding()]
     param
     (
@@ -155,8 +160,7 @@ Function Set-TargetResource
     Write-Warning -Message "set warning"
 }
 
-Function Test-TargetResource
-{
+Function Test-TargetResource {
     [CmdletBinding()]
     [OutputType([Boolean])]
     param
@@ -210,7 +214,8 @@ Function Test-TargetResource
     $exists = Test-Path -LiteralPath $Path -PathType Leaf
     if ($Ensure -eq "Present") {
         $exists
-    } else {
+    }
+    else {
         -not $exists
     }
 }

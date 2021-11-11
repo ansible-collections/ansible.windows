@@ -64,7 +64,8 @@ Function Assert-Age {
 
     if ($Age -ge 0) {
         return $Age -ge $actual_age
-    } else {
+    }
+    else {
         return ($Age * -1) -le $actual_age
     }
 }
@@ -106,7 +107,8 @@ Function Assert-FileNamePattern {
                 $valid_match = $true
                 break
             }
-        } else {
+        }
+        else {
             if ($File.Name -like $pattern) {
                 $valid_match = $true
                 break
@@ -124,7 +126,8 @@ Function Assert-FileSize {
 
     if ($Size -ge 0) {
         return $File.Length -ge $Size
-    } else {
+    }
+    else {
         return $File.Length -le ($Size * -1)
     }
 }
@@ -147,28 +150,30 @@ Function Get-FileChecksum {
     $fp = [System.IO.File]::Open($Path, [System.IO.Filemode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
     try {
         [System.BitConverter]::ToString($sp.ComputeHash($fp)).Replace("-", "").ToLower()
-    } catch {
+    }
+    catch {
         Write-Error -Message "Failed to get $Algorithm hash for '$Path': $($_.Exception.Message)" -Exception $_.Exception
-    } finally {
+    }
+    finally {
         $fp.Dispose()
     }
 }
 
 Function Search-Path {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
-        Justification="We purposefully ignore certain exceptions when failing to access files we don't have permissions to")]
+        Justification = "We purposefully ignore certain exceptions when failing to access files we don't have permissions to")]
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $Path,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [System.Collections.Generic.HashSet`1[System.String]]
         $CheckedPaths,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]
         $Module,
 
@@ -207,7 +212,8 @@ Function Search-Path {
     if ($null -eq $dir_obj.Attributes -or [Int32]$dir_obj.Attributes -eq -1) {
         $Module.Warn("Argument path '$Path' does not exist or is not accessible, skipping")
         return
-    } elseif (-not $dir_obj.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
+    }
+    elseif (-not $dir_obj.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
         $Module.Warn("Argument path '$Path' is a file not a directory, skipping")
         return
     }
@@ -215,8 +221,11 @@ Function Search-Path {
     $dir_files = @()
     try {
         $dir_files = $dir_obj.EnumerateFileSystemInfos("*", [System.IO.SearchOption]::TopDirectoryOnly)
-    } catch [System.IO.DirectoryNotFoundException] { # Broken ReparsePoint/Symlink, cannot enumerate
-    } catch [System.UnauthorizedAccessException] {}  # No ListDirectory permissions, Get-ChildItem ignored this
+    }
+    catch [System.IO.DirectoryNotFoundException] {
+        # Broken ReparsePoint/Symlink, cannot enumerate
+    }
+    catch [System.UnauthorizedAccessException] {}  # No ListDirectory permissions, Get-ChildItem ignored this
 
     foreach ($dir_child in $dir_files) {
         if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory) -and $Recurse) {
@@ -235,7 +244,8 @@ Function Search-Path {
 
         if ($PSBoundParameters.ContainsKey('Age')) {
             $age_match = Assert-Age -File $dir_child -Age $Age -AgeStamp $AgeStamp
-        } else {
+        }
+        else {
             $age_match = $true
         }
 
@@ -244,13 +254,15 @@ Function Search-Path {
 
         if ($PSBoundParameters.ContainsKey('Patterns')) {
             $pattern_match = Assert-FileNamePattern -File $dir_child -Patterns $Patterns -UseRegex:$UseRegex.IsPresent
-        } else {
+        }
+        else {
             $pattern_match = $true
         }
 
         if ($PSBoundParameters.ContainsKey('Size')) {
             $size_match = Assert-FileSize -File $dir_child -Size $Size
-        } else {
+        }
+        else {
             $size_match = $true
         }
 
@@ -286,7 +298,8 @@ Function Search-Path {
 
         try {
             $file_info.owner = $dir_child.GetAccessControl().Owner
-        } catch {
+        }
+        catch {
             # May not have the rights to get the Owner, historical behaviour is to ignore but we will at least warn.
             $module.Warn("Failed to get the owner for '$($dir_child.FullName)': $($_.Exception.Message)")
         }
@@ -297,7 +310,8 @@ Function Search-Path {
                 $file_info.isshared = $true
                 $file_info.sharename = $share_info.Name
             }
-        } else {
+        }
+        else {
             $file_info.extension = $dir_child.Extension
             $file_info.isreg = $true
             $file_info.size = $dir_child.Length
@@ -363,14 +377,15 @@ $search_params = @{
 }
 
 if ($null -ne $age) {
-    $seconds_per_unit = @{'s'=1; 'm'=60; 'h'=3600; 'd'=86400; 'w'=604800}
+    $seconds_per_unit = @{'s' = 1; 'm' = 60; 'h' = 3600; 'd' = 86400; 'w' = 604800 }
     $seconds_pattern = '^(-?\d+)(s|m|h|d|w)?$'
     $match = $age -match $seconds_pattern
     if ($Match) {
         $specified_seconds = [Int64]$Matches[1]
         if ($null -eq $Matches[2]) {
             $chosen_unit = 's'
-        } else {
+        }
+        else {
             $chosen_unit = $Matches[2]
         }
 
@@ -378,13 +393,15 @@ if ($null -ne $age) {
 
         if ($total_seconds -ge 0) {
             $search_params.Age = (Get-Date).AddSeconds($total_seconds * -1).Ticks
-        } else {
+        }
+        else {
             # Make sure we add the positive value of seconds to current time then make it negative for later comparisons.
             $age = (Get-Date).AddSeconds($total_seconds).Ticks
             $search_params.Age = $age * -1
         }
         $search_params.AgeStamp = $age_stamp
-    } else {
+    }
+    else {
         $module.FailJson("Invalid age pattern specified")
     }
 }
@@ -395,19 +412,21 @@ if ($null -ne $patterns) {
 }
 
 if ($null -ne $size) {
-    $bytes_per_unit = @{'b'=1; 'k'=1KB; 'm'=1MB; 'g'=1GB;'t'=1TB}
+    $bytes_per_unit = @{'b' = 1; 'k' = 1KB; 'm' = 1MB; 'g' = 1GB; 't' = 1TB }
     $size_pattern = '^(-?\d+)(b|k|m|g|t)?$'
     $match = $size -match $size_pattern
     if ($Match) {
         $specified_size = [Int64]$Matches[1]
         if ($null -eq $Matches[2]) {
             $chosen_byte = 'b'
-        } else {
+        }
+        else {
             $chosen_byte = $Matches[2]
         }
 
         $search_params.Size = $specified_size * ($bytes_per_unit.$chosen_byte)
-    } else {
+    }
+    else {
         $module.FailJson("Invalid size pattern specified")
     }
 }
@@ -420,7 +439,7 @@ $matched_files = foreach ($path in $paths) {
 }
 
 # Make sure we sort the files in alphabetical order.
-$module.Result.files = @() + ($matched_files | Sort-Object -Property {$_.path})
+$module.Result.files = @() + ($matched_files | Sort-Object -Property { $_.path })
 
 $module.ExitJson()
 

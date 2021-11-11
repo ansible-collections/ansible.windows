@@ -24,7 +24,8 @@ $module.Diff.after = $module.Params.name
 if ($module.Params.name -ne $current_computer_name) {
     Try {
         Rename-Computer -NewName $module.Params.name -Force -WhatIf:$module.CheckMode
-    } Catch {
+    }
+    Catch {
         $module.FailJson("Failed to rename computer to '$($module.Params.name)': $($_.Exception.Message)", $_)
     }
     $module.Result.changed = $true

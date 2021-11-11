@@ -13,7 +13,7 @@ $result = @{
 }
 
 $path = Get-AnsibleParam -obj $params "path" -type "path" -failifempty $true
-$state = Get-AnsibleParam -obj $params "state" -type "str" -default "absent" -validateSet "present","absent" -resultobj $result
+$state = Get-AnsibleParam -obj $params "state" -type "str" -default "absent" -validateSet "present", "absent" -resultobj $result
 $reorganize = Get-AnsibleParam -obj $params "reorganize" -type "bool" -default $false -resultobj $result
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -36,17 +36,23 @@ Try {
             $objACL = Get-ACL -LiteralPath $path
 
             # convert explicit ACE to inherited ACE
-            ForEach($inheritedRule in $objACL.Access) {
+            ForEach ($inheritedRule in $objACL.Access) {
                 If (-not $inheritedRule.IsInherited) {
                     Continue
                 }
 
-                ForEach($explicitRrule in $objACL.Access) {
+                ForEach ($explicitRrule in $objACL.Access) {
                     If ($explicitRrule.IsInherited) {
                         Continue
                     }
 
-                    If (($inheritedRule.FileSystemRights -eq $explicitRrule.FileSystemRights) -And ($inheritedRule.AccessControlType -eq $explicitRrule.AccessControlType) -And ($inheritedRule.IdentityReference -eq $explicitRrule.IdentityReference) -And ($inheritedRule.InheritanceFlags -eq $explicitRrule.InheritanceFlags) -And ($inheritedRule.PropagationFlags -eq $explicitRrule.PropagationFlags)) {
+                    If (
+                        ($inheritedRule.FileSystemRights -eq $explicitRrule.FileSystemRights) -And
+                        ($inheritedRule.AccessControlType -eq $explicitRrule.AccessControlType) -And
+                        ($inheritedRule.IdentityReference -eq $explicitRrule.IdentityReference) -And
+                        ($inheritedRule.InheritanceFlags -eq $explicitRrule.InheritanceFlags) -And
+                        ($inheritedRule.PropagationFlags -eq $explicitRrule.PropagationFlags)
+                    ) {
                         $objACL.RemoveAccessRule($explicitRrule)
                     }
                 }
@@ -55,12 +61,14 @@ Try {
 
         Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf:$check_mode
         $result.changed = $true
-    } Elseif (($state -eq "absent") -And (-not $inheritanceDisabled)) {
+    }
+    Elseif (($state -eq "absent") -And (-not $inheritanceDisabled)) {
         $objACL.SetAccessRuleProtection($True, $reorganize)
         Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf:$check_mode
         $result.changed = $true
     }
-} Catch {
+}
+Catch {
     Fail-Json $result "an error occurred when attempting to disable inheritance: $($_.Exception.Message)"
 }
 

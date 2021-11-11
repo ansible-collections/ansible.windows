@@ -9,30 +9,32 @@
 #Functions
 Function NormalizeAccounts {
     param(
-        [parameter(valuefrompipeline=$true)]
+        [parameter(valuefrompipeline = $true)]
         $users
     )
 
-    $users = $users.Trim()
-    If ($users -eq "") {
-        $splitUsers = [Collections.Generic.List[String]] @()
-    }
-    Else {
-        $splitUsers = [Collections.Generic.List[String]] $users.Split(",")
-    }
-
-    $normalizedUsers = [Collections.Generic.List[String]] @()
-    ForEach($splitUser in $splitUsers) {
-        $sid = Convert-ToSID -account_name $splitUser
-        if (!$sid) {
-            Fail-Json $result "$splitUser is not a valid user or group on the host machine or domain"
+    process {
+        $users = $users.Trim()
+        If ($users -eq "") {
+            $splitUsers = [Collections.Generic.List[String]] @()
+        }
+        Else {
+            $splitUsers = [Collections.Generic.List[String]] $users.Split(",")
         }
 
-        $normalizedUser = (New-Object System.Security.Principal.SecurityIdentifier($sid)).Translate([System.Security.Principal.NTAccount])
-        $normalizedUsers.Add($normalizedUser)
-    }
+        $normalizedUsers = [Collections.Generic.List[String]] @()
+        ForEach ($splitUser in $splitUsers) {
+            $sid = Convert-ToSID -account_name $splitUser
+            if (!$sid) {
+                Fail-Json $result "$splitUser is not a valid user or group on the host machine or domain"
+            }
 
-    return ,$normalizedUsers
+            $normalizedUser = (New-Object System.Security.Principal.SecurityIdentifier($sid)).Translate([System.Security.Principal.NTAccount])
+            $normalizedUsers.Add($normalizedUser)
+        }
+
+        return , $normalizedUsers
+    }
 }
 
 $result = @{
@@ -46,8 +48,8 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
 $name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present","absent"
-$rule_action  = Get-AnsibleParam -obj $params -name "rule_action" -type "str" -default "set" -validateset "set","add"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
+$rule_action = Get-AnsibleParam -obj $params -name "rule_action" -type "str" -default "set" -validateset "set", "add"
 
 if (-not (Get-Command -Name Get-SmbShare -ErrorAction SilentlyContinue)) {
     Fail-Json $result "The current host does not support the -SmbShare cmdlets required by this module. Please run on Server 2012 or Windows 8 and later"
@@ -63,7 +65,8 @@ If ($state -eq "absent") {
         $result.actions += "Remove-SmbShare -Force -Name $name"
         $result.changed = $true
     }
-} Else {
+}
+Else {
     $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true
     $description = Get-AnsibleParam -obj $params -name "description" -type "str" -default ""
 
@@ -75,7 +78,8 @@ If ($state -eq "absent") {
     $permissionFull = Get-AnsibleParam -obj $params -name "full" -type "str" -default "" | NormalizeAccounts
     $permissionDeny = Get-AnsibleParam -obj $params -name "deny" -type "str" -default "" | NormalizeAccounts
 
-    $cachingMode = Get-AnsibleParam -obj $params -name "caching_mode" -type "str" -default "Manual" -validateSet "BranchCache","Documents","Manual","None","Programs","Unknown"
+    $cachingModeOptions = "BranchCache", "Documents", "Manual", "None", "Programs", "Unknown"
+    $cachingMode = Get-AnsibleParam -obj $params -name "caching_mode" -type "str" -default "Manual" -validateSet $cachingModeOptions
     $encrypt = Get-AnsibleParam -obj $params -name "encrypt" -type "bool" -default $false
 
     If (-Not (Test-Path -LiteralPath $path)) {
@@ -84,7 +88,7 @@ If ($state -eq "absent") {
 
     # normalize path and remove slash at the end
     $path = (Get-Item -LiteralPath $path).FullName -replace "\\$"
-    $path = "$path" -replace "\:$",":\"
+    $path = "$path" -replace "\:$", ":\"
 
     # need to (re-)create share
     If (-not $share) {
@@ -153,7 +157,7 @@ If ($state -eq "absent") {
 
     # remove permissions
     $permissions = Get-SmbShareAccess -Name $name
-    if($rule_action -eq "set") {
+    if ($rule_action -eq "set") {
         ForEach ($permission in $permissions) {
             If ($permission.AccessControlType -eq "Deny") {
                 $cim_count = 0
@@ -168,12 +172,14 @@ If ($state -eq "absent") {
                         }
                         $result.changed = $true
                         $result.actions += "Unblock-SmbShareAccess -Force -Name $name -AccountName $($permission.AccountName)"
-                    } else {
+                    }
+                    else {
                         # Remove from the deny list as it already has the permissions
                         $permissionDeny.remove($permission.AccountName) | Out-Null
                     }
                 }
-            } ElseIf ($permission.AccessControlType -eq "Allow") {
+            }
+            ElseIf ($permission.AccessControlType -eq "Allow") {
                 If ($permission.AccessRight -eq "Full") {
                     If (-not ($permissionFull.Contains($permission.AccountName))) {
                         if (-not $check_mode) {
@@ -187,7 +193,8 @@ If ($state -eq "absent") {
 
                     # user got requested permissions
                     $permissionFull.remove($permission.AccountName) | Out-Null
-                } ElseIf ($permission.AccessRight -eq "Change") {
+                }
+                ElseIf ($permission.AccessRight -eq "Change") {
                     If (-not ($permissionChange.Contains($permission.AccountName))) {
                         if (-not $check_mode) {
                             Revoke-SmbShareAccess -Force -Name $name -AccountName $permission.AccountName | Out-Null
@@ -200,7 +207,8 @@ If ($state -eq "absent") {
 
                     # user got requested permissions
                     $permissionChange.remove($permission.AccountName) | Out-Null
-                } ElseIf ($permission.AccessRight -eq "Read") {
+                }
+                ElseIf ($permission.AccessRight -eq "Read") {
                     If (-not ($permissionRead.Contains($permission.AccountName))) {
                         if (-not $check_mode) {
                             Revoke-SmbShareAccess -Force -Name $name -AccountName $permission.AccountName | Out-Null
@@ -216,18 +224,22 @@ If ($state -eq "absent") {
                 }
             }
         }
-    } ElseIf ($rule_action -eq "add") {
-        ForEach($permission in $permissions) {
+    }
+    ElseIf ($rule_action -eq "add") {
+        ForEach ($permission in $permissions) {
             If ($permission.AccessControlType -eq "Deny") {
                 If ($permissionDeny.Contains($permission.AccountName)) {
                     $permissionDeny.Remove($permission.AccountName)
                 }
-            } ElseIf ($permission.AccessControlType -eq "Allow") {
+            }
+            ElseIf ($permission.AccessControlType -eq "Allow") {
                 If ($permissionFull.Contains($permission.AccountName) -and $permission.AccessRight -eq "Full") {
                     $permissionFull.Remove($permission.AccountName)
-                } ElseIf ($permissionChange.Contains($permission.AccountName) -and $permission.AccessRight -eq "Change") {
+                }
+                ElseIf ($permissionChange.Contains($permission.AccountName) -and $permission.AccessRight -eq "Change") {
                     $permissionChange.Remove($permission.AccountName)
-                } ElseIf ($permissionRead.Contains($permission.AccountName) -and $permission.AccessRight -eq "Read") {
+                }
+                ElseIf ($permissionRead.Contains($permission.AccountName) -and $permission.AccessRight -eq "Read") {
                     $permissionRead.Remove($permission.AccountName)
                 }
             }

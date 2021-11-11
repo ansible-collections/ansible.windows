@@ -29,11 +29,11 @@ $result = @{
 }
 
 if ($creates -and $(Test-AnsiblePath -Path $creates)) {
-    Exit-Json @{msg="skipped, since $creates exists";cmd=$raw_command_line;changed=$false;skipped=$true;rc=0}
+    Exit-Json @{ msg = "skipped, since $creates exists"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
 if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
-    Exit-Json @{msg="skipped, since $removes does not exist";cmd=$raw_command_line;changed=$false;skipped=$true;rc=0}
+    Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
 $command_args = @{
@@ -52,11 +52,13 @@ if ($output_encoding_override) {
 $start_datetime = [DateTime]::UtcNow
 try {
     $command_result = Run-Command @command_args
-} catch {
+}
+catch {
     $result.changed = $false
     try {
         $result.rc = $_.Exception.NativeErrorCode
-    } catch {
+    }
+    catch {
         $result.rc = 2
     }
     Fail-Json -obj $result -message $_.Exception.Message

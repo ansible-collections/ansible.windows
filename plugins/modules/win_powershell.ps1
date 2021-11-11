@@ -148,7 +148,8 @@ namespace Ansible.Windows.WinPowerShell
             throw new MethodInvocationException("PowerShell is in NonInteractive mode. Read and Prompt functionality is not available.");
         }
 
-        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
+        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName,
+            PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
         {
             throw new MethodInvocationException("PowerShell is in NonInteractive mode. Read and Prompt functionality is not available.");
         }
@@ -211,7 +212,7 @@ namespace Ansible.Windows.WinPowerShell
 Function Get-StdHandle {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateSet('Stdout', 'Stderr')]
         [string]
         $Stream
@@ -233,7 +234,7 @@ Function Get-StdHandle {
 Function Set-StdHandle {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateSet('Stdout', 'Stderr')]
         [string]
         $Stream,
@@ -258,12 +259,12 @@ Function Set-StdHandle {
 Function Convert-OutputObject {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [AllowNull()]
         [object]
         $InputObject,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [int]
         $Depth
     )
@@ -286,8 +287,8 @@ Function Convert-OutputObject {
             }
 
             $psTypes = @($InputObject.PSTypeNames | ForEach-Object -Process {
-                $_ -replace '^Deserialized.'
-            })
+                    $_ -replace '^Deserialized.'
+                })
 
             $Type.FullName -in $psTypes
         }
@@ -355,9 +356,9 @@ Function Convert-OutputObject {
             [string]$InputObject
         }
         elseif ($InputObject -is [Collections.IList]) {
-            ,@(foreach ($obj in $InputObject) {
-                Convert-OutputObject -InputObject $obj -Depth $childDepth
-            })
+            , @(foreach ($obj in $InputObject) {
+                    Convert-OutputObject -InputObject $obj -Depth $childDepth
+                })
         }
         elseif ($InputObject -is [Collections.IDictionary]) {
             $newObj = @{}
@@ -388,7 +389,7 @@ Function Convert-OutputObject {
 Function Format-Exception {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [AllowNull()]
         $Exception
     )
@@ -423,7 +424,7 @@ Function Format-Exception {
 Function Test-AnsiblePath {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Path
     )
@@ -432,9 +433,11 @@ Function Test-AnsiblePath {
     try {
         [void][System.IO.File]::GetAttributes($Path)
         return $true
-    } catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
+    }
+    catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
         return $false
-    } catch {
+    }
+    catch {
         # When testing a path like Cert:\LocalMachine\My, System.IO.File will
         # not work, we just revert back to using Test-Path for this
         return Test-Path -Path $Path
@@ -482,10 +485,10 @@ finally {
     $sr.Dispose()
 }
 '@).AddParameters(@{
-        StringBuilder = $sb
-        Server = $server
-        Encoding = $utf8NoBom
-    })
+            StringBuilder = $sb
+            Server = $server
+            Encoding = $utf8NoBom
+        })
     $task = $ps.BeginInvoke()
 
     [PSCustomObject]@{
@@ -514,13 +517,13 @@ $scriptAst = [ScriptBlock]::Create($module.Params.script).Ast
 $supportsShouldProcess = $false
 if ($scriptAst -is [Management.Automation.Language.ScriptBlockAst] -and $scriptAst.ParamBlock.Attributes) {
     $supportsShouldProcess = [bool]($scriptAst.ParamBlock.Attributes |
-        Where-Object { $_.TypeName.Name -eq 'CmdletBinding' } |
-        Select-Object -First 1 |
-        ForEach-Object -Process {
-            $_.NamedArguments | Where-Object {
-                $_.ArgumentName -eq 'SupportsShouldProcess' -and ($_.ExpressionOmitted -or $_.Argument.ToString() -eq '$true')
-            }
-        })
+            Where-Object { $_.TypeName.Name -eq 'CmdletBinding' } |
+            Select-Object -First 1 |
+            ForEach-Object -Process {
+                $_.NamedArguments | Where-Object {
+                    $_.ArgumentName -eq 'SupportsShouldProcess' -and ($_.ExpressionOmitted -or $_.Argument.ToString() -eq '$true')
+                }
+            })
 }
 
 if ($module.CheckMode -and -not $supportsShouldProcess) {
@@ -563,8 +566,8 @@ try {
             $commandLIne,
             $null,
             $null,
-            $true,  # Required so the child process can inherit our anon pipes.
-            'CreateNewConsole',  # Ensures we don't mess with the current console output.
+            $true, # Required so the child process can inherit our anon pipes.
+            'CreateNewConsole', # Ensures we don't mess with the current console output.
             $null,
             $null,
             $si
@@ -593,13 +596,13 @@ try {
     $ps.Runspace = $runspace
 
     $ps.Runspace.SessionStateProxy.SetVariable('Ansible', [PSCustomObject]@{
-        PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
-        CheckMode = $module.CheckMode
-        Result = @{}
-        Changed = $true
-        Failed = $false
-        Tmpdir = $module.Tmpdir
-    })
+            PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
+            CheckMode = $module.CheckMode
+            Result = @{}
+            Changed = $true
+            Failed = $false
+            Tmpdir = $module.Tmpdir
+        })
 
     $eap = switch ($module.Params.error_action) {
         'stop' { 'Stop' }
@@ -661,13 +664,13 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     &$setHandle -Stream $_.Name -NET $writer -Raw $pipe.SafePipeHandle.DangerousGetHandle()
 }
 '@, $true).AddParameters(@{
-            StdoutHandle = $newStdout.ClientString
-            StderrHandle = $newStderr.ClientString
-            SetStdPInvoke = $stdPinvoke
-            SetScriptBlock = ${function:Set-StdHandle}
-            AddTypeCode = ${function:Add-CSharpType}
-            TmpDir = $module.Tmpdir
-        }).AddStatement()
+                StdoutHandle = $newStdout.ClientString
+                StderrHandle = $newStderr.ClientString
+                SetStdPInvoke = $stdPinvoke
+                SetScriptBlock = ${function:Set-StdHandle}
+                AddTypeCode = ${function:Add-CSharpType}
+                TmpDir = $module.Tmpdir
+            }).AddStatement()
     }
     else {
         # The psrp connection plugin doesn't have a console so we need to create one ourselves.
@@ -717,7 +720,6 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
             return $false
         }
 
-        # https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.powershell.invoke?view=powershellsdk-7.0.0#System_Management_Automation_PowerShell_Invoke__1_System_Collections_IEnumerable_System_Collections_Generic_IList___0__
         $parameters = $_.GetParameters()
         (
             $parameters.Count -eq 2 -and
@@ -778,32 +780,32 @@ $module.Result.failed = $module.Result.failed -or $result.Failed
 $module.Result.output = Convert-OutputObject -InputObject $psOutput -Depth $module.Params.depth
 
 $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
-    $err = @{
-        output = ($_ | Out-String)
-        error_details = $null
-        exception = Format-Exception -Exception $_.Exception
-        target_object = $_.TargetObject
-        category_info = @{
-            category = [string]$_.CategoryInfo.Category
-            category_id = [int]$_.CategoryInfo.Category
-            activity = $_.CategoryInfo.Activity
-            reason = $_.CategoryInfo.Reason
-            target_name = $_.CategoryInfo.TargetName
-            target_type = $_.CategoryInfo.TargetType
+        $err = @{
+            output = ($_ | Out-String)
+            error_details = $null
+            exception = Format-Exception -Exception $_.Exception
+            target_object = $_.TargetObject
+            category_info = @{
+                category = [string]$_.CategoryInfo.Category
+                category_id = [int]$_.CategoryInfo.Category
+                activity = $_.CategoryInfo.Activity
+                reason = $_.CategoryInfo.Reason
+                target_name = $_.CategoryInfo.TargetName
+                target_type = $_.CategoryInfo.TargetType
+            }
+            fully_qualified_error_id = $_.FullyQualifiedErrorId
+            script_stack_trace = $_.ScriptStackTrace
+            pipeline_iteration_info = $_.PipelineIterationInfo
         }
-        fully_qualified_error_id = $_.FullyQualifiedErrorId
-        script_stack_trace = $_.ScriptStackTrace
-        pipeline_iteration_info = $_.PipelineIterationInfo
-    }
-    if ($_.ErrorDetails) {
-        $err.error_details = @{
-            message = $_.ErrorDetails.Message
-            recommended_action = $_.ErrorDetails.RecommendedAction
+        if ($_.ErrorDetails) {
+            $err.error_details = @{
+                message = $_.ErrorDetails.Message
+                recommended_action = $_.ErrorDetails.RecommendedAction
+            }
         }
-    }
 
-    $err
-})
+        $err
+    })
 
 'debug', 'verbose', 'warning' | ForEach-Object -Process {
     $module.Result.$_ = @($ps.Streams.$_ | Select-Object -ExpandProperty Message)
@@ -811,15 +813,15 @@ $module.Result.error = @($ps.Streams.Error | ForEach-Object -Process {
 
 # Use Select-Object as Information may not be present on earlier pwsh version (<v5).
 $module.Result.information = @($ps.Streams |
-    Select-Object -ExpandProperty Information -ErrorAction SilentlyContinue |
-    ForEach-Object -Process {
-        @{
-            message_data = Convert-OutputObject -InputObject $_.MessageData -Depth $module.Params.depth
-            source = $_.Source
-            time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
-            tags = @($_.Tags)
+        Select-Object -ExpandProperty Information -ErrorAction SilentlyContinue |
+        ForEach-Object -Process {
+            @{
+                message_data = Convert-OutputObject -InputObject $_.MessageData -Depth $module.Params.depth
+                source = $_.Source
+                time_generated = $_.TimeGenerated.ToUniversalTime().ToString('o')
+                tags = @($_.Tags)
+            }
         }
-    }
 )
 
 $module.ExitJson()

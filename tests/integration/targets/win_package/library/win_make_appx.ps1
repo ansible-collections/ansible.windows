@@ -95,7 +95,7 @@ try {
     # Need to create a temporary pfx for signtool.exe and we need to import the cert to the Trusted Root store.
     $module.Result.thumbprint = $cert.Thumbprint
     $certPath = Join-Path -Path $module.Tmpdir -ChildPath 'cert.pfx'
-    $certPassword = ([char[]]([char]33..[char]126) | Sort-Object {Get-Random})[0..16] -join ''
+    $certPassword = ([char[]]([char]33..[char]126) | Sort-Object { Get-Random })[0..16] -join ''
     $certPasswordSS = ConvertTo-SecureString -String $certPassword -AsPlainText -Force
     $null = $cert |  Export-PfxCertificate -FilePath $certPath -Password $certPasswordSS
 
@@ -105,7 +105,8 @@ try {
         Password = $certPasswordSS
     }
     $null = Import-PfxCertificate @importParams
-} finally {
+}
+finally {
     $cert | Remove-Item -Force
 }
 

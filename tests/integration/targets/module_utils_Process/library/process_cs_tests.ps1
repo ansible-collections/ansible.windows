@@ -21,37 +21,40 @@ namespace Handle
 }
 '@
 
-Function Assert-Equals {
+Function Assert-Equal {
     param(
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)][AllowNull()]$Actual,
-        [Parameter(Mandatory=$true, Position=0)][AllowNull()]$Expected
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)][AllowNull()]$Actual,
+        [Parameter(Mandatory = $true, Position = 0)][AllowNull()]$Expected
     )
 
-    $matched = $false
-    if ($Actual -is [System.Collections.ArrayList] -or $Actual -is [Array]) {
-        $Actual.Count | Assert-Equals -Expected $Expected.Count
-        for ($i = 0; $i -lt $Actual.Count; $i++) {
-            $actual_value = $Actual[$i]
-            $expected_value = $Expected[$i]
-            Assert-Equals -Actual $actual_value -Expected $expected_value
+    process {
+        $matched = $false
+        if ($Actual -is [System.Collections.ArrayList] -or $Actual -is [Array]) {
+            $Actual.Count | Assert-Equal -Expected $Expected.Count
+            for ($i = 0; $i -lt $Actual.Count; $i++) {
+                $actual_value = $Actual[$i]
+                $expected_value = $Expected[$i]
+                Assert-Equal -Actual $actual_value -Expected $expected_value
+            }
+            $matched = $true
         }
-        $matched = $true
-    } else {
-        $matched = $Actual -ceq $Expected
-    }
-
-    if (-not $matched) {
-        if ($Actual -is [PSObject]) {
-            $Actual = $Actual.ToString()
+        else {
+            $matched = $Actual -ceq $Expected
         }
 
-        $call_stack = (Get-PSCallStack)[1]
-        $module.Result.test = $test
-        $module.Result.actual = $Actual
-        $module.Result.expected = $Expected
-        $module.Result.line = $call_stack.ScriptLineNumber
-        $module.Result.method = $call_stack.Position.Text
-        $module.FailJson("AssertionError: actual != expected")
+        if (-not $matched) {
+            if ($Actual -is [PSObject]) {
+                $Actual = $Actual.ToString()
+            }
+
+            $call_stack = (Get-PSCallStack)[1]
+            $module.Result.test = $test
+            $module.Result.actual = $Actual
+            $module.Result.expected = $Expected
+            $module.Result.line = $call_stack.ScriptLineNumber
+            $module.Result.method = $call_stack.Position.Text
+            $module.FailJson("AssertionError: actual != expected")
+        }
     }
 }
 
@@ -59,98 +62,100 @@ $tests = @{
     "CommandLineToArgv empty string" = {
         $expected = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv((Get-Process -Id $pid).Path)
         $actual = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv("")
-        Assert-Equals -Actual $actual -Expected $expected
+        Assert-Equal -Actual $actual -Expected $expected
     }
 
     "CommandLineToArgv single argument" = {
         $expected = @("powershell.exe")
         $actual = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv("powershell.exe")
-        Assert-Equals -Actual $actual -Expected $expected
+        Assert-Equal -Actual $actual -Expected $expected
     }
 
     "CommandLineToArgv multiple arguments" = {
         $expected = @("powershell.exe", "-File", "C:\temp\script.ps1")
         $actual = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv("powershell.exe -File C:\temp\script.ps1")
-        Assert-Equals -Actual $actual -Expected $expected
+        Assert-Equal -Actual $actual -Expected $expected
     }
 
     "CommandLineToArgv comples arguments" = {
         $expected = @('abc', 'd', 'ef gh', 'i\j', 'k"l', 'm\n op', 'ADDLOCAL=qr, s', 'tuv\', 'w''x', 'yz')
         $actual = [Ansible.Windows.Process.ProcessUtil]::CommandLineToArgv('abc d "ef gh" i\j k\"l m\\"n op" ADDLOCAL="qr, s" tuv\ w''x yz')
-        Assert-Equals -Actual $actual -Expected $expected
+        Assert-Equal -Actual $actual -Expected $expected
     }
 
     "CreateProcess basic" = {
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, "whoami.exe", $null, $null, $null, $null, $false)
-        $actual.GetType().FullName | Assert-Equals -Expected "ansible_collections.ansible.windows.plugins.module_utils.Process.Result"
-        $actual.StandardOut | Assert-Equals -Expected "$(&whoami.exe)`r`n"
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.GetType().FullName | Assert-Equal -Expected "ansible_collections.ansible.windows.plugins.module_utils.Process.Result"
+        $actual.StandardOut | Assert-Equal -Expected "$(&whoami.exe)`r`n"
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess stderr" = {
         $cmd = "powershell.exe [System.Console]::Error.WriteLine('hi')"
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected ""
-        $actual.StandardError | Assert-Equals -Expected "hi`r`n"
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected ""
+        $actual.StandardError | Assert-Equal -Expected "hi`r`n"
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess exit code" = {
         $cmd = "powershell.exe exit 10"
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected ""
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 10
+        $actual.StandardOut | Assert-Equal -Expected ""
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 10
     }
 
     "CreateProcess bad executable" = {
         $failed = $false
         try {
             [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, "fake.exe", $null, $null, $null, $null, $false)
-        } catch {
+        }
+        catch {
             $failed = $true
-            $_.Exception.InnerException.GetType().FullName | Assert-Equals -Expected "ansible_collections.ansible.windows.plugins.module_utils.Process.Win32Exception"
+            $_.Exception.InnerException.GetType().FullName |
+                Assert-Equal -Expected "ansible_collections.ansible.windows.plugins.module_utils.Process.Win32Exception"
             $expected = 'Exception calling "CreateProcess" with "7" argument(s): "CreateProcessW() failed '
             $expected += '(The system cannot find the file specified, Win32ErrorCode 2 - 0x00000002)"'
-            $_.Exception.Message | Assert-Equals -Expected $expected
+            $_.Exception.Message | Assert-Equal -Expected $expected
         }
-        $failed | Assert-Equals -Expected $true
+        $failed | Assert-Equal -Expected $true
     }
 
     "CreateProcess with unicode" = {
         $cmd = "cmd.exe /c echo 💩 café"
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected "💩 café`r`n"
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected "💩 café`r`n"
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess without working dir" = {
         $expected = $pwd.Path + "`r`n"
         $cmd = 'powershell.exe $pwd.Path'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with working dir" = {
         $expected = "C:\Windows`r`n"
         $cmd = 'powershell.exe $pwd.Path'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, 'C:\Windows', $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess without environment" = {
         $expected = "$($env:USERNAME)`r`n"
         $cmd = 'powershell.exe $env:TEST; $env:USERNAME'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with environment" = {
@@ -160,11 +165,11 @@ $tests = @{
         }
         $cmd = 'cmd.exe /c set'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $env_vars, $null, $null, $false)
-        ("TEST=tesTing" -cin $actual.StandardOut.Split("`r`n")) | Assert-Equals -Expected $true
-        ("TEST2=Testing 2" -cin $actual.StandardOut.Split("`r`n")) | Assert-Equals -Expected $true
-        ("USERNAME=$($env:USERNAME)" -cnotin $actual.StandardOut.Split("`r`n")) | Assert-Equals -Expected $true
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        ("TEST=tesTing" -cin $actual.StandardOut.Split("`r`n")) | Assert-Equal -Expected $true
+        ("TEST2=Testing 2" -cin $actual.StandardOut.Split("`r`n")) | Assert-Equal -Expected $true
+        ("USERNAME=$($env:USERNAME)" -cnotin $actual.StandardOut.Split("`r`n")) | Assert-Equal -Expected $true
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with byte stdin" = {
@@ -172,9 +177,9 @@ $tests = @{
         $cmd = 'powershell.exe [System.Console]::In.ReadToEnd()'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null,
             [System.Text.Encoding]::UTF8.GetBytes("input value"), $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with byte stdin and newline" = {
@@ -182,32 +187,33 @@ $tests = @{
         $cmd = 'powershell.exe [System.Console]::In.ReadToEnd()'
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null,
             [System.Text.Encoding]::UTF8.GetBytes("input value`r`n"), $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with lpApplicationName" = {
         $expected = "abc`r`n"
         $full_path = "$($env:SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe"
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($full_path, "Write-Output 'abc'", $null, $null, $null, $null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
 
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($full_path, "powershell.exe Write-Output 'abc'", $null, $null, $null, $Null, $false)
-        $actual.StandardOut | Assert-Equals -Expected $expected
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected $expected
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess with unicode and us-ascii encoding" = {
-        $poop = [System.Char]::ConvertFromUtf32(0xE05A)  # Coverage breaks due to script parsing encoding issues with unicode chars, just use the code point instead
+        # Coverage breaks due to script parsing encoding issues with unicode chars, just use the code point instead
+        $poop = [System.Char]::ConvertFromUtf32(0xE05A)
         $cmd = "cmd.exe /c echo $poop café"
         $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, 'us-ascii', $false)
-        $actual.StandardOut | Assert-Equals -Expected "??? caf??`r`n"
-        $actual.StandardError | Assert-Equals -Expected ""
-        $actual.ExitCode | Assert-Equals -Expected 0
+        $actual.StandardOut | Assert-Equal -Expected "??? caf??`r`n"
+        $actual.StandardError | Assert-Equal -Expected ""
+        $actual.ExitCode | Assert-Equal -Expected 0
     }
 
     "CreateProcess while waiting for grandchildren" = {
@@ -220,15 +226,15 @@ exit 1
         $actual = $null
         $time = Measure-Command -Expression {
             $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $false)
-            $actual.ExitCode | Assert-Equals -Expected 0
+            $actual.ExitCode | Assert-Equal -Expected 0
         }
-        $time.TotalSeconds -lt 2 | Assert-Equals -Expected $true
+        $time.TotalSeconds -lt 2 | Assert-Equal -Expected $true
 
         $time = Measure-Command -Expression {
             $actual = [Ansible.Windows.Process.ProcessUtil]::CreateProcess($null, $cmd, $null, $null, $null, $null, $true)
-            $actual.ExitCode | Assert-Equals -Expected 0  # We still don't expect to get the grandchild rc
+            $actual.ExitCode | Assert-Equal -Expected 0  # We still don't expect to get the grandchild rc
         }
-        $time.TotalSeconds -ge 2 | Assert-Equals -Expected $true
+        $time.TotalSeconds -ge 2 | Assert-Equal -Expected $true
     }
 
     "NativeCreateProcess with redirected pipes" = {
@@ -258,14 +264,14 @@ exit 1
             $null,
             $si
         )
-        $actual.Process.IsClosed | Assert-Equals -Expected $false
-        $actual.Process.IsInvalid | Assert-Equals -Expected $false
-        $actual.Thread.IsClosed | Assert-Equals -Expected $false
-        $actual.Thread.IsInvalid | Assert-Equals -Expected $false
+        $actual.Process.IsClosed | Assert-Equal -Expected $false
+        $actual.Process.IsInvalid | Assert-Equal -Expected $false
+        $actual.Thread.IsClosed | Assert-Equal -Expected $false
+        $actual.Thread.IsInvalid | Assert-Equal -Expected $false
 
         $actual.Dispose()
-        $actual.Process.IsClosed | Assert-Equals -Expected $true
-        $actual.Thread.IsClosed | Assert-Equals -Expected $true
+        $actual.Process.IsClosed | Assert-Equal -Expected $true
+        $actual.Thread.IsClosed | Assert-Equal -Expected $true
 
         $stdoutClient.Dispose()
         $stdout = $stdoutSr.ReadToEnd()
@@ -276,8 +282,8 @@ exit 1
         $stderrSr.Dispose()
 
         # If someone would have gone wrong it would be in stderr so check that first.
-        $stderr | Assert-Equals -Expected 'stderr'
-        $stdout | Assert-Equals -Expected 'stdout'
+        $stderr | Assert-Equal -Expected 'stderr'
+        $stdout | Assert-Equal -Expected 'stdout'
     }
 
     "NativeCreateProcess with suspended thread" = {
@@ -294,10 +300,10 @@ exit 1
             $null,
             [Ansible.Windows.Process.StartupInfo]@{}
         )
-        $actual.Process.IsClosed | Assert-Equals -Expected $false
-        $actual.Process.IsInvalid | Assert-Equals -Expected $false
-        $actual.Thread.IsClosed | Assert-Equals -Expected $false
-        $actual.Thread.IsInvalid | Assert-Equals -Expected $false
+        $actual.Process.IsClosed | Assert-Equal -Expected $false
+        $actual.Process.IsInvalid | Assert-Equal -Expected $false
+        $actual.Thread.IsClosed | Assert-Equal -Expected $false
+        $actual.Thread.IsInvalid | Assert-Equal -Expected $false
 
         $processFlags = 0
         $threadFlags = 0
@@ -307,16 +313,16 @@ exit 1
         [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
 
         # 1 == HANDLE_FLAG_INHERIT
-        $processFlags | Assert-Equals -Expected 0
-        $threadFlags | Assert-Equals -Expected 0
+        $processFlags | Assert-Equal -Expected 0
+        $threadFlags | Assert-Equal -Expected 0
 
         $process = Get-Process -Id $actual.ProcessId
         Wait-Process -Id $actual.ProcessId -Timeout 1 -ErrorAction SilentlyContinue
-        $process.HasExited | Assert-Equals -Expected $false
+        $process.HasExited | Assert-Equal -Expected $false
 
         [Ansible.Windows.Process.ProcessUtil]::ResumeThread($actual.Thread)
         Wait-Process -Id $actual.ProcessId -ErrorAction SilentlyContinue
-        $process.HasExited | Assert-Equals -Expected $true
+        $process.HasExited | Assert-Equal -Expected $true
     }
 
     "NativeCreateProcess with InheritHandle=`$true security attributes" = {
@@ -346,8 +352,8 @@ exit 1
             [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
 
             # 1 == HANDLE_FLAG_INHERIT
-            $processFlags | Assert-Equals -Expected 1
-            $threadFlags | Assert-Equals -Expected 1
+            $processFlags | Assert-Equal -Expected 1
+            $threadFlags | Assert-Equal -Expected 1
         }
         finally {
             Stop-Process -Id $actual.ProcessId -Force
@@ -382,8 +388,8 @@ exit 1
             [void][Handle.NativeMethods]::GetHandleInformation($actual.Thread.DangerousGetHandle(), [ref]$threadFlags)
 
             # 1 == HANDLE_FLAG_INHERIT
-            $processFlags | Assert-Equals -Expected 0
-            $threadFlags | Assert-Equals -Expected 0
+            $processFlags | Assert-Equal -Expected 0
+            $threadFlags | Assert-Equal -Expected 0
         }
         finally {
             Stop-Process -Id $actual.ProcessId -Force

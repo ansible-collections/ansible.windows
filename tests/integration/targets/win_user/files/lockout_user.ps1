@@ -1,5 +1,4 @@
-trap
-{
+trap {
     Write-Error -ErrorRecord $_
     exit 1;
 }

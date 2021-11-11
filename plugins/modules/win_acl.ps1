@@ -50,9 +50,9 @@ Function SetPrivilegeTokens() {
     # Set privilege tokens only if admin.
     # Admins would have these privs or be able to set these privs in the UI Anyway
 
-    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+    $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+    $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
 
 
     if ($myWindowsPrincipal.IsInRole($adminRole)) {
@@ -62,8 +62,8 @@ Function SetPrivilegeTokens() {
         # See the following for details of each privilege
         # https://msdn.microsoft.com/en-us/library/windows/desktop/bb530716(v=vs.85).aspx
         $privileges = @(
-            "SeRestorePrivilege",  # Grants all write access control to any file, regardless of ACL.
-            "SeBackupPrivilege",  # Grants all read access control to any file, regardless of ACL.
+            "SeRestorePrivilege", # Grants all write access control to any file, regardless of ACL.
+            "SeBackupPrivilege", # Grants all read access control to any file, regardless of ACL.
             "SeTakeOwnershipPrivilege"  # Grants ability to take owernship of an object w/out being granted discretionary access
         )
         foreach ($privilege in $privileges) {
@@ -84,11 +84,11 @@ $path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $tru
 $user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
 $rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
 
-$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow","deny"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent","present"
+$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow", "deny"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent", "present"
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
-$propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly","None","NoPropagateInherit"
+$propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
@@ -140,10 +140,10 @@ Try {
     $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
 
     If ($type -eq "allow") {
-        $objType =[System.Security.AccessControl.AccessControlType]::Allow
+        $objType = [System.Security.AccessControl.AccessControlType]::Allow
     }
     Else {
-        $objType =[System.Security.AccessControl.AccessControlType]::Deny
+        $objType = [System.Security.AccessControl.AccessControlType]::Deny
     }
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
@@ -158,15 +158,30 @@ Try {
     # Check if the ACE exists already in the objects ACL list
     $match = $false
 
-    ForEach($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])){
+    ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
 
         If ($path_item.PSProvider.Name -eq "Registry") {
-            If (($rule.RegistryRights -eq $objACE.RegistryRights) -And ($rule.AccessControlType -eq $objACE.AccessControlType) -And ($rule.IdentityReference -eq $objACE.IdentityReference) -And ($rule.IsInherited -eq $objACE.IsInherited) -And ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And ($rule.PropagationFlags -eq $objACE.PropagationFlags)) {
+            If (
+                ($rule.RegistryRights -eq $objACE.RegistryRights) -And
+                ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                ($rule.IsInherited -eq $objACE.IsInherited) -And
+                ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+            ) {
                 $match = $true
                 Break
             }
-        } else {
-            If (($rule.FileSystemRights -eq $objACE.FileSystemRights) -And ($rule.AccessControlType -eq $objACE.AccessControlType) -And ($rule.IdentityReference -eq $objACE.IdentityReference) -And ($rule.IsInherited -eq $objACE.IsInherited) -And ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And ($rule.PropagationFlags -eq $objACE.PropagationFlags)) {
+        }
+        else {
+            If (
+                ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
+                ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                ($rule.IsInherited -eq $objACE.IsInherited) -And
+                ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+            ) {
                 $match = $true
                 Break
             }
@@ -178,7 +193,8 @@ Try {
             $objACL.AddAccessRule($objACE)
             If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
-            } else {
+            }
+            else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
             $result.changed = $true
@@ -192,7 +208,8 @@ Try {
             $objACL.RemoveAccessRule($objACE)
             If ($path_item.PSProvider.Name -eq "Registry") {
                 Set-ACL -LiteralPath $path -AclObject $objACL
-            } else {
+            }
+            else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
             $result.changed = $true

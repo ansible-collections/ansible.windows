@@ -9,7 +9,7 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
 $name = Get-AnsibleParam -obj $params -name "name" -type "str" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present","absent"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
 $description = Get-AnsibleParam -obj $params -name "description" -type "str"
 
 $result = @{
@@ -17,7 +17,7 @@ $result = @{
 }
 
 $adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
-$group = $adsi.Children | Where-Object {$_.SchemaClassName -eq 'group' -and $_.Name -eq $name }
+$group = $adsi.Children | Where-Object { $_.SchemaClassName -eq 'group' -and $_.Name -eq $name }
 
 try {
     If ($state -eq "present") {

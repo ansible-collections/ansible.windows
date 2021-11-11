@@ -13,8 +13,8 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
 
-$path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest","name"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent","directory","file","touch"
+$path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest", "name"
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch"
 
 # used in template/copy when dest is the path to a dir and source is a file
 $original_basename = Get-AnsibleParam -obj $params -name "_original_basename" -type "str"
@@ -63,17 +63,21 @@ function Remove-File($file, $checkmode) {
                 if (-not $checkmode) {
                     [Ansible.Command.SymLinkHelper]::DeleteDirectory($file.FullName)
                 }
-            } else {
+            }
+            else {
                 if (-not $checkmode) {
                     [Ansible.Command.SymlinkHelper]::DeleteFile($file.FullName)
                 }
             }
-        } elseif ($file.PSIsContainer) {
+        }
+        elseif ($file.PSIsContainer) {
             Remove-Directory -directory $file -checkmode $checkmode
-        } else {
+        }
+        else {
             Remove-Item -LiteralPath $file.FullName -Force -WhatIf:$checkmode
         }
-    } catch [Exception] {
+    }
+    catch [Exception] {
         Fail-Json $result "Failed to delete $($file.FullName): $($_.Exception.Message)"
     }
 }
@@ -92,7 +96,8 @@ if ($state -eq "touch") {
             (Get-ChildItem -LiteralPath $path).LastWriteTime = Get-Date
         }
         $result.changed = $true
-    } else {
+    }
+    else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
         $result.changed = $true
     }
@@ -103,7 +108,8 @@ if (Test-Path -LiteralPath $path) {
     if ($state -eq "absent") {
         Remove-File -file $fileinfo -checkmode $check_mode
         $result.changed = $true
-    } else {
+    }
+    else {
         if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
             Fail-Json $result "path $path is not a directory"
         }
@@ -113,34 +119,39 @@ if (Test-Path -LiteralPath $path) {
         }
     }
 
-} else {
+}
+else {
 
     # If state is not supplied, test the $path to see if it looks like
     # a file or a folder and set state to file or folder
     if ($null -eq $state) {
         $basename = Split-Path -Path $path -Leaf
         if ($basename.length -gt 0) {
-           $state = "file"
-        } else {
-           $state = "directory"
+            $state = "file"
+        }
+        else {
+            $state = "directory"
         }
     }
 
     if ($state -eq "directory") {
         try {
             New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
-        } catch {
+        }
+        catch {
             if ($_.CategoryInfo.Category -eq "ResourceExists") {
                 $fileinfo = Get-Item -LiteralPath $_.CategoryInfo.TargetName
                 if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
                     Fail-Json $result "path $path is not a directory"
                 }
-            } else {
+            }
+            else {
                 Fail-Json $result $_.Exception.Message
             }
         }
         $result.changed = $true
-    } elseif ($state -eq "file") {
+    }
+    elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"
     }
 

@@ -32,7 +32,8 @@ $changed_features = [System.Collections.Generic.List`1[String]]@()
 foreach ($feature_name in $name) {
     try {
         $feature_state_start = Get-WindowsOptionalFeature -Online -FeatureName $feature_name
-    } catch [System.Runtime.InteropServices.COMException] {
+    }
+    catch [System.Runtime.InteropServices.COMException] {
         # Server 2012 raises a COMException and doesn't return $null even with -ErrorAction SilentlyContinue
         $feature_state_start = $null
     }
@@ -43,7 +44,8 @@ foreach ($feature_name in $name) {
     if ($state -eq "present" -and $feature_state_start.State -notlike "Enabled*") {
         # Matches for "Enabled" and "EnabledPending"
         $changed_features.Add($feature_name)
-    } elseif ($state -eq "absent" -and $feature_state_start.State -notlike "Disabled*") {
+    }
+    elseif ($state -eq "absent" -and $feature_state_start.State -notlike "Disabled*") {
         # Matches for Disabled, DisabledPending, and DisabledWithPayloadRemoved
         $changed_features.Add($feature_name)
     }
@@ -68,7 +70,8 @@ if ($state -eq "present" -and $changed_features.Count -gt 0) {
         $module.Result.reboot_required = $action_result.RestartNeeded
     }
     $module.Result.changed = $true
-} elseif ($state -eq "absent" -and $changed_features.Count -gt 0) {
+}
+elseif ($state -eq "absent" -and $changed_features.Count -gt 0) {
     $remove_args = @{
         FeatureName = $changed_features
     }

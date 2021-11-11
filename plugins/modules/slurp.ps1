@@ -11,18 +11,15 @@ $result = @{
     changed = $false;
 }
 
-If (Test-Path -LiteralPath $src -PathType Leaf)
-{
+If (Test-Path -LiteralPath $src -PathType Leaf) {
     $bytes = [System.IO.File]::ReadAllBytes($src);
     $result.content = [System.Convert]::ToBase64String($bytes);
     $result.encoding = "base64";
     Exit-Json $result;
 }
-ElseIf (Test-Path -LiteralPath $src -PathType Container)
-{
+ElseIf (Test-Path -LiteralPath $src -PathType Container) {
     Fail-Json $result "Path $src is a directory";
 }
-Else
-{
+Else {
     Fail-Json $result "Path $src is not found";
 }

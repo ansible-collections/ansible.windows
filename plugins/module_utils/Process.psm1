@@ -10,7 +10,7 @@ Function Resolve-ExecutablePath {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $FilePath,
 
         [String]
@@ -54,7 +54,7 @@ Function ConvertFrom-EscapedArgument {
     [CmdletBinding()]
     [OutputType([String])]
     param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String[]]
         $InputObject
     )
@@ -81,7 +81,7 @@ Function ConvertTo-EscapedArgument {
     [CmdletBinding()]
     [OutputType([String])]
     param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [AllowEmptyString()]
         [AllowNull()]
         [String[]]
@@ -154,19 +154,19 @@ Function Start-AnsibleWindowsProcess {
         ExitCode = The return code from the process
     }
     #>
-    [CmdletBinding(DefaultParameterSetName='ArgumentList')]
+    [CmdletBinding(DefaultParameterSetName = 'ArgumentList')]
     [OutputType('Ansible.Windows.Process.Info')]
     param (
-        [Parameter(Mandatory=$true, ParameterSetName='ArgumentList')]
-        [Parameter(ParameterSetName='CommandLine')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ArgumentList')]
+        [Parameter(ParameterSetName = 'CommandLine')]
         [String]
         $FilePath,
 
-        [Parameter(ParameterSetName='ArgumentList')]
+        [Parameter(ParameterSetName = 'ArgumentList')]
         [String[]]
         $ArgumentList,
 
-        [Parameter(Mandatory=$true, ParameterSetName='CommandLine')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'CommandLine')]
         [String]
         $CommandLine,
 

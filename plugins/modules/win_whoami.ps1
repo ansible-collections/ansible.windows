@@ -705,7 +705,8 @@ namespace Ansible
                     else if (res != 0)
                         throw new Win32Exception(LsaNtStatusToWinError(res), String.Format("LsaGetLogonSessionData() failed {0}", res));
 
-                    SECURITY_LOGON_SESSION_DATA sessionData = (SECURITY_LOGON_SESSION_DATA)Marshal.PtrToStructure(dataPointer, typeof(SECURITY_LOGON_SESSION_DATA));
+                    SECURITY_LOGON_SESSION_DATA sessionData = (SECURITY_LOGON_SESSION_DATA)Marshal.PtrToStructure(
+                        dataPointer, typeof(SECURITY_LOGON_SESSION_DATA));
                     UInt64 sessionDataid = ConvertLuidToUint(sessionData.LogonId);
 
                     if (sessionDataid == processDataId)
@@ -796,7 +797,8 @@ Function Convert-Value($value) {
             $new_list_value = Convert-Value -value $list_value
             [void]$new_value.Add($new_list_value)
         }
-    } elseif ($value -is [Hashtable]) {
+    }
+    elseif ($value -is [Hashtable]) {
         $new_value = @{}
         foreach ($entry in $value.GetEnumerator()) {
             $entry_value = Convert-Value -value $entry.Value
@@ -806,18 +808,20 @@ Function Convert-Value($value) {
             }
             $new_value[$entry.Name] = $entry_value
         }
-    } elseif ($value -is [Ansible.Sid]) {
+    }
+    elseif ($value -is [Ansible.Sid]) {
         $new_value = @{
             sid = $value.SidString
             account_name = $value.AccountName
             domain_name = $value.DomainName
             type = $value.SidType.ToString().Replace("SidType", "")
         }
-    } elseif ($value -is [Enum]) {
+    }
+    elseif ($value -is [Enum]) {
         $new_value = $value.ToString()
     }
 
-    return ,$new_value
+    return , $new_value
 }
 
 $properties = [type][Ansible.SessionInfo]

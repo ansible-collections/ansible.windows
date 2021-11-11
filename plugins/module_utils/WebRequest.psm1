@@ -216,11 +216,13 @@ Function Get-AnsibleWindowsWebRequest {
 
     if ($UseDefaultCredential -and $web_request -is [System.Net.HttpWebRequest]) {
         $web_request.UseDefaultCredentials = $true
-    } elseif ($UrlUsername) {
+    }
+    elseif ($UrlUsername) {
         if ($ForceBasicAuth) {
             $auth_value = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $UrlUsername, $UrlPassword)))
             $web_request.Headers.Add("Authorization", "Basic $auth_value")
-        } else {
+        }
+        else {
             $credential = New-Object -TypeName System.Net.NetworkCredential -ArgumentList $UrlUsername, $UrlPassword
             $web_request.Credentials = $credential
         }
@@ -240,7 +242,8 @@ Function Get-AnsibleWindowsWebRequest {
                 $cert = New-Object -TypeName "$crypto_ns.X509Certificate2" -ArgumentList @(
                     $ClientCert, $ClientCertPassword
                 )
-            } catch [System.Security.Cryptography.CryptographicException] {
+            }
+            catch [System.Security.Cryptography.CryptographicException] {
                 Write-Error -Message "Failed to read client certificate at '$ClientCert'" -Exception $_.Exception -Category SecurityError
                 return
             }
@@ -252,9 +255,11 @@ Function Get-AnsibleWindowsWebRequest {
 
     if (-not $UseProxy) {
         $proxy = $null
-    } elseif ($ProxyUrl) {
+    }
+    elseif ($ProxyUrl) {
         $proxy = New-Object -TypeName System.Net.WebProxy -ArgumentList $ProxyUrl, $true
-    } else  {
+    }
+    else {
         $proxy = $web_request.Proxy
     }
 
@@ -266,11 +271,13 @@ Function Get-AnsibleWindowsWebRequest {
             # property. We cannot set UseDefaultCredentials so we just set the Credentials to the
             # DefaultCredentials in the CredentialCache which does the same thing.
             $proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
-        } elseif ($ProxyUsername) {
+        }
+        elseif ($ProxyUsername) {
             $proxy.Credentials = New-Object -TypeName System.Net.NetworkCredential -ArgumentList @(
                 $ProxyUsername, $ProxyPassword
             )
-        } else {
+        }
+        else {
             $proxy.Credentials = $null
         }
     }
@@ -308,7 +315,8 @@ Function Get-AnsibleWindowsWebRequest {
             $options = (Get-AnsibleWindowsWebRequestSpec).options
             if ($HttpAgent -eq $options.http_agent.default) {
                 $HttpAgent = $Headers['User-Agent']
-            } elseif ($null -ne $Module) {
+            }
+            elseif ($null -ne $Module) {
                 $Module.Warn("The 'User-Agent' header and the 'http_agent' was set, using the 'http_agent' for web request")
             }
         }
@@ -319,7 +327,8 @@ Function Get-AnsibleWindowsWebRequest {
             safe {
                 if ($web_request.Method -in @("GET", "HEAD")) {
                     $web_request.AllowAutoRedirect = $true
-                } else {
+                }
+                else {
                     $web_request.AllowAutoRedirect = $false
                 }
             }
@@ -328,7 +337,8 @@ Function Get-AnsibleWindowsWebRequest {
 
         if ($MaximumRedirection -eq 0) {
             $web_request.AllowAutoRedirect = $false
-        } else {
+        }
+        else {
             $web_request.MaximumAutomaticRedirections = $MaximumRedirection
         }
     }
@@ -392,16 +402,16 @@ Function Invoke-AnsibleWindowsWebRequest {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.Object]
         [ValidateScript({ $_.GetType().FullName -eq 'Ansible.Basic.AnsibleModule' })]
         $Module,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.Net.WebRequest]
         $Request,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ScriptBlock]
         $Script,
 
@@ -419,7 +429,8 @@ Function Invoke-AnsibleWindowsWebRequest {
         try {
             $Body.CopyTo($request_st)
             $request_st.Flush()
-        } finally {
+        }
+        finally {
             $request_st.Close()
         }
     }
@@ -427,7 +438,8 @@ Function Invoke-AnsibleWindowsWebRequest {
     try {
         try {
             $web_response = $Request.GetResponse()
-        } catch [System.Net.WebException] {
+        }
+        catch [System.Net.WebException] {
             # A WebResponse with a status code not in the 200 range will raise a WebException. We check if the
             # exception raised contains the actual response and continue on if IgnoreBadResponse is set. We also
             # make sure we set the status_code return value on the Module object if possible
@@ -440,7 +452,8 @@ Function Invoke-AnsibleWindowsWebRequest {
                     $Module.Result.status_code = $_.Exception.Response.StatusCode
                     throw $_
                 }
-            } else {
+            }
+            else {
                 throw $_
             }
         }
@@ -449,7 +462,8 @@ Function Invoke-AnsibleWindowsWebRequest {
             # A FileWebResponse won't have these properties set
             $Module.Result.msg = "OK"
             $Module.Result.status_code = 200
-        } else {
+        }
+        else {
             $Module.Result.msg = $web_response.StatusDescription
             $Module.Result.status_code = $web_response.StatusCode
         }
@@ -458,10 +472,12 @@ Function Invoke-AnsibleWindowsWebRequest {
         try {
             # Invoke the ScriptBlock and pass in WebResponse and ResponseStream
             &$Script -Response $web_response -Stream $response_stream
-        } finally {
+        }
+        finally {
             $response_stream.Dispose()
         }
-    } finally {
+    }
+    finally {
         if ($web_response) {
             $web_response.Close()
         }

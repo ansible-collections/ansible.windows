@@ -142,44 +142,48 @@ if ($registry_path -ne $registry_leaf -and -not $registry_path.Contains('\')) {
 # import format is like 'hex:be,ef,be,ef,be,ef,be,ef,be,ef'
 Function Convert-RegExportHexStringToByteArray($string) {
     # Remove 'hex:' from the front of the string if present
-    $string = $string.ToLower() -replace '^hex\:',''
+    $string = $string.ToLower() -replace '^hex\:', ''
 
     # Remove whitespace and any other non-hex crud.
-    $string = $string -replace '[^a-f0-9\\,x\-\:]',''
+    $string = $string -replace '[^a-f0-9\\,x\-\:]', ''
 
     # Turn commas into colons
-    $string = $string -replace ',',':'
+    $string = $string -replace ',', ':'
 
     # Maybe there's nothing left over to convert...
     if ($string.Length -eq 0) {
-        return ,@()
+        return , @()
     }
 
     # Split string with or without colon delimiters.
     if ($string.Length -eq 1) {
-        return ,@([System.Convert]::ToByte($string,16))
-    } elseif (($string.Length % 2 -eq 0) -and ($string.IndexOf(":") -eq -1)) {
-        return ,@($string -split '([a-f0-9]{2})' | foreach-object { if ($_) {[System.Convert]::ToByte($_,16)}})
-    } elseif ($string.IndexOf(":") -ne -1) {
-        return ,@($string -split ':+' | foreach-object {[System.Convert]::ToByte($_,16)})
-    } else {
-        return ,@()
+        return , @([System.Convert]::ToByte($string, 16))
+    }
+    elseif (($string.Length % 2 -eq 0) -and ($string.IndexOf(":") -eq -1)) {
+        return , @($string -split '([a-f0-9]{2})' | foreach-object { if ($_) { [System.Convert]::ToByte($_, 16) } })
+    }
+    elseif ($string.IndexOf(":") -ne -1) {
+        return , @($string -split ':+' | foreach-object { [System.Convert]::ToByte($_, 16) })
+    }
+    else {
+        return , @()
     }
 }
 
-Function Compare-RegistryProperties($existing, $new) {
+Function Compare-RegistryProperty($existing, $new) {
     # Outputs $true if the property values don't match
     if ($existing -is [Array]) {
         (Compare-Object -ReferenceObject $existing -DifferenceObject $new -SyncWindow 0).Length -ne 0
-    } else {
+    }
+    else {
         $existing -cne $new
     }
 }
 
 Function Get-DiffValue {
     param(
-        [Parameter(Mandatory=$true)][Object]$Type,
-        [Parameter(Mandatory=$true)][Object]$Value
+        [Parameter(Mandatory = $true)][Object]$Type,
+        [Parameter(Mandatory = $true)][Object]$Value
     )
 
     $diff = @{ type = $Type.ToString(); value = $Value }
@@ -190,9 +194,11 @@ Function Get-DiffValue {
         foreach ($dec_value in $Value) {
             $diff.value.Add("0x{0:x2}" -f $dec_value)
         }
-    } elseif ($Type -eq $enum::DWord) {
+    }
+    elseif ($Type -eq $enum::DWord) {
         $diff.value = "0x{0:x8}" -f $Value
-    } elseif ($Type -eq $enum::QWord) {
+    }
+    elseif ($Type -eq $enum::QWord) {
         $diff.value = "0x{0:x16}" -f $Value
     }
 
@@ -202,10 +208,10 @@ Function Get-DiffValue {
 Function Set-StateAbsent {
     param(
         # Used for diffs and exception messages to match up against Ansible input
-        [Parameter(Mandatory=$true)][String]$PrintPath,
-        [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryKey]$Hive,
-        [Parameter(Mandatory=$true)][String]$Path,
-        [Parameter(Mandatory=$true)]$Module,
+        [Parameter(Mandatory = $true)][String]$PrintPath,
+        [Parameter(Mandatory = $true)][Microsoft.Win32.RegistryKey]$Hive,
+        [Parameter(Mandatory = $true)][String]$Path,
+        [Parameter(Mandatory = $true)]$Module,
         [String]$Name,
         [Switch]$DeleteKey
     )
@@ -224,15 +230,17 @@ Function Set-StateAbsent {
             if (-not $Module.CheckMode) {
                 try {
                     $Hive.DeleteSubKeyTree($Path, $false)
-                } catch {
+                }
+                catch {
                     $Module.FailJson("failed to delete registry key at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
             $Module.Result.changed = $true
 
-            $Module.Diff.before = @{$PrintPath = @{}}
+            $Module.Diff.before = @{$PrintPath = @{} }
             $Module.Diff.after = @{}
-        } else {
+        }
+        else {
             # delete_key=no or name is not null/empty, delete the property not the full key
             $property = $key.GetValue($Name)
             if ($null -eq $property) {
@@ -244,7 +252,8 @@ Function Set-StateAbsent {
             if (-not $Module.CheckMode) {
                 try {
                     $key.DeleteValue($Name)
-                } catch {
+                }
+                catch {
                     $Module.FailJson("failed to delete registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
@@ -254,7 +263,8 @@ Function Set-StateAbsent {
             $Module.Diff.before = @{ $PrintPath = @{ $Name = $diff_value } }
             $Module.Diff.after = @{ $PrintPath = @{} }
         }
-    } finally {
+    }
+    finally {
         if ($key) {
             $key.Dispose()
         }
@@ -263,10 +273,10 @@ Function Set-StateAbsent {
 
 Function Set-StatePresent {
     param(
-        [Parameter(Mandatory=$true)][String]$PrintPath,
-        [Parameter(Mandatory=$true)][Microsoft.Win32.RegistryKey]$Hive,
-        [Parameter(Mandatory=$true)][String]$Path,
-        [Parameter(Mandatory=$true)]$Module,
+        [Parameter(Mandatory = $true)][String]$PrintPath,
+        [Parameter(Mandatory = $true)][Microsoft.Win32.RegistryKey]$Hive,
+        [Parameter(Mandatory = $true)][String]$Path,
+        [Parameter(Mandatory = $true)]$Module,
         [String]$Name,
         [Object]$Data,
         [Object]$Type
@@ -279,18 +289,20 @@ Function Set-StatePresent {
             if (-not $Module.CheckMode) {
                 try {
                     $key = $Hive.CreateSubKey($Path)
-                } catch {
+                }
+                catch {
                     $Module.FailJson("failed to create registry key at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
             $Module.Result.changed = $true
 
             $Module.Diff.before = @{}
-            $Module.Diff.after = @{$PrintPath = @{}}
-        } else {
+            $Module.Diff.after = @{$PrintPath = @{} }
+        }
+        else {
             # Make sure the diff is in an expected state for the key
-            $Module.Diff.before = @{$PrintPath = @{}}
-            $Module.Diff.after = @{$PrintPath = @{}}
+            $Module.Diff.before = @{$PrintPath = @{} }
+            $Module.Diff.after = @{$PrintPath = @{} }
         }
 
         if ($null -eq $key -or $null -eq $Data) {
@@ -308,12 +320,13 @@ Function Set-StatePresent {
             if ($Type -ne $existing_type) {
                 $change_value = $true
                 $Module.Result.data_type_changed = $true
-                $data_mismatch = Compare-RegistryProperties -existing $property -new $Data
+                $data_mismatch = Compare-RegistryProperty -existing $property -new $Data
                 if ($data_mismatch) {
                     $Module.Result.data_changed = $true
                 }
-            } else {
-                $data_mismatch = Compare-RegistryProperties -existing $property -new $Data
+            }
+            else {
+                $data_mismatch = Compare-RegistryProperty -existing $property -new $Data
                 if ($data_mismatch) {
                     $change_value = $true
                     $Module.Result.data_changed = $true
@@ -324,7 +337,8 @@ Function Set-StatePresent {
                 if (-not $Module.CheckMode) {
                     try {
                         $key.SetValue($Name, $Data, $Type)
-                    } catch {
+                    }
+                    catch {
                         $Module.FailJson("failed to change registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                     }
                 }
@@ -332,17 +346,20 @@ Function Set-StatePresent {
 
                 $Module.Diff.before.$PrintPath.$Name = Get-DiffValue -Type $existing_type -Value $property
                 $Module.Diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
-            } else {
+            }
+            else {
                 $diff_value = Get-DiffValue -Type $existing_type -Value $property
                 $Module.Diff.before.$PrintPath.$Name = $diff_value
                 $Module.Diff.after.$PrintPath.$Name = $diff_value
             }
-        } else {
+        }
+        else {
             # property doesn't exist just create a new one
             if (-not $Module.CheckMode) {
                 try {
                     $key.SetValue($Name, $Data, $Type)
-                } catch {
+                }
+                catch {
                     $Module.FailJson("failed to create registry property '$Name' at $($PrintPath): $($_.Exception.Message)", $_)
                 }
             }
@@ -350,7 +367,8 @@ Function Set-StatePresent {
 
             $Module.Diff.after.$PrintPath.$Name = Get-DiffValue -Type $Type -Value $Data
         }
-    } finally {
+    }
+    finally {
         if ($key) {
             $key.Dispose()
         }
@@ -371,15 +389,19 @@ if ($type -in @("binary", "none")) {
     # convert the data from string to byte array if in hex: format
     if ($data -is [String]) {
         $data = [byte[]](Convert-RegExportHexStringToByteArray -string $data)
-    } elseif ($data -is [Int]) {
+    }
+    elseif ($data -is [Int]) {
         if ($data -gt 255) {
-            $module.FailJson("cannot convert binary data '$data' to byte array, please specify this value as a yaml byte array or a comma separated hex value string")
+            $msg = "cannot convert binary data '$data' to byte array, please specify this value as a yaml byte array or a comma separated hex value string"
+            $module.FailJson($msg)
         }
         $data = [byte[]]@([byte]$data)
-    } elseif ($data -is [Array]) {
+    }
+    elseif ($data -is [Array]) {
         $data = [byte[]]$data
     }
-} elseif ($type -in @("dword", "qword")) {
+}
+elseif ($type -in @("dword", "qword")) {
     # dword's and dword's don't allow null values, set to 0
     if ($null -eq $data) {
         $data = 0
@@ -396,36 +418,43 @@ if ($type -in @("binary", "none")) {
     if ($type -eq "dword") {
         if ($data -gt [UInt32]::MaxValue) {
             $module.FailJson("data cannot be larger than 0xffffffff when type is dword")
-        } elseif ($data -gt [Int32]::MaxValue) {
+        }
+        elseif ($data -gt [Int32]::MaxValue) {
             # when dealing with larger int32 (> 2147483647 or 0x7FFFFFFF) powershell
             # automatically converts it to a signed int64. We need to convert this to
             # signed int32 by parsing the hex string value.
             $data = "0x$("{0:x}" -f $data)"
         }
         $data = [Int32]$data
-    } else {
+    }
+    else {
         if ($data -gt [UInt64]::MaxValue) {
             $module.FailJson("data cannot be larger than 0xffffffffffffffff when type is qword")
-        } elseif ($data -gt [Int64]::MaxValue) {
+        }
+        elseif ($data -gt [Int64]::MaxValue) {
             $data = "0x$("{0:x}" -f $data)"
         }
         $data = [Int64]$data
     }
-} elseif ($type -in @("string", "expandstring") -and $name) {
+}
+elseif ($type -in @("string", "expandstring") -and $name) {
     # a null string or expandstring must be empty quotes
     # Only do this if $name has been defined (not the default key)
     if ($null -eq $data) {
         $data = ""
     }
-} elseif ($type -eq "multistring") {
+}
+elseif ($type -eq "multistring") {
     # convert the data for a multistring to a String[] array
     if ($null -eq $data) {
         [string[]]$data = @()
-    } elseif ($data -is [System.Collections.IList]) {
+    }
+    elseif ($data -is [System.Collections.IList]) {
         [string[]]$data = foreach ($entry in $data) {
             $entry.ToString([CultureInfo]::InvariantCulture)
         }
-    } else {
+    }
+    else {
         [string[]]$data = @($data.ToString([CultureInfo]::InvariantCulture))
     }
 }
@@ -434,7 +463,7 @@ if ($type -in @("binary", "none")) {
 $type = [System.Enum]::Parse([Microsoft.Win32.RegistryValueKind], $type, $true)
 
 # Cannot get field from switch as it causes issues with PSScriptAnalyzer parsing the module on linux
-$registry_hive = switch(Split-Path -Path $path -Qualifier) {
+$registry_hive = switch (Split-Path -Path $path -Qualifier) {
     "HKCR:" { 'ClassesRoot' }
     "HKCC:" { 'CurrentConfig' }
     "HKCU:" { 'CurrentUser' }
@@ -454,7 +483,8 @@ try {
         try {
             Set-AnsiblePrivilege -Name SeBackupPrivilege -Value $true
             Set-AnsiblePrivilege -Name SeRestorePrivilege -Value $true
-        } catch [System.ComponentModel.Win32Exception] {
+        }
+        catch [System.ComponentModel.Win32Exception] {
             $module.FailJson("failed to enable SeBackupPrivilege and SeRestorePrivilege for the current process: $($_.Exception.Message)", $_)
         }
 
@@ -462,14 +492,16 @@ try {
             $module.Warn("hive already loaded at HKLM:\ANSIBLE, had to unload hive for win_regedit to continue")
             try {
                 [Ansible.WinRegedit.Hive]::UnloadHive("ANSIBLE")
-            } catch [System.ComponentModel.Win32Exception] {
+            }
+            catch [System.ComponentModel.Win32Exception] {
                 $module.FailJson("failed to unload registry hive HKLM:\ANSIBLE from $($hive): $($_.Exception.Message)", $_)
             }
         }
 
         try {
             $loaded_hive = New-Object -TypeName Ansible.WinRegedit.Hive -ArgumentList "ANSIBLE", $hive
-        } catch [System.ComponentModel.Win32Exception] {
+        }
+        catch [System.ComponentModel.Win32Exception] {
             $module.FailJson("failed to load registry hive from '$hive' to HKLM:\ANSIBLE: $($_.Exception.Message)", $_)
         }
     }
@@ -483,10 +515,12 @@ try {
     }
     if ($state -eq "present") {
         Set-StatePresent @set_params -Data $data -Type $type
-    } else {
+    }
+    else {
         Set-StateAbsent @set_params -DeleteKey:$delete_key
     }
-} finally {
+}
+finally {
     $registry_hive.Dispose()
     if ($loaded_hive) {
         $loaded_hive.Dispose()
