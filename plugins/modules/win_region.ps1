@@ -156,7 +156,8 @@ Function Get-SystemLocaleName {
         }
 
         $system_locale = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($ptr)
-    } finally {
+    }
+    finally {
         [System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr)
     }
 
@@ -177,29 +178,32 @@ Function Get-UserLocaleName {
         }
 
         $user_locale = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($ptr)
-    } finally {
+    }
+    finally {
         [System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr)
     }
 
     return $user_locale
 }
 
-Function Get-ValidGeoIds($cultures) {
-   $geo_ids = @()
-   foreach($culture in $cultures) {
-       try {
-           $geo_id = [System.Globalization.RegionInfo]$culture.Name
-           $geo_ids += $geo_id.GeoId
-       } catch {}
-   }
-   $geo_ids
+Function Get-ValidGeoId($cultures) {
+    $geo_ids = @()
+    foreach ($culture in $cultures) {
+        try {
+            $geo_id = [System.Globalization.RegionInfo]$culture.Name
+            $geo_ids += $geo_id.GeoId
+        }
+        catch {}
+    }
+    $geo_ids
 }
 
 Function Test-RegistryProperty($reg_key, $property) {
     $type = Get-ItemProperty -LiteralPath $reg_key -Name $property -ErrorAction SilentlyContinue
     if ($null -eq $type) {
         $false
-    } else {
+    }
+    else {
         $true
     }
 }
@@ -208,7 +212,7 @@ Function Copy-RegistryKey($source, $target) {
     # Using Copy-Item -Recurse is giving me weird results, doing it recursively
     Copy-Item -LiteralPath $source -Destination $target -WhatIf:$check_mode
 
-    foreach($key in Get-ChildItem -LiteralPath $source) {
+    foreach ($key in Get-ChildItem -LiteralPath $source) {
         $sourceKey = "$source\$($key.PSChildName)"
         $targetKey = (Get-Item -LiteralPath $source).PSChildName
         Copy-RegistryKey -source "$sourceKey" -target "$target\$targetKey"
@@ -269,7 +273,7 @@ Function Set-UserLocale($culture) {
     }
 
     $properties = Get-ItemProperty -LiteralPath $reg_key
-    foreach($property in $properties.PSObject.Properties) {
+    foreach ($property in $properties.PSObject.Properties) {
         if (Test-RegistryProperty -reg_key $reg_key -property $property.Name) {
             $name = $property.Name
             $old_value = $property.Value
@@ -339,9 +343,10 @@ Function Set-SystemLocaleLegacy($unicode_language) {
 
 if ($null -eq $format -and $null -eq $location -and $null -eq $unicode_language) {
     $module.FailJson("An argument for 'format', 'location' or 'unicode_language' needs to be supplied")
-} else {
+}
+else {
     $valid_cultures = [System.Globalization.CultureInfo]::GetCultures('InstalledWin32Cultures')
-    $valid_geoids = Get-ValidGeoIds -cultures $valid_cultures
+    $valid_geoids = Get-ValidGeoId -cultures $valid_cultures
 
     if ($null -ne $location) {
         if ($valid_geoids -notcontains $location) {
@@ -373,7 +378,8 @@ if ($null -ne $location) {
             }
             $module.Result.changed = $true
         }
-    } else {
+    }
+    else {
         $current_location = (Get-ItemProperty -LiteralPath 'HKCU:\Control Panel\International\Geo').Nation
         if ($current_location -ne $location) {
             Set-ItemProperty -LiteralPath 'HKCU:\Control Panel\International\Geo' -Name 'Nation' -Value $location -WhatIf:$check_mode
@@ -402,7 +408,8 @@ if ($null -ne $unicode_language) {
             $module.Result.changed = $true
             $module.Result.restart_required = $true
         }
-    } else {
+    }
+    else {
         Set-SystemLocaleLegacy -unicode_language $unicode_language
     }
 }
