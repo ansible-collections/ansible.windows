@@ -11,13 +11,13 @@ Set-StrictMode -Version 2.0
 
 $spec = @{
     options = @{
-        logon_count = @{type = "int"}
-        password = @{type = "str"; no_log = $true}
-        state = @{type = "str"; choices = "absent", "present"; default = "present"}
-        username = @{type = "str"}
+        logon_count = @{ type = "int" }
+        password = @{ type = "str"; no_log = $true }
+        state = @{ type = "str"; choices = "absent", "present"; default = "present" }
+        username = @{ type = "str" }
     }
     required_if = @(
-        ,@("state", "present", @("username", "password"))
+        , @("state", "present", @("username", "password"))
     )
     supports_check_mode = $true
 }
@@ -36,7 +36,8 @@ if ($username) {
     $ntAccount = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $username
     try {
         $accountSid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
-    } catch [System.Security.Principal.IdentityNotMappedException] {
+    }
+    catch [System.Security.Principal.IdentityNotMappedException] {
         $module.FailJson("Failed to find a local or domain user with the name '$username'", $_)
     }
     $ntAccount = $accountSid.Translate([System.Security.Principal.NTAccount])
