@@ -29,7 +29,8 @@ $triggers = Get-AnsibleParam -obj $params -name "triggers" -type "list"
 # task Principal properties
 $display_name = Get-AnsibleParam -obj $params -name "display_name" -type "str"
 $group = Get-AnsibleParam -obj $params -name "group" -type "str"
-$logon_type = Get-AnsibleParam -obj $params -name "logon_type" -type "str" -validateset "none","password","s4u","interactive_token","group","service_account","interactive_token_or_password"
+$logon_options = "none", "password", "s4u", "interactive_token", "group", "service_account", "interactive_token_or_password"
+$logon_type = Get-AnsibleParam -obj $params -name "logon_type" -type "str" -validateset $logon_options
 $run_level = Get-AnsibleParam -obj $params -name "run_level" -type "str" -validateset "limited", "highest" -aliases "runlevel"
 $username = Get-AnsibleParam -obj $params -name "username" -type "str" -aliases "user"
 $password = Get-AnsibleParam -obj $params -name "password" -type "str"
@@ -45,16 +46,19 @@ $version = Get-AnsibleParam -obj $params -name "version" -type "str"
 # task Settings properties
 $allow_demand_start = Get-AnsibleParam -obj $params -name "allow_demand_start" -type "bool"
 $allow_hard_terminate = Get-AnsibleParam -obj $params -name "allow_hard_terminate" -type "bool"
-$compatibility =  Get-AnsibleParam -obj $params -name "compatibility" -type "int" # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383486(v=vs.85).aspx
+# https://msdn.microsoft.com/en-us/library/windows/desktop/aa383486(v=vs.85).aspx
+$compatibility = Get-AnsibleParam -obj $params -name "compatibility" -type "int"
 $delete_expired_task_after = Get-AnsibleParam -obj $params -name "delete_expired_task_after" -type "str" # time string PT...
 $disallow_start_if_on_batteries = Get-AnsibleParam -obj $params -name "disallow_start_if_on_batteries" -type "bool"
 $enabled = Get-AnsibleParam -obj $params -name "enabled" -type "bool"
 $execution_time_limit = Get-AnsibleParam -obj $params -name "execution_time_limit" -type "str" # PT72H
 $hidden = Get-AnsibleParam -obj $params -name "hidden" -type "bool"
 # TODO: support for $idle_settings, needs to be created as a COM object
-$multiple_instances = Get-AnsibleParam -obj $params -name "multiple_instances" -type "int" # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383507(v=vs.85).aspx
+# https://msdn.microsoft.com/en-us/library/windows/desktop/aa383507(v=vs.85).aspx
+$multiple_instances = Get-AnsibleParam -obj $params -name "multiple_instances" -type "int"
 # TODO: support for  $network_settings, needs to be created as a COM object
-$priority = Get-AnsibleParam -obj $params -name "priority" -type "int" # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383512(v=vs.85).aspx
+# https://msdn.microsoft.com/en-us/library/windows/desktop/aa383512(v=vs.85).aspx
+$priority = Get-AnsibleParam -obj $params -name "priority" -type "int"
 $restart_count = Get-AnsibleParam -obj $params -name "restart_count" -type "int"
 $restart_interval = Get-AnsibleParam -obj $params -name "restart_interval" -type "str" # time string PT..
 $run_only_if_idle = Get-AnsibleParam -obj $params -name "run_only_if_idle" -type "bool"
@@ -148,7 +152,7 @@ Function Convert-SnakeToPascalCase($snake) {
     return $capitalised
 }
 
-Function Compare-Properties($property_name, $parent_property, $map, $enum_map=$null) {
+Function Compare-Property($property_name, $parent_property, $map, $enum_map = $null) {
     $changes = [System.Collections.ArrayList]@()
 
     # loop through the passed in map and compare values
@@ -163,7 +167,8 @@ Function Compare-Properties($property_name, $parent_property, $map, $enum_map=$n
             if ($existing_value -cne $new_value) {
                 try {
                     $parent_property.$property_name = $new_value
-                } catch {
+                }
+                catch {
                     Fail-Json -obj $result -message "failed to set $property_name property '$property_name' to '$new_value': $($_.Exception.Message)"
                 }
 
@@ -177,14 +182,15 @@ Function Compare-Properties($property_name, $parent_property, $map, $enum_map=$n
         }
     }
 
-    return ,$changes
+    return , $changes
 }
 
 Function Set-PropertyForComObject($com_object, $name, $arg, $value) {
     $com_name = Convert-SnakeToPascalCase -snake $arg
     try {
         $com_object.$com_name = $value
-    } catch {
+    }
+    catch {
         Fail-Json -obj $result -message "failed to set $name property '$com_name' to '$value': $($_.Exception.Message)"
     }
 }
@@ -219,7 +225,8 @@ Function Compare-PropertyList {
     for ($i = 0; $i -lt $new_count; $i++) {
         if ($i -lt $existing_count) {
             $existing_property = $existing[$i]
-        } else {
+        }
+        else {
             $existing_property = $null
         }
         $new_property = $new[$i]
@@ -240,14 +247,16 @@ Function Compare-PropertyList {
         # validate the mandatory arguments
         foreach ($mandatory_arg in $mandatory_args) {
             if (-not $new_property.ContainsKey($mandatory_arg)) {
-                Fail-Json -obj $result -message "mandatory key '$mandatory_arg' for $($property_name) is not set, mandatory keys are '$($mandatory_args -join "', '")'"
+                $msg = "mandatory key '$mandatory_arg' for $($property_name) is not set, mandatory keys are '$($mandatory_args -join "', '")'"
+                Fail-Json -obj $result -message $msg
             }
         }
         # throw a warning if in invalid key was set
         foreach ($entry in $new_property.GetEnumerator()) {
             $key = $entry.Name
             if ($key -notin $total_args -and $key -ne "type") {
-                Add-Warning -obj $result -message "key '$key' for $($property_name) entry is not valid and will be ignored, valid keys are '$($total_args -join "', '")'"
+                $msg = "key '$key' for $($property_name) entry is not valid and will be ignored, valid keys are '$($total_args -join "', '")'"
+                Add-Warning -obj $result -message $msg
             }
         }
 
@@ -269,14 +278,16 @@ Function Compare-PropertyList {
                             $sub_property_value = $kv.Value
                             [void]$diff_list.Add("+$com_name.$sub_com_name=$sub_property_value")
                         }
-                    } else {
+                    }
+                    else {
                         [void]$diff_list.Add("+$com_name=$property_value")
                     }
                 }
             }
 
             [void]$changes.Add("+$property_name[$i] = {`n  +Type=$type`n  $($diff_list -join ",`n  ")`n+}")
-        } elseif ([Enum]::ToObject($enum, $existing_property.Type) -ne $type) {
+        }
+        elseif ([Enum]::ToObject($enum, $existing_property.Type) -ne $type) {
             # the types are different so we need to change
             $diff_list = [System.Collections.ArrayList]@()
 
@@ -293,12 +304,14 @@ Function Compare-PropertyList {
                                 $sub_property_value = $kv.Value
                                 [void]$diff_list.Add("+$com_name.$sub_com_name=$sub_property_value")
                             }
-                        } else {
+                        }
+                        else {
                             [void]$diff_list.Add("+$com_name=$property_value")
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 # we know the types of the existing property
                 $existing_type = [Enum]::ToObject([TASK_TRIGGER_TYPE2], $existing_property.Type)
                 [void]$diff_list.Add("-Type=$existing_type")
@@ -322,7 +335,8 @@ Function Compare-PropertyList {
                                 [void]$diff_list.Add("-$com_name.$sub_com_name=$sub_existing_value")
                             }
                         }
-                    } else {
+                    }
+                    else {
                         if ($null -ne $property_value) {
                             [void]$diff_list.Add("+$com_name=$property_value")
                         }
@@ -335,7 +349,8 @@ Function Compare-PropertyList {
             }
 
             [void]$changes.Add("$property_name[$i] = {`n  $($diff_list -join ",`n  ")`n}")
-        } else {
+        }
+        else {
             # compare the properties of existing and new
             $diff_list = [System.Collections.ArrayList]@()
 
@@ -358,7 +373,8 @@ Function Compare-PropertyList {
                             }
                         }
                     }
-                } elseif ($null -ne $property_value -and $property_value -cne $existing_value) {
+                }
+                elseif ($null -ne $property_value -and $property_value -cne $existing_value) {
                     [void]$diff_list.Add("-$com_name=$existing_value")
                     [void]$diff_list.Add("+$com_name=$property_value")
                 }
@@ -383,7 +399,8 @@ Function Compare-PropertyList {
                         Set-PropertyForComObject -com_object $new_object_property -name $property_name -arg $kv.Key -value $value
                     }
                 }
-            } elseif ($null -ne $new_value) {
+            }
+            elseif ($null -ne $new_value) {
                 Set-PropertyForComObject -com_object $new_object -name $property_name -arg $property_arg -value $new_value
             }
         }
@@ -407,7 +424,8 @@ Function Compare-PropertyList {
                         [void]$diff_list.Add("-$com_name=$existing_value")
                     }
                 }
-            } else {
+            }
+            else {
                 [void]$diff_list.Add("-UNKNOWN TYPE $existing_type")
             }
 
@@ -415,16 +433,16 @@ Function Compare-PropertyList {
         }
     }
 
-    return ,$changes
+    return , $changes
 }
 
-Function Compare-Actions($task_definition) {
+Function Compare-Action($task_definition) {
     # compares the Actions property and returns a list of list of changed
     # actions for use in a diff string
     # ActionCollection - https://msdn.microsoft.com/en-us/library/windows/desktop/aa446804(v=vs.85).aspx
     # Action - https://msdn.microsoft.com/en-us/library/windows/desktop/aa446803(v=vs.85).aspx
     if ($null -eq $actions) {
-        return ,[System.Collections.ArrayList]@()
+        return , [System.Collections.ArrayList]@()
     }
 
     $task_actions = $task_definition.Actions
@@ -449,7 +467,7 @@ Function Compare-Actions($task_definition) {
     }
     $changes = Compare-PropertyList -collection $task_actions -property_name "action" -new $actions -existing $existing_actions -map $map -enum TASK_ACTION_TYPE
 
-    return ,$changes
+    return , $changes
 }
 
 Function Compare-Principal($task_definition, $task_definition_xml) {
@@ -466,7 +484,7 @@ Function Compare-Principal($task_definition, $task_definition_xml) {
         RunLevel = "TASK_RUN_LEVEL"
     }
     $task_principal = $task_definition.Principal
-    $changes = Compare-Properties -property_name "Principal" -parent_property $task_principal -map $principal_map -enum_map $enum_map
+    $changes = Compare-Property -property_name "Principal" -parent_property $task_principal -map $principal_map -enum_map $enum_map
 
     # Principal.UserId and GroupId only returns the username portion of the
     # username, skipping the domain or server name. This makes the
@@ -489,10 +507,12 @@ Function Compare-Principal($task_definition, $task_definition_xml) {
             [void]$changes.Add("-GroupId=$existing_account_name`n+UserId=$new_user_name")
             $task_principal.UserId = $new_user_name
             $task_principal.GroupId = $null
-        } elseif ($null -eq $principal_username_sid) {
+        }
+        elseif ($null -eq $principal_username_sid) {
             [void]$changes.Add("+UserId=$new_user_name")
             $task_principal.UserId = $new_user_name
-        } elseif ($principal_username_sid -ne $username_sid) {
+        }
+        elseif ($principal_username_sid -ne $username_sid) {
             $existing_account_name = Convert-FromSid -sid $principal_username_sid
             [void]$changes.Add("-UserId=$existing_account_name`n+UserId=$new_user_name")
             $task_principal.UserId = $new_user_name
@@ -505,17 +525,19 @@ Function Compare-Principal($task_definition, $task_definition_xml) {
             [void]$changes.Add("-UserId=$existing_account_name`n+GroupId=$new_group_name")
             $task_principal.UserId = $null
             $task_principal.GroupId = $new_group_name
-        } elseif ($null -eq $principal_group_sid) {
+        }
+        elseif ($null -eq $principal_group_sid) {
             [void]$changes.Add("+GroupId=$new_group_name")
             $task_principal.GroupId = $new_group_name
-        } elseif ($principal_group_sid -ne $group_sid) {
+        }
+        elseif ($principal_group_sid -ne $group_sid) {
             $existing_account_name = Convert-FromSid -sid $principal_group_sid
             [void]$changes.Add("-GroupId=$existing_account_name`n+GroupId=$new_group_name")
             $task_principal.GroupId = $new_group_name
         }
     }
 
-    return ,$changes
+    return , $changes
 }
 
 Function Compare-RegistrationInfo($task_definition) {
@@ -529,12 +551,12 @@ Function Compare-RegistrationInfo($task_definition) {
         Source = $source
         Version = $version
     }
-    $changes = Compare-Properties -property_name "RegistrationInfo" -parent_property $task_definition.RegistrationInfo -map $reg_info_map
+    $changes = Compare-Property -property_name "RegistrationInfo" -parent_property $task_definition.RegistrationInfo -map $reg_info_map
 
-    return ,$changes
+    return , $changes
 }
 
-Function Compare-Settings($task_definition) {
+Function Compare-Setting($task_definition) {
     # compares the task Settings property and returns a list of changed objects
     # for use in a diff string
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383480(v=vs.85).aspx
@@ -559,18 +581,18 @@ Function Compare-Settings($task_definition) {
         StopIfGoingOnBatteries = $stop_if_going_on_batteries
         WakeToRun = $wake_to_run
     }
-    $changes = Compare-Properties -property_name "Settings" -parent_property $task_definition.Settings -map $settings_map
+    $changes = Compare-Property -property_name "Settings" -parent_property $task_definition.Settings -map $settings_map
 
-    return ,$changes
+    return , $changes
 }
 
-Function Compare-Triggers($task_definition) {
+Function Compare-Trigger($task_definition) {
     # compares the task Triggers property and returns a list of changed objects
     # for use in a diff string
     # TriggerCollection - https://msdn.microsoft.com/en-us/library/windows/desktop/aa383875(v=vs.85).aspx
     # Trigger - https://msdn.microsoft.com/en-us/library/windows/desktop/aa383868(v=vs.85).aspx
     if ($null -eq $triggers) {
-        return ,[System.Collections.ArrayList]@()
+        return , [System.Collections.ArrayList]@()
     }
 
     $task_triggers = $task_definition.Triggers
@@ -611,11 +633,13 @@ Function Compare-Triggers($task_definition) {
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_MONTHLYDOW = @{
             mandatory = @('start_boundary')
-            optional = @('days_of_week', 'enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'run_on_last_week_of_month', 'weeks_of_month', 'repetition')
+            optional = @('days_of_week', 'enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'run_on_last_week_of_month',
+                'weeks_of_month', 'repetition')
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_MONTHLY = @{
             mandatory = @('days_of_month', 'start_boundary')
-            optional = @('enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'run_on_last_day_of_month', 'start_boundary', 'repetition')
+            optional = @('enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'run_on_last_day_of_month',
+                'start_boundary', 'repetition')
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_REGISTRATION = @{
             mandatory = @()
@@ -634,12 +658,20 @@ Function Compare-Triggers($task_definition) {
             optional = @('delay', 'enabled', 'end_boundary', 'execution_time_limit', 'repetition', 'start_boundary', 'state_change', 'user_id' )
         }
     }
-    $changes = Compare-PropertyList -collection $task_triggers -property_name "trigger" -new $triggers -existing $existing_triggers -map $map -enum TASK_TRIGGER_TYPE2
+    $compareParams = @{
+        collection = $task_triggers
+        property_name = "trigger"
+        new = $triggers
+        existing = $existing_triggers
+        map = $map
+        enum = "TASK_TRIGGER_TYPE2"
+    }
+    $changes = Compare-PropertyList @compareParams
 
-    return ,$changes
+    return , $changes
 }
 
-Function Test-TaskExists($task_folder, $name) {
+Function Test-TaskExist($task_folder, $name) {
     # checks if a task exists in the TaskFolder COM object, returns null if the
     # task does not exist, otherwise returns the RegisteredTask object
     $task = $null
@@ -663,7 +695,8 @@ Function Test-XmlDurationFormat($key, $value) {
     try {
         $time_span = [System.Xml.XmlConvert]::ToTimeSpan($value)
         return $time_span
-    } catch [System.FormatException] {
+    }
+    catch [System.FormatException] {
         Fail-Json -obj $result -message "trigger option '$key' must be in the XML duration format but was '$value'"
     }
 }
@@ -719,7 +752,8 @@ if ($null -ne $logon_type) {
 if ($null -ne $run_level) {
     if ($run_level -eq "limited") {
         $run_level = [TASK_RUN_LEVEL]::TASK_RUNLEVEL_LUA
-    } else {
+    }
+    else {
         $run_level = [TASK_RUN_LEVEL]::TASK_RUNLEVEL_HIGHEST
     }
 }
@@ -744,7 +778,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
 
     $trigger_type = $trigger.type
     if ($trigger_type -notin $valid_trigger_types) {
-        Fail-Json -obj $result -message "the specified trigger type '$trigger_type' is not valid, type must be a value of '$($valid_trigger_types -join "', '")'"
+        $msg = "the specified trigger type '$trigger_type' is not valid, type must be a value of '$($valid_trigger_types -join "', '")'"
+        Fail-Json -obj $result -message $msg
     }
 
     $full_enum_name = "TASK_TRIGGER_$($trigger_type.ToUpper())"
@@ -761,7 +796,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
                 $date = Get-Date -Date $date_value -Format "yyyy-MM-dd'T'HH:mm:ssK"
                 # make sure we convert it to the full string format
                 $trigger.$property_name = $date.ToString()
-            } catch [System.Management.Automation.ParameterBindingException] {
+            }
+            catch [System.Management.Automation.ParameterBindingException] {
                 Fail-Json -obj $result -message "trigger option '$property_name' must be in the format 'YYYY-MM-DDThh:mm:ss' format but was '$date_value'"
             }
         }
@@ -800,7 +836,11 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         }
 
         if ($null -ne $interval_timespan -and $null -ne $duration_timespan -and $interval_timespan -gt $duration_timespan) {
-            Fail-Json -obj $result -message "trigger repetition option 'interval' value '$($trigger.repetition.interval)' must be less than or equal to 'duration' value '$($trigger.repetition.duration)'"
+            $msg = -join @(
+                "trigger repetition option 'interval' value '$($trigger.repetition.interval)' "
+                "must be less than or equal to 'duration' value '$($trigger.repetition.duration)'"
+            )
+            Fail-Json -obj $result -message $msg
         }
     }
 
@@ -809,7 +849,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         $days = $trigger.days_of_week
         if ($days -is [String]) {
             $days = $days.Split(",").Trim()
-        } elseif ($days -isnot [Array]) {
+        }
+        elseif ($days -isnot [Array]) {
             $days = @($days)
         }
 
@@ -837,7 +878,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         $days = $trigger.days_of_month
         if ($days -is [String]) {
             $days = $days.Split(",").Trim()
-        } elseif ($days -isnot [Array]) {
+        }
+        elseif ($days -isnot [Array]) {
             $days = @($days)
         }
 
@@ -888,7 +930,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         $weeks = $trigger.weeks_of_month
         if ($weeks -is [String]) {
             $weeks = $weeks.Split(",").Trim()
-        } elseif ($weeks -isnot [Array]) {
+        }
+        elseif ($weeks -isnot [Array]) {
             $weeks = @($weeks)
         }
 
@@ -913,7 +956,8 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         $months = $trigger.months_of_year
         if ($months -is [String]) {
             $months = $months.Split(",").Trim()
-        } elseif ($months -isnot [Array]) {
+        }
+        elseif ($months -isnot [Array]) {
             $months = @($months)
         }
 
@@ -942,7 +986,7 @@ for ($i = 0; $i -lt $triggers.Count; $i++) {
         $trigger.months_of_year = $month_value
     }
     if ($trigger.ContainsKey("state_change")) {
-        $trigger.state_change = switch($trigger.state_change) {
+        $trigger.state_change = switch ($trigger.state_change) {
             console_connect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_CONSOLE_CONNECT }
             console_disconnect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_CONSOLE_DISCONNECT }
             remote_connect { [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_REMOTE_CONNECT }
@@ -972,19 +1016,21 @@ if ($path.EndsWith("\") -and $path.Length -ne 1) {
 $service = New-Object -ComObject Schedule.Service
 try {
     $service.Connect()
-} catch {
+}
+catch {
     Fail-Json -obj $result -message "failed to connect to the task scheduler service: $($_.Exception.Message)"
 }
 
 # check that the path for the task set exists, create if need be
 try {
     $task_folder = $service.GetFolder($path)
-} catch {
+}
+catch {
     $task_folder = $null
 }
 
 # try and get the task at the path
-$task = Test-TaskExists -task_folder $task_folder -name $name
+$task = Test-TaskExist -task_folder $task_folder -name $name
 $task_path = Join-Path -Path $path -ChildPath $name
 
 if ($state -eq "absent") {
@@ -992,7 +1038,8 @@ if ($state -eq "absent") {
         if (-not $check_mode) {
             try {
                 $task_folder.DeleteTask($name, 0)
-            } catch {
+            }
+            catch {
                 Fail-Json -obj $result -message "failed to delete task '$name' at path '$path': $($_.Exception.Message)"
             }
         }
@@ -1006,12 +1053,14 @@ if ($state -eq "absent") {
         if ($other_tasks.Count -eq 0 -and $task_folder.Name -ne "\") {
             try {
                 $task_folder.DeleteFolder($null, $null)
-            } catch {
+            }
+            catch {
                 Fail-Json -obj $result -message "failed to delete empty task folder '$path' after task deletion: $($_.Exception.Message)"
             }
         }
     }
-} else {
+}
+else {
     if ($null -eq $task) {
         $create_diff_string = "+[Task]`n+$task_path`n`n"
         # to create a bare minimum task we need 1 action
@@ -1046,7 +1095,8 @@ if ($state -eq "absent") {
         if ($check_mode) {
             # Only validate the task in check mode
             $task_creation_flags = [TASK_CREATION]::TASK_VALIDATE_ONLY
-        } else {
+        }
+        else {
             # Create the task but do not fire it as we still need to configure it further below
             $task_creation_flags = [TASK_CREATION]::TASK_CREATE -bor [TASK_CREATION]::TASK_IGNORE_REGISTRATION_TRIGGERS
         }
@@ -1058,14 +1108,16 @@ if ($state -eq "absent") {
                 if (-not $check_mode) {
                     $task_folder = $task_folder.CreateFolder($path)
                 }
-            } catch {
+            }
+            catch {
                 Fail-Json -obj $result -message "failed to create new folder at path '$path': $($_.Exception.Message)"
             }
         }
 
         try {
             $task = $task_folder.RegisterTaskDefinition($name, $task_definition, $task_creation_flags, $null, $null, $null)
-        } catch {
+        }
+        catch {
             Fail-Json -obj $result -message "failed to register new task definition: $($_.Exception.Message)"
         }
         if ($diff_mode) {
@@ -1081,11 +1133,11 @@ if ($state -eq "absent") {
         $task_definition = $task.Definition
         $task_definition_xml = [xml]$task_definition.XmlText
 
-        $action_changes = Compare-Actions -task_definition $task_definition
+        $action_changes = Compare-Action -task_definition $task_definition
         $principal_changed = Compare-Principal -task_definition $task_definition -task_definition_xml $task_definition_xml
         $reg_info_changed = Compare-RegistrationInfo -task_definition $task_definition
-        $settings_changed = Compare-Settings -task_definition $task_definition
-        $trigger_changes = Compare-Triggers -task_definition $task_definition
+        $settings_changed = Compare-Setting -task_definition $task_definition
+        $trigger_changes = Compare-Trigger -task_definition $task_definition
 
         # compile the diffs into one list with headers
         $task_diff = [System.Collections.ArrayList]@()
@@ -1130,7 +1182,8 @@ if ($state -eq "absent") {
             $register_username = $username
             $register_password = $password
             $register_logon_type = $task_principal.LogonType
-        } else {
+        }
+        else {
             # will inherit from the Principal property values
             $register_username = $null
             $register_password = $null
@@ -1141,13 +1194,22 @@ if ($state -eq "absent") {
             if ($check_mode) {
                 # Only validate the task in check mode
                 $task_creation_flags = [TASK_CREATION]::TASK_VALIDATE_ONLY
-            } else {
+            }
+            else {
                 # Create the task
                 $task_creation_flags = [TASK_CREATION]::TASK_CREATE_OR_UPDATE
             }
             try {
-                $task_folder.RegisterTaskDefinition($name, $task_definition, $task_creation_flags, $register_username, $register_password, $register_logon_type) | Out-Null
-            } catch {
+                $task_folder.RegisterTaskDefinition(
+                    $name,
+                    $task_definition,
+                    $task_creation_flags,
+                    $register_username,
+                    $register_password,
+                    $register_logon_type
+                ) | Out-Null
+            }
+            catch {
                 Fail-Json -obj $result -message "failed to modify scheduled task: $($_.Exception.Message)"
             }
 
@@ -1157,7 +1219,8 @@ if ($state -eq "absent") {
                 $changed_diff_text = $task_diff -join "`n"
                 if ($null -ne $result.diff.prepared) {
                     $diff_text = "$($result.diff.prepared)`n$changed_diff_text"
-                } else {
+                }
+                else {
                     $diff_text = $changed_diff_text
                 }
                 $result.diff.prepared = $diff_text.Trim()
