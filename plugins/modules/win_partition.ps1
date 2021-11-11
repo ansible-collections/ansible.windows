@@ -62,21 +62,21 @@ $mbr_styles = @{
     fat32 = 12
 }
 
-function Convert-SizeToBytes {
+function Convert-SizeToByte {
     param(
         $Size,
         $Units
     )
 
     switch ($Units) {
-        "B"   { return 1 * $Size }
-        "KB"  { return 1000 * $Size }
+        "B" { return 1 * $Size }
+        "KB" { return 1000 * $Size }
         "KiB" { return 1024 * $Size }
-        "MB"  { return [Math]::Pow(1000, 2) * $Size }
+        "MB" { return [Math]::Pow(1000, 2) * $Size }
         "MiB" { return [Math]::Pow(1024, 2) * $Size }
-        "GB"  { return [Math]::Pow(1000, 3) * $Size }
+        "GB" { return [Math]::Pow(1000, 3) * $Size }
         "GiB" { return [Math]::Pow(1024, 3) * $Size }
-        "TB"  { return [Math]::Pow(1000, 4) * $Size }
+        "TB" { return [Math]::Pow(1000, 4) * $Size }
         "TiB" { return [Math]::Pow(1024, 4) * $Size }
     }
 }
@@ -86,7 +86,7 @@ if ($null -ne $partition_size) {
         $size_is_maximum = $true
     }
     elseif ($partition_size -match '^(?<Size>[0-9]+)[ ]*(?<Units>b|kb|kib|mb|mib|gb|gib|tb|tib)$') {
-        $ansible_partition_size = Convert-SizeToBytes -Size $Matches.Size -Units $Matches.Units
+        $ansible_partition_size = Convert-SizeToByte -Size $Matches.Size -Units $Matches.Units
     }
     else {
         $module.FailJson("Invalid partition size. B, KB, KiB, MB, MiB, GB, GiB, TB, TiB are valid partition size units")
@@ -109,7 +109,8 @@ elseif ($drive_letter -and -not ($disk_number -and $partition_number)) {
 elseif ($disk_number) {
     try {
         Get-Disk -Number $disk_number | Out-Null
-    } catch {
+    }
+    catch {
         $module.FailJson("Specified disk does not exist")
     }
 }
@@ -162,7 +163,8 @@ function New-AnsiblePartition {
 
     try {
         $new_partition = New-Partition @parameters
-    } catch {
+    }
+    catch {
         $module.FailJson("Unable to create a new partition: $($_.Exception.Message)", $_)
     }
 
@@ -197,7 +199,8 @@ function Set-AnsiblePartitionState {
 
     try {
         Set-Partition @parameters
-    } catch {
+    }
+    catch {
         $module.FailJson("Error changing state of partition: $($_.Exception.Message)", $_)
     }
 }
@@ -206,8 +209,15 @@ function Set-AnsiblePartitionState {
 if ($ansible_partition) {
     if ($state -eq "absent") {
         try {
-            Remove-Partition -DiskNumber $ansible_partition.DiskNumber -PartitionNumber $ansible_partition.PartitionNumber -Confirm:$false -WhatIf:$module.CheckMode
-        } catch {
+            $remove_params = @{
+                DiskNumber = $ansible_partition.DiskNumber
+                PartitionNumber = $ansible_partition.PartitionNumber
+                Confirm = $false
+                WhatIf = $module.CheckMode
+            }
+            Remove-Partition @remove_params
+        }
+        catch {
             $module.FailJson("There was an error removing the partition: $($_.Exception.Message)", $_)
         }
         $module.Result.changed = $true
@@ -223,25 +233,42 @@ if ($ansible_partition) {
 
         if ($partition_size) {
             try {
-                $max_supported_size = (Get-PartitionSupportedSize -DiskNumber $ansible_partition.DiskNumber -PartitionNumber $ansible_partition.PartitionNumber).SizeMax
-            } catch {
+                $get_params = @{
+                    DiskNumber = $ansible_partition.DiskNumber
+                    PartitionNumber = $ansible_partition.PartitionNumber
+                }
+                $max_supported_size = (Get-PartitionSupportedSize @get_params).SizeMax
+            }
+            catch {
                 $module.FailJson("Unable to get maximum supported partition size: $($_.Exception.Message)", $_)
             }
             if ($size_is_maximum) {
                 $ansible_partition_size = $max_supported_size
             }
-            if ($ansible_partition_size -ne $ansible_partition.Size -and ($ansible_partition_size - $ansible_partition.Size -gt 1049000 -or $ansible_partition.Size - $ansible_partition_size -gt 1049000)) {
+            if (
+                $ansible_partition_size -ne $ansible_partition.Size -and
+                ($ansible_partition_size - $ansible_partition.Size -gt 1049000 -or $ansible_partition.Size - $ansible_partition_size -gt 1049000)
+            ) {
                 if ($ansible_partition.IsReadOnly) {
                     $module.FailJson("Unable to resize partition: Partition is read only")
-                } else {
+                }
+                else {
                     try {
-                        Resize-Partition -DiskNumber $ansible_partition.DiskNumber -PartitionNumber $ansible_partition.PartitionNumber -Size $ansible_partition_size -WhatIf:$module.CheckMode
-                    } catch {
+                        $resize_params = @{
+                            DiskNumber = $ansible_partition.DiskNumber
+                            PartitionNumber = $ansible_partition.PartitionNumber
+                            Size = $ansible_partition_size
+                            WhatIf = $module.CheckMode
+                        }
+                        Resize-Partition @resize_params
+                    }
+                    catch {
                         $module.FailJson("Unable to change partition size: $($_.Exception.Message)", $_)
                     }
                     $module.Result.changed = $true
                 }
-            } elseif ($ansible_partition_size -gt $max_supported_size) {
+            }
+            elseif ($ansible_partition_size -gt $max_supported_size) {
                 $module.FailJson("Specified partition size exceeds size supported by the partition")
             }
         }
@@ -250,7 +277,8 @@ if ($ansible_partition) {
             if (-not $module.CheckMode) {
                 try {
                     Set-Partition -DiskNumber $ansible_partition.DiskNumber -PartitionNumber $ansible_partition.PartitionNumber -NewDriveLetter $drive_letter
-                } catch {
+                }
+                catch {
                     $module.FailJson("Unable to change drive letter: $($_.Exception.Message)", $_)
                 }
             }
@@ -263,20 +291,22 @@ else {
         if ($null -eq $disk_number) {
             $module.FailJson("Missing required parameter: disk_number")
         }
-        if ($null -eq $ansible_partition_size -and -not $size_is_maximum){
+        if ($null -eq $ansible_partition_size -and -not $size_is_maximum) {
             $module.FailJson("Missing required parameter: partition_size")
         }
         if (-not $size_is_maximum) {
             try {
                 $max_supported_size = (Get-Disk -Number $disk_number).LargestFreeExtent
-            } catch {
+            }
+            catch {
                 $module.FailJson("Unable to get maximum size supported by disk: $($_.Exception.Message)", $_)
             }
 
             if ($ansible_partition_size -gt $max_supported_size) {
                 $module.FailJson("Partition size is not supported by disk. Use partition_size: -1 to get maximum size")
             }
-        } else {
+        }
+        else {
             $ansible_partition_size = (Get-Disk -Number $disk_number).LargestFreeExtent
         }
 
@@ -284,20 +314,30 @@ else {
         if ($null -ne $mbr_type) {
             if ($supp_part_type -eq "MBR" -and $mbr_styles.ContainsKey($mbr_type)) {
                 $partition_style = $mbr_styles.$mbr_type
-            } else {
+            }
+            else {
                 $module.FailJson("Incorrect partition style specified")
             }
         }
         if ($null -ne $gpt_type) {
             if ($supp_part_type -eq "GPT" -and $gpt_styles.ContainsKey($gpt_type)) {
                 $partition_style = $gpt_styles.$gpt_type
-            } else {
+            }
+            else {
                 $module.FailJson("Incorrect partition style specified")
             }
         }
 
         if (-not $module.CheckMode) {
-            $ansible_partition = New-AnsiblePartition -DiskNumber $disk_number -Letter $drive_letter -Size $ansible_partition_size -MbrType $mbr_type -GptType $gpt_type -Style $partition_style
+            $new_params = @{
+                DiskNumber = $disk_number
+                Letter = $drive_letter
+                Size = $ansible_partition_size
+                MbrType = $mbr_type
+                GptType = $gpt_type
+                Style = $partition_style
+            }
+            $ansible_partition = New-AnsiblePartition @new_params
         }
         $module.Result.changed = $true
     }
@@ -308,14 +348,19 @@ if ($state -eq "present" -and $ansible_partition) {
         if (-not $module.CheckMode) {
             try {
                 Set-Partition -DiskNumber $ansible_partition.DiskNumber -PartitionNumber $ansible_partition.PartitionNumber -IsOffline $offline
-            } catch {
+            }
+            catch {
                 $module.FailJson("Error setting partition offline: $($_.Exception.Message)", $_)
             }
         }
         $module.Result.changed = $true
     }
 
-    if ($hidden -NotIn ($null, $ansible_partition.IsHidden) -or $read_only -NotIn ($null, $ansible_partition.IsReadOnly) -or $active -NotIn ($null, $ansible_partition.IsActive)) {
+    if (
+        $hidden -NotIn ($null, $ansible_partition.IsHidden) -or
+        $read_only -NotIn ($null, $ansible_partition.IsReadOnly) -or
+        $active -NotIn ($null, $ansible_partition.IsActive)
+    ) {
         if (-not $module.CheckMode) {
             Set-AnsiblePartitionState -hidden $hidden -read_only $read_only -active $active -partition $ansible_partition
         }
