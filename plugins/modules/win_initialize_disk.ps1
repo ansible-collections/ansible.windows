@@ -18,10 +18,10 @@ $spec = @{
         force = @{ type = "bool"; default = $false }
     }
     mutually_exclusive = @(
-        ,@('disk_number', 'uniqueid', 'path')
+        , @('disk_number', 'uniqueid', 'path')
     )
     required_one_of = @(
-        ,@('disk_number', 'uniqueid', 'path')
+        , @('disk_number', 'uniqueid', 'path')
     )
     supports_check_mode = $true
 }
@@ -45,22 +45,28 @@ function Get-AnsibleDisk {
     if ($null -ne $DiskNumber) {
         try {
             $disk = Get-Disk -Number $DiskNumber
-        } catch {
+        }
+        catch {
             $module.FailJson("There was an error retrieving the disk using disk_number $($DiskNumber): $($_.Exception.Message)")
         }
-    } elseif ($null -ne $UniqueId) {
+    }
+    elseif ($null -ne $UniqueId) {
         try {
             $disk = Get-Disk -UniqueId $UniqueId
-        } catch {
+        }
+        catch {
             $module.FailJson("There was an error retrieving the disk using id $($UniqueId): $($_.Exception.Message)")
         }
-    } elseif ($null -ne $Path) {
+    }
+    elseif ($null -ne $Path) {
         try {
             $disk = Get-Disk -Path $Path
-        } catch {
+        }
+        catch {
             $module.FailJson("There was an error retrieving the disk using path $($Path): $($_.Exception.Message)")
         }
-    } else {
+    }
+    else {
         $module.FailJson("Unable to retrieve disk: disk_number, id, or path was not specified")
     }
 
@@ -138,10 +144,16 @@ $ansible_part_style = $ansible_disk.PartitionStyle
 if ("RAW" -eq $ansible_part_style) {
     $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
     Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style
-} else {
+}
+else {
     if (($ansible_part_style -ne $partition_style.ToUpper()) -And -Not $force_init) {
-        $module.FailJson("Force initialization must be specified since the target partition style: $($partition_style.ToLower()) is different from the current partition style: $($ansible_part_style.ToLower())")
-    } elseif ($force_init) {
+        $msg = -join @(
+            "Force initialization must be specified since the target partition style: $($partition_style.ToLower()) "
+            "is different from the current partition style: $($ansible_part_style.ToLower())"
+        )
+        $module.FailJson($msg)
+    }
+    elseif ($force_init) {
         $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
         Clear-AnsibleDisk -AnsibleDisk $ansible_disk
         if ( $bring_online ) { Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style }
