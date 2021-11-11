@@ -8,12 +8,12 @@
 
 $spec = @{
     options = @{
-        owner = @{ type="str" }
-        organization = @{ type="str" }
-        description = @{ type="str" }
+        owner = @{ type = "str" }
+        organization = @{ type = "str" }
+        description = @{ type = "str" }
     }
     required_one_of = @(
-        ,@('owner', 'organization', 'description')
+        , @('owner', 'organization', 'description')
     )
     supports_check_mode = $true
 }
@@ -23,20 +23,20 @@ $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 $owner = $module.Params.owner
 $organization = $module.Params.organization
 $description = $module.Params.description
-$regPath="HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\"
+$regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\"
 
 #Change description
 if ($description -or $description -eq "") {
-    $descriptionObject=Get-CimInstance -class "Win32_OperatingSystem"
+    $descriptionObject = Get-CimInstance -class "Win32_OperatingSystem"
     if ($description -cne $descriptionObject.description) {
-        Set-CimInstance -InputObject $descriptionObject -Property @{"Description"="$description"} -WhatIf:$module.CheckMode
+        Set-CimInstance -InputObject $descriptionObject -Property @{"Description" = "$description" } -WhatIf:$module.CheckMode
         $module.Result.changed = $true
     }
 }
 
 #Change owner
 if ($owner -or $owner -eq "") {
-    $curentOwner=(Get-ItemProperty -LiteralPath $regPath -Name RegisteredOwner).RegisteredOwner
+    $curentOwner = (Get-ItemProperty -LiteralPath $regPath -Name RegisteredOwner).RegisteredOwner
     if ($curentOwner -cne $owner) {
         Set-ItemProperty -LiteralPath $regPath -Name "RegisteredOwner" -Value $owner -WhatIf:$module.CheckMode
         $module.Result.changed = $true
@@ -45,7 +45,7 @@ if ($owner -or $owner -eq "") {
 
 #Change organization
 if ($organization -or $organization -eq "") {
-    $curentOrganization=(Get-ItemProperty -LiteralPath $regPath -Name RegisteredOrganization).RegisteredOrganization
+    $curentOrganization = (Get-ItemProperty -LiteralPath $regPath -Name RegisteredOrganization).RegisteredOrganization
     if ($curentOrganization -cne $organization) {
         Set-ItemProperty -LiteralPath $regPath -Name "RegisteredOrganization" -Value $organization -WhatIf:$module.CheckMode
         $module.Result.changed = $true
