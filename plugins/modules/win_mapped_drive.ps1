@@ -16,7 +16,7 @@ $spec = @{
         password = @{ type = "str"; no_log = $true }
     }
     required_if = @(
-        ,@("state", "present", @("path"))
+        , @("state", "present", @("path"))
     )
     supports_check_mode = $true
 }
@@ -327,11 +327,13 @@ Function Get-LimitedToken {
             [Ansible.AccessToken.TokenUtil]::ImpersonateToken($system_token)
             try {
                 return [Ansible.AccessToken.TokenUtil]::GetTokenLinkedToken($h_token)
-            } finally {
+            }
+            finally {
                 [Ansible.AccessToken.TokenUtil]::RevertToSelf()
             }
         }
-    } finally {
+    }
+    finally {
         $h_token.Dispose()
     }
 }
@@ -388,7 +390,8 @@ try {
 
             $module.Result.changed = $true
         }
-    } else {
+    }
+    else {
         $physical_drives = Get-PSDrive -PSProvider "FileSystem"
         if ($letter -in $physical_drives.Name) {
             $module.FailJson("failed to create mapped drive $letter, this letter is in use and is pointing to a non UNC path")
@@ -415,8 +418,9 @@ try {
                 }
                 $module.Result.changed = $true
             }
-        } else  {
-            if (-not $module.CheckMode)  {
+        }
+        else {
+            if (-not $module.CheckMode) {
                 $add_method.Invoke($null, [Object[]]@($letter_root, $path, $i_token_ptr, $input_username, $input_password))
             }
 
@@ -435,7 +439,8 @@ try {
             path = $path
         }
     }
-} finally {
+}
+finally {
     if ($null -ne $impersonation_token) {
         $impersonation_token.Dispose()
     }
