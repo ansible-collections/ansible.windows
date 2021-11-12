@@ -1,0 +1,4 @@
+bugfixes:
+- >-
+  win_updates - Fix return value for ``updates`` and ``filtered_updates`` to match original stucture -
+  https://github.com/ansible-collections/ansible.windows/issues/307

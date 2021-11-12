@@ -1563,8 +1563,8 @@ if ($invokeSplat.Wait) {
     $module.Result.found_update_count = 0
     $module.Result.failed_update_count = 0
     $module.Result.installed_update_count = 0
-    $module.Result.updates = [System.Collections.Generic.List[Hashtable]]@()
-    $module.Result.filtered_updates = [System.Collections.Generic.List[Hashtable]]@()
+    $module.Result.updates = @{}
+    $module.Result.filtered_updates = @{}
 
     $updates = @{}
     Get-Content -LiteralPath $outputPath | ForEach-Object -Process {
@@ -1643,7 +1643,7 @@ if ($invokeSplat.Wait) {
         $info = $updateKvp.Value
 
         if ($info.Contains('filtered_reasons')) {
-            $module.Result.filtered_updates.Add($info)
+            $module.Result.filtered_updates[$info.id] = $info
             continue
         }
 
@@ -1654,7 +1654,7 @@ if ($invokeSplat.Wait) {
         elseif ($info.installed) {
             $module.Result.installed_update_count += 1
         }
-        $module.Result.updates.Add($info)
+        $module.Result.updates[$info.id] = $info
     }
 }
 else {

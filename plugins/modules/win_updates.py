@@ -132,7 +132,7 @@ notes:
 - More information about PowerShell and how it handles RegEx strings can be
   found at U(https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx).
 - The current module doesn't support Systems Center Configuration Manager (SCCM).
-  See L(https://github.com/ansible-collections/ansible.windows/issues/194)
+  See U(https://github.com/ansible-collections/ansible.windows/issues/194)
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: ansible.windows.win_feature
@@ -204,9 +204,11 @@ reboot_required:
     sample: true
 
 updates:
-    description: List of updates that were found/installed.
+    description:
+    - Updates that were found/installed.
+    - The key for each update is the C(id) of the update.
     returned: success
-    type: complex
+    type: dict
     sample:
     contains:
         title:
@@ -255,11 +257,11 @@ updates:
             version_added: 1.7.0
 
 filtered_updates:
-    description: List of updates that were found but were filtered based on
+    description: Updates that were found but were filtered based on
       I(blacklist), I(whitelist) or I(category_names). The return value is in
       the same form as I(updates), along with I(filtered_reason).
     returned: success
-    type: complex
+    type: dict
     sample: see the updates return value
     contains:
         filtered_reason:
