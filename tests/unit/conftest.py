@@ -4,10 +4,11 @@ __metaclass__ = type
 
 import os
 import os.path
-import sys
+
+from ansible.utils.collection_loader._collection_finder import _AnsibleCollectionFinder
 
 
-ANSIBLE_COLLECTIONS_PATH = os.path.abspath(os.path.join(__file__, '..', '..', '..', '..', '..', '..'))
+ANSIBLE_COLLECTIONS_PATH = os.path.abspath(os.path.join(__file__, '..', '..', '..', '..', '..'))
 
 
 # this monkeypatch to _pytest.pathlib.resolve_package_path fixes PEP420 resolution for collections in pytest >= 6.0.0
@@ -28,14 +29,6 @@ def pytest_configure():
             return
     except AttributeError:
         pytest_configure.executed = True
-
-    # If ANSIBLE_HOME is set make sure we add it to the PYTHONPATH to ensure it is picked up. Not all env vars are
-    # picked up by vscode (.bashrc is a notable one) so a user can define it manually in their .env file.
-    ansible_home = os.environ.get('ANSIBLE_HOME', None)
-    if ansible_home:
-        sys.path.insert(0, os.path.join(ansible_home, 'lib'))
-
-    from ansible.utils.collection_loader._collection_finder import _AnsibleCollectionFinder
 
     # allow unit tests to import code from collections
 
