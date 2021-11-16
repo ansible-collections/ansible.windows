@@ -386,6 +386,19 @@ else {
     $module_version = "latest"
 }
 
+# DSC Composite resources are currently not supported without a MOF file
+# this check prevents the user from getting a "Failed to serialize properties into CimInstance." error and
+# instead gets something a bit more informative while support is being worked on.
+# https://github.com/ansible-collections/ansible.windows/issues/15
+if ((Get-DscResource -Name $resource_name).ImplementedAs -eq 'Composite') {
+    $res = @{
+        msg = "unsupported resource type: composite"
+        failed = $true
+    }
+    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
+    exit 1
+}
+
 # For DSC class based resources we may need to ensure the module was loaded normally so the 'RequiredAssemblies' part
 # of the manifest is run. This is important as classes have their types validated during parse time before the
 # assemblies are loaded and this will fail if the assembly isn't already there.
