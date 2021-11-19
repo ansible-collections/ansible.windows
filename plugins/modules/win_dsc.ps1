@@ -439,7 +439,7 @@ if (-not $resource) {
 # https://github.com/ansible-collections/ansible.windows/issues/15
 if ($resource.ImplementedAs -eq 'Composite') {
     $res = @{
-        msg = "unsupported resource type: composite"
+        msg = "unsupported resource type: $resource_name is a composite"
         failed = $true
     }
     Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
