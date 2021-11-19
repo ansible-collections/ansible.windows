@@ -9,7 +9,7 @@
   win_dsc:
     resource_name: xTestComposite
   register: fail_invalid_resource_type
-  failed_when: 'fail_invalid_resource_type.msg != "unsupported resource type: composite"'
+  failed_when: 'fail_invalid_resource_type.msg != "unsupported resource type: ''xTestComposite'' is a composite resource"'
 
 - name: fail with invalid DSC version
   win_dsc:
