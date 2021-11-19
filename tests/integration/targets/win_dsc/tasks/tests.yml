@@ -5,6 +5,12 @@
   register: fail_invalid_resource
   failed_when: fail_invalid_resource.msg != "Resource 'FakeResource' not found."
 
+- name: fail with composite DSC resource
+  win_dsc:
+    resource_name: xTestComposite
+  register: fail_invalid_resource_type
+  failed_when: 'fail_invalid_resource_type.msg != "unsupported resource type: composite"'
+
 - name: fail with invalid DSC version
   win_dsc:
     resource_name: xTestResource
