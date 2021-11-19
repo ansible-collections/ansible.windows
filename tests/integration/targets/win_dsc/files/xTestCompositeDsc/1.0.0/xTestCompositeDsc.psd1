@@ -7,10 +7,6 @@
     Copyright = ''
     Description = 'Example composite DSC Resource'
     PowerShellVersion = '5.1'
-    FunctionsToExport = '*'
-    CmdletsToExport = '*'
-    VariablesToExport = '*'
-    AliasesToExport = '*'
     DscResourcesToExport = 'xTestComposite'
     PrivateData = @{
         PSData = @{
