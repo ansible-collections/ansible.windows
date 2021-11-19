@@ -715,6 +715,13 @@ namespace Ansible.Windows.WinUpdates
         Aborted = 5,
     }
 
+    public class NativeMethods
+    {
+        [DllImport("Kernel32.dll")]
+        public static extern UInt32 SetThreadExecutionState(
+            UInt32 esFlags);
+    }
+
     public class API
     {
         public Dictionary<int, string> IndexMap = new Dictionary<int, string>();
@@ -1019,9 +1026,20 @@ namespace Ansible.Windows.WinUpdates
             $cancelToken = New-Object -TypeName System.Threading.CancellationTokenSource
             $task = &$ScriptBlock $cancelToken.Token
 
-            $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
-                    $cancelTask, $task
-                ))
+            while ($true) {
+                # Tells the host not to go to sleep every minute, this
+                # passes in the flags ES_CONTINUOUS | ES_SYSTEM_REQUIRED.
+                # https://github.com/ansible-collections/ansible.windows/issues/310
+                [void][Ansible.Windows.WinUpdates.NativeMethods]::SetThreadExecutionState([UInt32]"0x80000001")
+
+                $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
+                        $cancelTask, $task
+                    ), 60000)
+
+                if ($waitIdx -ge 0) {
+                    break
+                }
+            }
             if ($waitIdx -eq 0) {
                 if (-not $task.IsCompleted) {
                     # Sends the COM RequestAbort signal to the job
