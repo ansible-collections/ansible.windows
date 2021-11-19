@@ -21,4 +21,3 @@ jobs:
         stale-pr-message: >-
           This pull request is stale because it has been open for 4 weeks with no activity.
           Remove stale label or comment or this will be closed in 2 weeks.
-
