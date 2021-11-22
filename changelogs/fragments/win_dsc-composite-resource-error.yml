@@ -1,0 +1,2 @@
+bugfixes:
+- win_dsc - Provide better error message when trying to invoke a composite DSC resource
