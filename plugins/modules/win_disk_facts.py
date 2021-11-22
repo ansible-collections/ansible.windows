@@ -18,6 +18,16 @@ notes:
     U(https://msdn.microsoft.com/en-us/library/windows/desktop/hh830612.aspx)
 author:
   - Marc Tschapek (@marqelme)
+options:
+  filter:
+    description:
+      - Allows to filter returned facts by type of disk information.
+      - If volumes are selected partitions will be returned as well.
+    type: list
+    elements: str
+    choices: [ physical_disk, virtual_disk, win32_disk_drive, partitions, volumes ]
+    default: [ physical_disk, virtual_disk, win32_disk_drive, partitions, volumes ]
+    version_added: 1.9.0
 '''
 
 EXAMPLES = r'''
@@ -46,6 +56,12 @@ EXAMPLES = r'''
 - name: Output second disk serial number
   debug:
     var: ansible_facts.disks[1].serial_number
+
+- name: get disk physical_disk and partition facts on the target
+  win_disk_facts:
+    filter:
+      - physical_disk
+      - partitions
 '''
 
 RETURN = r'''
