@@ -16,3 +16,74 @@
     - disks_found.ansible_facts.ansible_disks[0].physical_disk.size is defined
     - disks_found.ansible_facts.ansible_disks[0].physical_disk.operational_status is defined
     - disks_found.ansible_facts.ansible_disks[0].win32_disk_drive is defined
+    - disks_found.ansible_facts.ansible_disks[0].partitions is defined
+    - disks_found.ansible_facts.ansible_disks[0].partitions[0].volumes is defined
+
+- name: get disk partition facts on the target
+  win_disk_facts:
+    filter:
+      - partitions
+  register: disks_partitions_found
+
+- name: assert partitions disk facts
+  assert:
+    that:
+    - disks_partitions_found.changed == false
+    - disks_partitions_found.ansible_facts.ansible_disks[0].partitions is defined
+
+- name: get disk volume and partition facts on the target
+  win_disk_facts:
+    filter:
+      - volumes
+  register: disks_volumes_found
+
+- name: assert volume and partition disk facts
+  assert:
+    that:
+    - disks_volumes_found.changed == false
+    - disks_volumes_found.ansible_facts.ansible_disks[0].partitions is defined
+    - disks_volumes_found.ansible_facts.ansible_disks[0].partitions[0].volumes is defined
+
+
+- name: get disk physical_disk facts on the target
+  win_disk_facts:
+    filter:
+      - physical_disk
+  register: physical_disk_found
+
+- name: assert physical_disk disk facts
+  assert:
+    that:
+    - physical_disk_found.changed == false
+    - physical_disk_found.ansible_facts.ansible_disks[0].physical_disk is defined
+
+- name: get disk virtual_disk facts on the target
+  win_disk_facts:
+    filter:
+      - virtual_disk
+  register: virtual_disk_found
+
+- name: check if virtual_disk should be found
+  ansible.windows.win_shell: |
+    if (Get-VirtualDisk){$true}else{$false}
+  register: virtual_available
+  changed_when: false
+
+- name: assert virtual_disk disk facts
+  assert:
+    that:
+    - virtual_disk_found.changed == false
+    - virtual_disk_found.ansible_facts.ansible_disks[0].virtual_disk is defined
+  when: virtual_available.stdout == "True"
+
+- name: get disk win32_disk_drive facts on the target
+  win_disk_facts:
+    filter:
+      - win32_disk_drive
+  register: win32_disk_drive_found
+
+- name: assert win32_disk_drive disk facts
+  assert:
+    that:
+    - win32_disk_drive_found.changed == false
+    - win32_disk_drive_found.ansible_facts.ansible_disks[0].win32_disk_drive is defined
