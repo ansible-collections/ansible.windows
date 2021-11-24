@@ -96,7 +96,7 @@ notes:
 - C($Ansible.Tmpdir) is the path to a temporary directory to use as a scratch location that is cleaned up after the
   module has finished.
 - C($Ansible.Verbosity) reveals Ansible's verbosity level for this play. Allows the script to set VerbosePreference/DebugPreference
-  based on verbosity.
+  based on verbosity. Added in C(1.9.0).
 - Any host/console output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object, they are
   returned as a string in I(host_out) and I(host_err).
 - The module will skip running the script when in check mode unless the script defines
