@@ -433,6 +433,19 @@ if (-not $resource) {
     exit 1
 }
 
+# DSC Composite resources are currently not supported without a MOF file
+# this check prevents the user from getting a "Failed to serialize properties into CimInstance." error and
+# instead gets something a bit more informative while support is being worked on.
+# https://github.com/ansible-collections/ansible.windows/issues/15
+if ($resource.ImplementedAs -eq 'Composite') {
+    $res = @{
+        msg = "unsupported resource type: '$resource_name' is a composite resource"
+        failed = $true
+    }
+    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
+    exit 1
+}
+
 # Build the base args for the DSC Invocation based on the resource selected
 $dsc_args = @{
     Name = $resource.Name
