@@ -598,6 +598,7 @@ try {
     $ps.Runspace.SessionStateProxy.SetVariable('Ansible', [PSCustomObject]@{
             PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
             CheckMode = $module.CheckMode
+            Verbosity = $module.Verbosity
             Result = @{}
             Changed = $true
             Failed = $false

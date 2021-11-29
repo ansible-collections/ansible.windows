@@ -95,6 +95,8 @@ notes:
 - C($Ansible.Failed) can be set to C(true) if the script wants to return the failure back to the controller.
 - C($Ansible.Tmpdir) is the path to a temporary directory to use as a scratch location that is cleaned up after the
   module has finished.
+- C($Ansible.Verbosity) reveals Ansible's verbosity level for this play. Allows the script to set VerbosePreference/DebugPreference
+  based on verbosity. Added in C(1.9.0).
 - Any host/console output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object, they are
   returned as a string in I(host_out) and I(host_err).
 - The module will skip running the script when in check mode unless the script defines
@@ -187,6 +189,20 @@ EXAMPLES = r'''
       else {
           $Ansible.Changed = $true
       }
+
+- name: Define when to enable Verbose/Debug output
+  ansible.windows.win_powershell:
+    script: |
+      if ($Ansible.Verbosity -ge 3) {
+          $VerbosePreference = "Continue"
+      }
+      if ($Ansible.Verbosity -eq 5) {
+          $DebugPreference = "Continue"
+      }
+      Write-Output "Hello World!"
+      Write-Verbose "Hello World!"
+      Write-Debug "Hello World!"
+
 '''
 
 RETURN = r'''
