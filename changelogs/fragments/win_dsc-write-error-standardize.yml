@@ -1,2 +1,2 @@
 minor_changes:
-- win_dsc - deduplicated error writing code with a new function. No error text was changed.
+- win_dsc - deduplicated error writing code with a new function. No actual error text was changed.
