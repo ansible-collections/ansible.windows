@@ -349,9 +349,6 @@ Function Write-AnsibleError {
 
     .PARAMETER Msg
     Error message text
-
-    .PARAMETER Failed
-    Whether or not the error triggers a failure. Defaults to '$true'.
     #>
     [CmdletBinding()]
     param (
