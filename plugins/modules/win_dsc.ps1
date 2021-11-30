@@ -356,13 +356,12 @@ Function Write-AnsibleError {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [String]$Msg,
-        [Boolean]$Failed = $true
+        [String]$Msg
     )
 
     $res = @{
         msg = $msg
-        failed = $Failed
+        failed = $true
     }
     Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
     exit 1
