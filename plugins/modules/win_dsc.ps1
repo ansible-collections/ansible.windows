@@ -342,6 +342,28 @@ Function Invoke-SafeDscResource {
     }
 }
 
+Function Write-AnsibleError {
+    <#
+    .SYNOPSIS
+    Raises a standard terminating error.
+
+    .PARAMETER Msg
+    Error message text
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [String]$Msg
+    )
+
+    $res = @{
+        msg = $msg
+        failed = $true
+    }
+    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
+    exit 1
+}
+
 # DSC requires the default HTTP WSMan listener to be active and cannot be configured by Invoke-DscResource so we check
 # if it is active and present a better error message to the caller if it isn't. The only alternative is to invoke the
 # CIM method manually in our own CimSession but that would mean we need to compile the MOF ourselves which is not
@@ -351,12 +373,7 @@ $wsman_http_port = (Get-Item -LiteralPath $wsman_http_port_path).Value
 if (-not (Test-WSMan -Port $wsman_http_port -ErrorAction SilentlyContinue)) {
     $msg = "The win_dsc module requires the WSMan HTTP listener to be configured and online. The port win_dsc is set "
     $msg += "to use is $wsman_http_port as configured by 'Get-Item -LiteralPath $wsman_http_port_path'."
-    $res = @{
-        msg = $msg
-        failed = $true
-    }
-    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
-    exit 1
+    Write-AnsibleError -Msg $msg
 }
 
 # win_dsc is unique in that is builds the arg spec based on DSC Resource input. To get this info
@@ -368,12 +385,7 @@ else {
     $params = $complex_args
 }
 if (-not $params.ContainsKey("resource_name")) {
-    $res = @{
-        msg = "missing required argument: resource_name"
-        failed = $true
-    }
-    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
-    exit 1
+    Write-AnsibleError -Msg 'missing required argument: resource_name'
 }
 $resource_name = $params.resource_name
 
@@ -428,9 +440,7 @@ if (-not $resource) {
         $msg = "Resource '$resource_name' with version '$module_version' not found."
         $msg += " Versions installed: '$($module_versions.Version -join "', '")'."
     }
-
-    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject @{ failed = $true; msg = $msg })
-    exit 1
+    Write-AnsibleError -Msg $msg
 }
 
 # DSC Composite resources are currently not supported without a MOF file
@@ -438,12 +448,7 @@ if (-not $resource) {
 # instead gets something a bit more informative while support is being worked on.
 # https://github.com/ansible-collections/ansible.windows/issues/15
 if ($resource.ImplementedAs -eq 'Composite') {
-    $res = @{
-        msg = "unsupported resource type: '$resource_name' is a composite resource"
-        failed = $true
-    }
-    Write-Output -InputObject (ConvertTo-Json -Compress -InputObject $res)
-    exit 1
+    Write-AnsibleError -Msg "unsupported resource type: '$resource_name' is a composite resource"
 }
 
 # Build the base args for the DSC Invocation based on the resource selected
