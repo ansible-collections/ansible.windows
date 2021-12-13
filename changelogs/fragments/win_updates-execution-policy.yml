@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - Fixed issue when attempting to run ``task.ps1`` with a host that has a restrictive execution policy set through GPO
