@@ -91,6 +91,10 @@ options:
             - Will set patterns to run as a regex check if set to C(yes).
         type: bool
         default: no
+notes:
+- When scanning directories with a large number of files containing lots of data it is recommended to set
+  C(get_checksum=false). This will speed up the time it takes to scan the folders as getting a checksum needs to
+  read the contents of every file it returns.
 author:
 - Jordan Borean (@jborean93)
 '''
