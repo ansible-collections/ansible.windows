@@ -460,9 +460,15 @@ Function Invoke-AsBatchLogon {
         Set-Content -LiteralPath $scriptPath -Value ${function:Invoke-TaskInfo}
 
         $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-        $arguments = '-ExecutionPolicy ByPass -NoProfile -NonInteractive -File "{0}" -Id "{1}" -LogPath "{2}"' -f (
-            $scriptPath, $pipeName, $module.TmpDir
-        )
+        # Cannot use -File in case the host has a GPO defined execution policy. Instead this will read the script
+        # and run it like an in memory scriptblock bypassing the execution policy.
+        $arguments = @(
+            '-NoProfile'
+            '-NonInteractive'
+            '-Command'
+            '$cmd = Get-Content -LiteralPath ''{0}'' -Raw;' -f $scriptPath
+            '&([ScriptBlock]::Create($cmd)) -Id ''{0}'' -LogPath ''{1}''' -f $pipeName, $module.TmpDir
+        ) -join ' '
         $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path $pwsh -Arguments $arguments
 
         # Wait for the task to connect to our pipe or for the process to end (failed and should be reported)
