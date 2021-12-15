@@ -26,6 +26,9 @@ options:
       domain users/groups.
     - For local users/groups it can be in the form user-group, .\user-group,
       SERVERNAME\user-group where SERVERNAME is the name of the remote server.
+    - It is highly recommended to use the C(.\) or C(SERVERNAME\) prefix to
+      avoid any ambiguity with domain account names or errors trying to lookup
+      an account on a domain controller.
     - You can also add special local accounts like SYSTEM and others.
     - Can be set to an empty list with I(action=set) to remove all accounts
       from the right.
