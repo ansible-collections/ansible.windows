@@ -206,6 +206,7 @@ Notes
    - ``$Ansible.Changed`` can be set to ``true`` or ``false`` to reflect whether the module made a change or not. By default this is set to ``true``.
    - ``$Ansible.Failed`` can be set to ``true`` if the script wants to return the failure back to the controller.
    - ``$Ansible.Tmpdir`` is the path to a temporary directory to use as a scratch location that is cleaned up after the module has finished.
+   - ``$Ansible.Verbosity`` reveals Ansible's verbosity level for this play. Allows the script to set VerbosePreference/DebugPreference based on verbosity. Added in ``1.9.0``.
    - Any host/console output like ``Write-Host`` or ``[Console]::WriteLine`` is not considered an output object, they are returned as a string in *host_out* and *host_err*.
    - The module will skip running the script when in check mode unless the script defines ``[CmdletBinding(SupportsShouldProcess``]).
 
@@ -309,6 +310,19 @@ Examples
           else {
               $Ansible.Changed = $true
           }
+
+    - name: Define when to enable Verbose/Debug output
+      ansible.windows.win_powershell:
+        script: |
+          if ($Ansible.Verbosity -ge 3) {
+              $VerbosePreference = "Continue"
+          }
+          if ($Ansible.Verbosity -eq 5) {
+              $DebugPreference = "Continue"
+          }
+          Write-Output "Hello World!"
+          Write-Verbose "Hello World!"
+          Write-Debug "Hello World!"
 
 
 

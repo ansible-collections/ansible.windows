@@ -367,8 +367,6 @@ releases:
       - win_whoami - Fix conflicts with existing ``LIB`` environment variable
       minor_changes:
       - win_updates - Added the ``skip_optional`` module option to skip optional updates
-      release_summary:
-      - Release summary for v1.8.0
     fragments:
     - 283-win_dns_client_IPv6_DNS.yml
     - 290-win_user-state-query.yml
@@ -378,3 +376,38 @@ releases:
     - win_copy-dst-size.yml
     - win_updates-skip-optional.yml
     release_date: '2021-11-03'
+  1.9.0:
+    changes:
+      bugfixes:
+      - win_command - Use the 24 hour format for the hours of ``start`` and ``end``
+        - https://github.com/ansible-collections/ansible.windows/issues/303
+      - win_copy - improve dest folder size detection to handle broken and recursive
+        symlinks as well as inaccesible folders - https://github.com/ansible-collections/ansible.windows/issues/298
+      - win_dsc - Provide better error message when trying to invoke a composite DSC
+        resource
+      - win_shell - Use the 24 hour format for the hours of ``start`` and ``end``
+        - https://github.com/ansible-collections/ansible.windows/issues/303
+      - win_updates - Fix return value for ``updates`` and ``filtered_updates`` to
+        match original stucture - https://github.com/ansible-collections/ansible.windows/issues/307
+      - win_updates - Fixed issue when attempting to run ``task.ps1`` with a host
+        that has a restrictive execution policy set through GPO
+      - win_updates - prevent the host from going to sleep if a low sleep timeout
+        is set - https://github.com/ansible-collections/ansible.windows/issues/310
+      minor_changes:
+      - win_dsc - deduplicated error writing code with a new function. No actual error
+        text was changed.
+      - win_powershell - Added ``$Ansible.Verbosity`` for scripts to adjust code based
+        on the verbosity Ansible is running as
+      release_summary:
+      - Release summary for v1.9.0
+    fragments:
+    - release-1.9.0.yml
+    - win_command-shell-time.yml
+    - win_copy-dest-calc-fix.yml
+    - win_dsc-composite-resource-error.yml
+    - win_dsc-write-error-standardize.yml
+    - win_powershell.yml
+    - win_updates-execution-policy.yml
+    - win_updates-return.yml
+    - win_updates-sleep.yml
+    release_date: '2021-12-21'

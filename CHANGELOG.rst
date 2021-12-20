@@ -5,13 +5,33 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.8.0
+v1.9.0
 ======
 
 Release Summary
 ---------------
 
-- Release summary for v1.8.0
+- Release summary for v1.9.0
+
+Minor Changes
+-------------
+
+- win_dsc - deduplicated error writing code with a new function. No actual error text was changed.
+- win_powershell - Added ``$Ansible.Verbosity`` for scripts to adjust code based on the verbosity Ansible is running as
+
+Bugfixes
+--------
+
+- win_command - Use the 24 hour format for the hours of ``start`` and ``end`` - https://github.com/ansible-collections/ansible.windows/issues/303
+- win_copy - improve dest folder size detection to handle broken and recursive symlinks as well as inaccesible folders - https://github.com/ansible-collections/ansible.windows/issues/298
+- win_dsc - Provide better error message when trying to invoke a composite DSC resource
+- win_shell - Use the 24 hour format for the hours of ``start`` and ``end`` - https://github.com/ansible-collections/ansible.windows/issues/303
+- win_updates - Fix return value for ``updates`` and ``filtered_updates`` to match original stucture - https://github.com/ansible-collections/ansible.windows/issues/307
+- win_updates - Fixed issue when attempting to run ``task.ps1`` with a host that has a restrictive execution policy set through GPO
+- win_updates - prevent the host from going to sleep if a low sleep timeout is set - https://github.com/ansible-collections/ansible.windows/issues/310
+
+v1.8.0
+======
 
 Minor Changes
 -------------

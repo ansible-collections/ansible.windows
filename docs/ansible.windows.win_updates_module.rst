@@ -278,7 +278,7 @@ Notes
    - :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` can take a significant amount of time to complete (hours, in some cases). Performance depends on many factors, including OS version, number of updates, system load, and update server load.
    - Beware that just after :ref:`ansible.windows.win_updates <ansible.windows.win_updates_module>` reboots the system, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.
    - More information about PowerShell and how it handles RegEx strings can be found at https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx.
-   - The current module doesn't support Systems Center Configuration Manager (SCCM). See L(https://github.com/ansible-collections/ansible.windows/issues/194)
+   - The current module doesn't support Systems Center Configuration Manager (SCCM). See https://github.com/ansible-collections/ansible.windows/issues/194
 
 
 See Also
@@ -388,12 +388,12 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>filtered_updates</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>List of updates that were found but were filtered based on <em>blacklist</em>, <em>whitelist</em> or <em>category_names</em>. The return value is in the same form as <em>updates</em>, along with <em>filtered_reason</em>.</div>
+                            <div>Updates that were found but were filtered based on <em>blacklist</em>, <em>whitelist</em> or <em>category_names</em>. The return value is in the same form as <em>updates</em>, along with <em>filtered_reason</em>.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">see the updates return value</div>
@@ -497,12 +497,13 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>updates</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>List of updates that were found/installed.</div>
+                            <div>Updates that were found/installed.</div>
+                            <div>The key for each update is the <code>id</code> of the update.</div>
                     <br/>
                 </td>
             </tr>
