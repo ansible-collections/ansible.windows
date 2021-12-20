@@ -1,4 +1,0 @@
-bugfixes:
-- >-
-  win_updates - prevent the host from going to sleep if a low sleep timeout is set -
-  https://github.com/ansible-collections/ansible.windows/issues/310

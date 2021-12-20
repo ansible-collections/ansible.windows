@@ -89,6 +89,7 @@ Parameters
                         <div>A list of users or groups to add/remove on the User Right.</div>
                         <div>These can be in the form DOMAIN\user-group, user-group@DOMAIN.COM for domain users/groups.</div>
                         <div>For local users/groups it can be in the form user-group, .\user-group, SERVERNAME\user-group where SERVERNAME is the name of the remote server.</div>
+                        <div>It is highly recommended to use the <code>.\</code> or <code>SERVERNAME\</code> prefix to avoid any ambiguity with domain account names or errors trying to lookup an account on a domain controller.</div>
                         <div>You can also add special local accounts like SYSTEM and others.</div>
                         <div>Can be set to an empty list with <em>action=set</em> to remove all accounts from the right.</div>
                 </td>

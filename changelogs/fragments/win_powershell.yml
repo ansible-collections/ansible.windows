@@ -1,2 +1,0 @@
-minor_changes:
-- win_powershell - Added ``$Ansible.Verbosity`` for scripts to adjust code based on the verbosity Ansible is running as
