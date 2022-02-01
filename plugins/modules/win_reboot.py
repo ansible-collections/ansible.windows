@@ -14,6 +14,7 @@ options:
   pre_reboot_delay:
     description:
     - Seconds to wait before reboot. Passed as a parameter to the reboot command.
+    - The minimum version is C(2) seconds and cannot be set lower.
     type: float
     default: 2
     aliases: [ pre_reboot_delay_sec ]
