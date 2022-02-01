@@ -78,6 +78,11 @@ class ActionModule(ActionBase):
                 except TypeError as e:
                     raise AnsibleError("Invalid value given for '%s': %s." % (names[0], to_native(e)))
 
+                # Setting a lower value and kill PowerShell when sending the shutdown command. Just use the defaults
+                # if this is the case.
+                if names[0] == 'pre_reboot_delay' and value < 2:
+                    continue
+
                 parameters[names[0]] = value
 
         result = reboot_host(self._task.action, self._connection, **parameters)
