@@ -84,7 +84,8 @@ $path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $tru
 $user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
 $rights = Get-AnsibleParam -obj $params -name "rights" -type "str" -failifempty $true
 
-$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow", "deny"
+#$type = Get-AnsibleParam -obj $params -name "type" -type "str" -failifempty $true -validateset "allow", "deny"
+$type = Get-AnsibleParam -obj $params -name "type" -type "str" -validateset "allow", "deny"
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "absent", "present"
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
@@ -101,6 +102,10 @@ if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
 }
 if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
     New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
+}
+if ($path_qualifier -eq "AD:" -and (-not (Test-Path -LiteralPath AD:\))) {
+    Import-Module ActiveDirectory
+    #New-PSDrive -Name AD -PSProvider ActiveDirectory -Root "dc=lab,dc=local" > $null
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -129,15 +134,23 @@ if ($null -ne $path_qualifier) {
 Try {
     SetPrivilegeTokens
     $path_item = Get-Item -LiteralPath $path -Force
-    If ($path_item.PSProvider.Name -eq "Registry") {
-        $colRights = [System.Security.AccessControl.RegistryRights]$rights
+    switch ($path_item.PSProvider.Name)
+        {
+        'Registry' {
+            $colRights = [System.Security.AccessControl.RegistryRights]$rights 
+            $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
+            $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
+                    }
+        'ActiveDirectory' {
+            $colRights = [System.DirectoryServices.ActiveDirectoryRights]$rights
+           # $InheritanceFlag = [System.DirectoryServices.ActiveDirectorySecurityInheritance]'None'
+                          }
+        Default    {
+            $colRights = [System.Security.AccessControl.FileSystemRights]$rights
+            $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
+            $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
+        }
     }
-    Else {
-        $colRights = [System.Security.AccessControl.FileSystemRights]$rights
-    }
-
-    $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
-    $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
 
     If ($type -eq "allow") {
         $objType = [System.Security.AccessControl.AccessControlType]::Allow
@@ -147,45 +160,71 @@ Try {
     }
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
-    If ($path_item.PSProvider.Name -eq "Registry") {
-        $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+
+    switch ($path_item.PSProvider.Name)
+    {
+        'Registry' {
+            $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+        }
+
+        'ActiveDirectory' {
+            $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule ($objUser, $colRights, $objType)
+        }
+
+        'Default' {
+            $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+        }
     }
-    Else {
-        $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-    }
+
     $objACL = Get-ACL -LiteralPath $path
 
     # Check if the ACE exists already in the objects ACL list
     $match = $false
 
     ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
+        switch ($path_item.PSProvider.Name)
+            {
+                'Registry'
+                    {
+                        If (
+                            ($rule.RegistryRights -eq $objACE.RegistryRights) -And
+                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                            ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                            ($rule.IsInherited -eq $objACE.IsInherited) -And
+                            ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                            ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+                        ) {
+                            $match = $true
+                            Break
+                        }
+                    }
+                'ActiveDirectory'
+                    {
+                        If (
+                            ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
+                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                            ($rule.IdentityReference -eq $objACE.IdentityReference)
+                        ) {
+                            $match = $true
+                            Break
+                        }
+                    }
+                'Default'
+                    {
 
-        If ($path_item.PSProvider.Name -eq "Registry") {
-            If (
-                ($rule.RegistryRights -eq $objACE.RegistryRights) -And
-                ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                ($rule.IdentityReference -eq $objACE.IdentityReference) -And
-                ($rule.IsInherited -eq $objACE.IsInherited) -And
-                ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
-                ($rule.PropagationFlags -eq $objACE.PropagationFlags)
-            ) {
-                $match = $true
-                Break
+                        If (
+                            ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
+                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                            ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                            ($rule.IsInherited -eq $objACE.IsInherited) -And
+                            ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                            ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+                        ) {
+                            $match = $true
+                            Break
+                        }
+                    }
             }
-        }
-        else {
-            If (
-                ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
-                ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                ($rule.IdentityReference -eq $objACE.IdentityReference) -And
-                ($rule.IsInherited -eq $objACE.IsInherited) -And
-                ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
-                ($rule.PropagationFlags -eq $objACE.PropagationFlags)
-            ) {
-                $match = $true
-                Break
-            }
-        }
     }
 
     If ($state -eq "present" -And $match -eq $false) {
@@ -206,7 +245,7 @@ Try {
     ElseIf ($state -eq "absent" -And $match -eq $true) {
         Try {
             $objACL.RemoveAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
+            If (($path_item.PSProvider.Name -eq "Registry") -or ($path_item.PSProvider.Name -eq "ActiveDirectory")) {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             }
             else {
