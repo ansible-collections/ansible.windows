@@ -133,8 +133,7 @@ if ($null -ne $path_qualifier) {
 Try {
     SetPrivilegeTokens
     $path_item = Get-Item -LiteralPath $path -Force
-    switch ($path_item.PSProvider.Name)
-    {
+    switch ($path_item.PSProvider.Name) {
         'Registry' {
             $colRights = [System.Security.AccessControl.RegistryRights]$rightss
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
@@ -160,8 +159,7 @@ Try {
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
 
-    switch ($path_item.PSProvider.Name)
-    {
+    switch ($path_item.PSProvider.Name){
         'Registry' {
             $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
         }
@@ -180,12 +178,9 @@ Try {
     # Check if the ACE exists already in the objects ACL list
     $match = $false
 
-    ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) 
-    {
-        switch ($path_item.PSProvider.Name)
-            {
-                'Registry'
-                    {
+    ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
+        switch ($path_item.PSProvider.Name) {
+                Registry {
                         If (
                             ($rule.RegistryRights -eq $objACE.RegistryRights) -And
                             ($rule.AccessControlType -eq $objACE.AccessControlType) -And
@@ -198,8 +193,7 @@ Try {
                             Break
                           }
                     }
-                'ActiveDirectory'
-                    {
+                ActiveDirectory {
                         If (
                             ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
                             ($rule.AccessControlType -eq $objACE.AccessControlType) -And
@@ -209,9 +203,7 @@ Try {
                             Break
                           }
                     }
-                'Default'
-                    {
-
+                Default {
                         If (
                             ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
                             ($rule.AccessControlType -eq $objACE.AccessControlType) -And

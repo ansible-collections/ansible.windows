@@ -24,8 +24,7 @@ if ($path_qualifier -like "AD:" ) {
         If (-Not (Test-Path -LiteralPath $path)) {
             Fail-Json $result "$path does not exist on the host"
           }
-          else
-          {
+          else {
             $objACL = Get-ACL $path
           }
     }
@@ -34,8 +33,7 @@ else {
     If (-Not (Test-Path -LiteralPath $path)) {
         Fail-Json $result "$path file or directory does not exist on the host"
       }
-      else
-      {
+      else {
         $objACL = Get-ACL -LiteralPath $path
       }
     }
