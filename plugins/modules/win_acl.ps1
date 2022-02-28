@@ -134,20 +134,20 @@ Try {
     SetPrivilegeTokens
     $path_item = Get-Item -LiteralPath $path -Force
     switch ($path_item.PSProvider.Name) {
-        'Registry' {
+        Registry {
             $colRights = [System.Security.AccessControl.RegistryRights]$rightss
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
             $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
-                    }
-        'ActiveDirectory' {
+        }
+        ActiveDirectory {
             $colRights = [System.DirectoryServices.ActiveDirectoryRights]$rights
             $InheritanceFlag = [System.DirectoryServices.ActiveDirectorySecurityInheritance]$inherit
-                          }
+        }
         Default {
             $colRights = [System.Security.AccessControl.FileSystemRights]$rights
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
             $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
-                }
+        }
     }
 
     If ($type -eq "allow") {
@@ -160,15 +160,15 @@ Try {
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
 
     switch ($path_item.PSProvider.Name){
-        'Registry' {
+        Registry {
             $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
         }
 
-        'ActiveDirectory' {
+        ActiveDirectory {
             $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule ($objUser, $colRights, $objType)
         }
 
-        'Default' {
+        Default {
             $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
         }
     }
@@ -192,7 +192,7 @@ Try {
                             $match = $true
                             Break
                           }
-                    }
+                }
                 ActiveDirectory {
                         If (
                             ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
@@ -202,7 +202,7 @@ Try {
                             $match = $true
                             Break
                           }
-                    }
+                }
                 Default {
                         If (
                             ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
@@ -215,7 +215,7 @@ Try {
                             $match = $true
                             Break
                           }
-                    }
+                }
             }
     }
 
@@ -229,10 +229,10 @@ Try {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
                  }
             $result.changed = $true
-            }
+        }
         Catch {
             Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
-              }
+        }
     }
     ElseIf ($state -eq "absent" -And $match -eq $true) {
         Try {
