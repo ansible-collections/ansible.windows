@@ -105,7 +105,6 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
 }
 if ($path_qualifier -eq "AD:" -and (-not (Test-Path -LiteralPath AD:\))) {
     Import-Module ActiveDirectory
-    #New-PSDrive -Name AD -PSProvider ActiveDirectory -Root "dc=lab,dc=local" > $null
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -143,7 +142,7 @@ Try {
                     }
         'ActiveDirectory' {
             $colRights = [System.DirectoryServices.ActiveDirectoryRights]$rights
-           # $InheritanceFlag = [System.DirectoryServices.ActiveDirectorySecurityInheritance]'None'
+            $InheritanceFlag = [System.DirectoryServices.ActiveDirectorySecurityInheritance]$inherit
                           }
         Default    {
             $colRights = [System.Security.AccessControl.FileSystemRights]$rights

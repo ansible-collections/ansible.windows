@@ -36,12 +36,18 @@ seealso:
 - module: ansible.windows.win_stat
 author:
 - Hans-Joachim Kliemeck (@h0nIg)
+- Raph POURCHASSE (@pourchasse)
 '''
 
 EXAMPLES = r'''
 - name: Disable inherited ACE's
   ansible.windows.win_acl_inheritance:
     path: C:\apache
+    state: absent
+
+- name: Disable inheritance ACE on Organizational Unit
+  ansible.windows.win_acl_inheritance:
+    path: AD:\OU=MYOU,DC=MY,DC=DOMAIN
     state: absent
 
 - name: Disable and copy inherited ACE's
