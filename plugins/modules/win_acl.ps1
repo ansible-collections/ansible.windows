@@ -227,7 +227,7 @@ Try {
             }
             else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
-                 }
+            }
             $result.changed = $true
         }
         Catch {
