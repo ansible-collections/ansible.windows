@@ -159,7 +159,7 @@ Try {
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
 
-    switch ($path_item.PSProvider.Name){
+    switch ($path_item.PSProvider.Name) {
         Registry {
             $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
         }
@@ -180,43 +180,43 @@ Try {
 
     ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
         switch ($path_item.PSProvider.Name) {
-                Registry {
-                        If (
-                            ($rule.RegistryRights -eq $objACE.RegistryRights) -And
-                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                            ($rule.IdentityReference -eq $objACE.IdentityReference) -And
-                            ($rule.IsInherited -eq $objACE.IsInherited) -And
-                            ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
-                            ($rule.PropagationFlags -eq $objACE.PropagationFlags)
-                        ) {
-                            $match = $true
-                            Break
-                          }
-                }
-                ActiveDirectory {
-                        If (
-                            ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
-                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                            ($rule.IdentityReference -eq $objACE.IdentityReference)
-                        ) {
-                            $match = $true
-                            Break
-                          }
-                }
-                Default {
-                        If (
-                            ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
-                            ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                            ($rule.IdentityReference -eq $objACE.IdentityReference) -And
-                            ($rule.IsInherited -eq $objACE.IsInherited) -And
-                            ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
-                            ($rule.PropagationFlags -eq $objACE.PropagationFlags)
-                        ) {
-                            $match = $true
-                            Break
-                          }
+            Registry {
+                If (
+                    ($rule.RegistryRights -eq $objACE.RegistryRights) -And
+                    ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                    ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                    ($rule.IsInherited -eq $objACE.IsInherited) -And
+                    ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                    ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+                ) {
+                    $match = $true
+                    Break
                 }
             }
+            ActiveDirectory {
+                If (
+                    ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
+                    ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                    ($rule.IdentityReference -eq $objACE.IdentityReference)
+                ) {
+                    $match = $true
+                    Break
+                }
+            }
+            Default {
+                If (
+                    ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
+                    ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                    ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                    ($rule.IsInherited -eq $objACE.IsInherited) -And
+                    ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                    ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+                ) {
+                    $match = $true
+                    Break
+                }
+            }
+        }
     }
 
     If ($state -eq "present" -And $match -eq $false) {
