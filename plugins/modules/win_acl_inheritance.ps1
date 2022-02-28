@@ -18,13 +18,12 @@ $state = Get-AnsibleParam -obj $params "state" -type "str" -default "absent" -va
 $reorganize = Get-AnsibleParam -obj $params "reorganize" -type "bool" -default $false -resultobj $result
 $path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
 
-if ($path_qualifier -like "AD:" )
-    {
+if ($path_qualifier -like "AD:" ) {
         Import-Module ActiveDirectory
         $path = Get-AnsibleParam -obj $params -name "path" -type "str" -failifempty $true
         If (-Not (Test-Path -LiteralPath $path)) {
             Fail-Json $result "$path does not exist on the host"
-          } 
+          }
           else
           {
             $objACL = Get-ACL $path
@@ -34,7 +33,7 @@ else {
     $path = Get-AnsibleParam -obj $params "path" -type "path"  -failifempty $true
     If (-Not (Test-Path -LiteralPath $path)) {
         Fail-Json $result "$path file or directory does not exist on the host"
-      }   
+      }
       else
       {
         $objACL = Get-ACL -LiteralPath $path

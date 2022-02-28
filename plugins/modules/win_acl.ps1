@@ -134,9 +134,9 @@ Try {
     SetPrivilegeTokens
     $path_item = Get-Item -LiteralPath $path -Force
     switch ($path_item.PSProvider.Name)
-        {
+    {
         'Registry' {
-            $colRights = [System.Security.AccessControl.RegistryRights]$rights 
+            $colRights = [System.Security.AccessControl.RegistryRights]$rightss
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
             $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
                     }
@@ -144,11 +144,11 @@ Try {
             $colRights = [System.DirectoryServices.ActiveDirectoryRights]$rights
             $InheritanceFlag = [System.DirectoryServices.ActiveDirectorySecurityInheritance]$inherit
                           }
-        Default    {
+        Default {
             $colRights = [System.Security.AccessControl.FileSystemRights]$rights
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
             $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
-        }
+                }
     }
 
     If ($type -eq "allow") {
@@ -180,7 +180,8 @@ Try {
     # Check if the ACE exists already in the objects ACL list
     $match = $false
 
-    ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
+    ForEach ($rule in $objACL.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) 
+    {
         switch ($path_item.PSProvider.Name)
             {
                 'Registry'
@@ -195,7 +196,7 @@ Try {
                         ) {
                             $match = $true
                             Break
-                        }
+                          }
                     }
                 'ActiveDirectory'
                     {
@@ -206,7 +207,7 @@ Try {
                         ) {
                             $match = $true
                             Break
-                        }
+                          }
                     }
                 'Default'
                     {
@@ -221,7 +222,7 @@ Try {
                         ) {
                             $match = $true
                             Break
-                        }
+                          }
                     }
             }
     }
@@ -234,12 +235,12 @@ Try {
             }
             else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
-            }
+                 }
             $result.changed = $true
-        }
+            }
         Catch {
             Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
-        }
+              }
     }
     ElseIf ($state -eq "absent" -And $match -eq $true) {
         Try {
