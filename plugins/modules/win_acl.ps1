@@ -105,6 +105,7 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
 }
 if ($path_qualifier -eq "AD:" -and (-not (Test-Path -LiteralPath AD:\))) {
     Import-Module ActiveDirectory
+
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -117,7 +118,7 @@ if (!$sid) {
     Fail-Json -obj $result -message "$user is not a valid user or group on the host machine or domain"
 }
 
-If (Test-Path -LiteralPath $path -PathType Leaf) {
+If ((Test-Path -LiteralPath $path -PathType Leaf) -or ($path_qualifier -eq "AD:")) {
     $inherit = "None"
 }
 ElseIf ($null -eq $inherit) {
@@ -197,7 +198,8 @@ Try {
                 If (
                     ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
                     ($rule.AccessControlType -eq $objACE.AccessControlType) -And
-                    ($rule.IdentityReference -eq $objACE.IdentityReference)
+                    ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                    ($rule.IsInherited -eq $objACE.IsInherited)
                 ) {
                     $match = $true
                     Break
