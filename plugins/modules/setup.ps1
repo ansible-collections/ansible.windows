@@ -721,6 +721,15 @@ $factMeta = @(
                     elseif ($ipv6) {
                         $ipv6.Index
                     }
+
+                    $ipv4_address = $ipProps.UnicastAddresses | Where-Object {
+                        $_.Address.AddressFamily -eq 2
+                    } | Select-Object @{ N = 'address'; E = { $_.Address.ToString() } }, @{ N = 'prefix'; E = { $_.PrefixLength.ToString() } }
+
+                    $ipv6_address = $ipProps.UnicastAddresses | Where-Object {
+                        $_.Address.AddressFamily -eq 23
+                    } | Select-Object @{ N = 'address'; E = { $_.Address.ToString() } }, @{ N = 'prefix'; E = { $_.PrefixLength.ToString() } }
+
                     $mac = ($interface.GetPhysicalAddress() -replace '(..)', '$1:').ToUpperInvariant().Trim(':')
 
                     @{
@@ -729,7 +738,11 @@ $factMeta = @(
                         dns_domain = $dnsDomain
                         interface_index = $index
                         interface_name = $interface.Description
+                        ipv4 = $ipv4_address
+                        ipv6 = $ipv6_address
                         macaddress = $mac
+                        mtu = $ipv4.Mtu
+                        speed = $interface.Speed / 1000 / 1000
                     }
                 })
 
