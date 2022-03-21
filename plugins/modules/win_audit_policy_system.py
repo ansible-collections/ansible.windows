@@ -28,6 +28,7 @@ options:
       - The type of event you would like to audit for.
       - Accepts a list. See examples.
     type: list
+    elements: str
     required: yes
     choices: [ failure, none, success ]
 notes:
