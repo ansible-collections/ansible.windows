@@ -46,6 +46,7 @@ options:
     - This module only supports the C(ExecAction) type but can still delete the
       older legacy types.
     type: list
+    elements: dict
     suboptions:
       path:
         description:
@@ -73,6 +74,7 @@ options:
     - The suboption options listed below are not required for all trigger
       types, read the description for more details.
     type: list
+    elements: dict
     suboptions:
       type:
         description:
