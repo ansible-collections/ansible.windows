@@ -17,6 +17,7 @@ options:
     description:
     - Specify one or more profiles to change.
     type: list
+    elements: str
     choices: [ Domain, Private, Public ]
     default: [ Domain, Private, Public ]
   state:
