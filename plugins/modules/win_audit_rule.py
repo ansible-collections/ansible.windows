@@ -36,6 +36,7 @@ options:
       - If I(path) is a registry key, rights can be any right under MSDN
         RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
     type: list
+    elements: str
     required: yes
   inheritance_flags:
     description:
@@ -44,6 +45,7 @@ options:
       - For more information on the choices see MSDN PropagationFlags enumeration
         at U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx).
     type: list
+    elements: str
     choices: [ ContainerInherit, ObjectInherit ]
     default: ContainerInherit,ObjectInherit
   propagation_flags:
@@ -59,6 +61,7 @@ options:
       - Defines whether to log on failure, success, or both.
       - To log both define as comma separated list "Success, Failure".
     type: list
+    elements: str
     required: yes
     choices: [ Failure, Success ]
   state:
