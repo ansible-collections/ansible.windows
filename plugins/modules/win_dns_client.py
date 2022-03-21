@@ -16,6 +16,7 @@ options:
       - Adapter name or list of adapter names for which to manage DNS settings ('*' is supported as a wildcard value).
       - The adapter name used is the connection caption in the Network Control Panel or the InterfaceAlias of C(Get-DnsClientServerAddress).
     type: list
+    elements: str
     required: yes
   dns_servers:
     description:
@@ -24,6 +25,7 @@ options:
         or disable DNS lookup on statically-configured connections.
       - IPv6 DNS servers can only be set on Windows Server 2012 or newer, older hosts can only set IPv4 addresses.
     type: list
+    elements: str
     required: yes
     aliases: [ "ipv4_addresses", "ip_addresses", "addresses" ]
 author:

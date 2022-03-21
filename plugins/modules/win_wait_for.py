@@ -35,6 +35,7 @@ options:
     - The list of hosts or IPs to ignore when looking for active TCP
       connections when C(state=drained).
     type: list
+    elements: str
   host:
     description:
     - A resolvable hostname or IP address to wait for.

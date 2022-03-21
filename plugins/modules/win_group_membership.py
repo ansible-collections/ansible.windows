@@ -26,6 +26,7 @@ options:
       - Accepts all local, domain and service user types as username,
         favoring domain lookups when in a domain.
     type: list
+    elements: str
     required: yes
   state:
     description:
