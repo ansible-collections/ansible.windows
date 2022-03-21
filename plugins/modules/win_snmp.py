@@ -15,10 +15,12 @@ options:
         description:
         - The list of permitted SNMP managers.
         type: list
+        elements: str
     community_strings:
         description:
         - The list of read-only SNMP community strings.
         type: list
+        elements: str
     action:
         description:
         - C(add) will add new SNMP community strings and/or SNMP managers
