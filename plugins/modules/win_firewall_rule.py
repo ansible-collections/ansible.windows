@@ -99,6 +99,7 @@ options:
       - The profile this rule applies to.
       - Defaults to C(domain,private,public) when creating a new rule.
     type: list
+    elements: str
     aliases: [ profile ]
   icmp_type_code:
     description:
@@ -111,6 +112,7 @@ options:
       - See U(https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml)
         for a list of ICMP types and the codes that apply to them.
     type: list
+    elements: str
 notes:
 - Multiple firewall rules can share the same I(name), if there are multiple matches then the module will set the user
   defined options for each matching rule.
