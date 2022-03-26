@@ -136,7 +136,7 @@ Try {
     $path_item = Get-Item -LiteralPath $path -Force
     switch ($path_item.PSProvider.Name) {
         Registry {
-            $colRights = [System.Security.AccessControl.RegistryRights]$rightss
+            $colRights = [System.Security.AccessControl.RegistryRights]$rights
             $InheritanceFlag = [System.Security.AccessControl.InheritanceFlags]$inherit
             $PropagationFlag = [System.Security.AccessControl.PropagationFlags]$propagation
         }
