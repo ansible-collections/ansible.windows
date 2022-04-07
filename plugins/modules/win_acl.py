@@ -9,10 +9,10 @@
 DOCUMENTATION = r'''
 ---
 module: win_acl
-short_description: Set file/directory/registry permissions for a system user or group
+short_description: Set file/directory/registry/Active Directory Organizational Unit permissions for a system user or group
 description:
 - Add or remove rights/permissions for a given user or group for the specified
-  file, folder, registry key or AppPool identifies.
+  file, folder, registry key, Organizational Unit or AppPool identifies.
 options:
   path:
     description:
@@ -21,7 +21,7 @@ options:
     required: yes
   user:
     description:
-    - User or Group to add specified rights to act on src file/folder or
+    - User or Group to add specified rights to act on src file/folder, Organizational unit or
       registry key.
     type: str
     required: yes
@@ -45,6 +45,8 @@ options:
       FileSystemRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx).
     - If C(path) is a registry key, rights can be any right under MSDN
       RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
+    - If C(path) is a Organizational Unit, rights can be any right under MSDN
+      System.DirectoryServices.ActiveDirectoryRights U(https://msdn.microsoft.com/en-us/dotnet/api/system.directoryservices.activedirectoryrights.aspx).
     type: str
     required: yes
   inherit:
@@ -67,6 +69,7 @@ options:
     default: "None"
 notes:
 - If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
+- If used Active Directory, The feature "propagation" is not necessary
 seealso:
 - module: ansible.windows.win_acl_inheritance
 - module: ansible.windows.win_file
@@ -76,6 +79,7 @@ author:
 - Phil Schwartz (@schwartzmx)
 - Trond Hindenes (@trondhindenes)
 - Hans-Joachim Kliemeck (@h0nIg)
+- Raph POURCHASSE (@pourchasse)
 '''
 
 EXAMPLES = r'''
@@ -95,6 +99,15 @@ EXAMPLES = r'''
     state: present
     inherit: ContainerInherit, ObjectInherit
     propagation: 'None'
+
+- name: Remove Authorization for NT AUTHORITY\Authenticated Users on Organizational Unit
+  ansible.windows.win_acl:
+    path: AD:\OU=MYOU,DC=MY,DC=DOMAIN
+    user: NT AUTHORITY\Authenticated Users
+    rights: GenericRead
+    type: allow
+    inherit: ContainerInherit, ObjectInherit
+    state: absent
 
 - name: Set registry key right
   ansible.windows.win_acl:
