@@ -19,6 +19,7 @@ options:
       - Names of roles or features to install as a single feature or a comma-separated list of features.
       - To list all available features use the PowerShell command C(Get-WindowsFeature).
     type: list
+    elements: str
     required: yes
   state:
     description:

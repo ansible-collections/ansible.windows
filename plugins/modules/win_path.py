@@ -27,6 +27,7 @@ options:
       - Paths are compared in a case-insensitive fashion, and trailing backslashes are ignored for comparison purposes. However, note that trailing
         backslashes in YAML require quotes.
     type: list
+    elements: str
     required: yes
   state:
     description:

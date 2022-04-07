@@ -1,0 +1,6 @@
+plugins/modules/setup.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore custom rules in the version of PSSA in ansible-test docker
+plugins/modules/win_powershell.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore until all ansible-test branches support custom rules
+tests/integration/targets/win_package/library/win_make_appx.ps1 pslint:PSAvoidLongLines # Cannot ignore until all ansible-test branches support this rule
+tests/utils/shippable/check_matrix.py replace-urlopen
+tests/utils/shippable/timing.py shebang
+tests/integration/targets/win_dsc/files/xTestCompositeDsc/1.0.0/DSCResources/xTestComposite/xTestComposite.schema.psm1 pslint!skip # Pwsh cannot parse DSC to MOF on Linux
