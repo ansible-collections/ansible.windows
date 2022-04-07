@@ -105,7 +105,6 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
 }
 if ($path_qualifier -eq "AD:" -and (-not (Test-Path -LiteralPath AD:\))) {
     Import-Module ActiveDirectory
-
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -166,7 +165,7 @@ Try {
         }
 
         ActiveDirectory {
-            $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule ($objUser, $colRights, $objType)
+            $objACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule ($objUser, $colRights, $objType, $InheritanceFlag)
         }
 
         Default {
@@ -199,7 +198,8 @@ Try {
                     ($rule.ActiveDirectoryRights -eq $objACE.ActiveDirectoryRights) -And
                     ($rule.AccessControlType -eq $objACE.AccessControlType) -And
                     ($rule.IdentityReference -eq $objACE.IdentityReference) -And
-                    ($rule.IsInherited -eq $objACE.IsInherited)
+                    ($rule.IsInherited -eq $objACE.IsInherited) -And
+                    ($rule.InheritanceFlags -eq $objACE.InheritanceFlags)
                 ) {
                     $match = $true
                     Break
@@ -224,7 +224,7 @@ Try {
     If ($state -eq "present" -And $match -eq $false) {
         Try {
             $objACL.AddAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
+            If (($path_item.PSProvider.Name -eq "Registry") -or ($path_item.PSProvider.Name -eq "ActiveDirectory")) {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             }
             else {

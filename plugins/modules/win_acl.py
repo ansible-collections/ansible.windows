@@ -100,12 +100,13 @@ EXAMPLES = r'''
     inherit: ContainerInherit, ObjectInherit
     propagation: 'None'
 
-- name: Remove Authorization for NT AUTHORITY\Authenticated Users
+- name: Remove Authorization for NT AUTHORITY\Authenticated Users on Organizational Unit
   ansible.windows.win_acl:
     path: AD:\OU=MYOU,DC=MY,DC=DOMAIN
     user: NT AUTHORITY\Authenticated Users
     rights: GenericRead
     type: allow
+    inherit: ContainerInherit, ObjectInherit
     state: absent
 
 - name: Set registry key right
