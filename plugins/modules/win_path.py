@@ -34,6 +34,7 @@ options:
       - Whether the path elements specified in C(elements) should be present or absent.
     type: str
     choices: [ absent, present ]
+    default: present
   scope:
     description:
       - The level at which the environment variable specified by C(name) should be managed (either for the current user or global machine scope).

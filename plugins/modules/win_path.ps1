@@ -2,10 +2,26 @@
 
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
-Set-StrictMode -Version 2
-$ErrorActionPreference = "Stop"
+$spec = @{
+    options = @{
+        name = @{ type = "str"; default = "PATH" }
+        elements = @{ type = "list"; elements = "str"; required = $true }
+        state = @{ type = "str"; choices = "absent", "present"; default = "present" }
+        scope = @{ type = "str"; choices = "machine", "user"; default = "machine" }
+    }
+    supports_check_mode = $true
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$var_name = $module.Params.name
+$elements = $module.Params.elements
+$state = $module.Params.state
+$scope = $module.Params.scope
+
+$check_mode = $module.CheckMode
 
 $system_path = "System\CurrentControlSet\Control\Session Manager\Environment"
 $user_path = "Environment"
@@ -58,7 +74,7 @@ Function Remove-Element ($existing_elements, $elements_to_remove) {
 
     ForEach ($el in $elements_to_remove) {
         $idx = Get-IndexOfPathElement $existing_elements $el
-        $result.removed_idx = $idx
+        $module.Result.removed_idx = $idx
         If ($idx -gt -1) {
             $existing_elements.RemoveAt($idx)
         }
@@ -76,7 +92,12 @@ Function Get-RawPathVar ($scope) {
         $env_key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($system_path)
     }
 
-    return $env_key.GetValue($var_name, "", [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+    try {
+        return $env_key.GetValue($var_name, "", [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+    }
+    finally {
+        $env_key.Dispose()
+    }
 }
 
 Function Set-RawPathVar($path_value, $scope) {
@@ -92,27 +113,70 @@ Function Set-RawPathVar($path_value, $scope) {
     return $path_value
 }
 
-$parsed_args = Parse-Args $args -supports_check_mode $true
+Function Register-EnvironmentChange {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [Ansible.Basic.AnsibleModule]
+        $Module
+    )
 
-$result = @{changed = $false }
+    Add-CSharpType -AnsibleModule $Module -References @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
-$var_name = Get-AnsibleParam $parsed_args "name" -Default "PATH"
-$elements = Get-AnsibleParam $parsed_args "elements" -FailIfEmpty $result
-$state = Get-AnsibleParam $parsed_args "state" -Default "present" -ValidateSet "present", "absent"
-$scope = Get-AnsibleParam $parsed_args "scope" -Default "machine" -ValidateSet "machine", "user"
+namespace Ansible.Windows.WinPath
+{
+    public class Native
+    {
+        [DllImport("User32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr SendMessageTimeoutW(
+            IntPtr hWnd,
+            uint Msg,
+            UIntPtr wParam,
+            string lParam,
+            SendMessageFlags fuFlags,
+            uint uTimeout,
+            out UIntPtr lpdwResult);
 
-$check_mode = Get-AnsibleParam $parsed_args "_ansible_check_mode" -Default $false
+        public static UIntPtr SendMessageTimeout(IntPtr windowHandle, uint msg, UIntPtr wParam, string lParam,
+            SendMessageFlags flags, uint timeout)
+        {
+            UIntPtr result = UIntPtr.Zero;
+            IntPtr funcRes = SendMessageTimeoutW(windowHandle, msg, wParam, lParam, flags, timeout, out result);
+            if (funcRes == IntPtr.Zero)
+                throw new Win32Exception();
 
-If ($elements -is [string]) {
-    $elements = @($elements)
+            return result;
+        }
+    }
+
+    [Flags()]
+    public enum SendMessageFlags : uint
+    {
+        Normal = 0x0000,
+        Block = 0x0001,
+        AbortIfHung = 0x0002,
+        NoTimeoutIfNotHung = 0x0008,
+        ErrorOnExit = 0x0020,
+    }
 }
+'@
 
-If ($elements -isnot [Array]) {
-    Fail-Json $result "elements must be a string or list of path strings"
+    $HWND_BROADCAST = [IntPtr]0xFFFF;
+    $WM_SETTINGCHANGE = 0x001A;
+    $null = [Ansible.Windows.WinPath.Native]::SendMessageTimeout(
+        $HWND_BROADCAST,
+        $WM_SETTINGCHANGE,
+        [UIntPtr]::Zero,
+        "Environment",
+        "AbortIfHung",
+        5000)
 }
 
 $current_value = Get-RawPathVar $scope
-$result.path_value = $current_value
+$module.Result.path_value = $current_value
 
 # TODO: test case-canonicalization on wacky unicode values (eg turkish i)
 # TODO: detect and warn/fail on unparseable path? (eg, unbalanced quotes, invalid path chars)
@@ -128,18 +192,19 @@ ForEach ($m in $pathsplit_re.Matches($current_value)) {
 }
 
 If ($state -eq "absent") {
-    $result.changed = Remove-Element $existing_elements $elements
+    $module.Result.changed = Remove-Element $existing_elements $elements
 }
 ElseIf ($state -eq "present") {
-    $result.changed = Add-Element $existing_elements $elements
+    $module.Result.changed = Add-Element $existing_elements $elements
 }
 
 # calculate the new path value from the existing elements
 $path_value = [String]::Join(";", $existing_elements.ToArray())
-$result.path_value = $path_value
+$module.Result.path_value = $path_value
 
-If ($result.changed -and -not $check_mode) {
+If ($module.Result.changed -and -not $check_mode) {
     Set-RawPathVar $path_value $scope | Out-Null
+    Register-EnvironmentChange -Module $module
 }
 
-Exit-Json $result
+$module.ExitJson()

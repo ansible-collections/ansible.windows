@@ -1,0 +1,4 @@
+minor_changes:
+- win_environment - Trigger ``WM_SETTINGCHANGE`` on a change to notify other host processes of an environment change
+- win_path - Trigger ``WM_SETTINGCHANGE`` on a change to notify other host processes of an environment change
+- win_path - Migrate to newer style module parser that adds features like module invocation under ``-vvv``
