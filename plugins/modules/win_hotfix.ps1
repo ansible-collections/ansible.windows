@@ -93,44 +93,43 @@ Function Get-HotfixMetadataFromFile($extract_path) {
     }
     [xml]$xml = Get-Content -LiteralPath $metadata_path.FullName
 
-    $cab_source_filename = $xml.unattend.servicing.package.source.GetAttribute("location")
-    $cab_source_filename = Split-Path -Path $cab_source_filename -Leaf
-    $cab_file = Join-Path -Path $extract_path -ChildPath $cab_source_filename
+    $xml.unattend.servicing.package.source.location | ForEach-Object {
+        $cab_source_filename = Split-Path -Path $_ -Leaf
+        $cab_file = Join-Path -Path $extract_path -ChildPath $cab_source_filename
 
-    try {
-        $dism_package_info = Get-WindowsPackage -Online -PackagePath $cab_file
-    }
-    catch {
-        Fail-Json $result "failed to get DISM package metadata from path $($extract_path): $($_.Exception.Message)"
-    }
-    if ($dism_package_info.Applicable -eq $false) {
-        Fail-Json $result "hotfix package is not applicable for this server"
-    }
+        try {
+            $dism_package_info = Get-WindowsPackage -Online -PackagePath $cab_file
+        }
+        catch {
+            Fail-Json $result "failed to get DISM package metadata from path $($extract_path): $($_.Exception.Message)"
+        }
+        if ($dism_package_info.Applicable -eq $false) {
+            Fail-Json $result "hotfix package is not applicable for this server"
+        }
 
-    $package_properties_path = Get-ChildItem -LiteralPath $extract_path | Where-Object { $_.Extension -eq ".txt" }
-    if ($null -eq $package_properties_path) {
-        $hotfix_kb = "UNKNOWN"
-    }
-    else {
-        $package_ini = Get-Content -LiteralPath $package_properties_path.FullName
-        $entry = $package_ini | Where-Object { $_.StartsWith("KB Article Number") }
-        if ($null -eq $entry) {
+        $package_properties_path = Get-ChildItem -LiteralPath $extract_path | Where-Object { $_.Extension -eq ".txt" }
+        if ($null -eq $package_properties_path) {
             $hotfix_kb = "UNKNOWN"
         }
         else {
-            $hotfix_kb = ($entry -split '=')[-1]
-            $hotfix_kb = "KB$($hotfix_kb.Substring(1, $hotfix_kb.Length - 2))"
+            $package_ini = Get-Content -LiteralPath $package_properties_path.FullName
+            $entry = $package_ini | Where-Object { $_.StartsWith("KB Article Number") }
+            if ($null -eq $entry) {
+                $hotfix_kb = "UNKNOWN"
+            }
+            else {
+                $hotfix_kb = ($entry -split '=')[-1]
+                $hotfix_kb = "KB$($hotfix_kb.Substring(1, $hotfix_kb.Length - 2))"
+            }
+        }
+
+        [pscustomobject]@{
+            path = $cab_file
+            name = $dism_package_info.PackageName
+            state = $dism_package_info.PackageState
+            kb = $hotfix_kb
         }
     }
-
-    $metadata = @{
-        path = $cab_file
-        name = $dism_package_info.PackageName
-        state = $dism_package_info.PackageState
-        kb = $hotfix_kb
-    }
-
-    return $metadata
 }
 
 Function Get-HotfixMetadataFromKB($kb) {
@@ -236,8 +235,10 @@ else {
             }
         }
 
-        $result.identifier = $hotfix_metadata.name
-        $result.kb = $hotfix_metadata.kb
+        $result.identifiers = @($hotfix_metadata.name)
+        $result.identifier = $result.identifiers[0]
+        $result.kbs = @($hotfix_metadata.kb)
+        $result.kb = $result.kbs[0]
 
         # how do we want to deal with other states
         if ($hotfix_metadata.state -eq "InstallPending") {
@@ -247,12 +248,16 @@ else {
         elseif ($hotfix_metadata.state -ne "Installed") {
             if (-not $check_mode) {
                 try {
-                    $install_result = Add-WindowsPackage -Online -PackagePath $hotfix_metadata.path -NoRestart
+                    $install_result = @(
+                        Foreach ($path in $hotfix_metadata.path) {
+                            Add-WindowsPackage -Online -PackagePath $path -NoRestart
+                        }
+                    )
                 }
                 catch {
                     Fail-Json $result "failed to add windows package from path $($hotfix_metadata.path): $($_.Exception.Message)"
                 }
-                $result.reboot_required = $install_result.RestartNeeded
+                $result.reboot_required = [bool]($install_result.RestartNeeded -eq $true)
             }
             $result.changed = $true
         }

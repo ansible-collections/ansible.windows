@@ -120,11 +120,27 @@ identifier:
   returned: success
   type: str
   sample: Package_for_KB3172729~31bf3856ad364e35~amd64~~6.3.1.0
+identifiers:
+  description: The DISM identifiers for each hotfix in the msu.
+  returned: success
+  type: list
+  elements: str
+  sample:
+  - Package_for_KB3172729~31bf3856ad364e35~amd64~~6.3.1.0
+  version_added: '1.10.0'
 kb:
   description: The KB the hotfix relates to.
   returned: success
   type: str
   sample: KB3172729
+kbs:
+  description: The KB for each hotfix in the msu,
+  returned: success
+  type: list
+  elements: str
+  sample:
+  - KB3172729
+  version_added: '1.10.0'
 reboot_required:
   description: Whether a reboot is required for the install or uninstall to
     finalise.
