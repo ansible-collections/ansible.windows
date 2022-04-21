@@ -1,0 +1,45 @@
+# This file is part of Ansible
+
+# Copyright: (c) 2022, DataDope (@datadope-io)
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+- name: Gather facts with invalid tcp_filter state and null date format
+  win_listen_ports_facts:
+    tcp_filter:
+      - Error
+    date_format: null
+  register: invalid_state_date_run
+  ignore_errors: True
+
+- name: Gather facts with only some invalid tcp_filter states and null date format
+  win_listen_ports_facts:
+    tcp_filter:
+      - Listen
+      - Closed
+      - Error
+    date_format: null
+  register: partial_invalid_state_date_run
+  ignore_errors: True
+
+- name: Gather facts with multiple filters and custom date format
+  win_listen_ports_facts:
+    tcp_filter:
+      - Listen
+      - Closed
+    date_format: yyyy
+  register: custom_state_date_run
+  ignore_errors: True
+
+- name: Gather facts with default filters and date format
+  win_listen_ports_facts:
+  register: default_run
+  ignore_errors: True
+
+- assert:
+    that:
+    - invalid_state_date_run.failed is defined and invalid_state_date_run.failed
+    - partial_invalid_state_date_run.failed is defined and partial_invalid_state_date_run.failed
+    - custom_state_date_run.failed is not defined or not custom_state_date_run.failed
+    - default_run.failed is not defined or not default_run.failed
+    - tcp_listen is defined
+    - udp_listen is defined
