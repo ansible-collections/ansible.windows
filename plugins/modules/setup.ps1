@@ -1052,11 +1052,19 @@ $factMeta = @(
             $ansibleFacts.ansible_virtualization_role = 'NA'
             $ansibleFacts.ansible_virtualization_type = 'NA'
         }
+    },
+    @{
+        Subsets = 'locale'
+        Code = {
+            $system_language = (Get-WmiObject -Class Win32_OperatingSystem).MUILanguages | Select -Index 0
+
+            $ansibleFacts.ansible_locale.system_language = $system_language
+        }
     }
 )
 
 $groupedSubsets = @{
-    min = [System.Collections.Generic.List[string]]@('date_time', 'distribution', 'dns', 'env', 'local', 'platform', 'powershell_version', 'user')
+    min = [System.Collections.Generic.List[string]]@('date_time', 'distribution', 'dns', 'env', 'local', 'platform', 'powershell_version', 'user', 'locale')
     network = [System.Collections.Generic.List[string]]@('all_ipv4_addresses', 'all_ipv6_addresses', 'interfaces', 'windows_domain', 'winrm')
     hardware = [System.Collections.Generic.List[string]]@('bios', 'memory', 'processor', 'uptime', 'virtual')
     external = [System.Collections.Generic.List[string]]@('facter')
