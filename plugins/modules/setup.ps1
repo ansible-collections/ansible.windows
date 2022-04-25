@@ -1056,7 +1056,7 @@ $factMeta = @(
     @{
         Subsets = 'locale'
         Code = {
-            $system_language = (Get-WmiObject -Class Win32_OperatingSystem).MUILanguages | Select -Index 0
+            $system_language = (Get-CimInstance -ClassName Win32_OperatingSystem).MUILanguages | Select-Object -Index 0
 
             $ansibleFacts.ansible_locale.system_language = $system_language
         }
