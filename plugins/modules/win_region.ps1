@@ -416,7 +416,7 @@ if ($null -ne $unicode_language) {
 
 if ($copy_settings -eq $true -and $module.Result.changed -eq $true) {
     if (-not $check_mode) {
-        New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS
+        $null = New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS
 
         if (Test-Path -LiteralPath HKU:\ANSIBLE) {
             $module.Warn("hive already loaded at HKU:\ANSIBLE, had to unload hive for win_region to continue")
