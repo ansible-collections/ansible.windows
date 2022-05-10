@@ -1431,7 +1431,7 @@ try {
     }
 
     # If the path is a URL or UNC with credentials and no ID is set then create a temp copy for idempotency checks.
-    if ($pathType -and -not $Id) {
+    if ($pathType -and -not $getParams.Id) {
         $tempFile = switch ($pathType) {
             url { Get-UrlFile -Module $module -Url $path }
             unc { Copy-ItemWithCredential -Path $path -Destination $module.Tmpdir -Credential $credential }
