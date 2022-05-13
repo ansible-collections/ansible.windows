@@ -1,2 +1,0 @@
-minor_changes:
-- setup - Added ipv4, ipv6, mtu and speed data to ansible_interfaces

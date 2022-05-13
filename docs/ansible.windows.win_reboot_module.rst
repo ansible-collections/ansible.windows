@@ -16,7 +16,7 @@ ansible.windows.win_reboot
 
 Synopsis
 --------
-- Reboot a Windows machine, wait for it to go down, come back up, and respond to commands.
+- Unconditionally reboot a Windows machine, wait for it to go down, come back up, and respond to commands.
 - For non-Windows targets, use the :ref:`ansible.builtin.reboot <ansible.builtin.reboot_module>` module instead.
 
 
@@ -115,6 +115,7 @@ Parameters
                 </td>
                 <td>
                         <div>Seconds to wait before reboot. Passed as a parameter to the reboot command.</div>
+                        <div>The minimum version is <code>2</code> seconds and cannot be set lower.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: pre_reboot_delay_sec</div>
                 </td>
             </tr>
@@ -163,6 +164,7 @@ Notes
    - If a shutdown was already scheduled on the system, :ref:`ansible.windows.win_reboot <ansible.windows.win_reboot_module>` will abort the scheduled shutdown and enforce its own shutdown.
    - Beware that when :ref:`ansible.windows.win_reboot <ansible.windows.win_reboot_module>` returns, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this. This has been slightly mitigated in the ``1.6.0`` release of ``ansible.windows`` but it is not guranteed to always wait until the logon prompt is shown.
    - The connection user must have the ``SeRemoteShutdownPrivilege`` privilege enabled, see https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/force-shutdown-from-a-remote-system for more information.
+   - This module is equivalent to using the /f forced option for reboot on a windows host
 
 
 See Also

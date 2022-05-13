@@ -162,6 +162,26 @@ releases:
     - 1.0.1-summary.yml
     - win_copy-single-fix.yml
     release_date: '2020-09-26'
+  1.10.0:
+    changes:
+      bugfixes:
+      - win_reboot - Always set a minimum of 2 seconds for ``pre_reboot_delay`` to
+        ensure the plugin can read the result
+      minor_changes:
+      - setup - Added ipv4, ipv6, mtu and speed data to ansible_interfaces
+      - win_environment - Trigger ``WM_SETTINGCHANGE`` on a change to notify other
+        host processes of an environment change
+      - win_path - Migrate to newer style module parser that adds features like module
+        invocation under ``-vvv``
+      - win_path - Trigger ``WM_SETTINGCHANGE`` on a change to notify other host processes
+        of an environment change
+      release_summary: Release summary for v1.10.0
+    fragments:
+    - environment_notify.yml
+    - release-v1.10.0.yml
+    - setup_more_interface_data.yml
+    - win_reboot-pre-delay.yml
+    release_date: '2022-05-13'
   1.2.0:
     fragments:
     - 1.1.0-release.yml
@@ -398,8 +418,6 @@ releases:
         text was changed.
       - win_powershell - Added ``$Ansible.Verbosity`` for scripts to adjust code based
         on the verbosity Ansible is running as
-      release_summary:
-      - Release summary for v1.9.0
     fragments:
     - release-1.9.0.yml
     - win_command-shell-time.yml

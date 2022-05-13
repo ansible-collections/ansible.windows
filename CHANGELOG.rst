@@ -5,13 +5,29 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
-v1.9.0
-======
+v1.10.0
+=======
 
 Release Summary
 ---------------
 
-- Release summary for v1.9.0
+Release summary for v1.10.0
+
+Minor Changes
+-------------
+
+- setup - Added ipv4, ipv6, mtu and speed data to ansible_interfaces
+- win_environment - Trigger ``WM_SETTINGCHANGE`` on a change to notify other host processes of an environment change
+- win_path - Migrate to newer style module parser that adds features like module invocation under ``-vvv``
+- win_path - Trigger ``WM_SETTINGCHANGE`` on a change to notify other host processes of an environment change
+
+Bugfixes
+--------
+
+- win_reboot - Always set a minimum of 2 seconds for ``pre_reboot_delay`` to ensure the plugin can read the result
+
+v1.9.0
+======
 
 Minor Changes
 -------------
