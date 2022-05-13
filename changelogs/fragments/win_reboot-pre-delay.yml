@@ -1,2 +1,0 @@
-bugfixes:
-- win_reboot - Always set a minimum of 2 seconds for ``pre_reboot_delay`` to ensure the plugin can read the result

@@ -122,10 +122,12 @@ def mock_connection_init(test_id, default_rc=0, default_stderr=b''):
 def win_updates_init(task_args, async_val=0, check_mode=False, connection=None):
     task = MagicMock(Task)
     task.args = task_args
+    task.check_mode = check_mode
     task.async_val = async_val
 
     connection = connection or MagicMock()
 
+    # Used for older Ansible versions
     play_context = MagicMock()
     play_context.check_mode = check_mode
 
