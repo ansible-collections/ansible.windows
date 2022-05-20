@@ -106,7 +106,7 @@ Parameters
                         <div>If <code>src</code> is a directory, this must be a directory too.</div>
                         <div>Use \ for path separators or \\ when in &quot;double quotes&quot;.</div>
                         <div>If <code>dest</code> ends with \ then source or the contents of source will be copied to the directory without renaming.</div>
-                        <div>If <code>dest</code> is a nonexistent path, it will only be created if <code>dest</code> ends with &quot;/&quot; or &quot;\&quot;, or <code>src</code> is a directory.</div>
+                        <div>If <code>dest</code> is a nonexistent path, it will only be created if <code>dest</code> ends with &quot;/&quot; or &quot;\\&quot;, or <code>src</code> is a directory.</div>
                         <div>If <code>src</code> and <code>dest</code> are files and if the parent directory of <code>dest</code> doesn&#x27;t exist, then the task will fail.</div>
                 </td>
             </tr>
