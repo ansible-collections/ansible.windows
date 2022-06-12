@@ -129,7 +129,7 @@ If ($null -ne $info) {
     # values that are set according to the type of file
     if ($info.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
         $stat.isdir = $true
-        $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($stat.path -replace '\\', '\\')'"
+        $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($stat.path -replace "(\\|')", '\$1')'"
         if ($null -ne $share_info) {
             $stat.isshared = $true
             $stat.sharename = $share_info.Name
