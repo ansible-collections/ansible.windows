@@ -305,7 +305,7 @@ Function Search-Path {
         }
 
         if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
-            $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($dir_child.FullName -replace '\\', '\\')'"
+            $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($dir_child.FullName -replace "(\\|')", '\$1')'"
             if ($null -ne $share_info) {
                 $file_info.isshared = $true
                 $file_info.sharename = $share_info.Name
