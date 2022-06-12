@@ -590,7 +590,11 @@ Function Get-InstalledStatus {
     }
     else {
         if ($Provider -eq 'auto') {
-            $providerList = [String[]]$providerInfo.Keys
+            # While we only technically support 2012+ this is a fairly small thing to do to ensure this
+            # continues to run on Server 2008 and 2008 R2. This should be removed sometime in the future.
+            # https://github.com/ansible-collections/ansible.windows/issues/362
+            $msixAvailable = [bool](Get-Command -Name Get-AppxPackage -ErrorAction SilentlyContinue)
+            $providerList = [String[]]$providerInfo.Keys | Where-Object { $_ -ne 'msix' -or $msixAvailable }
         }
         else {
             $providerList = @($Provider)
