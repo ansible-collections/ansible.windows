@@ -16,12 +16,27 @@ description:
        module if you need these features).
      - For non-Windows targets, use the M(ansible.builtin.command) module instead.
 options:
-  free_form:
+  _raw_params:
     description:
       - The C(win_command) module takes a free form command to run.
-      - There is no parameter actually named 'free form'. See the examples!
+      - This is mutually exclusive with the C(cmd) and C(argv) options.
+      - There is no parameter actually named '_raw_params'. See the examples!
     type: str
-    required: yes
+  cmd:
+    description:
+    - The command and arguments to run.
+    - This is mutually exclusive with the C(_raw_params) and C(argv) options.
+    type: str
+    version_added: '1.11.0'
+  argv:
+    description:
+    - A list that contains the executable and arguments to run.
+    - The module will attempt to quote the arguments specified based on the
+      L(Win32 C command-line argument rules,https://docs.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments).
+    - Not all applications use the same quoting rules so the escaping may not work, for those scenarios use C(cmd) instead.
+    type: list
+    elements: str
+    version_added: '1.11.0'
   creates:
     description:
       - A path or path filter pattern; when the referenced path exists on the target host, the task will be skipped.
@@ -53,6 +68,7 @@ notes:
       environment.
     - C(creates), C(removes), and C(chdir) can be specified after the command. For instance, if you only want to run a command if a certain file does not
       exist, use this.
+    - Do not try to use the older style free form format and the newer style cmd/argv format. See the examples for how both of these formats are defined.
 seealso:
 - module: ansible.builtin.command
 - module: community.windows.psexec
@@ -64,6 +80,8 @@ author:
 '''
 
 EXAMPLES = r'''
+# Older style using the free-form and args format. The command is on the same
+# line as the module and 'args' is used to define the options for win_command.
 - name: Save the result of 'whoami' in 'whoami_out'
   ansible.windows.win_command: whoami
   register: whoami_out
@@ -78,6 +96,26 @@ EXAMPLES = r'''
   ansible.windows.win_command: powershell.exe -
   args:
     stdin: Write-Host test
+
+# Newer style using module options. The command and other arguments are
+# defined as module options and are indended like another other module.
+- name: Run the 'whoami' executable with the '/all' argument
+  ansible.windows.win_command:
+    cmd: whoami.exe /all
+
+- name: Run executable in 'C:\Program Files' with a custom chdir
+  ansible.windows.win_command:
+    # When using cmd, the arguments need to be quoted manually
+    cmd: '"C:\Program Files\My Application\run.exe" "argument 1" -force'
+    chdir: C:\Windows\TEMP
+
+- name: Run executable using argv and have win_command escape the spaces as needed
+  ansible.windows.win_command:
+    # When using argv, each entry is quoted in the module
+    argv:
+    - C:\Program Files\My Application\run.exe
+    - argument 1
+    - -force
 '''
 
 RETURN = r'''

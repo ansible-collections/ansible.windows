@@ -28,7 +28,7 @@
     - cmdout is not changed
     - cmdout.cmd == 'bogus_command1234'
     - cmdout.rc == 2
-    - "\"Could not find file 'bogus_command1234.exe'.\" in cmdout.msg"
+    - '"The system cannot find the file specified" in cmdout.msg'
 
 - name: execute something with error output
   win_command: cmd /c "echo some output & echo some error 1>&2"
@@ -253,3 +253,94 @@
     - nonascii_output.stdout_lines|count == 1
     - nonascii_output.stdout_lines[0] == 'über den Fußgängerübergang gehen'
     - nonascii_output.stderr == ''
+
+- name: expect failure without defined cmd
+  win_command:
+    chdir: '{{ win_printargv_path | win_dirname }}'
+  register: failure_no_cmd
+  failed_when:
+  - failure_no_cmd is not failed
+  - 'failure_no_cmd.msg != "one of the following is required: _raw_params, argv, cmd"'
+
+- name: expect failure when both cmd and argv are defined
+  win_command:
+    cmd: my cmd
+    argv:
+    - my cmd
+  register: failure_both_cmd_and_argv
+  failed_when:
+  - failure_both_cmd_and_argv is not failed
+  - 'failure_both_cmd_and_argv.msg != "parameters are mutually exclusive: _raw_params, argv, cmd"'
+
+- name: call binary with cmd
+  win_command:
+    cmd: '"{{ win_printargv_path }}" arg1 "arg 2" C:\path\arg "\"quoted arg\""'
+  register: cmdout
+
+- set_fact:
+    cmdout_argv: '{{ cmdout.stdout | trim | from_json }}'
+
+- name: assert call to argv binary with absolute path
+  assert:
+    that:
+    - cmdout is changed
+    - cmdout.rc == 0
+    - cmdout_argv.args[0] == 'arg1'
+    - cmdout_argv.args[1] == 'arg 2'
+    - cmdout_argv.args[2] == 'C:\\path\\arg'
+    - cmdout_argv.args[3] == '"quoted arg"'
+
+- name: call binary with single argv entry
+  win_command:
+    argv:
+    - whoami
+  register: cmdout
+
+- name: assert call binary with single argv entry
+  assert:
+    that:
+    - cmdout is changed
+    - cmdout.rc == 0
+    - cmdout.stdout != ""
+
+- name: call binary with argv
+  win_command:
+    argv:
+    - "{{ win_printargv_path }}"
+    - arg1
+    - "arg 2"
+    - C:\path\arg
+    - "\"quoted arg\""
+  register: cmdout
+
+- set_fact:
+    cmdout_argv: '{{ cmdout.stdout | trim | from_json }}'
+
+- name: assert call to argv binary with absolute path
+  assert:
+    that:
+    - cmdout is changed
+    - cmdout.rc == 0
+    - cmdout_argv.args[0] == 'arg1'
+    - cmdout_argv.args[1] == 'arg 2'
+    - cmdout_argv.args[2] == 'C:\\path\\arg'
+    - cmdout_argv.args[3] == '"quoted arg"'
+
+- name: call binary with argv with relative path
+  win_command:
+    argv:
+    - '{{ win_printargv_path | win_basename }}'
+    - testing
+    chdir: '{{ win_printargv_path | win_dirname }}'
+  register: cmdout
+
+- set_fact:
+    cmdout_argv: '{{ cmdout.stdout | trim | from_json }}'
+
+- name: assert call to argv binary with relative path
+  assert:
+    that:
+    - cmdout is changed
+    - cmdout.rc == 0
+    - cmdout.cmd == win_printargv_path ~ ' testing'
+    - cmdout_argv.args[0] == 'testing'
