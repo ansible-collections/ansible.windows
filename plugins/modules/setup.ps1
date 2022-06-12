@@ -667,7 +667,15 @@ $factMeta = @(
                     return $false
                 }
                 $facterPath = Join-Path -Path $_ -ChildPath facter.exe
-                Test-Path -LiteralPath $facterPath
+
+                # https://github.com/ansible-collections/ansible.windows/issues/364
+                # PATH may still contain invalid PATH characters, ignore them
+                try {
+                    Test-Path -LiteralPath $facterPath -ErrorAction SilentlyContinue
+                }
+                catch [ArgumentException] {
+                    $false
+                }
             } | Select-Object -First 1
 
             if ($facterDir) {
