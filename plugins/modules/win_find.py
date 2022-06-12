@@ -329,7 +329,7 @@ files:
             description: The full absolute path to the file.
             returned: success, path exists
             type: str
-            sample: BUILTIN\Administrators
+            sample: C:\temp\file.txt
         sharename:
             description: The name of share if folder is shared.
             returned: success, path exists, path is a directory and isshared == True
