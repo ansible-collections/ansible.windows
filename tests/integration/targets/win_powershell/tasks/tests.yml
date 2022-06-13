@@ -844,3 +844,28 @@
     - host_output.host_out == 'host café 💩\r\nsub stdout café 💩\r\nstdout café 💩\r\n'
     - host_output.error == []
     - host_output.output == []
+
+# Primitive types should strip out the ETS props to avoid recursive and deep nesting serializtion
+# problems. This replicates the behaviour of ConvertTo-Json in newer pwsh versions.
+# https://github.com/ansible-collections/ansible.windows/issues/360
+- name: output primitive types that contains heavily nested ETS properties
+  win_powershell:
+    script: |
+       $noteProp = New-Object -TypeName System.Management.Automation.PSNoteProperty -ArgumentList @(
+          'ETSProp', [type]
+       )
+       $str = "foo" | Write-Output
+       $str.PSObject.Properties.Add($noteProp)
+       $str
+
+       $int = 1 | Write-Output
+       $int.PSObject.Properties.Add($noteProp)
+       $int
+  register: primitive_with_ets
+
+- name: assert output primitive types that contain heavily nested ETS properties
+  assert:
+    that:
+    - primitive_with_ets is changed
+    - primitive_with_ets.error == []
+    - primitive_with_ets.output == ["foo", 1]
