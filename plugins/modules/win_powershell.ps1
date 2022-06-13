@@ -342,14 +342,15 @@ Function Convert-OutputObject {
             }
         }
         elseif ($InputObject -is [string]) {
-            $InputObject
+            # Get the BaseObject to strip out any ETS properties
+            $InputObject.PSObject.BaseObject
         }
         elseif (&$isType -InputObject $InputObject -Type ([switch])) {
             $InputObject.IsPresent
         }
         elseif ($InputObject.GetType().IsValueType) {
             # We want to display just this value and not any properties it has (if any).
-            $InputObject
+            $InputObject.PSObject.BaseObject
         }
         elseif ($Depth -lt 0) {
             # This must occur after the above to ensure ints and other ValueTypes are preserved as is.
