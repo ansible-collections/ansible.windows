@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Copyright: (c) 2022, Oleg Galushko (@inorangestylee)
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -14,8 +15,8 @@ options:
   path:
     description:
       - Path to be used for changing inheritance
-    required: yes
-    type: path
+    required: true
+    type: str
   state:
     description:
       - Specify whether to enable I(present) or disable I(absent) ACL inheritance.
@@ -24,17 +25,18 @@ options:
     default: absent
   reorganize:
     description:
-      - For P(state) = I(absent), indicates if the inherited ACE's should be copied from the parent directory.
+      - For P(state) = I(absent), indicates if the inherited ACE's should be copied from the parent.
         This is necessary (in combination with removal) for a simple ACL instead of using multiple ACE deny entries.
-      - For P(state) = I(present), indicates if the inherited ACE's should be deduplicated compared to the parent directory.
+      - For P(state) = I(present), indicates if the inherited ACE's should be deduplicated compared to the parent.
         This removes complexity of the ACL structure.
     type: bool
-    default: no
+    default: false
 seealso:
 - module: ansible.windows.win_acl
 - module: ansible.windows.win_file
 - module: ansible.windows.win_stat
 author:
+- Oleg Galushko (@inorangestylee)
 - Hans-Joachim Kliemeck (@h0nIg)
 '''
 
@@ -48,15 +50,36 @@ EXAMPLES = r'''
   ansible.windows.win_acl_inheritance:
     path: C:\apache
     state: absent
-    reorganize: yes
+    reorganize: true
 
 - name: Enable and remove dedicated ACE's
   ansible.windows.win_acl_inheritance:
     path: C:\apache
     state: present
-    reorganize: yes
+    reorganize: true
+
+- name: Disable registry key inherited ACE's
+  ansible.windows.win_acl_inheritance:
+    path: HKLM:\SOFTWARE\Secrets
+    state: absent
+
+- name: Disable and copy registry key inherited ACE's
+  ansible.windows.win_acl_inheritance:
+    path: HKLM:\SOFTWARE\Secrets
+    state: absent
+    reorganize: true
+
+- name: Enable and remove registry key dedicated ACE's
+  ansible.windows.win_acl_inheritance:
+    path: HKLM:\SOFTWARE\Secrets
+    state: present
+    reorganize: true
 '''
 
 RETURN = r'''
-
+access_rules_protected:
+  description: Are access rules protected from inheritance.
+  returned: success
+  type: bool
+  sample: True
 '''
