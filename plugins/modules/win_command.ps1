@@ -3,78 +3,145 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.CommandUtil
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell ..module_utils.Process
 #Requires -Module Ansible.ModuleUtils.FileUtil
 
-# TODO: add check mode support
+$spec = @{
+    options = @{
+        _raw_params = @{ type = "str" }
+        cmd = @{ type = 'str' }
+        argv = @{ type = "list"; elements = "str" }
+        chdir = @{ type = "path" }
+        creates = @{ type = "path" }
+        removes = @{ type = "path" }
+        stdin = @{ type = "str" }
+        output_encoding_override = @{ type = "str" }
+    }
+    required_one_of = @(
+        , @('_raw_params', 'argv', 'cmd')
+    )
+    mutually_exclusive = @(
+        , @('_raw_params', 'argv', 'cmd')
+    )
+    supports_check_mode = $false
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-Set-StrictMode -Version 2
-$ErrorActionPreference = 'Stop'
+$chdir = $module.Params.chdir
+$creates = $module.Params.creates
+$removes = $module.Params.removes
+$stdin = $module.Params.stdin
+$output_encoding_override = $module.Params.output_encoding_override
 
-$params = Parse-Args $args -supports_check_mode $false
+<#
+There are 3 ways a command can be specified with win_command:
 
-$raw_command_line = Get-AnsibleParam -obj $params -name "_raw_params" -type "str" -failifempty $true
-$chdir = Get-AnsibleParam -obj $params -name "chdir" -type "path"
-$creates = Get-AnsibleParam -obj $params -name "creates" -type "path"
-$removes = Get-AnsibleParam -obj $params -name "removes" -type "path"
-$stdin = Get-AnsibleParam -obj $params -name "stdin" -type "str"
-$output_encoding_override = Get-AnsibleParam -obj $params -name "output_encoding_override" -type "str"
+    1. Through _raw_params - the value will be used as is
 
-$raw_command_line = $raw_command_line.Trim()
+    - win_command: raw params here
 
-$result = @{
-    changed = $true
-    cmd = $raw_command_line
+    2. Through cmd - the value will be used as is
+
+    - win_command:
+        cmd: cmd to run here
+
+    3. Using argv - the values will be escaped using C argument rules
+
+    - win_command:
+        argv:
+        - executable
+        - argument 1
+        - argument 2
+        - repeat as needed
+
+Each of these options are mutually exclusive and at least 1 needs to be specified.
+#>
+$filePath = $null
+$rawCmdLine = if ($module.Params.cmd) {
+    $module.Params.cmd
+}
+elseif ($module.Params._raw_params) {
+    $module.Params._raw_params.Trim()
+}
+else {
+    $argv = $module.Params.argv
+
+    # First resolve just the executable to an absolute path
+    $filePath = Resolve-ExecutablePath -FilePath $argv[0] -WorkingDirectory $chdir
+
+    # Then combine the executable + remaining arguments and escape them
+    @(
+        ConvertTo-EscapedArgument -InputObject $filePath
+        $argv | Select-Object -Skip 1 | ConvertTo-EscapedArgument
+    ) -join " "
 }
 
+$module.Result.cmd = $rawCmdLine
+$module.Result.rc = 0
+
 if ($creates -and $(Test-AnsiblePath -Path $creates)) {
-    Exit-Json @{ msg = "skipped, since $creates exists"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
+    $module.Result.msg = "skipped, since $creates exists"
+    $module.Result.skipped = $true
+    $module.ExitJson()
 }
 
 if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
-    Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
+    $module.Result.msg = "skipped, since $removes does not exist"
+    $module.Result.skipped = $true
+    $module.ExitJson()
 }
 
-$command_args = @{
-    command = $raw_command_line
+$commandParams = @{
+    CommandLine = $rawCmdLine
+}
+if ($filePath) {
+    $commandParams.FilePath = $filePath
 }
 if ($chdir) {
-    $command_args['working_directory'] = $chdir
+    $commandParams.WorkingDirectory = $chdir
 }
 if ($stdin) {
-    $command_args['stdin'] = $stdin
+    $commandParams.InputObject = $stdin
 }
 if ($output_encoding_override) {
-    $command_args['output_encoding_override'] = $output_encoding_override
+    $commandParams.OutputEncodingOverride = $output_encoding_override
 }
 
-$start_datetime = [DateTime]::UtcNow
+$startDatetime = [DateTime]::UtcNow
 try {
-    $command_result = Run-Command @command_args
+    $cmdResult = Start-AnsibleWindowsProcess @commandParams
 }
 catch {
-    $result.changed = $false
-    try {
-        $result.rc = $_.Exception.NativeErrorCode
+    $module.Result.rc = 2
+
+    # Keep on checking inner exceptions to see if it has the NativeErrorCode to
+    # report back.
+    $exp = $_.Exception
+    while ($exp) {
+        if ($exp.PSObject.Properties.Name -contains 'NativeErrorCode') {
+            $module.Result.rc = $exp.NativeErrorCode
+            break
+        }
+        $exp = $exp.InnerException
     }
-    catch {
-        $result.rc = 2
-    }
-    Fail-Json -obj $result -message $_.Exception.Message
+
+    $module.FailJson("Failed to run: '$rawCmdLine': $($_.Exception.Message)", $_)
 }
 
-$result.stdout = $command_result.stdout
-$result.stderr = $command_result.stderr
-$result.rc = $command_result.rc
+$module.Result.cmd = $cmdResult.Command
+$module.Result.changed = $true
+$module.Result.stdout = $cmdResult.Stdout
+$module.Result.stderr = $cmdResult.Stderr
+$module.Result.rc = $cmdResult.ExitCode
 
-$end_datetime = [DateTime]::UtcNow
-$result.start = $start_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
-$result.end = $end_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
-$result.delta = $($end_datetime - $start_datetime).ToString("h\:mm\:ss\.ffffff")
+$endDatetime = [DateTime]::UtcNow
+$module.Result.start = $startDatetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
+$module.Result.end = $endDatetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
+$module.Result.delta = $($endDatetime - $startDatetime).ToString("h\:mm\:ss\.ffffff")
 
-If ($result.rc -ne 0) {
-    Fail-Json -obj $result -message "non-zero return code"
+If ($module.Result.rc -ne 0) {
+    $module.FailJson("non-zero return code")
 }
 
-Exit-Json $result
+$module.ExitJson()

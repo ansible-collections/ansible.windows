@@ -1,0 +1,4 @@
+minor_changes:
+- win_command - Migrated to the newer Ansible.Basic style module to improve module invocation output
+- win_command - Added the ``cmd`` module option for specifying the command to run as a module option rather than the free form input
+- win_command - Added the ``argv`` module option for specifying the command to run as a list to be escaped rather than the free form input
