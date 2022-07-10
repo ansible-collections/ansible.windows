@@ -770,12 +770,11 @@ $factMeta = @(
                 }
 
                 foreach ($factsFile in $factFiles) {
-                    $out = $null
-                    if ($factsFile.Extension -eq '.ps1') {
-                        $out = & $($factsFile.FullName)
+                    $out = if ($factsFile.Extension -eq '.ps1') {
+                        & $($factsFile.FullName)
                     }
-                    if ($factsFile.Extension -eq '.json') {
-                        $out = Get-Content -Raw -Path $factsFile.FullName | ConvertFrom-Json
+                    elseif ($factsFile.Extension -eq '.json') {
+                        Get-Content -Raw -Path $factsFile.FullName | ConvertFrom-Json
                     }
                     if ($out) {
                         $ansibleFacts."ansible_$($factsFile.BaseName)" = $out
