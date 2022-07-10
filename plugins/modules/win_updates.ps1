@@ -721,6 +721,14 @@ namespace Ansible.Windows.WinUpdates
         Aborted = 5,
     }
 
+    public enum UpdateExceptionContext : int
+    {
+        General = 1,
+        WindowsDriver = 2,
+        WindowsInstaller = 3,
+        SearchIncomplete = 4,
+    }
+
     public class NativeMethods
     {
         [DllImport("Kernel32.dll")]
@@ -1297,7 +1305,20 @@ namespace Ansible.Windows.WinUpdates
     $api.WriteLog("Searching for updates to install with query '$query'")
     $searchResult = Invoke-AsyncMethod 'Searching for updates' { $api.SearchAsync($searcher, $query, $args[0]) }
     $resCode = [Ansible.Windows.WinUpdates.OperationResultCode]$searchResult.ResultCode
-    if ($resCode -ne 'Succeeded') {
+
+    # If the search suceeded but had errors, continue on and try to log the warnings if any.
+    # https://github.com/ansible-collections/ansible.windows/issues/366
+    if ($resCode -eq 'SuceededWithErrors') {
+        $api.WriteLog("Searcher returned success but with $($searchResult.Warnings.Count) warnings")
+        for ($i = 0; $i -lt $searchResult.Warnings.Count; $i++) {
+            $warning = $searchResult.Warnings.Item($i)
+
+            $warningContext = [Ansible.Windows.WinUpdates.UpdateExceptionContext]$warning.Context
+            $api.WriteLog("Search warning {0} - Context {1} - HResult 0x{2:X8} - Message: {3}",
+                $i, $warningContext, $warning.HResult, $warning.Message)
+        }
+    }
+    elseif ($resCode -ne 'Succeeded') {
         # Probably due to a cancelation request
         throw "Failed to search for updates ($resCode $([int]$resCode))"
     }

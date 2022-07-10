@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - Try to display warnings on search suceeded with warnings - https://github.com/ansible-collections/ansible.windows/issues/366
