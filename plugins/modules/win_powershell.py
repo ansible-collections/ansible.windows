@@ -318,7 +318,8 @@ error:
       description:
       - The object which the error occured.
       - May be null if no object was specified when the record was created.
-      type: str
+      - Type type of this object depends on the error record itself.
+      - If a complex type, the value will follow the C(depth) limit specified.
       returned: always
       sample: C:\Windows
     category_info:
