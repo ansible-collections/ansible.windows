@@ -60,6 +60,7 @@ $spec = @{
     options = @{
         path = @{ type = 'path'; required = $true; aliases = @( 'dest', 'name' ) }
         get_checksum = @{ type = 'bool'; default = $true }
+        get_size = @{ type = 'bool'; default = $true }
         checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @( 'md5', 'sha1', 'sha256', 'sha384', 'sha512' ) }
         follow = @{ type = 'bool'; default = $false }
     }
@@ -70,6 +71,7 @@ $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 $path = $module.Params.path
 $get_checksum = $module.Params.get_checksum
+$get_size = $module.Params.get_size
 $checksum_algorithm = $module.Params.checksum_algorithm
 $follow = $module.Params.follow
 
@@ -109,7 +111,7 @@ If ($null -ne $info) {
         creationtime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.CreationTimeUtc)
         lastaccesstime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastAccessTimeUtc)
         lastwritetime = (ConvertTo-Timestamp -start_date $epoch_date -end_date $info.LastWriteTimeUtc)
-        # size = a file and directory - calculated below
+        # size = a file and directory - calculated below if get_size=$true
         path = $info.FullName
         filename = $info.Name
         # extension = a file
@@ -135,21 +137,22 @@ If ($null -ne $info) {
             $stat.sharename = $share_info.Name
         }
 
-        try {
-            $size = 0
-            foreach ($file in $info.EnumerateFiles("*", [System.IO.SearchOption]::AllDirectories)) {
-                $size += $file.Length
+        if ($get_size) {
+            try {
+                $size = 0
+                foreach ($file in $info.EnumerateFiles("*", [System.IO.SearchOption]::AllDirectories)) {
+                    $size += $file.Length
+                }
+                $stat.size = $size
             }
-            $stat.size = $size
-        }
-        catch {
-            $stat.size = 0
+            catch {
+                $stat.size = 0
+            }
         }
     }
     else {
         $stat.extension = $info.Extension
         $stat.isreg = $true
-        $stat.size = $info.Length
 
         if ($get_checksum) {
             try {
@@ -158,6 +161,10 @@ If ($null -ne $info) {
             catch {
                 $module.FailJson("Failed to get hash of file, set get_checksum to False to ignore this error: $($_.Exception.Message)", $_)
             }
+        }
+
+        if ($get_size) {
+            $stat.size = $info.Length
         }
     }
 

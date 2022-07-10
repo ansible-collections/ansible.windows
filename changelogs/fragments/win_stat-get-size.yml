@@ -1,0 +1,2 @@
+minor_changes:
+- win_stat - Added ``get_size`` to control whether ``win_stat`` will calculate the size of files or directories - https://github.com/ansible-collections/ansible.windows/issues/384
