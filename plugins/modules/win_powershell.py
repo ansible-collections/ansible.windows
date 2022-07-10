@@ -319,7 +319,8 @@ error:
       - The object which the error occured.
       - May be null if no object was specified when the record was created.
       - Type type of this object depends on the error record itself.
-      - If a complex type, the value will follow the C(depth) limit specified.
+      - If the value is a complex type, it will follow the C(depth) limit specified.
+      type: raw
       returned: always
       sample: C:\Windows
     category_info:
