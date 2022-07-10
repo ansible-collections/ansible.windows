@@ -869,3 +869,19 @@
     - primitive_with_ets is changed
     - primitive_with_ets.error == []
     - primitive_with_ets.output == ["foo", 1]
+
+# TargetObject on an error record needs to use Depth properly
+# https://github.com/ansible-collections/ansible.windows/issues/375
+- name: output error record target object with deeply nested values
+  win_powershell:
+    script: |
+      Write-Error -Message err -TargetObject @{'1'=@{'2'=@{'3'=@{'4'=@{foo='bar'}}}}}
+  register: err_nested_to
+
+- name: assert output error record target object with deeply nested values
+  assert:
+    that:
+    - err_nested_to is changed
+    - err_nested_to.error | length == 1
+    # Depth is 2 so it will fully enumerate 2 objects deep and on the 3rd stringify the value
+    - "err_nested_to.error[0].target_object == {'1': {'2': {'3': 'System.Collections.Hashtable'}}}"
