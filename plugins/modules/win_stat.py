@@ -24,6 +24,12 @@ options:
             - Whether to return a checksum of the file (default sha1)
         type: bool
         default: yes
+    get_size:
+        description:
+            - Whether to return the size of a file or directory.
+        type: bool
+        default: yes
+        version_added: '1.11.0'
     checksum_algorithm:
         description:
             - Algorithm to determine checksum of file.
@@ -219,7 +225,7 @@ stat:
             sample: file-share
         size:
             description: The size in bytes of a file or folder.
-            returned: success, path exists, file is not a link
+            returned: success, path exists, file is not a link, get_size == True
             type: int
             sample: 1024
 '''

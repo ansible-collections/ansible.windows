@@ -557,6 +557,30 @@
     - pagefile_stat.stat.exists == True
   when: pagefile_path.stdout_lines|count != 0
 
+- name: get stat of dir without size
+  win_stat:
+    path: '{{ win_stat_dir }}\nested'
+    get_size: False
+  register: win_stat_no_size_dir
+
+- name: assert get stat of dir without size
+  assert:
+    that:
+    - win_stat_no_size_dir.stat.exists
+    - '"size" not in win_stat_no_size_dir.stat'
+
+- name: get stat of file without size
+  win_stat:
+    path: '{{ win_stat_dir }}\nested\file.ps1'
+    get_size: False
+  register: win_stat_no_size_file
+
+- name: assert get stat of file without size
+  assert:
+    that:
+    - win_stat_no_size_file.stat.exists
+    - '"size" not in win_stat_no_size_file.stat'
+
 # Tests with normal user
 - set_fact:
     gen_pw: password123! + {{ lookup('password', '/dev/null chars=ascii_letters,digits length=8') }}
