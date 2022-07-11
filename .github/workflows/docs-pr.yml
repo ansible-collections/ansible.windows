@@ -1,0 +1,67 @@
+name: Collection Docs
+concurrency:
+  group: docs-pr-${{ github.head_ref }}
+  cancel-in-progress: true
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
+
+env:
+  GHP_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+
+jobs:
+  # Validation job runs a strict build to ensure it will fail CI on any mistakes.
+  validate-docs:
+    permissions:
+      contents: read
+    name: Validate Ansible Docs
+    if: github.event.action != 'closed'
+    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-push.yml@main
+    with:
+      artifact-upload: false
+      init-lenient: false
+      init-fail-on-error: true
+      build-ref: refs/pull/${{ github.event.number }}/merge
+
+  # The build job runs with the most lenient settings to ensure the best chance of getting
+  # a rendered docsite that can be looked at.
+  build-docs:
+    permissions:
+      contents: read
+    name: Build Ansible Docs
+    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-pr.yml@main
+    with:
+      init-lenient: true
+      init-fail-on-error: false
+
+  comment:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    needs: [build-docs]
+    name: PR comments
+    steps:
+      - name: PR comment
+        uses: ansible-community/github-docs-build/actions/ansible-docs-build-comment@main
+        with:
+          body-includes: '## Docs Build'
+          reactions: heart
+          action: ${{ needs.build-docs.outputs.changed != 'true' && 'remove' || '' }}
+          on-closed-action: remove
+          on-merged-action: remove
+          body: |
+            ## Docs Build 📝
+
+            Thank you for contribution!✨
+
+            The docsite for **this PR** is available for download as an artifact from this run:
+            ${{ needs.build-docs.outputs.artifact-url }}
+
+            You can compare to the docs for the `main` branch here:
+            ${{ env.GHP_BASE_URL }}/branch/main
+
+            File changes:
+
+            ${{ needs.build-docs.outputs.diff-files-rendered }}
+
+            ${{ needs.build-docs.outputs.diff-rendered }}
