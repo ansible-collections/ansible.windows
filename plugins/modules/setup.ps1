@@ -766,12 +766,19 @@ $factMeta = @(
 
             if (Test-Path -Path $factPath) {
                 $factFiles = Get-ChildItem -Path $factpath | Where-Object {
-                    -not $_.PSIsContainer -and $_.Extension -eq '.ps1'
+                    -not $_.PSIsContainer -and @('.ps1', '.json') -ccontains $_.Extension
                 }
 
                 foreach ($factsFile in $factFiles) {
-                    $out = & $($FactsFile.FullName)
-                    $ansibleFacts."ansible_$(($factsFile.Name).Split('.')[0])" = $out
+                    $out = if ($factsFile.Extension -eq '.ps1') {
+                        & $($factsFile.FullName)
+                    }
+                    elseif ($factsFile.Extension -eq '.json') {
+                        Get-Content -Raw -Path $factsFile.FullName | ConvertFrom-Json
+                    }
+                    if ($out) {
+                        $ansibleFacts."ansible_$($factsFile.BaseName)" = $out
+                    }
                 }
             }
             else {

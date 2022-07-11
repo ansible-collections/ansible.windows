@@ -1,0 +1,6 @@
+{
+    "my_json_custom_fact": "value",
+    "my_json_complex_custom_fact": {
+        "hello": "world"
+    }
+}
