@@ -123,7 +123,7 @@ EXAMPLES = r'''
           $Force
       )
 
-      New-Item -Path $Path -ItemType Direcotry -Force:$Force
+      New-Item -Path $Path -ItemType Directory -Force:$Force
     parameters:
       Path: C:\temp
       Force: true
