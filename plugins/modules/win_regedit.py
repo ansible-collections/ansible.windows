@@ -82,7 +82,7 @@ notes:
 - Beware that some registry hives (C(HKEY_USERS) in particular) do not allow to create new registry paths in the root folder.
 seealso:
 - module: ansible.windows.win_reg_stat
-- module: ansible.windows.win_regmerge
+- module: community.windows.win_regmerge
 author:
 - Adam Keech (@smadam813)
 - Josh Ludwig (@joshludwig)

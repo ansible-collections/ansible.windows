@@ -29,7 +29,7 @@ notes:
   the value has not been set then this key is not returned.
 seealso:
 - module: ansible.windows.win_regedit
-- module: ansible.windows.win_regmerge
+- module: community.windows.win_regmerge
 author:
 - Jordan Borean (@jborean93)
 '''
