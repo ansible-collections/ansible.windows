@@ -91,7 +91,7 @@ notes:
   mechanism. If sending large files consider hosting them on a web service and
   using M(ansible.windows.win_get_url) instead.
 seealso:
-- module: community.general.assemble
+- module: ansible.builtin.assemble
 - module: ansible.builtin.copy
 - module: ansible.windows.win_get_url
 - module: community.windows.win_robocopy

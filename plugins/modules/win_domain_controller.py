@@ -86,7 +86,7 @@ options:
     type: str
 seealso:
 - module: ansible.windows.win_domain
-- module: ansible.windows.win_domain_computer
+- module: community.windows.win_domain_computer
 - module: community.windows.win_domain_group
 - module: ansible.windows.win_domain_membership
 - module: community.windows.win_domain_user
