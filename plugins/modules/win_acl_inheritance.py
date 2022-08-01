@@ -15,6 +15,7 @@ options:
   path:
     description:
       - Path to be used for changing inheritance
+      - Support for registry keys have been added in C(ansible.windows>=1.11.0)
     required: true
     type: str
   state:
@@ -77,9 +78,5 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-access_rules_protected:
-  description: Are access rules protected from inheritance.
-  returned: success
-  type: bool
-  sample: True
+
 '''

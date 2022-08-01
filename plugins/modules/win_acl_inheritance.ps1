@@ -42,9 +42,6 @@ function Set-AclEx {
             $item.SetAccessControl($AclObject)
         }
     }
-    else {
-        Write-Verbose "WhatIf: Performing setting ACL on '$literalPath'"
-    }
 }
 
 function Remove-AclExplicitDuplicate {
@@ -69,9 +66,6 @@ function Remove-AclExplicitDuplicate {
                     if ($PSCmdlet.ShouldProcess($acl)) {
                         $acl.RemoveAccessRule($explicitRule)
                     }
-                    else {
-                        Write-Verbose "WhatIf: Performing remove explicit duplicate rule: $explicitRule"
-                    }
                 }
             }
         }
@@ -84,22 +78,27 @@ function Remove-AclExplicitDuplicate {
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 $path = $module.Params.path
+if (-not $path.StartsWith('\\?\')) {
+    $path = [System.Environment]::ExpandEnvironmentVariables($path)
+}
+
 $reorganize = $module.Params.reorganize
 $state = $module.Params.state
 $check_mode = $module.CheckMode
 
 $module.Result.changed = $false
 
-$pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+$regeditHives = @{
+    'HKCR' = 'HKEY_CLASSES_ROOT'
+    'HKU' = 'HKEY_USERS'
+    'HKCC' = 'HKEY_CURRENT_CONFIG'
+}
 
-if ($pathQualifier -eq 'HKCR:' -and (-not (Test-Path -LiteralPath HKCR:\))) {
-    $null = New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
-}
-if ($pathQualifier -eq 'HKU:' -and (-not (Test-Path -LiteralPath HKU:\))) {
-    $null = New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS
-}
-if ($pathQualifier -eq 'HKCC:' -and (-not (Test-Path -LiteralPath HKCC:\))) {
-    $null = New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG
+$pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+$pathQualifier = $pathQualifier.Replace(':', '')
+
+if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
+    $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -110,21 +109,23 @@ try {
     $acl = Get-AclEx -LiteralPath $path
 }
 catch {
-    $module.FailJson($_.ToString())
+    $module.FailJson("Failed to find '$path': $($_.ToString())", $_)
 }
 
-$module.Diff.before = @{ access_rules_protected = $acl.AreAccessRulesProtected }
+
+if ($acl.AreAccessRulesProtected) { $currentState = 'absent' } else { $currentState = 'present' }
+$module.Diff.before = @{ state = $currentState }
 
 If (($state -eq 'present') -and $acl.AreAccessRulesProtected) {
     try {
         $acl.SetAccessRuleProtection($false, $false)
     }
     catch {
-        $module.FailJson($_.ToString())
+        $module.FailJson("Failed to enable inheritance of '$path': $($_.ToString())", $_)
     }
     if ($reorganize) {
         Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
-        $acl = Remove-AclExplicitDuplicate($acl)
+        $acl = Remove-AclExplicitDuplicate -acl $acl
     }
     Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
     $module.Result.changed = $true
@@ -135,7 +136,7 @@ if (($state -eq 'absent') -and (-not $acl.AreAccessRulesProtected)) {
         $acl.SetAccessRuleProtection($true, $reorganize)
     }
     catch {
-        $module.FailJson($_.ToString())
+        $module.FailJson("Failed to disable inheritance of '$path': $($_.ToString())", $_)
     }
     Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
     $module.Result.changed = $true
@@ -146,11 +147,11 @@ if (-not $check_mode) {
         $acl = Get-AclEx -LiteralPath $path
     }
     catch {
-        $module.FailJson($_.ToString())
+        $module.FailJson("Failed to get acl of '$path': $($_.ToString())", $_)
     }
 }
 
-$module.Diff.after = @{ access_rules_protected = $acl.AreAccessRulesProtected }
-$module.Result.access_rules_protected = $acl.AreAccessRulesProtected
+if ($acl.AreAccessRulesProtected) { $currentState = 'absent' } else { $currentState = 'present' }
+$module.Diff.after = @{ state = $currentState }
 
 $module.ExitJson()

@@ -7,10 +7,28 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
 $params = Parse-Args $args -supports_check_mode $false
-$path = Get-AnsibleParam -obj $params "path" -type "path" -failifempty $true
+$path = Get-AnsibleParam -obj $params 'path' -type 'str' -failifempty $true
 
 $result = @{
     changed = $false
+}
+
+if (-not $path.StartsWith('\\?\')) {
+    $path = [System.Environment]::ExpandEnvironmentVariables($path)
+}
+
+$regeditHives = @{
+    'HKCR' = 'HKEY_CLASSES_ROOT'
+    'HKU' = 'HKEY_USERS'
+    'HKCC' = 'HKEY_CURRENT_CONFIG'
+}
+
+$pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+$pathQualifier = $pathQualifier.Replace(':', '')
+
+if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
+    $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
+    Push-Location -LiteralPath "${pathQualifier}:\"
 }
 
 $acl = Get-Acl -LiteralPath $path

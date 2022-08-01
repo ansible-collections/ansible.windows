@@ -2,14 +2,13 @@
 # Test setup
 # Use single task to save in CI runtime
 - name: create test folders
-  win_shell: |
+  ansible.windows.win_shell: |
     $ErrorActionPreference = 'Stop'
-
     $tmp_dir = '{{ test_win_acl_inheritance_path }}'
     if (Test-Path -LiteralPath $tmp_dir) {
         Remove-Item -LiteralPath $tmp_dir -Force -Recurse
     }
-    New-Item -Path $tmp_dir -ItemType Directory > $null
+    $null = New-Item -Path $tmp_dir -ItemType Directory
 
     Add-Type -AssemblyName System.DirectoryServices.AccountManagement
     $current_sid = ([System.DirectoryServices.AccountManagement.UserPrincipal]::Current).Sid
@@ -48,7 +47,7 @@
 
     Set-Acl -LiteralPath $tmp_dir -AclObject $sd
 
-    New-Item -Path "$tmp_dir\folder" -ItemType Directory > $null
+    $null = New-Item -Path "$tmp_dir\folder" -ItemType Directory
     Set-Content -LiteralPath "$tmp_dir\folder\file.txt" -Value 'a'
 
     $system_sid.Value
@@ -56,22 +55,89 @@
     $everyone_sid.Value
   register: test_sids  # register the output SID values used for comparison tests below
 
+- name: create test registry key
+  ansible.windows.win_shell: |
+    $ErrorActionPreference = 'Stop'
+    $tmp_dir = '{{ test_win_acl_inheritance_registry_path }}'
+    $regeditHives = @{
+        "HKCR" = "HKEY_CLASSES_ROOT"
+        "HKU" = "HKEY_USERS"
+        "HKCC" = "HKEY_CURRENT_CONFIG"
+    }
+
+    $pathQualifier = Split-Path -Path $tmp_dir -Qualifier -ErrorAction SilentlyContinue
+    $pathQualifier = $pathQualifier.Replace(':','')
+
+    if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
+        $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
+    }
+
+    Push-Location -Path "${pathQualifier}:\"
+    if (Test-Path -LiteralPath $tmp_dir) {
+        Remove-Item -LiteralPath $tmp_dir -Force -Recurse
+    }
+    $null = New-Item -Path $tmp_dir
+
+    Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+    $current_sid = ([System.DirectoryServices.AccountManagement.UserPrincipal]::Current).Sid
+    $system_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::LocalSystemSid, $null)
+    $everyone_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::WorldSid, $null)
+
+    $sd = New-Object -TypeName System.Security.AccessControl.RegistrySecurity
+    $sd.SetAccessRuleProtection($true, $false)
+    $sd.AddAccessRule(
+        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+            $system_sid,
+            [System.Security.AccessControl.RegistryRights]::FullControl,
+            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+            [System.Security.AccessControl.PropagationFlags]::None,
+            [System.Security.AccessControl.AccessControlType]::Allow
+        ))
+    )
+    $sd.AddAccessRule(
+        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+            $current_sid,
+            [System.Security.AccessControl.RegistryRights]::FullControl,
+            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+            [System.Security.AccessControl.PropagationFlags]::None,
+            [System.Security.AccessControl.AccessControlType]::Allow
+        ))
+    )
+    $sd.AddAccessRule(
+        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+            $everyone_sid,
+            [System.Security.AccessControl.RegistryRights]::ReadKey,
+            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+            [System.Security.AccessControl.PropagationFlags]::None,
+            [System.Security.AccessControl.AccessControlType]::Allow
+        ))
+    )
+
+    Set-Acl -LiteralPath $tmp_dir -AclObject $sd
+
+    $null = New-Item -Path "$tmp_dir\folder"
+
+    $system_sid.Value
+    $current_sid.Value
+    $everyone_sid.Value
+  register: test_registry_sids  # register the output SID values used for comparison tests below
+
 # Run tests
-- name: remove inheritance check
-  win_acl_inheritance:
+- name: (folder) remove inheritance check
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: absent
   register: remove_check
   check_mode: True
 
-- name: get actual remove inheritance check
+- name: (folder) get actual remove inheritance check
   test_get_acl:
     path: '{{ test_win_acl_inheritance_path }}\folder'
   register: actual_remove_check
 
-- name: assert remove inheritance check
-  assert:
+- name: (folder) assert remove inheritance check
+  ansible.builtin.assert:
     that:
     - remove_check is changed
     - actual_remove_check.inherited == True
@@ -79,20 +145,20 @@
     - actual_remove_check.user_details[test_sids.stdout_lines[1]].isinherited == True
     - actual_remove_check.user_details[test_sids.stdout_lines[2]].isinherited == True
 
-- name: remove inheritance
-  win_acl_inheritance:
+- name: (folder) remove inheritance
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: absent
   register: remove
 
-- name: get actual remove inheritance
+- name: (folder) get actual remove inheritance
   test_get_acl:
     path: '{{ test_win_acl_inheritance_path }}\folder'
   register: actual_remove
 
-- name: assert remove inheritance
-  assert:
+- name: (folder) assert remove inheritance
+  ansible.builtin.assert:
     that:
     - remove is changed
     - actual_remove.inherited == False
@@ -100,33 +166,33 @@
     - actual_remove.user_details[test_sids.stdout_lines[1]].isinherited == False
     - actual_remove.user_details[test_sids.stdout_lines[2]].isinherited == False
 
-- name: remove inheritance again
-  win_acl_inheritance:
+- name: (folder) remove inheritance again
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: absent
   register: remove_again
 
-- name: assert remove inheritance again
-  assert:
+- name: (folder) assert remove inheritance again
+  ansible.builtin.assert:
     that:
     - remove_again is not changed
 
-- name: add inheritance check
-  win_acl_inheritance:
+- name: (folder) add inheritance check
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: present
   register: add_check
   check_mode: True
 
-- name: get actual add inheritance check
+- name: (folder) get actual add inheritance check
   test_get_acl:
     path: '{{ test_win_acl_inheritance_path }}\folder'
   register: actual_add_check
 
-- name: assert add inheritance check
-  assert:
+- name: (folder) assert add inheritance check
+  ansible.builtin.assert:
     that:
     - add_check is changed
     - actual_add_check.inherited == False
@@ -134,20 +200,20 @@
     - actual_add_check.user_details[test_sids.stdout_lines[1]].isinherited == False
     - actual_add_check.user_details[test_sids.stdout_lines[2]].isinherited == False
 
-- name: add inheritance
-  win_acl_inheritance:
+- name: (folder) add inheritance
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: present
   register: add
 
-- name: get actual add inheritance
+- name: (folder) get actual add inheritance
   test_get_acl:
     path: '{{ test_win_acl_inheritance_path }}\folder'
   register: actual_add
 
-- name: assert add inheritance
-  assert:
+- name: (folder) assert add inheritance
+  ansible.builtin.assert:
     that:
     - add is changed
     - actual_add.inherited == True
@@ -155,20 +221,137 @@
     - actual_add.user_details[test_sids.stdout_lines[1]].isinherited == True
     - actual_add.user_details[test_sids.stdout_lines[2]].isinherited == True
 
-- name: add inheritance again
-  win_acl_inheritance:
+- name: (folder) add inheritance again
+  ansible.windows.win_acl_inheritance:
     path: '{{ test_win_acl_inheritance_path }}\folder'
     reorganize: True
     state: present
   register: add_again
 
-- name: assert add inheritance again
-  assert:
+- name: (folder) assert add inheritance again
+  ansible.builtin.assert:
     that:
     - add_again is not changed
 
+# registry
+
+- name: (registry) remove inheritance check
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: absent
+  register: registry_remove_check
+  check_mode: True
+
+- name: (registry) get actual remove inheritance check
+  test_get_acl:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+  register: actual_registry_remove_check
+
+- name: (registry) assert remove inheritance check
+  ansible.builtin.assert:
+    that:
+    - registry_remove_check is changed
+    - actual_registry_remove_check.inherited == True
+    - actual_registry_remove_check.user_details[test_sids.stdout_lines[0]].isinherited == True
+    - actual_registry_remove_check.user_details[test_sids.stdout_lines[1]].isinherited == True
+    - actual_registry_remove_check.user_details[test_sids.stdout_lines[2]].isinherited == True
+
+- name: (registry) remove inheritance
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: absent
+  register: registry_remove
+
+- name: (registry) get actual remove inheritance
+  test_get_acl:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+  register: actual_registry_remove
+
+- name: (registry) assert remove inheritance
+  ansible.builtin.assert:
+    that:
+    - registry_remove is changed
+    - actual_registry_remove.inherited == False
+    - actual_registry_remove.user_details[test_sids.stdout_lines[0]].isinherited == False
+    - actual_registry_remove.user_details[test_sids.stdout_lines[1]].isinherited == False
+    - actual_registry_remove.user_details[test_sids.stdout_lines[2]].isinherited == False
+
+- name: (registry) remove inheritance again
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: absent
+  register: registry_remove_again
+
+- name: (registry) assert remove inheritance again
+  ansible.builtin.assert:
+    that:
+    - registry_remove_again is not changed
+
+- name: (registry) add inheritance check
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: present
+  register: registry_add_check
+  check_mode: True
+
+- name: (registry) get actual add inheritance check
+  test_get_acl:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+  register: actual_registry_add_check
+
+- name: (registry) assert add inheritance check
+  ansible.builtin.assert:
+    that:
+    - registry_add_check is changed
+    - actual_registry_add_check.inherited == False
+    - actual_registry_add_check.user_details[test_sids.stdout_lines[0]].isinherited == False
+    - actual_registry_add_check.user_details[test_sids.stdout_lines[1]].isinherited == False
+    - actual_registry_add_check.user_details[test_sids.stdout_lines[2]].isinherited == False
+
+- name: (registry) add inheritance
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: present
+  register: registry_add
+
+- name: (registry) get actual add inheritance
+  test_get_acl:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+  register: actual_registry_add
+
+- name: (registry) assert add inheritance
+  ansible.builtin.assert:
+    that:
+    - registry_add is changed
+    - actual_registry_add.inherited == True
+    - actual_registry_add.user_details[test_sids.stdout_lines[0]].isinherited == True
+    - actual_registry_add.user_details[test_sids.stdout_lines[1]].isinherited == True
+    - actual_registry_add.user_details[test_sids.stdout_lines[2]].isinherited == True
+
+- name: (registry) add inheritance again
+  ansible.windows.win_acl_inheritance:
+    path: '{{ test_win_acl_inheritance_registry_path }}\folder'
+    reorganize: True
+    state: present
+  register: registry_add_again
+
+- name: (registry) assert add inheritance again
+  ansible.builtin.assert:
+    that:
+    - registry_add_again is not changed
+
 # Test cleanup
 - name: remove test folder
-  win_file:
+  ansible.windows.win_file:
     path: '{{ test_win_acl_inheritance_path }}'
+    state: absent
+
+- name: remove test registry key
+  ansible.windows.win_regedit:
+    path: '{{ test_win_acl_inheritance_registry_path }}'
     state: absent
