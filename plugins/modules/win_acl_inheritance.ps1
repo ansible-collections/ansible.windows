@@ -1,75 +1,157 @@
 #!powershell
 
+# Copyright: (c) 2022, Oleg Galushko (@inorangestylee)
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-$params = Parse-Args $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
-
-$result = @{
-    changed = $false
+$spec = @{
+    options = @{
+        path = @{ type = 'str'; required = $true }
+        reorganize = @{ type = 'bool'; default = $false }
+        state = @{ type = 'str'; default = 'absent'; choices = @('absent', 'present') }
+    }
+    supports_check_mode = $true
 }
 
-$path = Get-AnsibleParam -obj $params "path" -type "path" -failifempty $true
-$state = Get-AnsibleParam -obj $params "state" -type "str" -default "absent" -validateSet "present", "absent" -resultobj $result
-$reorganize = Get-AnsibleParam -obj $params "reorganize" -type "bool" -default $false -resultobj $result
+function Get-AclEx {
+    [CmdletBinding()]
+    [OutputType([System.Security.AccessControl.NativeObjectSecurity])]
+    param(
+        [System.String] $LiteralPath
+    )
 
-If (-Not (Test-Path -LiteralPath $path)) {
-    Fail-Json $result "$path file or directory does not exist on the host"
+    $item = Get-Item -LiteralPath $LiteralPath
+    return $item.GetAccessControl()
 }
 
-Try {
-    $objACL = Get-ACL -LiteralPath $path
-    # AreAccessRulesProtected - $false if inheritance is set ,$true if inheritance is not set
-    $inheritanceDisabled = $objACL.AreAccessRulesProtected
+function Set-AclEx {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [System.String] $LiteralPath,
+        [System.Security.AccessControl.NativeObjectSecurity] $AclObject
+    )
 
-    If (($state -eq "present") -And $inheritanceDisabled) {
-        # second parameter is ignored if first=$False
-        $objACL.SetAccessRuleProtection($False, $False)
+    $item = Get-Item -LiteralPath $LiteralPath
+    if ($PSCmdlet.ShouldProcess($LiteralPath)) {
+        if ($item.PSProvider.Name -eq 'Registry') {
+            Set-Acl -LiteralPath $LiteralPath -AclObject $AclObject
+        }
+        else {
+            $item.SetAccessControl($AclObject)
+        }
+    }
+}
 
-        If ($reorganize) {
-            # it wont work without intermediate save, state would be the same
-            Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf:$check_mode
-            $result.changed = $true
-            $objACL = Get-ACL -LiteralPath $path
+function Remove-AclExplicitDuplicate {
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([System.Security.AccessControl.NativeObjectSecurity])]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [System.Security.AccessControl.NativeObjectSecurity] $acl
+    )
 
-            # convert explicit ACE to inherited ACE
-            ForEach ($inheritedRule in $objACL.Access) {
-                If (-not $inheritedRule.IsInherited) {
-                    Continue
-                }
+    Begin {}
 
-                ForEach ($explicitRrule in $objACL.Access) {
-                    If ($explicitRrule.IsInherited) {
-                        Continue
-                    }
+    Process {
+        $properties = $acl.Access |
+            Get-Member -MemberType Property |
+            Where-Object { $_.Name -ne 'IsInherited' } |
+            Select-Object -ExpandProperty Name
 
-                    If (
-                        ($inheritedRule.FileSystemRights -eq $explicitRrule.FileSystemRights) -And
-                        ($inheritedRule.AccessControlType -eq $explicitRrule.AccessControlType) -And
-                        ($inheritedRule.IdentityReference -eq $explicitRrule.IdentityReference) -And
-                        ($inheritedRule.InheritanceFlags -eq $explicitRrule.InheritanceFlags) -And
-                        ($inheritedRule.PropagationFlags -eq $explicitRrule.PropagationFlags)
-                    ) {
-                        $objACL.RemoveAccessRule($explicitRrule)
+        ForEach ($inheritedRule in $($acl.Access | Where-Object { $_.IsInherited })) {
+            ForEach ($explicitRule in $($acl.Access | Where-Object { -not $_.IsInherited })) {
+                If ($null -eq (Compare-Object -ReferenceObject $explicitRule -DifferenceObject $inheritedRule -Property $properties)) {
+                    if ($PSCmdlet.ShouldProcess($acl)) {
+                        $acl.RemoveAccessRule($explicitRule)
                     }
                 }
             }
         }
+        return $acl
+    }
 
-        Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf:$check_mode
-        $result.changed = $true
-    }
-    Elseif (($state -eq "absent") -And (-not $inheritanceDisabled)) {
-        $objACL.SetAccessRuleProtection($True, $reorganize)
-        Set-ACL -LiteralPath $path -AclObject $objACL -WhatIf:$check_mode
-        $result.changed = $true
-    }
-}
-Catch {
-    Fail-Json $result "an error occurred when attempting to disable inheritance: $($_.Exception.Message)"
+    End {}
 }
 
-Exit-Json $result
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+$path = $module.Params.path
+if (-not $path.StartsWith('\\?\')) {
+    $path = [System.Environment]::ExpandEnvironmentVariables($path)
+}
+
+$reorganize = $module.Params.reorganize
+$state = $module.Params.state
+$check_mode = $module.CheckMode
+
+$module.Result.changed = $false
+
+$regeditHives = @{
+    'HKCR' = 'HKEY_CLASSES_ROOT'
+    'HKU' = 'HKEY_USERS'
+    'HKCC' = 'HKEY_CURRENT_CONFIG'
+}
+
+$pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+$pathQualifier = $pathQualifier.Replace(':', '')
+
+if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
+    $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
+}
+
+If (-Not (Test-Path -LiteralPath $path)) {
+    $module.FailJson("$path does not exist")
+}
+
+try {
+    $acl = Get-AclEx -LiteralPath $path
+}
+catch {
+    $module.FailJson("Failed to find '$path': $($_.ToString())", $_)
+}
+
+
+if ($acl.AreAccessRulesProtected) { $currentState = 'absent' } else { $currentState = 'present' }
+$module.Diff.before = @{ state = $currentState }
+
+If (($state -eq 'present') -and $acl.AreAccessRulesProtected) {
+    try {
+        $acl.SetAccessRuleProtection($false, $false)
+    }
+    catch {
+        $module.FailJson("Failed to enable inheritance of '$path': $($_.ToString())", $_)
+    }
+    if ($reorganize) {
+        Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
+        $acl = Remove-AclExplicitDuplicate -acl $acl
+    }
+    Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
+    $module.Result.changed = $true
+}
+
+if (($state -eq 'absent') -and (-not $acl.AreAccessRulesProtected)) {
+    try {
+        $acl.SetAccessRuleProtection($true, $reorganize)
+    }
+    catch {
+        $module.FailJson("Failed to disable inheritance of '$path': $($_.ToString())", $_)
+    }
+    Set-AclEx -LiteralPath $path -AclObject $acl -WhatIf:$check_mode
+    $module.Result.changed = $true
+}
+
+if (-not $check_mode) {
+    try {
+        $acl = Get-AclEx -LiteralPath $path
+    }
+    catch {
+        $module.FailJson("Failed to get acl of '$path': $($_.ToString())", $_)
+    }
+}
+
+if ($acl.AreAccessRulesProtected) { $currentState = 'absent' } else { $currentState = 'present' }
+$module.Diff.after = @{ state = $currentState }
+
+$module.ExitJson()
