@@ -666,14 +666,14 @@ $factMeta = @(
                 if ([String]::IsNullOrWhiteSpace($_)) {
                     return $false
                 }
-                $facterPath = Join-Path -Path $_ -ChildPath facter.exe
 
                 # https://github.com/ansible-collections/ansible.windows/issues/364
                 # PATH may still contain invalid PATH characters, ignore them
                 try {
+                    $facterPath = Join-Path -Path $_ -ChildPath facter.exe -ErrorAction Stop
                     Test-Path -LiteralPath $facterPath -ErrorAction SilentlyContinue
                 }
-                catch [ArgumentException] {
+                catch [ArgumentException], [System.Management.Automation.DriveNotFoundException] {
                     $false
                 }
             } | Select-Object -First 1
