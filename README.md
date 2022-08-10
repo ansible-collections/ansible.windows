@@ -79,7 +79,7 @@ The current process for publishing new versions of the Windows Core Collection i
 * Create a release with the tag that matches the version number
   * The tag is the version number itself, and should not start with anything
   * This will trigger a build and publish the collection to AH and Galaxy
-  * The Zuul job progress will be listed [here](https://ansible.softwarefactory-project.io/zuul/builds?job_name=release-ansible-collection-automation-hub)
+  * The Zuul job progress will be listed [here](https://ansible.softwarefactory-project.io/zuul/builds?project=ansible-collections%2Fansible.windows&skip=0)
 
 After the version is published, verify it exists on the [Windows Core Collection Galaxy page](https://galaxy.ansible.com/ansible/windows).
 
