@@ -1,3 +1,0 @@
-bugfixes:
-- win_stat - Fix up share checks when the share contains the ``'`` character
-- win_find - Fix up share checks when the share contains the ``'`` character

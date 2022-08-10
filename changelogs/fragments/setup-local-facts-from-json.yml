@@ -1,2 +1,0 @@
-minor_changes:
-- setup - also read ``*.json`` files in ``fact_path`` as raw JSON text in addition to ``.ps1`` scripts

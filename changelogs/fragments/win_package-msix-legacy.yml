@@ -1,2 +1,0 @@
-bugfixes:
-- win_package - Skip ``msix`` provider on older hosts that do not implement the required cmdlets
