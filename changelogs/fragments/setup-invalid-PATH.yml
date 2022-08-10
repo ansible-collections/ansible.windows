@@ -1,2 +1,0 @@
-bugfixes:
-- setup - Ignore invalid ``PATH`` entries when trying to find ``facter.exe`` - https://github.com/ansible-collections/ansible.windows/issues/364

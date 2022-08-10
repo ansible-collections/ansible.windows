@@ -5,6 +5,37 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.11.0
+=======
+
+Release Summary
+---------------
+
+Release summary for v1.11.0
+
+Minor Changes
+-------------
+
+- Raise minimum Ansible version to ``2.11`` or newer
+- setup - also read ``*.json`` files in ``fact_path`` as raw JSON text in addition to ``.ps1`` scripts
+- win_acl_inheritance - support for setting inheritance for registry keys
+- win_command - Added the ``argv`` module option for specifying the command to run as a list to be escaped rather than the free form input
+- win_command - Added the ``cmd`` module option for specifying the command to run as a module option rather than the free form input
+- win_command - Migrated to the newer Ansible.Basic style module to improve module invocation output
+- win_stat - Added ``get_size`` to control whether ``win_stat`` will calculate the size of files or directories - https://github.com/ansible-collections/ansible.windows/issues/384
+
+Bugfixes
+--------
+
+- setup - Ignore PATH entries with invalid roots when trying to find ``facter.exe`` - https://github.com/ansible-collections/ansible.windows/issues/397
+- setup - Ignore invalid ``PATH`` entries when trying to find ``facter.exe`` - https://github.com/ansible-collections/ansible.windows/issues/364
+- win_find - Fix up share checks when the share contains the ``'`` character
+- win_package - Skip ``msix`` provider on older hosts that do not implement the required cmdlets
+- win_powershell - Do not attempt to serialize ETS properties of primitive types - https://github.com/ansible-collections/ansible.windows/issues/360
+- win_powershell - Make sure ``target_object`` on an error record uses the ``depth`` object when serializing the value - https://github.com/ansible-collections/ansible.windows/issues/375
+- win_stat - Fix up share checks when the share contains the ``'`` character
+- win_updates - Try to display warnings on search suceeded with warnings - https://github.com/ansible-collections/ansible.windows/issues/366
+
 v1.10.0
 =======
 

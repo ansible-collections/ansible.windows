@@ -1,2 +1,0 @@
-bugfixes:
-- win_powershell - Do not attempt to serialize ETS properties of primitive types - https://github.com/ansible-collections/ansible.windows/issues/360

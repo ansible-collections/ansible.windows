@@ -1,2 +1,0 @@
-bugfixes:
-- win_powershell - Make sure ``target_object`` on an error record uses the ``depth`` object when serializing the value - https://github.com/ansible-collections/ansible.windows/issues/375
