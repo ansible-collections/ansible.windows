@@ -633,8 +633,10 @@ Function Compare-Trigger($task_definition) {
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_MONTHLYDOW = @{
             mandatory = @('start_boundary')
-            optional = @('days_of_week', 'enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'run_on_last_week_of_month',
-                'weeks_of_month', 'repetition')
+            # Make sure run_on_last_week_of_month comes after weeks_of_month
+            # https://github.com/ansible-collections/community.windows/issues/414
+            optional = @('days_of_week', 'enabled', 'end_boundary', 'execution_time_limit', 'months_of_year', 'random_delay', 'weeks_of_month',
+                'run_on_last_week_of_month', 'repetition')
         }
         [TASK_TRIGGER_TYPE2]::TASK_TRIGGER_MONTHLY = @{
             mandatory = @('days_of_month', 'start_boundary')
