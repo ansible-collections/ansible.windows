@@ -1,0 +1,2 @@
+bugfixes:
+- win_copy - Fix error message when failing to find ``src`` on the controller filesystem
