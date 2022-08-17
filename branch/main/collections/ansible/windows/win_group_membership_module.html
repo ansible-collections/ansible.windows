@@ -125,9 +125,6 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.11.0).</p>
-<p>You might already have this collection installed if you are using the <code class="docutils literal notranslate"><span class="pre">ansible</span></code> package.
-It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
-To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_group_membership</span></code>.</p>
 </div>
@@ -160,9 +157,9 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <a class="ansibleOptionLink" href="#parameter-members" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of members to ensure are present/absent from the group.</p>
-<p>Accepts local users as .username, and SERVERNAMEusername.</p>
-<p>Accepts domain users and groups as DOMAINusername and <a class="reference external" href="mailto:username&#37;&#52;&#48;DOMAIN">username<span>&#64;</span>DOMAIN</a>.</p>
-<p>Accepts service users as NT AUTHORITYusername.</p>
+<p>Accepts local users as .\username, and SERVERNAME\username.</p>
+<p>Accepts domain users and groups as DOMAIN\username and <a class="reference external" href="mailto:username&#37;&#52;&#48;DOMAIN">username<span>&#64;</span>DOMAIN</a>.</p>
+<p>Accepts service users as NT AUTHORITY\username.</p>
 <p>Accepts all local, domain and service user types as username, favoring domain lookups when in a domain.</p>
 </div></td>
 </tr>

@@ -125,9 +125,6 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.11.0).</p>
-<p>You might already have this collection installed if you are using the <code class="docutils literal notranslate"><span class="pre">ansible</span></code> package.
-It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
-To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_copy</span></code>.</p>
 </div>
@@ -170,8 +167,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>No backup is taken when <code class="docutils literal notranslate"><span class="pre">remote_src=False</span></code> and multiple files are being copied.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">no</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">yes</span></p></li>
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -190,8 +187,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>This option controls the autodecryption of source files using vault.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">no</span></p></li>
-<li><p><span class="ansible-option-default-bold">yes</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -201,9 +198,9 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 <td><div class="ansible-option-cell"><p>Remote absolute path where the file should be copied to.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">src</span></code> is a directory, this must be a directory too.</p>
-<p>Use for path separators or \ when in “double quotes”.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">dest</span></code> ends with then source or the contents of source will be copied to the directory without renaming.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">dest</span></code> is a nonexistent path, it will only be created if <code class="docutils literal notranslate"><span class="pre">dest</span></code> ends with “/” or “&quot;, or <code class="docutils literal notranslate"><span class="pre">src</span></code> is a directory.</p>
+<p>Use \ for path separators or \\ when in “double quotes”.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">dest</span></code> ends with \ then source or the contents of source will be copied to the directory without renaming.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">dest</span></code> is a nonexistent path, it will only be created if <code class="docutils literal notranslate"><span class="pre">dest</span></code> ends with “/” or “\”, or <code class="docutils literal notranslate"><span class="pre">src</span></code> is a directory.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">src</span></code> and <code class="docutils literal notranslate"><span class="pre">dest</span></code> are files and if the parent directory of <code class="docutils literal notranslate"><span class="pre">dest</span></code> doesn’t exist, then the task will fail.</p>
 </div></td>
 </tr>
@@ -216,8 +213,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>If set to <code class="docutils literal notranslate"><span class="pre">no</span></code>, no checksuming of the content is performed which can help improve performance on larger files.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">no</span></p></li>
-<li><p><span class="ansible-option-default-bold">yes</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -228,8 +225,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>This flag indicates that filesystem links in the source tree, if they exist, should be followed.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">no</span></p></li>
-<li><p><span class="ansible-option-default-bold">yes</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -241,8 +238,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>If <code class="docutils literal notranslate"><span class="pre">yes</span></code>, it will go to the remote/target machine for the src.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">no</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">yes</span></p></li>
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -253,7 +250,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>Local path to a file to copy to the remote server; can be absolute or relative.</p>
 <p>If path is a directory, it is copied (including the source folder name) recursively to <code class="docutils literal notranslate"><span class="pre">dest</span></code>.</p>
 <p>If path is a directory and ends with “/”, only the inside contents of that directory are copied to the destination. Otherwise, if it does not end with “/”, the directory itself with all contents is copied.</p>
-<p>If path is a file and dest ends with “&quot;, the file is copied to the folder with the same filename.</p>
+<p>If path is a file and dest ends with “\”, the file is copied to the folder with the same filename.</p>
 <p>Required unless using <code class="docutils literal notranslate"><span class="pre">content</span></code>.</p>
 </div></td>
 </tr>

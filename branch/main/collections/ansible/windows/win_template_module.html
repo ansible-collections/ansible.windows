@@ -125,9 +125,6 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.11.0).</p>
-<p>You might already have this collection installed if you are using the <code class="docutils literal notranslate"><span class="pre">ansible</span></code> package.
-It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
-To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_template</span></code>.</p>
 </div>
@@ -177,8 +174,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code>, create a backup file including the timestamp information so you can get the original file back if you somehow clobbered it incorrectly.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">no</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">yes</span></p></li>
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -214,8 +211,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>When set to <code class="docutils literal notranslate"><span class="pre">no</span></code>, the file will only be transferred if the destination does not exist.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">no</span></p></li>
-<li><p><span class="ansible-option-default-bold">yes</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -228,8 +225,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>This functionality requires Jinja 2.7 or newer.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">no</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">yes</span></p></li>
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -273,8 +270,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> the first newline after a block is removed (block, not variable tag!).</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">no</span></p></li>
-<li><p><span class="ansible-option-default-bold">yes</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -308,7 +305,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <li><p>To find Byte Order Marks in files, use <code class="docutils literal notranslate"><span class="pre">Format-Hex</span> <span class="pre">&lt;file&gt;</span> <span class="pre">-Count</span> <span class="pre">16</span></code> on Windows, and use <code class="docutils literal notranslate"><span class="pre">od</span> <span class="pre">-a</span> <span class="pre">-t</span> <span class="pre">x1</span> <span class="pre">-N</span> <span class="pre">16</span> <span class="pre">&lt;file&gt;</span></code> on Linux.</p></li>
 <li><p>Beware fetching files from windows machines when creating templates because certain tools, such as Powershell ISE, and regedit’s export facility add a Byte Order Mark as the first character of the file, which can cause tracebacks.</p></li>
 <li><p>You can use the <a class="reference internal" href="win_copy_module.html#ansible-collections-ansible-windows-win-copy-module"><span class="std std-ref">ansible.windows.win_copy</span></a> module with the <code class="docutils literal notranslate"><span class="pre">content:</span></code> option if you prefer the template inline, as part of the playbook.</p></li>
-<li><p>For Linux you can use <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/template_module.html#ansible-collections-ansible-builtin-template-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.template</span></a> which uses ‘\n’ as <code class="docutils literal notranslate"><span class="pre">newline_sequence</span></code> by default.</p></li>
+<li><p>For Linux you can use <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/template_module.html#ansible-collections-ansible-builtin-template-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.template</span></a> which uses ‘\\n’ as <code class="docutils literal notranslate"><span class="pre">newline_sequence</span></code> by default.</p></li>
 </ul>
 </div>
 </section>
