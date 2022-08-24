@@ -1,0 +1,2 @@
+bugfixes:
+- win_command - Fix bug that stopped win_command from finding executables that are located more than once in ``PATH`` - https://github.com/ansible-collections/ansible.windows/issues/403

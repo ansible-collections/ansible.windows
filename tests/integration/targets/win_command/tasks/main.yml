@@ -344,3 +344,45 @@
     - cmdout.rc == 0
     - cmdout.cmd == win_printargv_path ~ ' testing'
     - cmdout_argv.args[0] == 'testing'
+
+- name: create 2 dirs to contain the same executable
+  win_file:
+    path: '{{ remote_tmp_dir }}\{{ item }}'
+    state: directory
+  loop:
+  - path1
+  - path2
+
+- name: copy printargv to 2 dirs
+  win_copy:
+    src: '{{ win_printargv_path }}'
+    dest: '{{ remote_tmp_dir }}\{{ item }}\printargv.exe'
+    remote_src: true
+  loop:
+  - path1
+  - path2
+
+- name: run exe that is located in 2 PATH directories
+  win_command: printargv test
+  environment:
+    PATH: '{{ remote_tmp_dir }}\path1;{{ remote_tmp_dir }}\path2'
+  register: cmdout
+
+- name: assert call to run exe that is located in 2 PATH directories
+  assert:
+    that:
+    - cmdout.rc == 0
+
+- name: run exe that is located in 2 PATH directories with argv
+  win_command:
+    argv:
+    - printargv
+    - test
+  environment:
+    PATH: '{{ remote_tmp_dir }}\path1;{{ remote_tmp_dir }}\path2'
+  register: cmdout
+
+- name: assert call to run exe that is located in 2 PATH directories with argv
+  assert:
+    that:
+    - cmdout.rc == 0
