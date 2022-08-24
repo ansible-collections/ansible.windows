@@ -285,8 +285,8 @@ exit 1
             New-Item -Path $path2 -ItemType Directory | Out-Null
             $env:PATH = "$path1;$path2"
 
-            Copy-Item C:\Windows\System32\whoami.exe $path1
-            Copy-Item C:\Windows\System32\whoami.exe $path2
+            Copy-Item -LiteralPath C:\Windows\System32\whoami.exe -Destination $path1
+            Copy-Item -LiteralPath C:\Windows\System32\whoami.exe -Destination $path2
 
             $actual = Start-AnsibleWindowsProcess -CommandLine 'whoami'
             $actual.ExitCode | Assert-Equal -Expected 0
