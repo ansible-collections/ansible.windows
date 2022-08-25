@@ -24,9 +24,9 @@ Function Resolve-ExecutablePath {
 
     # See the if path is resolvable using the normal PATH logic. Also resolves absolute paths and relative paths if
     # they exist.
-    $command = Get-Command -Name $FilePath -CommandType Application -ErrorAction SilentlyContinue
+    $command = @(Get-Command -Name $FilePath -CommandType Application -ErrorAction SilentlyContinue)
     if ($command) {
-        $command.Path
+        $command[0].Path
         return
     }
 
@@ -239,7 +239,7 @@ Function Start-AnsibleWindowsProcess {
     }
 }
 
-$export_members = @{
+$exportMembers = @{
     Function = 'ConvertFrom-EscapedArgument', 'ConvertTo-EscapedArgument', 'Resolve-ExecutablePath', 'Start-AnsibleWindowsProcess'
 }
-Export-ModuleMember @export_members
+Export-ModuleMember @exportMembers
