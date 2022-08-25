@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_uri module – Interacts with webservices &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/ansible.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/antsibull-minimal.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/rtd-ethical-ads.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/images/Ansible-Mark-RGB_Black.svg"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_user module – Manages local Windows user accounts" href="win_user_module.html" />
+    <link rel="prev" title="ansible.windows.win_updates module – Download and install Windows updates" href="win_updates_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/ansiblefest" target="_blank">AnsibleFest</a></li>
+    <li><a href="https://www.ansible.com/tower" target="_blank">Products</a></li>
+    <li><a href="https://www.ansible.com/community" target="_blank">Community</a></li>
+    <li><a href="https://www.ansible.com/webinars-training" target="_blank">Webinars & Training</a></li>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.svg"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" class="st-default-search-input" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#communication">Communication</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Collection Index</a> &raquo;</li>
+          <li><a href="../index.html">Collections in the Ansible Namespace</a> &raquo;</li>
+          <li><a href="index.html">Ansible.Windows</a> &raquo;</li>
+      <li>ansible.windows.win_uri module – Interacts with webservices</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_uri.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-uri-module"></span><section id="ansible-windows-win-uri-module-interacts-with-webservices">
+<h1>ansible.windows.win_uri module – Interacts with webservices<a class="headerlink" href="#ansible-windows-win-uri-module-interacts-with-webservices" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.11.1).</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_uri</span></code>.</p>
+</div>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id3">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</div>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Interacts with FTP, HTTP and HTTPS web services.</p></li>
+<li><p>Supports Digest, Basic and WSSE HTTP authentication mechanisms.</p></li>
+<li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/uri_module.html#ansible-collections-ansible-builtin-uri-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.uri</span></a> module instead.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<table class="colwidths-auto ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-body"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-body"><strong>body</strong></p>
+<a class="ansibleOptionLink" href="#parameter-body" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">any</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The body of the HTTP request/response to the web service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-client_cert"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-client-cert"><strong>client_cert</strong></p>
+<a class="ansibleOptionLink" href="#parameter-client_cert" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path to the client certificate (.pfx) that is used for X509 authentication. This path can either be the path to the <code class="docutils literal notranslate"><span class="pre">pfx</span></code> on the filesystem or the PowerShell certificate path <code class="docutils literal notranslate"><span class="pre">Cert:\CurrentUser\My\&lt;thumbprint&gt;</span></code>.</p>
+<p>The WinRM connection must be authenticated with <code class="docutils literal notranslate"><span class="pre">CredSSP</span></code> or <code class="docutils literal notranslate"><span class="pre">become</span></code> is used on the task if the certificate file is not password protected.</p>
+<p>Other authentication types can set <em>client_cert_password</em> when the cert is password protected.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-client_cert_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-client-cert-password"><strong>client_cert_password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-client_cert_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password for <em>client_cert</em> if the cert is password protected.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-content_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-content-type"><strong>content_type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-content_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Sets the “Content-Type” header.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-creates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-creates"><strong>creates</strong></p>
+<a class="ansibleOptionLink" href="#parameter-creates" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A filename, when it already exists, this step will be skipped.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-dest"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-dest"><strong>dest</strong></p>
+<a class="ansibleOptionLink" href="#parameter-dest" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Output the response body to a file.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-follow_redirects"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-follow-redirects"><strong>follow_redirects</strong></p>
+<a class="ansibleOptionLink" href="#parameter-follow_redirects" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether or the module should follow redirects.</p>
+<p><code class="docutils literal notranslate"><span class="pre">all</span></code> will follow all redirect.</p>
+<p><code class="docutils literal notranslate"><span class="pre">none</span></code> will not follow any redirect.</p>
+<p><code class="docutils literal notranslate"><span class="pre">safe</span></code> will follow only “safe” redirects, where “safe” means that the client is only doing a <code class="docutils literal notranslate"><span class="pre">GET</span></code> or <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> on the URI to which it is being redirected.</p>
+<p>When following a redirected URL, the <code class="docutils literal notranslate"><span class="pre">Authorization</span></code> header and any credentials set will be dropped and not redirected.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-choices-entry">all</span></p></li>
+<li><p><span class="ansible-option-choices-entry">none</span></p></li>
+<li><p><span class="ansible-option-default-bold">safe</span> <span class="ansible-option-default">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-force_basic_auth"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-force-basic-auth"><strong>force_basic_auth</strong></p>
+<a class="ansibleOptionLink" href="#parameter-force_basic_auth" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>By default the authentication header is only sent when a webservice responses to an initial request with a 401 status. Since some basic auth services do not properly send a 401, logins will fail.</p>
+<p>This option forces the sending of the Basic authentication header upon the original request.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-headers"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-headers"><strong>headers</strong></p>
+<a class="ansibleOptionLink" href="#parameter-headers" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Extra headers to set on the request.</p>
+<p>This should be a dictionary where the key is the header name and the value is the value for that header.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-http_agent"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-http-agent"><strong>http_agent</strong></p>
+<a class="ansibleOptionLink" href="#parameter-http_agent" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Header to identify as, generally appears in web server logs.</p>
+<p>This is set to the <code class="docutils literal notranslate"><span class="pre">User-Agent</span></code> header on a HTTP request.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“ansible-httpget”</span></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-maximum_redirection"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-maximum-redirection"><strong>maximum_redirection</strong></p>
+<a class="ansibleOptionLink" href="#parameter-maximum_redirection" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specify how many times the module will redirect a connection to an alternative URI before the connection fails.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">0</span></code> or <em>follow_redirects</em> is set to <code class="docutils literal notranslate"><span class="pre">none</span></code>, or <code class="docutils literal notranslate"><span class="pre">safe</span></code> when not doing a <code class="docutils literal notranslate"><span class="pre">GET</span></code> or <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> it prevents all redirection.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">50</span></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-proxy_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-proxy-password"><strong>proxy_password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-proxy_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password for <em>proxy_username</em>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-proxy_url"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-proxy-url"><strong>proxy_url</strong></p>
+<a class="ansibleOptionLink" href="#parameter-proxy_url" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>An explicit proxy to use for the request.</p>
+<p>By default, the request will use the IE defined proxy unless <em>use_proxy</em> is set to <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-proxy_use_default_credential"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-proxy-use-default-credential"><strong>proxy_use_default_credential</strong></p>
+<a class="ansibleOptionLink" href="#parameter-proxy_use_default_credential" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Uses the current user’s credentials when authenticating with a proxy host protected with <code class="docutils literal notranslate"><span class="pre">NTLM</span></code>, <code class="docutils literal notranslate"><span class="pre">Kerberos</span></code>, or <code class="docutils literal notranslate"><span class="pre">Negotiate</span></code> authentication.</p>
+<p>Proxies that use <code class="docutils literal notranslate"><span class="pre">Basic</span></code> auth will still require explicit credentials through the <em>proxy_username</em> and <em>proxy_password</em> options.</p>
+<p>The module will only have access to the user’s credentials if using <code class="docutils literal notranslate"><span class="pre">become</span></code> with a password, you are connecting with SSH using a password, or connecting with WinRM using <code class="docutils literal notranslate"><span class="pre">CredSSP</span></code> or <code class="docutils literal notranslate"><span class="pre">Kerberos</span> <span class="pre">with</span> <span class="pre">delegation</span></code>.</p>
+<p>If not using <code class="docutils literal notranslate"><span class="pre">become</span></code> or a different auth method to the ones stated above, there will be no default credentials available and no proxy authentication will occur.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-proxy_username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-proxy-username"><strong>proxy_username</strong></p>
+<a class="ansibleOptionLink" href="#parameter-proxy_username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The username to use for proxy authentication.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-removes"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-removes"><strong>removes</strong></p>
+<a class="ansibleOptionLink" href="#parameter-removes" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A filename, when it does not exist, this step will be skipped.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-return_content"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-return-content"><strong>return_content</strong></p>
+<a class="ansibleOptionLink" href="#parameter-return_content" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether or not to return the body of the response as a “content” key in the dictionary result. If the reported Content-type is “application/json”, then the JSON is additionally loaded into a key called <code class="docutils literal notranslate"><span class="pre">json</span></code> in the dictionary results.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-status_code"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-status-code"><strong>status_code</strong></p>
+<a class="ansibleOptionLink" href="#parameter-status_code" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A valid, numeric, HTTP status code that signifies success of the request.</p>
+<p>Can also be comma separated list of status codes.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">[200]</span></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-url"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-url"><strong>url</strong></p>
+<a class="ansibleOptionLink" href="#parameter-url" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Supports FTP, HTTP or HTTPS URLs in the form of (ftp|http|https)://host.domain:port/path.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-url_method"></div>
+<div class="ansibleOptionAnchor" id="parameter-method"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-url-method"><span id="ansible-collections-ansible-windows-win-uri-module-parameter-method"></span><strong>url_method</strong></p>
+<a class="ansibleOptionLink" href="#parameter-url_method" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: method</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The HTTP Method of the request.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“GET”</span></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-url_password"></div>
+<div class="ansibleOptionAnchor" id="parameter-password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-url-password"><span id="ansible-collections-ansible-windows-win-uri-module-parameter-password"></span><strong>url_password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-url_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: password</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password for <em>url_username</em>.</p>
+<p>The alias <em>password</em> is deprecated and will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-url_timeout"></div>
+<div class="ansibleOptionAnchor" id="parameter-timeout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-url-timeout"><span id="ansible-collections-ansible-windows-win-uri-module-parameter-timeout"></span><strong>url_timeout</strong></p>
+<a class="ansibleOptionLink" href="#parameter-url_timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: timeout</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies how long the request can be pending before it times out (in seconds).</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to specify an infinite timeout.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">30</span></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-url_username"></div>
+<div class="ansibleOptionAnchor" id="parameter-user"></div>
+<div class="ansibleOptionAnchor" id="parameter-username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-username"><span id="ansible-collections-ansible-windows-win-uri-module-parameter-user"></span><span id="ansible-collections-ansible-windows-win-uri-module-parameter-url-username"></span><strong>url_username</strong></p>
+<a class="ansibleOptionLink" href="#parameter-url_username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: user, username</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The username to use for authentication.</p>
+<p>The alias <em>user</em> and <em>username</em> is deprecated and will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-use_default_credential"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-use-default-credential"><strong>use_default_credential</strong></p>
+<a class="ansibleOptionLink" href="#parameter-use_default_credential" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Uses the current user’s credentials when authenticating with a server protected with <code class="docutils literal notranslate"><span class="pre">NTLM</span></code>, <code class="docutils literal notranslate"><span class="pre">Kerberos</span></code>, or <code class="docutils literal notranslate"><span class="pre">Negotiate</span></code> authentication.</p>
+<p>Sites that use <code class="docutils literal notranslate"><span class="pre">Basic</span></code> auth will still require explicit credentials through the <em>url_username</em> and <em>url_password</em> options.</p>
+<p>The module will only have access to the user’s credentials if using <code class="docutils literal notranslate"><span class="pre">become</span></code> with a password, you are connecting with SSH using a password, or connecting with WinRM using <code class="docutils literal notranslate"><span class="pre">CredSSP</span></code> or <code class="docutils literal notranslate"><span class="pre">Kerberos</span> <span class="pre">with</span> <span class="pre">delegation</span></code>.</p>
+<p>If not using <code class="docutils literal notranslate"><span class="pre">become</span></code> or a different auth method to the ones stated above, there will be no default credentials available and no authentication will occur.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-use_proxy"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-use-proxy"><strong>use_proxy</strong></p>
+<a class="ansibleOptionLink" href="#parameter-use_proxy" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">no</span></code>, it will not use the proxy defined in IE for the current user.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-validate_certs"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-parameter-validate-certs"><strong>validate_certs</strong></p>
+<a class="ansibleOptionLink" href="#parameter-validate_certs" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">no</span></code>, SSL certificates will not be validated.</p>
+<p>This should only be used on personally controlled sites using self-signed certificates.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><span class="ansible-option-choices-entry">false</span></p></li>
+<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id3">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/uri_module.html#ansible-collections-ansible-builtin-uri-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.uri</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.uri</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_get_url_module.html#ansible-collections-ansible-windows-win-get-url-module"><span class="std std-ref">ansible.windows.win_get_url</span></a></dt><dd><p>The official documentation on the <strong>ansible.windows.win_get_url</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/win_inet_proxy_module.html#ansible-collections-community-windows-win-inet-proxy-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_inet_proxy</span></a></dt><dd><p>The official documentation on the <strong>community.windows.win_inet_proxy</strong> module.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Perform a GET and Store Output</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_uri</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://example.com/endpoint</span><span class="w"></span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http_output</span><span class="w"></span>
+
+<span class="c1"># Set a HOST header to hit an internal webserver:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hit a Specific Host on the Server</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_uri</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://example.com/</span><span class="w"></span>
+<span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GET</span><span class="w"></span>
+<span class="w">    </span><span class="nt">headers</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">www.somesite.com</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Perform a HEAD on an Endpoint</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_uri</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://www.example.com/</span><span class="w"></span>
+<span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HEAD</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">POST a Body to an Endpoint</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_uri</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://www.somesite.com/</span><span class="w"></span>
+<span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">POST</span><span class="w"></span>
+<span class="w">    </span><span class="nt">body</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{</span><span class="nv"> </span><span class="s">&#39;some&#39;:</span><span class="nv"> </span><span class="s">&#39;json&#39;</span><span class="nv"> </span><span class="s">}&quot;</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="colwidths-auto ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-content"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-content"><strong>content</strong></p>
+<a class="ansibleOptionLink" href="#return-content" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The raw content of the HTTP response.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and return_content is True</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “{\”foo\”: \”bar\”}”</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-content_length"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-content-length"><strong>content_length</strong></p>
+<a class="ansibleOptionLink" href="#return-content_length" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The byte size of the response.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 54447</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-elapsed"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-elapsed"><strong>elapsed</strong></p>
+<a class="ansibleOptionLink" href="#return-elapsed" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">float</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of seconds that elapsed while performing the download.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 23.2</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-json"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-json"><strong>json</strong></p>
+<a class="ansibleOptionLink" href="#return-json" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The json structure returned under content as a dictionary.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and Content-Type is “application/json” or “application/javascript” and return_content is True</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> {“this-is-dependent”: “on the actual return content”}</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-status_code"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-status-code"><strong>status_code</strong></p>
+<a class="ansibleOptionLink" href="#return-status_code" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The HTTP Status Code of the response.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 200</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-status_description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-status-description"><strong>status_description</strong></p>
+<a class="ansibleOptionLink" href="#return-status_description" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A summary of the status.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “OK”</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-url"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-uri-module-return-url"><strong>url</strong></p>
+<a class="ansibleOptionLink" href="#return-url" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The Target URL.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “<a class="reference external" href="https://www.ansible.com">https://www.ansible.com</a>”</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Corwin Brown (&#64;blakfeld)</p></li>
+<li><p>Dag Wieers (&#64;dagwieers)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Permalink to this heading"></a></h3>
+<p class="ansible-links">
+  <a href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" aria-role="button" target="_blank" rel="noopener external">Issue Tracker</a>
+  <a href="https://github.com/ansible-collections/ansible.windows" aria-role="button" target="_blank" rel="noopener external">Repository (Sources)</a>
+  <a href="./#communication-for-ansible-windows" aria-role="button" target="_blank">Communication</a>
+</p></section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_updates_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_updates module – Download and install Windows updates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_user_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_user module – Manages local Windows user accounts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
