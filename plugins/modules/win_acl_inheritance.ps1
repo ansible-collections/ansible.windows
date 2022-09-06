@@ -56,9 +56,9 @@ function Remove-AclExplicitDuplicate {
 
     Process {
         $properties = $acl.Access |
-            Get-Member -MemberType Property |
-            Where-Object { $_.Name -ne 'IsInherited' } |
-            Select-Object -ExpandProperty Name
+        Get-Member -MemberType Property |
+        Where-Object { $_.Name -ne 'IsInherited' } |
+        Select-Object -ExpandProperty Name
 
         ForEach ($inheritedRule in $($acl.Access | Where-Object { $_.IsInherited })) {
             ForEach ($explicitRule in $($acl.Access | Where-Object { -not $_.IsInherited })) {
@@ -95,7 +95,9 @@ $regeditHives = @{
 }
 
 $pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
-$pathQualifier = $pathQualifier.Replace(':', '')
+if (':' -in $pathQualifier) {
+    $pathQualifier = $pathQualifier.Replace(':', '')
+}
 
 if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
     $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
