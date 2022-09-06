@@ -96,7 +96,7 @@ $regeditHives = @{
 
 $pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
 if ($pathQualifier) {
-    $pathQualifier = $pathQualifier.Replace(':', '')
+$pathQualifier = $pathQualifier.Replace(':', '')
 }
 
 if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
