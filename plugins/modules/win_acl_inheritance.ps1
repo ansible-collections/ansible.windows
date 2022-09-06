@@ -95,6 +95,7 @@ $regeditHives = @{
 }
 
 $pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
+# UNC paths will not return a qualifier, so $pathQualifier will be $null in that case
 if ($pathQualifier) {
     $pathQualifier = $pathQualifier.Replace(':', '')
 }
