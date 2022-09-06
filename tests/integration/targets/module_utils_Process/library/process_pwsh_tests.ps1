@@ -274,6 +274,27 @@ exit 1
         }
         $time.TotalSeconds -ge 2 | Assert-Equal -Expected $true
     }
+
+    "Start-AnsibleWindowsProcess with exe in multiple PATH locations" = {
+        # https://github.com/ansible-collections/ansible.windows/issues/403
+        $originalPath = $env:PATH
+        try {
+            $path1 = Join-Path $module.TmpDir 'path1'
+            New-Item -Path $path1 -ItemType Directory | Out-Null
+            $path2 = Join-Path $module.TmpDir 'path2'
+            New-Item -Path $path2 -ItemType Directory | Out-Null
+            $env:PATH = "$path1;$path2"
+
+            Copy-Item -LiteralPath C:\Windows\System32\whoami.exe -Destination $path1
+            Copy-Item -LiteralPath C:\Windows\System32\whoami.exe -Destination $path2
+
+            $actual = Start-AnsibleWindowsProcess -CommandLine 'whoami'
+            $actual.ExitCode | Assert-Equal -Expected 0
+        }
+        finally {
+            $env:PATH = $originalPath
+        }
+    }
 }
 
 # Add argv <-> argc tests

@@ -5,6 +5,20 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.11.1
+=======
+
+Release Summary
+---------------
+
+Release summary for v1.11.1
+
+Bugfixes
+--------
+
+- win_command - Fix bug that stopped win_command from finding executables that are located more than once in ``PATH`` - https://github.com/ansible-collections/ansible.windows/issues/403
+- win_copy - Fix error message when failing to find ``src`` on the controller filesystem
+
 v1.11.0
 =======
 

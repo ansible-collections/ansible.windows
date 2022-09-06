@@ -95,7 +95,9 @@ $regeditHives = @{
 }
 
 $pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
-$pathQualifier = $pathQualifier.Replace(':', '')
+if (':' -in $pathQualifier) {
+    $pathQualifier = $pathQualifier.Replace(':', '')
+}
 
 if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
     $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
