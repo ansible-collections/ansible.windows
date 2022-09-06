@@ -56,9 +56,9 @@ function Remove-AclExplicitDuplicate {
 
     Process {
         $properties = $acl.Access |
-            Get-Member -MemberType Property |
-            Where-Object { $_.Name -ne 'IsInherited' } |
-            Select-Object -ExpandProperty Name
+        Get-Member -MemberType Property |
+        Where-Object { $_.Name -ne 'IsInherited' } |
+        Select-Object -ExpandProperty Name
 
         ForEach ($inheritedRule in $($acl.Access | Where-Object { $_.IsInherited })) {
             ForEach ($explicitRule in $($acl.Access | Where-Object { -not $_.IsInherited })) {
@@ -95,7 +95,7 @@ $regeditHives = @{
 }
 
 $pathQualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
-if (':' -in $pathQualifier) {
+if ($pathQualifier) {
     $pathQualifier = $pathQualifier.Replace(':', '')
 }
 
