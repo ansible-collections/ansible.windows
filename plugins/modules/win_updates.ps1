@@ -1314,8 +1314,8 @@ namespace Ansible.Windows.WinUpdates
             $warning = $searchResult.Warnings.Item($i)
 
             $warningContext = [Ansible.Windows.WinUpdates.UpdateExceptionContext]$warning.Context
-            $api.WriteLog("Search warning {0} - Context {1} - HResult 0x{2:X8} - Message: {3}",
-                $i, $warningContext, $warning.HResult, $warning.Message)
+            $api.WriteLog(("Search warning {0} - Context {1} - HResult 0x{2:X8} - Message: {3}" -f
+                    $i, $warningContext, $warning.HResult, $warning.Message))
         }
     }
     elseif ($resCode -ne 'Succeeded') {

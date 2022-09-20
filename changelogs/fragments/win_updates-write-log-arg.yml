@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - Fix broken call when logging a warning about updates with errors - https://github.com/ansible-collections/ansible.windows/issues/411
