@@ -345,7 +345,7 @@ if ($null -eq $format -and $null -eq $location -and $null -eq $unicode_language)
     $module.FailJson("An argument for 'format', 'location' or 'unicode_language' needs to be supplied")
 }
 else {
-    $valid_cultures = [System.Globalization.CultureInfo]::GetCultures('InstalledWin32Cultures')
+    $valid_cultures = [System.Globalization.CultureInfo]::GetCultures('AllCultures')
     $valid_geoids = Get-ValidGeoId -cultures $valid_cultures
 
     if ($null -ne $location) {
