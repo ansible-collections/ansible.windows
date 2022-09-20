@@ -5,7 +5,6 @@
 
 The `ansible.windows` collection includes the core plugins supported by Ansible to help the management of Windows hosts.
 
-<!--start requires_ansible-->
 ## Ansible version compatibility
 
 This collection has been tested against following Ansible versions: **>=2.11**.
@@ -13,15 +12,16 @@ This collection has been tested against following Ansible versions: **>=2.11**.
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
-<!--end requires_ansible-->
 
+## Collection Documentation
 
-## Included content
+Browsing the [**latest** collection documentation](https://docs.ansible.com/ansible/latest/collections/ansible/windows) will show docs for the _latest version released in the Ansible package_ not the latest version of the collection released on Galaxy.
 
-<!--start collection content-->
-See the complete list of collection content in the [Plugin Index](https://ansible-collections.github.io/ansible.windows/branch/main/collections/ansible/windows/index.html#plugin-index).
+Browsing the [**devel** collection documentation](https://docs.ansible.com/ansible/devel/collections/ansible/windows) shows docs for the _latest version released on Galaxy_.
 
-<!--end collection content-->
+We also separately publish [**latest commit** collection documentation](https://ansible-collections.github.io/ansible.windows/branch/main/) which shows docs for the _latest commit in the `main` branch_.
+
+If you use the Ansible package and don't update collections independently, use **latest**, if you install or update this collection directly from Galaxy, use **devel**. If you are looking to contribute, use **latest commit**.
 
 ## Installation and Usage
 
