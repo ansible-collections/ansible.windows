@@ -9,7 +9,7 @@ DOCUMENTATION:
   description:
   - Quotes argument(s) for the various Windows command line shells.
   - Defaults to escaping arguments based on the Win32 C argv parsing rules that M(ansible.windows.win_command) uses.
-  - Using C(shell='cmd') or C(shell='powershell') can be set to escape arguments for those respective shells.
+  - Using I(shell='cmd') or I(shell='powershell') can be set to escape arguments for those respective shells.
   - Each value is escaped in a way to ensure the process gets the literal argument passed in and meta chars escaped.
   positional: _input
   options:
