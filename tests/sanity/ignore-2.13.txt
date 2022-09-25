@@ -1,7 +1,7 @@
-plugins/modules/async_status.yml validate-modules!skip # Does not support sidecar yet
-plugins/modules/setup.yml validate-modules!skip # Does not support sidecar yet
+plugins/modules/async_status.yml validate-modules!skip # Does not support sidecar
+plugins/modules/setup.yml validate-modules!skip # Does not support sidecar
 plugins/modules/setup.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore custom rules in the version of PSSA in ansible-test docker
-plugins/modules/slurp.yml validate-modules!skip # Does not support sidecar yet
+plugins/modules/slurp.yml validate-modules!skip # Does not support sidecar
 plugins/modules/win_powershell.ps1 pslint:PSCustomUseLiteralPath # Cannot ignore until all ansible-test branches support custom rules
 plugins/modules/win_powershell.py validate-modules:return-syntax-error # Current rules don't allow raw as the return_type https://github.com/ansible/ansible/pull/78231
 tests/integration/targets/win_package/library/win_make_appx.ps1 pslint:PSAvoidLongLines # Cannot ignore until all ansible-test branches support this rule
