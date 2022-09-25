@@ -6,6 +6,9 @@ DOCUMENTATION:
   author:
   - Jordan Borean (@jborean93)
   short_description: Quotes argument(s) for various Windows shells
+  seealso:
+  - module: ansible.windows.win_command
+  - module: ansible.windows.win_shell
   description:
   - Quotes argument(s) for the various Windows command line shells.
   - Defaults to escaping arguments based on the Win32 C argv parsing rules that M(ansible.windows.win_command) uses.
