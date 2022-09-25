@@ -1,0 +1,53 @@
+# Copyright (c) 2022 Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+# This is a stub to satisfy the GitHub doc action, see the builtin docs for better up to date info
+
+DOCUMENTATION:
+  module: slurp
+  version_added: historical
+  short_description: Slurps a file from remote nodes
+  description:
+  - This module works like M(ansible.builtin.fetch). It is used for fetching a base64-
+    encoded blob containing the data in a remote file.
+  options:
+    src:
+      description:
+      - The file on the remote system to fetch. This I(must) be a file, not a directory.
+      type: path
+      required: true
+      aliases: [ path ]
+  notes:
+  - This module returns an 'in memory' base64 encoded version of the file, take
+    into account that this will require at least twice the RAM as the original file size.
+  seealso:
+  - module: ansible.builtin.fetch
+  author:
+  - Ansible Core Team
+
+EXAMPLES: |
+  - name: Retrieve remote ini file on a Windows host
+    ansible.builtin.slurp:
+      src: C:\Program Files\Program\program.ini
+    register: program_conf
+
+  - name: Print returned information
+    ansible.builtin.debug:
+      msg: "{{ program_conf['content'] | b64decode }}"
+
+RETURN:
+  content:
+      description: Encoded file content
+      returned: success
+      type: str
+      sample: "MjE3OQo="
+  encoding:
+      description: Type of encoding used for file
+      returned: success
+      type: str
+      sample: "base64"
+  source:
+      description: Actual path of file slurped
+      returned: success
+      type: str
+      sample: C:\Program Files\Program\program.ini
