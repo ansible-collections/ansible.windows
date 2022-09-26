@@ -19,6 +19,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_command module – Executes a command on a remote Windows node" href="win_command_module.html" />
@@ -86,6 +87,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
 </ul>
 <!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
@@ -165,9 +167,9 @@
 <p>When <code class="docutils literal notranslate"><span class="pre">pkcs12</span></code> is set and the private key is not exportable or accessible by the current user, it will throw an exception.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">der</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">pem</span></p></li>
-<li><p><span class="ansible-option-choices-entry">pkcs12</span></p></li>
+<li><p><span class="ansible-option-default-bold">“der”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“pem”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“pkcs12”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -197,9 +199,9 @@
 <p>See <a class="reference external" href="https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx">https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx</a> for more details.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">default</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">machine</span></p></li>
-<li><p><span class="ansible-option-choices-entry">user</span></p></li>
+<li><p><span class="ansible-option-default-bold">“default”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“machine”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“user”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -231,9 +233,9 @@
 <p>When exporting a certificate, if <em>path</em> is a directory then the module will fail, otherwise the file will be replaced if needed.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">absent</span></p></li>
-<li><p><span class="ansible-option-choices-entry">exported</span></p></li>
-<li><p><span class="ansible-option-default-bold">present</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“exported”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -274,8 +276,8 @@
 <p>Use <code class="docutils literal notranslate"><span class="pre">service</span></code> to manage the store of a service account specified by <em>store_location</em>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">system</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">service</span></p></li>
+<li><p><span class="ansible-option-default-bold">“system”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“service”</span></p></li>
 </ul>
 </div></td>
 </tr>

@@ -19,10 +19,11 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_acl_inheritance module – Change ACL inheritance" href="win_acl_inheritance_module.html" />
-    <link rel="prev" title="Ansible.Windows" href="index.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+    <link rel="prev" title="ansible.windows.slurp module – Slurps a file from remote nodes" href="slurp_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
 
 
 
@@ -86,6 +87,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
 </ul>
 <!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
@@ -162,8 +164,8 @@
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">ContainerInherit,</span> <span class="pre">ObjectInherit</span></code> for Directories.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">ContainerInherit</span></p></li>
-<li><p><span class="ansible-option-choices-entry">ObjectInherit</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“ContainerInherit”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“ObjectInherit”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -182,9 +184,9 @@
 <p>For more information on the choices see MSDN PropagationFlags enumeration at <a class="reference external" href="https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx">https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx</a>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">InheritOnly</span></p></li>
-<li><p><span class="ansible-option-default-bold">None</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">NoPropagateInherit</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“InheritOnly”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“None”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“NoPropagateInherit”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -204,8 +206,8 @@
 <td><div class="ansible-option-cell"><p>Specify whether to add <code class="docutils literal notranslate"><span class="pre">present</span></code> or remove <code class="docutils literal notranslate"><span class="pre">absent</span></code> the specified access rule.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">absent</span></p></li>
-<li><p><span class="ansible-option-default-bold">present</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -216,8 +218,8 @@
 <td><div class="ansible-option-cell"><p>Specify whether to allow or deny the rights specified.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">allow</span></p></li>
-<li><p><span class="ansible-option-choices-entry">deny</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“allow”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“deny”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -328,7 +330,7 @@
           
 
 <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Ansible.Windows" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="slurp_module.html" class="btn btn-neutral float-left" title="ansible.windows.slurp module – Slurps a file from remote nodes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="win_acl_inheritance_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_acl_inheritance module – Change ACL inheritance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

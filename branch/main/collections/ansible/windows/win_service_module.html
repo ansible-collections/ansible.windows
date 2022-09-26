@@ -19,6 +19,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_service_info module – Gather information about Windows services" href="win_service_info_module.html" />
@@ -86,6 +87,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
 </ul>
 <!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
@@ -172,9 +174,9 @@
 <p>Set the dependencies to only the values in the list replacing the existing dependencies.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">add</span></p></li>
-<li><p><span class="ansible-option-choices-entry">remove</span></p></li>
-<li><p><span class="ansible-option-default-bold">set</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“add”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“remove”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“set”</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -218,10 +220,10 @@
 <p><code class="docutils literal notranslate"><span class="pre">severe</span></code> is like <code class="docutils literal notranslate"><span class="pre">critical</span></code> but a failure on the last-known good configuration reboot startup will be ignored.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">critical</span></p></li>
-<li><p><span class="ansible-option-choices-entry">ignore</span></p></li>
-<li><p><span class="ansible-option-choices-entry">normal</span></p></li>
-<li><p><span class="ansible-option-choices-entry">severe</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“critical”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“ignore”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“normal”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“severe”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -257,10 +259,10 @@
 <p><code class="docutils literal notranslate"><span class="pre">run_command</span></code> will run the command specified by <em>failure_command</em>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">none</span></p></li>
-<li><p><span class="ansible-option-choices-entry">reboot</span></p></li>
-<li><p><span class="ansible-option-choices-entry">restart</span></p></li>
-<li><p><span class="ansible-option-choices-entry">run_command</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“none”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“reboot”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“restart”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“run_command”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -379,10 +381,10 @@
 <p><em>desktop_interact</em> can only be set if the service type is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">user_own_process</span></p></li>
-<li><p><span class="ansible-option-choices-entry">user_share_process</span></p></li>
-<li><p><span class="ansible-option-choices-entry">win32_own_process</span></p></li>
-<li><p><span class="ansible-option-choices-entry">win32_share_process</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“user_own_process”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“user_share_process”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“win32_own_process”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“win32_share_process”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -396,9 +398,9 @@
 <p><code class="docutils literal notranslate"><span class="pre">unrestricted</span></code> will add the <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE\&lt;service</span> <span class="pre">name&gt;</span></code> SID to the access token’s groups.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">none</span></p></li>
-<li><p><span class="ansible-option-choices-entry">restricted</span></p></li>
-<li><p><span class="ansible-option-choices-entry">unrestricted</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“none”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“restricted”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“unrestricted”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -410,10 +412,10 @@
 <p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">auto</span></p></li>
-<li><p><span class="ansible-option-choices-entry">delayed</span></p></li>
-<li><p><span class="ansible-option-choices-entry">disabled</span></p></li>
-<li><p><span class="ansible-option-choices-entry">manual</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“auto”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“delayed”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“disabled”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“manual”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -429,11 +431,11 @@
 <p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">stopped</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">absent</span></p></li>
-<li><p><span class="ansible-option-choices-entry">paused</span></p></li>
-<li><p><span class="ansible-option-choices-entry">started</span></p></li>
-<li><p><span class="ansible-option-choices-entry">stopped</span></p></li>
-<li><p><span class="ansible-option-choices-entry">restarted</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“paused”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“started”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“stopped”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“restarted”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -447,8 +449,8 @@
 <p>The current default is <code class="docutils literal notranslate"><span class="pre">on_create</span></code> but this behaviour may change in the future, it is best to be explicit here.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">always</span></p></li>
-<li><p><span class="ansible-option-choices-entry">on_create</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“always”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“on_create”</span></p></li>
 </ul>
 </div></td>
 </tr>

@@ -19,6 +19,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_user_right module – Manage Windows User Rights" href="win_user_right_module.html" />
@@ -86,6 +87,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
 </ul>
 <!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
@@ -211,9 +213,9 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">remove</span></code>, the user is removed from each group in <em>groups</em>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">add</span></p></li>
-<li><p><span class="ansible-option-default-bold">replace</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">remove</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“add”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“replace”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“remove”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -290,9 +292,9 @@
 <p>When <code class="docutils literal notranslate"><span class="pre">query</span></code>, retrieves the user account details without making any changes.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">absent</span></p></li>
-<li><p><span class="ansible-option-default-bold">present</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">query</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“query”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -304,8 +306,8 @@
 <p><code class="docutils literal notranslate"><span class="pre">on_create</span></code> will only set the password for newly created users.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">always</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">on_create</span></p></li>
+<li><p><span class="ansible-option-default-bold">“always”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“on_create”</span></p></li>
 </ul>
 </div></td>
 </tr>

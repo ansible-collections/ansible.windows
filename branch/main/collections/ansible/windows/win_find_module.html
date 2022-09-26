@@ -19,6 +19,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_get_url module – Downloads file from HTTP, HTTPS, or FTP to node" href="win_get_url_module.html" />
@@ -86,6 +87,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
 </ul>
 <!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
@@ -171,9 +173,9 @@
 <p>The default attribute we compare with is the last modification time.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">atime</span></p></li>
-<li><p><span class="ansible-option-choices-entry">ctime</span></p></li>
-<li><p><span class="ansible-option-default-bold">mtime</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“atime”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“ctime”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“mtime”</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -185,11 +187,11 @@
 <p>Will throw an error if the host is unable to use specified algorithm.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">md5</span></p></li>
-<li><p><span class="ansible-option-default-bold">sha1</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">sha256</span></p></li>
-<li><p><span class="ansible-option-choices-entry">sha384</span></p></li>
-<li><p><span class="ansible-option-choices-entry">sha512</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“md5”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“sha1”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“sha256”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“sha384”</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“sha512”</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -200,8 +202,8 @@
 <td><div class="ansible-option-cell"><p>Type of file to search for.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">directory</span></p></li>
-<li><p><span class="ansible-option-default-bold">file</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><span class="ansible-option-choices-entry">“directory”</span></p></li>
+<li><p><span class="ansible-option-default-bold">“file”</span> <span class="ansible-option-default">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
