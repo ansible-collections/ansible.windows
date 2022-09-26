@@ -22,6 +22,7 @@ DOCUMENTATION:
     into account that this will require at least twice the RAM as the original file size.
   seealso:
   - module: ansible.builtin.fetch
+  - module: ansible.builtin.slurp
   author:
   - Ansible Core Team
 

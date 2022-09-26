@@ -7,6 +7,8 @@ DOCUMENTATION:
   module: async_status
   version_added: historical
   short_description: Obtain status of asynchronous task
+  seealso: 
+  - module: ansible.builtin.async_status
   description:
   - This module gets the status of an asynchronous task.
   options:
@@ -25,7 +27,7 @@ DOCUMENTATION:
   author:
   - Ansible Core Team
 
-EXAMPLESL: |
+EXAMPLES: |
   - name: Asynchronous yum task
     ansible.windows.win_command: my.exe
     async: 1000

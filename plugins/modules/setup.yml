@@ -7,6 +7,8 @@ DOCUMENTATION:
   module: setup
   version_added: historical
   short_description: Gathers facts about remote hosts
+  seealso:
+  - module: ansible.builtin.setup
   options:
     gather_subset:
       description:
