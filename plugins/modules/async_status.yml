@@ -1,8 +1,6 @@
 # Copyright (c) 2022 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# This is a stub to satisfy the GitHub doc action, see the builtin docs for better up to date info
-
 DOCUMENTATION:
   module: async_status
   version_added: historical
