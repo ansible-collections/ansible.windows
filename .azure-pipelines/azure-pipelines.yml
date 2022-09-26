@@ -54,6 +54,19 @@ stages:
               test: sanity
             - name: Units
               test: units
+  - stage: Ansible_2_14
+    displayName: Ansible 2.14
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: '{0}'
+          testFormat: '2.14/{0}'
+          targets:
+            - name: Sanity
+              test: sanity
+            - name: Units
+              test: units
   - stage: Ansible_2_13
     displayName: Ansible 2.13
     dependsOn: []
@@ -115,6 +128,8 @@ stages:
     condition: succeededOrFailed()
     dependsOn:
       - Ansible_devel
+      - Ansible_2_14
+      - Ansible_2_13
       - Ansible_2_12
       - Ansible_2_11
       - Windows

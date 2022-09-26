@@ -1,0 +1,70 @@
+# Copyright (c) 2022 Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: async_status
+  version_added: historical
+  short_description: Obtain status of asynchronous task
+  seealso: 
+  - module: ansible.builtin.async_status
+  description:
+  - This module gets the status of an asynchronous task.
+  options:
+    jid:
+      description:
+      - Job or task identifier
+      type: str
+      required: true
+    mode:
+      description:
+      - If C(status), obtain the status.
+      - If C(cleanup), clean up the async job cache (by default in C(~/.ansible_async/)) for the specified job I(jid).
+      type: str
+      choices: [ cleanup, status ]
+      default: status
+  author:
+  - Ansible Core Team
+
+EXAMPLES: |
+  - name: Asynchronous yum task
+    ansible.windows.win_command: my.exe
+    async: 1000
+    poll: 0
+    register: long_cmd
+
+  - name: Wait for asynchronous job to end
+    ansible.builtin.async_status:
+      jid: '{{ long_cmd.ansible_job_id }}'
+    register: job_result
+    until: job_result.finished
+    retries: 100
+    delay: 10
+
+RETURN:
+  ansible_job_id:
+    description: The asynchronous job id
+    returned: success
+    type: str
+    sample: '360874038559.4169'
+  finished:
+    description: Whether the asynchronous job has finished (C(1)) or not (C(0))
+    returned: always
+    type: int
+    sample: 1
+  started:
+    description: Whether the asynchronous job has started (C(1)) or not (C(0))
+    returned: always
+    type: int
+    sample: 1
+  stdout:
+    description: Any output returned by async_wrapper
+    returned: always
+    type: str
+  stderr:
+    description: Any errors returned by async_wrapper
+    returned: always
+    type: str
+  erased:
+    description: Path to erased job file
+    returned: when file is erased
+    type: str
