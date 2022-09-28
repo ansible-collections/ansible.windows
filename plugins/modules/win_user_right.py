@@ -15,7 +15,7 @@ options:
   name:
     description:
     - The name of the User Right as shown by the C(Constant Name) value from
-      U(https://technet.microsoft.com/en-us/library/dd349804.aspx).
+      U(https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment).
     - The module will return an error if the right is invalid.
     type: str
     required: yes
