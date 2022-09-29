@@ -3,7 +3,6 @@
 
 DOCUMENTATION:
   name: quote
-  version_added: historical
   author:
   - Jordan Borean (@jborean93)
   short_description: Quotes argument(s) for various Windows shells

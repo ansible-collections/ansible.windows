@@ -3,7 +3,6 @@
 
 DOCUMENTATION:
   module: slurp
-  version_added: historical
   short_description: Slurps a file from remote nodes
   description:
   - This module works like M(ansible.builtin.fetch). It is used for fetching a base64-
