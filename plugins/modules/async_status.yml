@@ -3,7 +3,6 @@
 
 DOCUMENTATION:
   module: async_status
-  version_added: historical
   short_description: Obtain status of asynchronous task
   seealso: 
   - module: ansible.builtin.async_status

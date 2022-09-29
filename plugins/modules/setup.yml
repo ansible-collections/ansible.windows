@@ -3,7 +3,6 @@
 
 DOCUMENTATION:
   module: setup
-  version_added: historical
   short_description: Gathers facts about remote hosts
   seealso:
   - module: ansible.builtin.setup
@@ -29,6 +28,11 @@ DOCUMENTATION:
         will be run (if a ps1) or read (if a json) and their results be added to the return facts.
       - The returned fact will be named after the local file (without the extension suffix), e.g. C(ansible_my_fact).
       type: path
+    _measure_subset:
+      description:
+      - For internal use
+      type: bool
+      default: False
   description:
   - This module is automatically called by playbooks to gather useful
     variables about remote hosts that can be used in playbooks. It can also be
