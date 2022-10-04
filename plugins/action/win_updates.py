@@ -754,12 +754,7 @@ class ActionModule(ActionBase):
             )
 
         else:
-            if not self._connection._shell.tmpdir:
-                self._make_tmp_path()  # Stores the update scheduled task script/progress
-
             module_options['_wait'] = False
-            # In case we are running with become we need to make sure the module uses the correct dir
-            module_options['_output_path'] = self._connection._shell.tmpdir
 
             try:
                 result = self._run_sync(task_vars, module_options, reboot, reboot_timeout)
@@ -822,8 +817,8 @@ class ActionModule(ActionBase):
 
     def _run_sync(self, task_vars, module_options, reboot, reboot_timeout):  # type: (Dict, Dict, bool, int) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
-        poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
-        cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+        # In case we are running with become we need to make sure the module uses the correct dir
+        module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
 
         result = {
             'changed': False,
@@ -840,10 +835,7 @@ class ActionModule(ActionBase):
             except _RecreateTempPathException:
                 display.vv("Failure when running win_updates module with existing tempdir, retrying with new dir")
                 self._connection._shell.tmpdir = None
-                self._make_tmp_path()
-                module_options['_output_path'] = self._connection._shell.tmpdir
-                poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
-                cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+                module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
 
                 continue
 
@@ -911,6 +903,16 @@ class ActionModule(ActionBase):
                 break
 
         return result
+
+    def _setup_updates_tmpdir(self):
+        """Sets up a remote tmpdir if needed and copies the files used by the action plugin."""
+        if not self._connection._shell.tmpdir:
+            self._make_tmp_path()  # Stores the update scheduled task script/progress
+
+        poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
+        cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+
+        return self._connection._shell.tmpdir, poll_script_path, cancel_script_path
 
     def _run_updates(self, task_vars, module_options, poll_script_path, cancel_script_path):
         # type: (Dict, Dict, str, str) -> UpdateResult
