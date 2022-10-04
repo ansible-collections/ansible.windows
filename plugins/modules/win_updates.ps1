@@ -1530,6 +1530,15 @@ if (-not $outputPathDir) {
     # Running async means this won't be set, just use the module tmpdir.
     $outputPathDir = $module.Tmpdir
 }
+elseif (-not (Test-Path -LiteralPath $outputPathDir)) {
+    # If the _output_path is set but does not exist then it needs to be
+    # re-created by the action plugin and the module rerun. The recreate_tmpdir
+    # return value is used to flag this special failure from one to pass back
+    # to Ansible.
+    # https://github.com/ansible-collections/ansible.windows/issues/417
+    $module.Result.recreate_tmpdir = $true
+    $module.FailJson("Module tmpdir '$outputPathDir' does not exist")
+}
 
 # The scheduled task might need to fallback to run as SYSTEM so grant that SID rights to OutputDir
 $systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(

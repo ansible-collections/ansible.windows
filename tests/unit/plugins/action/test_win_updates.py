@@ -547,3 +547,70 @@ def test_fail_install(monkeypatch):
         else:
             assert u['installed']
             assert 'failure_hresult_code' not in u
+
+
+def test_reboot_with_tmpdir_cleanup(monkeypatch):
+    reboot_mock = MagicMock()
+    reboot_mock.return_value = {'failed': False}
+    monkeypatch.setattr(win_updates, 'reboot_host', reboot_mock)
+
+    mock_connection = mock_connection_init('reboot_with_tmpdir_cleanup.txt')
+
+    module_arg_return = {
+        'category_names': '*',
+        'state': 'installed',
+        'reboot': 'yes',
+    }
+    plugin = win_updates_init(module_arg_return, connection=mock_connection)
+    execute_module = MagicMock()
+    execute_module.side_effect = (
+        {
+            'invocation': {'module_args': module_arg_return},
+            'output_path': 'update_output_path',
+            'task_pid': 666,
+            'cancel_id': 'update_cancel_id',
+        },
+        {
+            'invocation': {'module_args': module_arg_return},
+            'failed': True,
+            'msg': 'Module tmpdir ''...'' does not exist"',
+            'recreate_tmpdir': True,
+        },
+        {
+            'invocation': {'module_args': module_arg_return},
+            'output_path': 'update_output_path',
+            'task_pid': 666,
+            'cancel_id': 'update_cancel_id',
+        },
+    )
+    monkeypatch.setattr(plugin, '_execute_module', execute_module)
+    monkeypatch.setattr(plugin, '_transfer_file', MagicMock())
+
+    def test_make_tmp_path():
+        mock_connection._shell.tmpdir = 'shell_tmpdir_2'
+
+    monkeypatch.setattr(plugin, '_make_tmp_path', test_make_tmp_path)
+
+    actual = plugin.run()
+
+    assert reboot_mock.call_count == 1
+    assert mock_connection._shell.tmpdir == 'shell_tmpdir_2'
+    assert execute_module.call_count == 3
+
+    assert actual['changed']
+    assert not actual['reboot_required']
+    assert actual['found_update_count'] == 6
+    assert actual['failed_update_count'] == 0
+    assert actual['installed_update_count'] == 6
+    assert actual['filtered_updates'] == {}
+    assert len(actual['updates']) == 6
+
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
+        assert u['id'] in UPDATE_INFO
+        u_info = UPDATE_INFO[u['id']]
+        assert u['title'] == u_info['title']
+        assert u['kb'] == [u_info['kb']]
+        assert u['categories'] == u_info['categories']
+        assert u['downloaded']
+        assert u['installed']

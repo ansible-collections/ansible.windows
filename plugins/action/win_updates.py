@@ -682,6 +682,10 @@ class _ReturnResultException(Exception):
         self.result = result
 
 
+class _RecreateTempPathException(Exception):
+    pass
+
+
 class ActionModule(ActionBase):
 
     _VALID_ARGS = [
@@ -831,7 +835,17 @@ class ActionModule(ActionBase):
             round += 1
             display.v("Running win_updates - round %s" % round, host=task_vars.get('inventory_hostname', None))
 
-            update_result = self._run_updates(task_vars, module_options, poll_script_path, cancel_script_path)
+            try:
+                update_result = self._run_updates(task_vars, module_options, poll_script_path, cancel_script_path)
+            except _RecreateTempPathException:
+                display.vv("Failure when running win_updates module with existing tempdir, retrying with new dir")
+                self._connection._shell.tmpdir = None
+                self._make_tmp_path()
+                module_options['_output_path'] = self._connection._shell.tmpdir
+                poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
+                cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+
+                continue
 
             self._updates.update(update_result.updates)
             self._filtered_updates.update(update_result.filtered_updates)
@@ -937,12 +951,19 @@ class ActionModule(ActionBase):
             module_args=module_options,
             task_vars=task_vars,
         )
+
         if 'invocation' in result and not self._invocation:
             # First run through we want to update the invocation value in the final results
             self._invocation = result['invocation']
 
+        failed = result.get('failed', False)
+        if failed and result.get('recreate_tmpdir', False):
+            # Might have been deleted across a reboot, try to recreate for the next run.
+            # https://github.com/ansible-collections/ansible.windows/issues/417
+            raise _RecreateTempPathException()
+
         if (
-            result.get('failed', False) or
+            failed or
             'output_path' not in result or
             'task_pid' not in result or
             'cancel_id' not in result
