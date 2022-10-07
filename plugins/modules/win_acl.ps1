@@ -97,7 +97,7 @@ Do {
     if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
         $path = "\\?\$($PathDetails.Target.Get(0))"
     }
-} While($PathDetails.LinkType)
+} While ($PathDetails.LinkType)
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
