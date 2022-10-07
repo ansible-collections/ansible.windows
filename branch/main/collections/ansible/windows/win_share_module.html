@@ -171,12 +171,12 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <td><div class="ansible-option-cell"><p>Set the CachingMode for this share.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“BranchCache”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“Documents”</span></p></li>
-<li><p><span class="ansible-option-default-bold">“Manual”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“None”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“Programs”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“Unknown”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;BranchCache&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;Documents&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;Manual&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;Programs&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;Unknown&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -208,8 +208,8 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <td><div class="ansible-option-cell"><p>Sets whether to encrypt the traffic to the share or not.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -227,8 +227,8 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <td><div class="ansible-option-cell"><p>Specify whether to allow or deny file listing, in case user has no permission on share. Also known as Access-Based Enumeration.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -260,8 +260,8 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <td><div class="ansible-option-cell"><p>Whether to add or set (replace) access control entries.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">“set”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“add”</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;set&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;add&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -272,8 +272,8 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <td><div class="ansible-option-cell"><p>Specify whether to add <code class="docutils literal notranslate"><span class="pre">present</span></code> or remove <code class="docutils literal notranslate"><span class="pre">absent</span></code> the specified share.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
-<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;present&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -324,7 +324,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of action cmdlets that were run by the module.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“New-SmbShare -Name share -Path C:\\temp”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;New-SmbShare</span> <span class="pre">-Name</span> <span class="pre">share</span> <span class="pre">-Path</span> <span class="pre">C:\\temp&quot;]</span></code></p>
 </div></td>
 </tr>
 </tbody>

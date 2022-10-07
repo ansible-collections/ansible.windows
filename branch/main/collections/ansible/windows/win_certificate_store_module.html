@@ -167,9 +167,9 @@
 <p>When <code class="docutils literal notranslate"><span class="pre">pkcs12</span></code> is set and the private key is not exportable or accessible by the current user, it will throw an exception.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">“der”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“pem”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“pkcs12”</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;der&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;pem&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;pkcs12&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -182,8 +182,8 @@
 <p>Used when <code class="docutils literal notranslate"><span class="pre">state=present</span></code> only.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">false</span></p></li>
-<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -199,9 +199,9 @@
 <p>See <a class="reference external" href="https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx">https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx</a> for more details.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">“default”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“machine”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“user”</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;machine&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -233,9 +233,9 @@
 <p>When exporting a certificate, if <em>path</em> is a directory then the module will fail, otherwise the file will be replaced if needed.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“exported”</span></p></li>
-<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;exported&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;present&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -247,7 +247,7 @@
 <p>Can be set to <code class="docutils literal notranslate"><span class="pre">CurrentUser</span></code> or <code class="docutils literal notranslate"><span class="pre">LocalMachine</span></code> when <code class="docutils literal notranslate"><span class="pre">store_type=system</span></code>.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">LocalMachine</span></code> when <code class="docutils literal notranslate"><span class="pre">store_type=system</span></code>.</p>
 <p>Must be set to any service name when <code class="docutils literal notranslate"><span class="pre">store_type=service</span></code>.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“LocalMachine”</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;LocalMachine&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -263,7 +263,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">Root</span></code>: The X.509 certificate store for trusted root certificate authorities (CAs)</p>
 <p><code class="docutils literal notranslate"><span class="pre">TrustedPeople</span></code>: The X.509 certificate store for directly trusted people and resources</p>
 <p><code class="docutils literal notranslate"><span class="pre">TrustedPublisher</span></code>: The X.509 certificate store for directly trusted publishers</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“My”</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;My&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -276,8 +276,8 @@
 <p>Use <code class="docutils literal notranslate"><span class="pre">service</span></code> to manage the store of a service account specified by <em>store_location</em>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">“system”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“service”</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;system&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;service&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -400,7 +400,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of certificate thumbprints that were touched by the module.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“BC05633694E675449136679A658281F17A191087”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;BC05633694E675449136679A658281F17A191087&quot;]</span></code></p>
 </div></td>
 </tr>
 </tbody>

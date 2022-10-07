@@ -200,7 +200,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The account name of the account SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Administrator”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Administrator&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -209,7 +209,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The domain name of the account SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “DOMAIN”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;DOMAIN&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -218,7 +218,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The SID in string form.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “S-1-5-21-1654078763-769949647-2968445802-500”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;S-1-5-21-1654078763-769949647-2968445802-500&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -227,7 +227,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The type of SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “User”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;User&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -236,7 +236,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The name of the authentication package used to authenticate the user in the session.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Negotiate”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Negotiate&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -245,7 +245,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The DNS name of the logon session, this is an empty string if this is not set.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “DOMAIN.COM”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;DOMAIN.COM&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -254,7 +254,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of groups and attributes that the user is a member of.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [{“account_name”: “Domain Users”, “attributes”: [“Mandatory”, “Enabled by default”, “Enabled”], “domain_name”: “DOMAIN”, “sid”: “S-1-5-21-1654078763-769949647-2968445802-513”, “type”: “Group”}, {“account_name”: “Administrators”, “attributes”: [“Mandatory”, “Enabled by default”, “Enabled”, “Owner”], “domain_name”: “BUILTIN”, “sid”: “S-1-5-32-544”, “type”: “Alias”}]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[{&quot;account_name&quot;:</span> <span class="pre">&quot;Domain</span> <span class="pre">Users&quot;,</span> <span class="pre">&quot;attributes&quot;:</span> <span class="pre">[&quot;Mandatory&quot;,</span> <span class="pre">&quot;Enabled</span> <span class="pre">by</span> <span class="pre">default&quot;,</span> <span class="pre">&quot;Enabled&quot;],</span> <span class="pre">&quot;domain_name&quot;:</span> <span class="pre">&quot;DOMAIN&quot;,</span> <span class="pre">&quot;sid&quot;:</span> <span class="pre">&quot;S-1-5-21-1654078763-769949647-2968445802-513&quot;,</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;Group&quot;},</span> <span class="pre">{&quot;account_name&quot;:</span> <span class="pre">&quot;Administrators&quot;,</span> <span class="pre">&quot;attributes&quot;:</span> <span class="pre">[&quot;Mandatory&quot;,</span> <span class="pre">&quot;Enabled</span> <span class="pre">by</span> <span class="pre">default&quot;,</span> <span class="pre">&quot;Enabled&quot;,</span> <span class="pre">&quot;Owner&quot;],</span> <span class="pre">&quot;domain_name&quot;:</span> <span class="pre">&quot;BUILTIN&quot;,</span> <span class="pre">&quot;sid&quot;:</span> <span class="pre">&quot;S-1-5-32-544&quot;,</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;Alias&quot;}]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -263,7 +263,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The impersonation level of the token, only valid if <code class="docutils literal notranslate"><span class="pre">token_type</span></code> is <code class="docutils literal notranslate"><span class="pre">TokenImpersonation</span></code>, see <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa379572.aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa379572.aspx</a>.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “SecurityAnonymous”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;SecurityAnonymous&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -280,7 +280,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The account name of the label SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “High Mandatory Level”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;High</span> <span class="pre">Mandatory</span> <span class="pre">Level&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -289,7 +289,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The domain name of the label SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Mandatory Label”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Mandatory</span> <span class="pre">Label&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -298,7 +298,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The SID in string form.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “S-1-16-12288”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;S-1-16-12288&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -307,7 +307,7 @@
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The type of SID.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Label”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Label&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -316,7 +316,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The name of the domain used to authenticate the owner of the session.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “DOMAIN”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;DOMAIN&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -325,7 +325,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The logon time in ISO 8601 format</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “2017-11-27T06:24:14.3321665+10:00”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;2017-11-27T06:24:14.3321665+10:00&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -334,7 +334,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The unique identifier of the logon session.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 20470143</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">20470143</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -343,7 +343,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The name of the server used to authenticate the owner of the logon session.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “DC01”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;DC01&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -352,7 +352,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The logon type that identifies the logon method, see <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa380129.aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa380129.aspx</a>.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Network”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Network&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -361,7 +361,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A dictionary of privileges and their state on the logon token.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> {“SeChangeNotifyPrivileges”: “enabled-by-default”, “SeDebugPrivilege”: “enabled”, “SeRemoteShutdownPrivilege”: “disabled”}</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">{&quot;SeChangeNotifyPrivileges&quot;:</span> <span class="pre">&quot;enabled-by-default&quot;,</span> <span class="pre">&quot;SeDebugPrivilege&quot;:</span> <span class="pre">&quot;enabled&quot;,</span> <span class="pre">&quot;SeRemoteShutdownPrivilege&quot;:</span> <span class="pre">&quot;disabled&quot;}</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -370,7 +370,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of logon rights assigned to the logon.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and running user is a member of the local Administrators group</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“SeNetworkLogonRight”, “SeInteractiveLogonRight”, “SeBatchLogonRight”, “SeRemoteInteractiveLogonRight”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;SeNetworkLogonRight&quot;,</span> <span class="pre">&quot;SeInteractiveLogonRight&quot;,</span> <span class="pre">&quot;SeBatchLogonRight&quot;,</span> <span class="pre">&quot;SeRemoteInteractiveLogonRight&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -379,7 +379,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The token type to indicate whether it is a primary or impersonation token.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “TokenPrimary”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;TokenPrimary&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -388,7 +388,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The user principal name of the current user.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “<a class="reference external" href="mailto:Administrator&#37;&#52;&#48;DOMAIN&#46;COM">Administrator<span>&#64;</span>DOMAIN<span>&#46;</span>COM</a>”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Administrator&#64;DOMAIN.COM&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -397,7 +397,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The user flags for the logon session, see UserFlags in <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa380128">https://msdn.microsoft.com/en-us/library/windows/desktop/aa380128</a>.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Winlogon”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Winlogon&quot;</span></code></p>
 </div></td>
 </tr>
 </tbody>

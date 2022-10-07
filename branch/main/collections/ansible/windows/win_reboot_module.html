@@ -166,7 +166,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Command to run that returns a unique string indicating the last time the system was booted.</p>
 <p>Setting this to a command that has different output each time it is run will cause the task to fail.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime).LastBootUpTime.ToFileTime()”</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;(Get-CimInstance</span> <span class="pre">-ClassName</span> <span class="pre">Win32_OperatingSystem</span> <span class="pre">-Property</span> <span class="pre">LastBootUpTime).LastBootUpTime.ToFileTime()&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -176,7 +176,7 @@
 <p class="ansible-option-type-line"><span class="ansible-option-type">float</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Maximum seconds to wait for a single successful TCP connection to the WinRM endpoint before trying again.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">5.0</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">5.0</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -184,7 +184,7 @@
 <a class="ansibleOptionLink" href="#parameter-msg" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Message to display to users.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“Reboot initiated by Ansible”</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;Reboot</span> <span class="pre">initiated</span> <span class="pre">by</span> <span class="pre">Ansible&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -195,7 +195,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Seconds to wait after the reboot command was successful before attempting to validate the system rebooted successfully.</p>
 <p>This is useful if you want wait for something to settle despite your connection already working.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">0.0</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">0.0</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -206,7 +206,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Seconds to wait before reboot. Passed as a parameter to the reboot command.</p>
 <p>The minimum version is <code class="docutils literal notranslate"><span class="pre">2</span></code> seconds and cannot be set lower.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">2.0</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">2.0</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -217,7 +217,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Maximum seconds to wait for machine to re-appear on the network and respond to a test command.</p>
 <p>This timeout is evaluated separately for both reboot verification and test command success so maximum clock time is actually twice this value.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">600.0</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">600.0</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -306,7 +306,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The number of seconds that elapsed waiting for the system to be rebooted.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 23.2</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">23.2</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -315,7 +315,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>True if the machine was rebooted.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 </tbody>

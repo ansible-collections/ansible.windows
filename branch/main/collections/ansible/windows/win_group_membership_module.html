@@ -180,9 +180,9 @@
 <p>When <code class="docutils literal notranslate"><span class="pre">state</span></code> is <code class="docutils literal notranslate"><span class="pre">pure</span></code>, only the members specified will exist, and all other existing members not specified are removed.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
-<li><p><span class="ansible-option-default-bold">“present”</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“pure”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;present&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;pure&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -246,7 +246,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of members added when <code class="docutils literal notranslate"><span class="pre">state</span></code> is <code class="docutils literal notranslate"><span class="pre">present</span></code> or <code class="docutils literal notranslate"><span class="pre">pure</span></code>; this is empty if no members are added.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and <code class="docutils literal notranslate"><span class="pre">state</span></code> is <code class="docutils literal notranslate"><span class="pre">present</span></code></p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“SERVERNAME\\NewLocalAdmin”, “DOMAIN\\TestUser”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;SERVERNAME\\NewLocalAdmin&quot;,</span> <span class="pre">&quot;DOMAIN\\TestUser&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -255,7 +255,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of all local group members at completion; this is empty if the group contains no members.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“DOMAIN\\TestUser”, “SERVERNAME\\NewLocalAdmin”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;DOMAIN\\TestUser&quot;,</span> <span class="pre">&quot;SERVERNAME\\NewLocalAdmin&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -264,7 +264,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The name of the target local group.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Administrators”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Administrators&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -273,7 +273,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of members removed when <code class="docutils literal notranslate"><span class="pre">state</span></code> is <code class="docutils literal notranslate"><span class="pre">absent</span></code> or <code class="docutils literal notranslate"><span class="pre">pure</span></code>; this is empty if no members are removed.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and <code class="docutils literal notranslate"><span class="pre">state</span></code> is <code class="docutils literal notranslate"><span class="pre">absent</span></code></p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“DOMAIN\\TestGroup”, “NT AUTHORITY\\SYSTEM”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;DOMAIN\\TestGroup&quot;,</span> <span class="pre">&quot;NT</span> <span class="pre">AUTHORITY\\SYSTEM&quot;]</span></code></p>
 </div></td>
 </tr>
 </tbody>

@@ -169,8 +169,8 @@
 <p>No backup is taken when <code class="docutils literal notranslate"><span class="pre">remote_src=False</span></code> and multiple files are being copied.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -189,8 +189,8 @@
 <td><div class="ansible-option-cell"><p>This option controls the autodecryption of source files using vault.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">false</span></p></li>
-<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -215,8 +215,8 @@
 <p>If set to <code class="docutils literal notranslate"><span class="pre">no</span></code>, no checksuming of the content is performed which can help improve performance on larger files.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">false</span></p></li>
-<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -227,8 +227,8 @@
 <td><div class="ansible-option-cell"><p>This flag indicates that filesystem links in the source tree, if they exist, should be followed.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">false</span></p></li>
-<li><p><span class="ansible-option-default-bold">true</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -240,8 +240,8 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">yes</span></code>, it will go to the remote/target machine for the src.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -361,7 +361,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Name of the backup file that was created.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> if backup=yes</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “C:\\Path\\To\\File.txt.11540.20150212-220915.bak”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Path\\To\\File.txt.11540.20150212-220915.bak&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -370,7 +370,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>SHA1 checksum of the file after running copy.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, src is a file</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “6e642bb8dd5c2e027bf21dd923337cbb4214f827”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;6e642bb8dd5c2e027bf21dd923337cbb4214f827&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -379,7 +379,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Destination file/path.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> changed</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “C:\\Temp\\”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Temp\\&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -388,7 +388,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether a single file copy took place or a folder copy.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “file_copy”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;file_copy&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -397,7 +397,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Basename of the copied file.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> changed, src is a file</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “foo.txt”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;foo.txt&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -406,7 +406,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Size of the target, after execution.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> changed, src is a file</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> 1220</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">1220</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -415,7 +415,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Source file used for the copy on the target machine.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> changed</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “/home/httpd/.ansible/tmp/ansible-tmp-1423796390.97-147729857856000/source”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;/home/httpd/.ansible/tmp/ansible-tmp-1423796390.97-147729857856000/source&quot;</span></code></p>
 </div></td>
 </tr>
 </tbody>

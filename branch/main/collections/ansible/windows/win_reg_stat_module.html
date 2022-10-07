@@ -239,7 +239,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether anything was changed.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -248,7 +248,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>States whether the registry key/property exists.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and path/property exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -257,7 +257,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A dictionary containing all the properties and their values in the registry key.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, path exists and property not specified</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> {“”: {“raw_value”: “”, “type”: “REG_SZ”, “value”: “”}, “binary_property”: {“raw_value”: [“0x01”, “0x16”], “type”: “REG_BINARY”, “value”: [1, 22]}, “multi_string_property”: {“raw_value”: [“a”, “b”], “type”: “REG_MULTI_SZ”, “value”: [“a”, “b”]}}</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">{&quot;&quot;:</span> <span class="pre">{&quot;raw_value&quot;:</span> <span class="pre">&quot;&quot;,</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;REG_SZ&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;&quot;},</span> <span class="pre">&quot;binary_property&quot;:</span> <span class="pre">{&quot;raw_value&quot;:</span> <span class="pre">[&quot;0x01&quot;,</span> <span class="pre">&quot;0x16&quot;],</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;REG_BINARY&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">[1,</span> <span class="pre">22]},</span> <span class="pre">&quot;multi_string_property&quot;:</span> <span class="pre">{&quot;raw_value&quot;:</span> <span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;b&quot;],</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;REG_MULTI_SZ&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;b&quot;]}}</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -266,7 +266,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Returns the raw value of the registry property, REG_EXPAND_SZ has no string expansion, REG_BINARY or REG_NONE is in hex 0x format. REG_NONE, this value is a hex string in the 0x format.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, path/property exists and property specified</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “%ProgramDir%\\\\Common Files”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;%ProgramDir%\\\\Common</span> <span class="pre">Files&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -275,7 +275,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of all the sub keys of the key specified.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, path exists and property not specified</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“AppHost”, “Casting”, “DateTime”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;AppHost&quot;,</span> <span class="pre">&quot;Casting&quot;,</span> <span class="pre">&quot;DateTime&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -284,7 +284,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The property type.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, path/property exists and property specified</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “REG_EXPAND_SZ”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;REG_EXPAND_SZ&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -293,7 +293,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The value of the property.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success, path/property exists and property specified</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “C:\\\\Program Files\\\\Common Files”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\\\Program</span> <span class="pre">Files\\\\Common</span> <span class="pre">Files&quot;</span></code></p>
 </div></td>
 </tr>
 </tbody>

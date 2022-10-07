@@ -176,7 +176,7 @@
 <td><div class="ansible-option-cell"><p>Can be used to configure the exact version of the DSC resource to be invoked.</p>
 <p>Useful if the target node has multiple versions installed of the module containing the DSC resource.</p>
 <p>If not specified, the module will follow standard PowerShell convention and use the highest version available.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">“latest”</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;latest&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -305,7 +305,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The version of the dsc resource/module used.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “1.0.1”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;1.0.1&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -314,7 +314,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Flag returned from the DSC engine indicating whether or not the machine requires a reboot for the invoked changes to take effect.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -323,7 +323,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The verbose output as a list from executing the DSC Set method.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> Ansible verbosity is -vvv or greater and a change occurred</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“Perform operation ‘Invoke CimMethod’ with the following parameters, “, “[SERVER]: LCM: [Start Set ] [[File]DirectResourceAccess]”, “Operation ‘Invoke CimMethod’ complete.”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Perform</span> <span class="pre">operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">parameters,</span> <span class="pre">&quot;,</span> <span class="pre">&quot;[SERVER]:</span> <span class="pre">LCM:</span> <span class="pre">[Start</span> <span class="pre">Set</span> <span class="pre">]</span> <span class="pre">[[File]DirectResourceAccess]&quot;,</span> <span class="pre">&quot;Operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">complete.&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -332,7 +332,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The verbose output as a list from executing the DSC test method.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> Ansible verbosity is -vvv or greater</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“Perform operation ‘Invoke CimMethod’ with the following parameters, “, “[SERVER]: LCM: [Start Test ] [[File]DirectResourceAccess]”, “Operation ‘Invoke CimMethod’ complete.”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Perform</span> <span class="pre">operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">parameters,</span> <span class="pre">&quot;,</span> <span class="pre">&quot;[SERVER]:</span> <span class="pre">LCM:</span> <span class="pre">[Start</span> <span class="pre">Test</span> <span class="pre">]</span> <span class="pre">[[File]DirectResourceAccess]&quot;,</span> <span class="pre">&quot;Operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">complete.&quot;]</span></code></p>
 </div></td>
 </tr>
 </tbody>

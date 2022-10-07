@@ -174,9 +174,9 @@
 <p>Set the dependencies to only the values in the list replacing the existing dependencies.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“add”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“remove”</span></p></li>
-<li><p><span class="ansible-option-default-bold">“set”</span> <span class="ansible-option-default">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;add&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;remove&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;set&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
 </div></td>
 </tr>
@@ -196,8 +196,8 @@
 <p>This can only be set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> when the <em>service_type</em> is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -220,10 +220,10 @@
 <p><code class="docutils literal notranslate"><span class="pre">severe</span></code> is like <code class="docutils literal notranslate"><span class="pre">critical</span></code> but a failure on the last-known good configuration reboot startup will be ignored.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“critical”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“ignore”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“normal”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“severe”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;critical&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;ignore&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;normal&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;severe&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -245,7 +245,7 @@
 <p class="ansible-option-type-line"><span class="ansible-option-type">any</span></p>
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The time to wait, in milliseconds, before performing the specified action.</p>
-<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <span class="ansible-option-default">0</span></p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">0</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
@@ -259,10 +259,10 @@
 <p><code class="docutils literal notranslate"><span class="pre">run_command</span></code> will run the command specified by <em>failure_command</em>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“none”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“reboot”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“restart”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“run_command”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;reboot&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restart&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;run_command&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -273,8 +273,8 @@
 <td><div class="ansible-option-cell"><p>Controls whether failure actions will be performed on non crash failures or not.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">false</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -313,8 +313,8 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">no</span></code>, stopping or restarting a service with dependent services may fail.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-default-bold">false</span> <span class="ansible-option-default">← (default)</span></p></li>
-<li><p><span class="ansible-option-choices-entry">true</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -381,10 +381,10 @@
 <p><em>desktop_interact</em> can only be set if the service type is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“user_own_process”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“user_share_process”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“win32_own_process”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“win32_share_process”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user_own_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user_share_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;win32_own_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;win32_share_process&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -398,9 +398,9 @@
 <p><code class="docutils literal notranslate"><span class="pre">unrestricted</span></code> will add the <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE\&lt;service</span> <span class="pre">name&gt;</span></code> SID to the access token’s groups.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“none”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“restricted”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“unrestricted”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restricted&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;unrestricted&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -412,10 +412,10 @@
 <p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“auto”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“delayed”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“disabled”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“manual”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;delayed&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;disabled&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;manual&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -431,11 +431,11 @@
 <p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">stopped</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“absent”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“paused”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“started”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“stopped”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“restarted”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;paused&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;started&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;stopped&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restarted&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -449,8 +449,8 @@
 <p>The current default is <code class="docutils literal notranslate"><span class="pre">on_create</span></code> but this behaviour may change in the future, it is best to be explicit here.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><span class="ansible-option-choices-entry">“always”</span></p></li>
-<li><p><span class="ansible-option-choices-entry">“on_create”</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;on_create&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
@@ -678,7 +678,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether the service can be paused and unpaused.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -687,7 +687,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of services that depend on this service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“False”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;False&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -696,7 +696,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of services that is depended by this service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> [“False”]</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;False&quot;]</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -705,7 +705,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The description of the service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “Manages communication between system components.”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Manages</span> <span class="pre">communication</span> <span class="pre">between</span> <span class="pre">system</span> <span class="pre">components.&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -714,7 +714,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether the current user is allowed to interact with the desktop.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> false</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -723,7 +723,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The display name of the installed service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “CoreMessaging”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CoreMessaging&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -732,7 +732,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether the service exists or not.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> true</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -741,7 +741,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The service name or id of the service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “CoreMessagingRegistrar”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CoreMessagingRegistrar&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -750,7 +750,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The path to the service executable.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “C:\\Windows\\system32\\svchost.exe -k LocalServiceNoNetwork”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Windows\\system32\\svchost.exe</span> <span class="pre">-k</span> <span class="pre">LocalServiceNoNetwork&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -759,7 +759,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The startup type of the service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “manual”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;manual&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -768,7 +768,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The current running status of the service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “stopped”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;stopped&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -777,7 +777,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>The username that runs the service.</p>
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
-<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> “LocalSystem”</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;LocalSystem&quot;</span></code></p>
 </div></td>
 </tr>
 </tbody>
