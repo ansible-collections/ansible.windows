@@ -94,7 +94,7 @@ $follow_links = $True
 $path = Resolve-Path $path
 Do {
     $PathDetails = Get-ItemProperty -LiteralPath $path
-    if ($PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
+    if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
         $path = "\\?\$($PathDetails.Target.Get(0))"
     }
 } While($PathDetails.LinkType)
