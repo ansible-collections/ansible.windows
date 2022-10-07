@@ -91,7 +91,6 @@ $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
 $follow_links = $True
 
-# OL Fix to change permissions following links
 $path = Resolve-Path $path
 Do {
     $PathDetails = Get-ItemProperty -LiteralPath $path
