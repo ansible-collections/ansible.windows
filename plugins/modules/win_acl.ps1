@@ -89,6 +89,16 @@ $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "prese
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
+$follow_links = $True
+
+# OL Fix to change permissions following links
+$path = Resolve-Path $path
+Do {
+    $PathDetails = Get-ItemProperty -LiteralPath $path
+    if ($PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
+        $path = "\\?\$($PathDetails.Target.Get(0))"
+    }
+} While($PathDetails.LinkType)
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
@@ -191,10 +201,10 @@ Try {
     If ($state -eq "present" -And $match -eq $false) {
         Try {
             $objACL.AddAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
+            Try {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             }
-            else {
+            Catch {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
             $result.changed = $true
