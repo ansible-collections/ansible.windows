@@ -91,7 +91,7 @@ $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
 $follow_links = $True
 
-$path = Resolve-Path $path
+$path = Resolve-Path -LiteralPath $path
 Do {
     $PathDetails = Get-ItemProperty -LiteralPath $path
     if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
