@@ -1,3 +1,4 @@
 ---
 test_win_acl_inheritance_path: C:\ansible\win_acl_inheritance .ÅÑŚÌβŁÈ [$!@^&test(;)]
+test_win_acl_inheritance_network_path: \\localhost\{{ test_win_acl_inheritance_path[0:1] }}$\{{ test_win_acl_inheritance_path[3:] }}
 test_win_acl_inheritance_registry_path: HKU:\.DEFAULT\Ansible Test .ÅÑŚÌβŁÈ [$!@^&test(;)]
