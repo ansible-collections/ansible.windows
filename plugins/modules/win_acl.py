@@ -65,6 +65,11 @@ options:
     type: str
     choices: [ InheritOnly, None, NoPropagateInherit ]
     default: "None"
+  follow:
+    description:
+    - Follow the symlinks and junctions to apply the ACLs to the target instead of the link
+    type: bool
+    default: true
 notes:
 - If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
 seealso:

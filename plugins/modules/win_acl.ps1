@@ -8,6 +8,7 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 #Requires -Module Ansible.ModuleUtils.SID
+#Requires -Module Ansible.ModuleUtils.LinkUtil
 
 $ErrorActionPreference = "Stop"
 
@@ -89,7 +90,7 @@ $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "prese
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
-$follow_links = $True
+$follow = Get-AnsibleParam -obj $params -name "follow" -type "bool" -default "true"
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
@@ -105,9 +106,23 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
 }
 
 $path = Resolve-Path -LiteralPath $path
+while ($follow) {
+    try {
+        $link_info = Get-Link -Path $path
+    } catch {
+        $link_info = $null
+    }
+
+    if ($link_info -and $link_info.Type -in @("SymbolicLink", "JunctionPoint")) {
+        $path = $link_info.AbsolutePath
+    }
+    else {
+        break
+    }
+}
 Do {
     $PathDetails = Get-ItemProperty -LiteralPath $path
-    if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow_links) {
+    if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow) {
         $path = "\\?\$($PathDetails.Target.Get(0))"
     }
 } While ($PathDetails.LinkType)
