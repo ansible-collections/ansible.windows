@@ -109,7 +109,8 @@ $path = Resolve-Path -LiteralPath $path
 while ($follow) {
     try {
         $link_info = Get-Link -Path $path
-    } catch {
+    }
+    catch {
         $link_info = $null
     }
 
