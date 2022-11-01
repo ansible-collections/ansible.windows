@@ -147,7 +147,7 @@
 
 - name: (folder) remove inheritance
   ansible.windows.win_acl_inheritance:
-    path: '{{ test_win_acl_inheritance_path }}\folder'
+    path: '{{ test_win_acl_inheritance_network_path }}\folder'
     reorganize: True
     state: absent
   register: remove
@@ -168,7 +168,7 @@
 
 - name: (folder) remove inheritance again
   ansible.windows.win_acl_inheritance:
-    path: '{{ test_win_acl_inheritance_path }}\folder'
+    path: '{{ test_win_acl_inheritance_network_path }}\folder'
     reorganize: True
     state: absent
   register: remove_again
