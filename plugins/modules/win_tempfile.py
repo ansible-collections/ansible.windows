@@ -34,7 +34,6 @@ options:
     description:
       - Suffix of file/directory name created by module.
     type: str
-    default: ''
 seealso:
 - module: ansible.builtin.tempfile
 author:
