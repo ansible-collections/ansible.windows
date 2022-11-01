@@ -1,6 +1,6 @@
 trap {
     Write-Error -ErrorRecord $_
-    exit 1;
+    exit 1
 }
 
 $username = $args[0]

@@ -95,8 +95,8 @@ if ($domain_netbios_name -and $domain_netbios_name.length -gt 15) {
 }
 
 $result = @{
-    changed = $false;
-    reboot_required = $false;
+    changed = $false
+    reboot_required = $false
 }
 
 # FUTURE: Any sane way to do the detection under check-mode *without* installing the feature?
@@ -127,13 +127,13 @@ if (-not $forest) {
     $sm_cred = ConvertTo-SecureString $safe_mode_admin_password -AsPlainText -Force
 
     $install_params = @{
-        DomainName = $dns_domain_name;
-        SafeModeAdministratorPassword = $sm_cred;
-        Confirm = $false;
-        SkipPreChecks = $true;
-        InstallDns = $install_dns;
-        NoRebootOnCompletion = $true;
-        WhatIf = $check_mode;
+        DomainName = $dns_domain_name
+        SafeModeAdministratorPassword = $sm_cred
+        Confirm = $false
+        SkipPreChecks = $true
+        InstallDns = $install_dns
+        NoRebootOnCompletion = $true
+        WhatIf = $check_mode
     }
 
     if ($database_path) {
