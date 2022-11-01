@@ -1,0 +1,2 @@
+minor_changes:
+- win_uri - Use SHA256 for file idempotency checks instead of SHA1

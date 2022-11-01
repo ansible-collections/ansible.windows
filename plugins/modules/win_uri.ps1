@@ -161,9 +161,9 @@ $response_script = {
                 $changed = $true
 
                 if (Test-AnsiblePath -Path $dest) {
-                    $actual_checksum = Get-FileChecksum -path $dest -algorithm "sha1"
+                    $actual_checksum = Get-FileChecksum -path $dest -algorithm "sha256"
 
-                    $sp = New-Object -TypeName System.Security.Cryptography.SHA1CryptoServiceProvider
+                    $sp = New-Object -TypeName System.Security.Cryptography.SHA256CryptoServiceProvider
                     $content_checksum = [System.BitConverter]::ToString($sp.ComputeHash($memory_st)).Replace("-", "").ToLower()
 
                     if ($actual_checksum -eq $content_checksum) {
