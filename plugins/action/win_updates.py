@@ -682,6 +682,10 @@ class _ReturnResultException(Exception):
         self.result = result
 
 
+class _RecreateTempPathException(Exception):
+    pass
+
+
 class ActionModule(ActionBase):
 
     _VALID_ARGS = [
@@ -750,12 +754,7 @@ class ActionModule(ActionBase):
             )
 
         else:
-            if not self._connection._shell.tmpdir:
-                self._make_tmp_path()  # Stores the update scheduled task script/progress
-
             module_options['_wait'] = False
-            # In case we are running with become we need to make sure the module uses the correct dir
-            module_options['_output_path'] = self._connection._shell.tmpdir
 
             try:
                 result = self._run_sync(task_vars, module_options, reboot, reboot_timeout)
@@ -818,8 +817,8 @@ class ActionModule(ActionBase):
 
     def _run_sync(self, task_vars, module_options, reboot, reboot_timeout):  # type: (Dict, Dict, bool, int) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
-        poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
-        cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+        # In case we are running with become we need to make sure the module uses the correct dir
+        module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
 
         result = {
             'changed': False,
@@ -831,7 +830,14 @@ class ActionModule(ActionBase):
             round += 1
             display.v("Running win_updates - round %s" % round, host=task_vars.get('inventory_hostname', None))
 
-            update_result = self._run_updates(task_vars, module_options, poll_script_path, cancel_script_path)
+            try:
+                update_result = self._run_updates(task_vars, module_options, poll_script_path, cancel_script_path)
+            except _RecreateTempPathException:
+                display.vv("Failure when running win_updates module with existing tempdir, retrying with new dir")
+                self._connection._shell.tmpdir = None
+                module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
+
+                continue
 
             self._updates.update(update_result.updates)
             self._filtered_updates.update(update_result.filtered_updates)
@@ -898,6 +904,16 @@ class ActionModule(ActionBase):
 
         return result
 
+    def _setup_updates_tmpdir(self):
+        """Sets up a remote tmpdir if needed and copies the files used by the action plugin."""
+        if not self._connection._shell.tmpdir:
+            self._make_tmp_path()  # Stores the update scheduled task script/progress
+
+        poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
+        cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
+
+        return self._connection._shell.tmpdir, poll_script_path, cancel_script_path
+
     def _run_updates(self, task_vars, module_options, poll_script_path, cancel_script_path):
         # type: (Dict, Dict, str, str) -> UpdateResult
         """Runs the win_updates module and returns the raw results from that task."""
@@ -937,12 +953,19 @@ class ActionModule(ActionBase):
             module_args=module_options,
             task_vars=task_vars,
         )
+
         if 'invocation' in result and not self._invocation:
             # First run through we want to update the invocation value in the final results
             self._invocation = result['invocation']
 
+        failed = result.get('failed', False)
+        if failed and result.get('recreate_tmpdir', False):
+            # Might have been deleted across a reboot, try to recreate for the next run.
+            # https://github.com/ansible-collections/ansible.windows/issues/417
+            raise _RecreateTempPathException()
+
         if (
-            result.get('failed', False) or
+            failed or
             'output_path' not in result or
             'task_pid' not in result or
             'cancel_id' not in result
