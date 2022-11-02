@@ -479,7 +479,17 @@ try {
         foreach ($cert in $certs) {
             $module.Result.thumbprints += $cert.Thumbprint
             $found_certs = $store_certificates.Find([System.Security.Cryptography.X509Certificates.X509FindType]::FindByThumbprint, $cert.Thumbprint, $false)
-            if ($found_certs.Count -eq 0) {
+            $force_reimport = $False
+            if ($found_certs.Count -ne 0 -and $cert.HasPrivateKey) {
+                # Because the thumbprint doesn't identify a private key, if the cert to import contains a PrivateKey
+                # we have to update the existing cert, reimporting the cert + key.
+                foreach ($found_cert in $found_certs) {
+                    if ($cert.HasPrivateKey -and -not $found_cert.HasPrivateKey) {
+                        $force_reimport = $True
+                    }
+                }
+            }
+            if ($found_certs.Count -eq 0 -or $force_reimport) {
                 try {
                     if (-not $module.CheckMode) {
                         $store.Add($cert)
