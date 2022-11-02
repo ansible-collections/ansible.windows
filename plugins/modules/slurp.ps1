@@ -4,22 +4,22 @@
 
 #Requires -Module Ansible.ModuleUtils.Legacy
 
-$params = Parse-Args $args -supports_check_mode $true;
-$src = Get-AnsibleParam -obj $params -name "src" -type "path" -aliases "path" -failifempty $true;
+$params = Parse-Args $args -supports_check_mode $true
+$src = Get-AnsibleParam -obj $params -name "src" -type "path" -aliases "path" -failifempty $true
 
 $result = @{
-    changed = $false;
+    changed = $false
 }
 
 If (Test-Path -LiteralPath $src -PathType Leaf) {
-    $bytes = [System.IO.File]::ReadAllBytes($src);
-    $result.content = [System.Convert]::ToBase64String($bytes);
-    $result.encoding = "base64";
-    Exit-Json $result;
+    $bytes = [System.IO.File]::ReadAllBytes($src)
+    $result.content = [System.Convert]::ToBase64String($bytes)
+    $result.encoding = "base64"
+    Exit-Json $result
 }
 ElseIf (Test-Path -LiteralPath $src -PathType Container) {
-    Fail-Json $result "Path $src is a directory";
+    Fail-Json $result "Path $src is a directory"
 }
 Else {
-    Fail-Json $result "Path $src is not found";
+    Fail-Json $result "Path $src is not found"
 }

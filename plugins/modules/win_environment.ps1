@@ -140,8 +140,8 @@ namespace Ansible.Windows.WinEnvironment
 }
 '@
 
-    $HWND_BROADCAST = [IntPtr]0xFFFF;
-    $WM_SETTINGCHANGE = 0x001A;
+    $HWND_BROADCAST = [IntPtr]0xFFFF
+    $WM_SETTINGCHANGE = 0x001A
     $null = [Ansible.Windows.WinEnvironment.Native]::SendMessageTimeout(
         $HWND_BROADCAST,
         $WM_SETTINGCHANGE,
