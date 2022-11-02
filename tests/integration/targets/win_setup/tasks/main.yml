@@ -163,6 +163,8 @@
     - setup_result.ansible_facts.ansible_other_facts == ['abc', 'def']
     - setup_result.ansible_facts.ansible_json_facts.my_json_complex_custom_fact == {'hello':'world'}
     - setup_result.ansible_facts.ansible_json_facts.my_json_custom_fact == 'value'
+    - setup_result.ansible_facts.ansible_true_fact
+    - not setup_result.ansible_facts.ansible_false_fact
 
 # https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
 - name: check for facter with custom PATH

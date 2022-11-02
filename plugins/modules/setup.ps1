@@ -776,7 +776,7 @@ $factMeta = @(
                     elseif ($factsFile.Extension -eq '.json') {
                         Get-Content -Raw -Path $factsFile.FullName | ConvertFrom-Json
                     }
-                    if ($out) {
+                    if ($null -ne $out) {
                         $ansibleFacts."ansible_$($factsFile.BaseName)" = $out
                     }
                 }
