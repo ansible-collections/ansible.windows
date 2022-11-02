@@ -1,0 +1,5 @@
+# .git-blame-ignore-revs
+# Bulk PowerShell sanity fixes PSSA 1.20.0
+55653aa4b8bbd43c9227ddc949941ab7b9ed9dfe
+# Bulk PowerShell sanity fixes PSSA 1.21.0
+81d0bdccd643c6d97d7927446df4f51f0b99d708
