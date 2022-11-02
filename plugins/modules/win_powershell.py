@@ -34,6 +34,7 @@ options:
   depth:
     description:
     - How deep the return values are serialized for C(result), C(output), and C(information[x].message_data).
+    - This also controls the depth of the diff output set by C($Ansible.Diff).
     - Setting this to a higher value can dramatically increase the amount of data that needs to be returned.
     default: 2
     type: int
@@ -87,9 +88,11 @@ notes:
 - C(Type) will contain a dictionary with C(Name), C(FullName), C(AssemblyQualifiedName), C(BaseType) being the type
   name, the type name including the namespace, the full assembly name the type was defined in and the base type it
   derives from.
-- The script has access to the C($Ansible) variable where it can set C(Result), C(Changed), C(Failed), or access
-  C(Tmpdir).
+- The script has access to the C($Ansible) variable where it can set C(Result), C(Changed), C(Failed), C(Diff),
+  or access C(Tmpdir).
 - C($Ansible.Result) is a value that is returned back to the controller as is.
+- C($Ansible.Diff) was added in the C(1.12.0) release of C(ansible.windows) and is a dictionary that is set to the diff
+  result that can be interepreted by Ansible.
 - C($Ansible.Changed) can be set to C(true) or C(false) to reflect whether the module made a change or not. By default
   this is set to C(true).
 - C($Ansible.Failed) can be set to C(true) if the script wants to return the failure back to the controller.
