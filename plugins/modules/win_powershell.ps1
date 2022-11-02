@@ -601,6 +601,7 @@ try {
             CheckMode = $module.CheckMode
             Verbosity = $module.Verbosity
             Result = @{}
+            Diff = @{}
             Changed = $true
             Failed = $false
             Tmpdir = $module.Tmpdir
@@ -776,6 +777,14 @@ $module.Result.host_err = $newStderr.Output.ToString()
 $module.Result.result = Convert-OutputObject -InputObject $result.Result -Depth $module.Params.depth
 $module.Result.changed = $result.Changed
 $module.Result.failed = $module.Result.failed -or $result.Failed
+
+# If the diff was somehow changed to something else we cannot set it to the
+# module output diff so check if it's still a dict.
+if ($result.Diff -is [System.Collections.IDictionary]) {
+    foreach ($kvp in $result.Diff.GetEnumerator()) {
+        $module.Diff[$kvp.Key] = Convert-OutputObject -InputObject $kvp.Value -Depth $module.Params.depth
+    }
+}
 
 # We process the output outselves to flatten anything beyond the depth and deal with certain problematic types with
 # json serialization.

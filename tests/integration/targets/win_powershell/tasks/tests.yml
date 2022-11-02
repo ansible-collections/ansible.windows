@@ -372,7 +372,7 @@
                   Write-Error @errorParams
               }
           }
-          
+
       }
       1..3 | Test-Function
   register: complex_error_record
@@ -539,7 +539,7 @@
       Write-Warning 'warning'
 
   register: extra_streams
-      
+
 - name: assert write debug/verbose/warning streams
   assert:
     that:
@@ -885,3 +885,30 @@
     - err_nested_to.error | length == 1
     # Depth is 2 so it will fully enumerate 2 objects deep and on the 3rd stringify the value
     - "err_nested_to.error[0].target_object == {'1': {'2': {'3': 'System.Collections.Hashtable'}}}"
+
+- name: run script that sets diff output
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $Ansible.Diff = @{
+         before = @{
+            foo = 'foo'
+         }
+         after = @{
+            foo = 'bar'
+            nested = @{'1'=@{'2'=@{foo='bar'}}}
+         }
+      }
+
+  register: diff
+  diff: true
+
+- name: assert run script that sets diff output
+  assert:
+    that:
+    - diff is changed
+    - "diff.diff.before == {'foo': 'foo'}"
+    - (diff.diff.after.keys() | sort) == ["foo", "nested"]
+    - diff.diff.after.foo == 'bar'
+    # Depth also controls the diff nesting
+    - "diff.diff.after.nested == {'1': {'2': 'System.Collections.Hashtable'}}"
