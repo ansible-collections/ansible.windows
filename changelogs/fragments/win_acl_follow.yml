@@ -1,2 +1,0 @@
-minor_changes:
-- win_acl - Added the ``follow`` parameter with will follow the symlinks and junctions before applying ACLs to change the target instead of the link

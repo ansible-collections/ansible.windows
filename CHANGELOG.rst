@@ -5,6 +5,30 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.12.0
+=======
+
+Release Summary
+---------------
+
+Release summary for v1.12.0
+
+Minor Changes
+-------------
+
+- win_acl - Added the ``follow`` parameter with will follow the symlinks and junctions before applying ACLs to change the target instead of the link
+- win_powershell - Add support for setting diff output with ``$Ansible.Diff`` in the script
+- win_uri - Use SHA256 for file idempotency checks instead of SHA1
+
+Bugfixes
+--------
+
+- win_acl_inheritance - Fix broken pathqualifier when using a UNC path - (https://github.com/ansible-collections/ansible.windows/issues/408).
+- win_certificate_store - Allow to reimport a certificate + key if the private key was not present the first time you imported it
+- win_setup - Fix custom facts that return false are missing - https://github.com/ansible-collections/ansible.windows/issues/430
+- win_updates - Fix broken call when logging a warning about updates with errors - https://github.com/ansible-collections/ansible.windows/issues/411
+- win_updates - Handle running with a temp profile path that is deleted between reboots - https://github.com/ansible-collections/ansible.windows/issues/417
+
 v1.11.1
 =======
 

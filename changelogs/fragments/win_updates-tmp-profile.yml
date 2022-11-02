@@ -1,2 +1,0 @@
-bugfixes:
-- win_updates - Handle running with a temp profile path that is deleted between reboots - https://github.com/ansible-collections/ansible.windows/issues/417
