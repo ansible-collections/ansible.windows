@@ -8,6 +8,7 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 #Requires -Module Ansible.ModuleUtils.SID
+#Requires -Module Ansible.ModuleUtils.LinkUtil
 
 $ErrorActionPreference = "Stop"
 
@@ -89,6 +90,7 @@ $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "prese
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
+$follow = Get-AnsibleParam -obj $params -name "follow" -type "bool" -default "false"
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
@@ -101,6 +103,23 @@ if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
 }
 if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
     New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
+}
+
+Load-LinkUtils
+while ($follow) {
+    try {
+        $link_info = Get-Link $path
+    }
+    catch {
+        $link_info = $null
+    }
+
+    if ($link_info -and $link_info.Type -in @("SymbolicLink", "JunctionPoint")) {
+        $path = $link_info.AbsolutePath
+    }
+    else {
+        break
+    }
 }
 
 If (-Not (Test-Path -LiteralPath $path)) {
@@ -191,10 +210,10 @@ Try {
     If ($state -eq "present" -And $match -eq $false) {
         Try {
             $objACL.AddAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
+            Try {
                 Set-ACL -LiteralPath $path -AclObject $objACL
             }
-            else {
+            Catch {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
             $result.changed = $true

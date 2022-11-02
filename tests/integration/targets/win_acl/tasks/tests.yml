@@ -213,6 +213,76 @@
     - remove_right is changed
     - remove_right_actual.stdout_lines == ["[", "", "]"]
 
+- name: add right to symlink without follow
+  win_acl:
+    path: '{{ test_acl_path }}\symlink'
+    type: allow
+    user: Guests
+    rights: Write
+  register: allow_not_follow
+
+- name: get result of add right to symlink without follow on symlink
+  win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
+  register: allow_not_follow_symlink
+
+- name: get result of add right to symlink without follow on symlink
+  win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
+  register: allow_not_follow_target
+
+- name: assert add write rights to Guest - network
+  assert:
+    that:
+    - allow_not_follow is changed
+    - (allow_not_follow_symlink.stdout|from_json)|count == 1
+    - (allow_not_follow_symlink.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (allow_not_follow_symlink.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (allow_not_follow_symlink.stdout|from_json)[0].propagation_flags == 'None'
+    - (allow_not_follow_symlink.stdout|from_json)[0].rights == 'Write, Synchronize'
+    - (allow_not_follow_symlink.stdout|from_json)[0].type == 'Allow'
+    - (allow_not_follow_target.stdout|from_json)|count == 0
+
+- name: remove write rights on symlink
+  win_acl:
+    path: '{{ test_acl_path }}\symlink'
+    type: allow
+    user: Guests
+    rights: Write
+    state: absent
+
+- name: add right to symlink with follow
+  win_acl:
+    path: '{{ test_acl_path }}\symlink'
+    type: allow
+    user: Guests
+    rights: Write
+    follow: true
+  register: allow_follow
+
+- name: get result of add right to symlink without follow on symlink
+  win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
+  register: allow_follow_symlink
+
+- name: get result of add right to junction without follow on symlink
+  win_shell: '$path = ''{{ test_acl_path }}\junction''; {{ test_ace_cmd }}'
+  register: allow_follow_junction
+
+- name: get result of add right to symlink without follow on symlink
+  win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
+  register: allow_follow_target
+
+- name: assert add write rights to Guest - network
+  assert:
+    that:
+    - allow_not_follow is changed
+    - (allow_follow_symlink.stdout|from_json)|count == 0
+    - (allow_follow_junction.stdout|from_json)|count == 0
+    - (allow_follow_target.stdout|from_json)|count == 1
+    - (allow_follow_target.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+    - (allow_follow_target.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+    - (allow_follow_target.stdout|from_json)[0].propagation_flags == 'None'
+    - (allow_follow_target.stdout|from_json)[0].rights == 'Write, Synchronize'
+    - (allow_follow_target.stdout|from_json)[0].type == 'Allow'
+
 - name: add write rights to Guest - registry
   win_acl:
     path: '{{ test_acl_reg_path }}'
