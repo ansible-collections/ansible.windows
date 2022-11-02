@@ -12,10 +12,10 @@ Set-StrictMode -Version 2.0
 $spec = @{
     options = @{
         filter = @{
-            type = "list";
-            elements = "str";
-            choices = "physical_disk", "virtual_disk", "win32_disk_drive", "partitions", "volumes";
-            default = "physical_disk", "virtual_disk", "win32_disk_drive", "partitions", "volumes";
+            type = "list"
+            elements = "str"
+            choices = "physical_disk", "virtual_disk", "win32_disk_drive", "partitions", "volumes"
+            default = "physical_disk", "virtual_disk", "win32_disk_drive", "partitions", "volumes"
         }
     }
     supports_check_mode = $true
