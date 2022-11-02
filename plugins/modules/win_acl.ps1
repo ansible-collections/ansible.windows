@@ -90,7 +90,7 @@ $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "prese
 
 $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
-$follow = Get-AnsibleParam -obj $params -name "follow" -type "bool" -default "true"
+$follow = Get-AnsibleParam -obj $params -name "follow" -type "bool" -default "false"
 
 # We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
@@ -105,10 +105,10 @@ if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
     New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
 }
 
-$path = Resolve-Path -LiteralPath $path
+Load-LinkUtils
 while ($follow) {
     try {
-        $link_info = Get-Link -Path $path
+        $link_info = Get-Link $path
     }
     catch {
         $link_info = $null
@@ -121,12 +121,6 @@ while ($follow) {
         break
     }
 }
-Do {
-    $PathDetails = Get-ItemProperty -LiteralPath $path
-    if ($PathDetails.Target -and $PathDetails.Target.GetType().Name -eq "String[]" -and $follow) {
-        $path = "\\?\$($PathDetails.Target.Get(0))"
-    }
-} While ($PathDetails.LinkType)
 
 If (-Not (Test-Path -LiteralPath $path)) {
     Fail-Json -obj $result -message "$path file or directory does not exist on the host"

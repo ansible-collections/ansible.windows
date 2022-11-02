@@ -67,9 +67,10 @@ options:
     default: "None"
   follow:
     description:
-    - Follow the symlinks and junctions to apply the ACLs to the target instead of the link
+    - Follow the symlinks and junctions to apply the ACLs to the target instead of the link.
     type: bool
-    default: true
+    default: false
+    version_added: 1.12.0
 notes:
 - If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
 seealso:
