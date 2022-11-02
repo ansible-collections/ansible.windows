@@ -5,11 +5,11 @@
 
 #Requires -Module Ansible.ModuleUtils.Legacy
 
-$params = Parse-Args -arguments $args -supports_check_mode $true;
+$params = Parse-Args -arguments $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-$managers = Get-AnsibleParam -obj $params -name "permitted_managers"  -type "list" -default $null
-$communities = Get-AnsibleParam -obj $params -name "community_strings"   -type "list" -default $null
-$action_in = Get-AnsibleParam -obj $params -name "action"              -type "str"  -default "set" -ValidateSet @("set", "add", "remove")
+$managers = Get-AnsibleParam -obj $params -name "permitted_managers" -type "list" -default $null
+$communities = Get-AnsibleParam -obj $params -name "community_strings" -type "list" -default $null
+$action_in = Get-AnsibleParam -obj $params -name "action" -type "str" -default "set" -ValidateSet @("set", "add", "remove")
 $action = $action_in.ToLower()
 
 $result = @{
