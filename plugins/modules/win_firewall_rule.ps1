@@ -263,22 +263,32 @@ try {
                     if ($null -ne $userPassedArguments[$i]) {
                         # only change values the user passes in task definition
                         if ($existingRule.$prop -ne $new_rule.$prop) {
-                            if ($diff_support) {
-                                $result.diff.prepared += "-$($prop)='$($existingRule.$prop)'`n"
-                                $result.diff.prepared += "+$($prop)='$($new_rule.$prop)'`n"
+                            $haveSameAddresses = $false
+                            if ($prop -like "*Addresses") {
+                                $existingAddresses = $existingRule.$prop -split ','
+                                $newAddresses = $new_rule.$prop -split ','
+                                if (-not (Compare-Object $existingAddresses $newAddresses)) {
+                                    $haveSameAddresses = $true
+                                }
                             }
+                            if (-not $haveSameAddresses) {
+                                if ($diff_support) {
+                                    $result.diff.prepared += "-$($prop)='$($existingRule.$prop)'`n"
+                                    $result.diff.prepared += "+$($prop)='$($new_rule.$prop)'`n"
+                                }
 
-                            if (-not $check_mode) {
-                                # Profiles value cannot be a uint32, but the "all profiles" value (0x7FFFFFFF) will often become a uint32, so must cast to [int]
-                                # to prevent InvalidCastException under PS5+
-                                If ($prop -eq 'Profiles') {
-                                    $existingRule.Profiles = [int] $new_rule.$prop
+                                if (-not $check_mode) {
+                                    # Profiles value cannot be a uint32, but the "all profiles" value (0x7FFFFFFF) will often become a uint32,
+                                    # so must cast to [int] to prevent InvalidCastException under PS5+
+                                    If ($prop -eq 'Profiles') {
+                                        $existingRule.Profiles = [int] $new_rule.$prop
+                                    }
+                                    Else {
+                                        $existingRule.$prop = $new_rule.$prop
+                                    }
                                 }
-                                Else {
-                                    $existingRule.$prop = $new_rule.$prop
-                                }
+                                $changed = $true
                             }
-                            $changed = $true
                         }
                     }
                 }
