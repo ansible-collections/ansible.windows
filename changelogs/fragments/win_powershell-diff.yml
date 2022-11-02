@@ -1,2 +1,0 @@
-minor_changes:
-- win_powershell - Add support for setting diff output with ``$Ansible.Diff`` in the script

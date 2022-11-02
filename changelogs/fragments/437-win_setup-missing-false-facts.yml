@@ -1,2 +1,0 @@
-bugfixes:
-  - win_setup - Fix custom facts that return false are missing - https://github.com/ansible-collections/ansible.windows/issues/430

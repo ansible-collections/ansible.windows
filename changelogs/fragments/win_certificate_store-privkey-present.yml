@@ -1,2 +1,0 @@
-bugfixes:
-- win_certificate_store - Allow to reimport a certificate + key if the private key was not present the first time you imported it
