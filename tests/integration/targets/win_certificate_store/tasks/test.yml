@@ -371,6 +371,14 @@
   - '{{subj_thumbprint}}'
   - '{{root_thumbprint}}'
 
+# By importing the cert first we make sure win_certificate_store will reimport
+# a cert with a key present if the imported cert doesn't have the key.
+# https://github.com/ansible-collections/ansible.windows/pull/424
+- name: import cert without key for next test
+  win_certificate_store:
+    path: '{{win_cert_dir}}\subj-cert.pem'
+    state: present
+
 - name: import pfx without password and non exportable (check)
   win_certificate_store:
     path: '{{win_cert_dir}}\subj-cert-without-pass.pfx'
@@ -384,16 +392,11 @@
   register: import_pfx_without_pass_check
   check_mode: yes
 
-- name: get results of import pfx without password and non exportable (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
-  register: import_pfx_without_pass_result_check
-
 - name: assert results of import pfx without password and non exportable (check)
   assert:
     that:
     - import_pfx_without_pass_check is changed
     - import_pfx_without_pass_check.thumbprints == [subj_thumbprint]
-    - import_pfx_without_pass_result_check.stdout_lines[0] == "False"
 
 - name: import pfx without password and non exportable
   win_certificate_store:
