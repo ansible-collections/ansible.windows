@@ -8,7 +8,6 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/../../../",
     ],
-
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "powershell.codeFormatting.alignPropertyValuePairs": false,
     "powershell.codeFormatting.autoCorrectAliases": true,
@@ -23,6 +22,7 @@
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceBetweenParameters": true,
     "powershell.codeFormatting.whitespaceInsideBrace": true,
+    "powershell.codeFormatting.avoidSemicolonsAsLineTerminators": true,
     "powershell.scriptAnalysis.enable": true,
     "[powershell]": {
         "editor.formatOnSave": true,
