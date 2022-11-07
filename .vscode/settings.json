@@ -8,7 +8,6 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/../../../",
     ],
-
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "powershell.codeFormatting.alignPropertyValuePairs": false,
     "powershell.codeFormatting.autoCorrectAliases": true,
