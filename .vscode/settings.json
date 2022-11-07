@@ -23,6 +23,7 @@
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceBetweenParameters": true,
     "powershell.codeFormatting.whitespaceInsideBrace": true,
+    "powershell.codeFormatting.avoidSemicolonsAsLineTerminators": true,
     "powershell.scriptAnalysis.enable": true,
     "[powershell]": {
         "editor.formatOnSave": true,
