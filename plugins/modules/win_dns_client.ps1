@@ -222,7 +222,11 @@ Function Get-RegistryNameServerInfo {
                 }
 
                 if (($ns = Get-OptionalProperty -InputObject $iprop -Name $items.StaticNameServer)) {
-                    $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns -split '[,;\ ]'
+                    # The raw string value may have null bytes at the end of the string so needs to be trimmed out.
+                    # This seems to only happen when Set-DnsClientServerAddress was used to set both IPv4 and IPv6
+                    # DNS servers at the same time.
+                    # $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns.Trim([char]0) -split '[,;\ ]'
+                    $famInfo.EffectiveNameServers = $famInfo.StaticNameServers = $ns.Trim([char]0) -split '[,;\ ]'
                     $famInfo.UsingDhcp = $false
                     $famInfo.NameServerBadFormat = $ns -match '[;\ ]'
                 }
@@ -381,7 +385,7 @@ Try {
 Catch {
     $excep = $_
 
-    Write-DebugLog "Exception: $($excep | out-string)"
+    Write-DebugLog "Exception: $($excep | Out-String)"
 
     Throw
 }

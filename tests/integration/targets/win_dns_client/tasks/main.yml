@@ -201,12 +201,14 @@
     win_dns_client:
       adapter_names: '{{ network_adapter_name }}'
       dns_servers:
+      - 192.168.34.7
+      - 192.168.34.8
       - 2001:db8::1
       - 2001:db8::2
     register: set_ipv6
 
   - name: get result of set IPv6 DNS address
-    win_shell: (Get-DnsClientServerAddress -InterfaceAlias '{{ network_adapter_name }}' -AddressFAmily IPv6).ServerAddresses
+    win_shell: (Get-DnsClientServerAddress -InterfaceAlias '{{ network_adapter_name }}').ServerAddresses
     changed_when: no
     register: set_ipv6_actual
 
@@ -214,4 +216,19 @@
     assert:
       that:
       - set_ipv6 is changed
-      - set_ipv6_actual.stdout_lines == ['2001:db8::1', '2001:db8::2']
+      - set_ipv6_actual.stdout_lines == ['192.168.34.7', '192.168.34.8', '2001:db8::1', '2001:db8::2']
+
+  - name: set IPv6 DNS address (idempotent)
+    win_dns_client:
+      adapter_names: '{{ network_adapter_name }}'
+      dns_servers:
+      - 192.168.34.7
+      - 192.168.34.8
+      - 2001:db8::1
+      - 2001:db8::2
+    register: set_ipv6_again
+
+  - name: assert set IPv6 DNS address (idempotent)
+    assert:
+      that:
+      - not set_ipv6_again is changed
