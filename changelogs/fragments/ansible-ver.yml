@@ -1,0 +1,2 @@
+major_changes:
+- Set the minimum Ansible version supported by this collection to Ansible 2.12
