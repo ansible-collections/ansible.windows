@@ -4,8 +4,8 @@
 """Reboot action for Windows hosts
 
 This contains the code to reboot a Windows host for use by other action plugins
-in this collection. Right now it should only be used in ansible.windows as the
-interface is not final and could be subject to change.
+in this collection. Right now it should only be used in this collection as the
+interface is not final and count be subject to change.
 """
 
 # FOR INTERNAL COLLECTION USE ONLY
@@ -14,34 +14,20 @@ interface is not final and could be subject to change.
 # See also: https://github.com/ansible/community/issues/539#issuecomment-780839686
 # Please open an issue if you have questions about this.
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 import datetime
 import json
 import random
 import time
 import traceback
 import uuid
+import typing as t
 
 from ansible.errors import AnsibleConnectionFailure, AnsibleError
-from ansible.module_utils.common.text.converters import to_native, to_text
+from ansible.module_utils.common.text.converters import to_text
 from ansible.plugins.connection import ConnectionBase
 from ansible.utils.display import Display
 
 from ._quote import quote_pwsh
-
-try:
-    from typing import (
-        Any,
-        Callable,
-        Dict,
-        Optional,
-        Tuple,
-    )
-except ImportError:
-    # Satisfy Python 2 which doesn't have typing.
-    Any = Callable = Dict = Optional = Tuple = None
 
 
 # This is not ideal but the psrp connection plugin doesn't catch all these exceptions as an AnsibleConnectionFailure.
@@ -54,10 +40,16 @@ except ImportError:
     RequestException = AnsibleConnectionFailure
 
 
-_LOGON_UI_KEY = r'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoLogonChecked'
+_LOGON_UI_KEY = (
+    r"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoLogonChecked"
+)
 
-_DEFAULT_BOOT_TIME_COMMAND = "(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime)" \
-                             ".LastBootUpTime.ToFileTime()"
+_DEFAULT_BOOT_TIME_COMMAND = (
+    "(Get-CimInstance -ClassName Win32_OperatingSystem -Property LastBootUpTime)"
+    ".LastBootUpTime.ToFileTime()"
+)
+
+T = t.TypeVar("T")
 
 display = Display()
 
@@ -66,26 +58,25 @@ class _ReturnResultException(Exception):
     """Used to sneak results back to the return dict from an exception"""
 
     def __init__(self, msg, **result):
-        super(_ReturnResultException, self).__init__(msg)
+        super().__init__(msg)
         self.result = result
 
 
 class _TestCommandFailure(Exception):
     """Differentiates between a connection failure and just a command assertion failure during the reboot loop"""
-    pass
 
 
 def reboot_host(
-        task_action,
-        connection,
-        boot_time_command=_DEFAULT_BOOT_TIME_COMMAND,
-        connect_timeout=5,
-        msg='Reboot initiated by Ansible',
-        post_reboot_delay=0,
-        pre_reboot_delay=2,
-        reboot_timeout=600,
-        test_command=None,
-):  # type: (str, ConnectionBase, str, float, str, float, float, float, Optional[str]) -> Dict
+    task_action: str,
+    connection: ConnectionBase,
+    boot_time_command: str = _DEFAULT_BOOT_TIME_COMMAND,
+    connect_timeout: int = 5,
+    msg: str = "Reboot initiated by Ansible",
+    post_reboot_delay: int = 0,
+    pre_reboot_delay: int = 2,
+    reboot_timeout: int = 600,
+    test_command: t.Optional[str] = None,
+) -> t.Dict[str, t.Any]:
     """Reboot a Windows Host.
 
     Used by action plugins in ansible.windows to reboot a Windows host. It
@@ -105,7 +96,7 @@ def reboot_host(
 
     Verbosity levels used:
         2: Message when each reboot step is completed
-        3: Connection plugin operations and their results
+        4: Connection plugin operations and their results
         5: Raw commands run and the results of those commands
         Debug: Everything, very verbose
 
@@ -131,21 +122,29 @@ def reboot_host(
         (Dict[str, Any]): The return result as a dictionary. Use the 'failed'
             key to determine if there was a failure or not.
     """
-    result = {
-        'changed': False,
-        'elapsed': 0,
-        'failed': False,
-        'unreachable': False,
-        'rebooted': False,
+    result: t.Dict[str, t.Any] = {
+        "changed": False,
+        "elapsed": 0,
+        "failed": False,
+        "unreachable": False,
+        "rebooted": False,
     }
-    host_context = {'do_close_on_reset': True}
+    host_context = {"do_close_on_reset": True}
 
     # Get current boot time. A lot of tasks that require a reboot leave the WSMan stack in a bad place. Will try to
     # get the initial boot time 3 times before giving up.
     try:
-        previous_boot_time = _do_until_success_or_retry_limit(task_action, connection, host_context,
-                                                              'pre-reboot boot time check', 3, _get_system_boot_time,
-                                                              task_action, connection, boot_time_command)
+        previous_boot_time = _do_until_success_or_retry_limit(
+            task_action,
+            connection,
+            host_context,
+            "pre-reboot boot time check",
+            3,
+            _get_system_boot_time,
+            task_action,
+            connection,
+            boot_time_command,
+        )
 
     except Exception as e:
         # Report a the failure based on the last exception received.
@@ -153,29 +152,31 @@ def reboot_host(
             result.update(e.result)
 
         if isinstance(e, AnsibleConnectionFailure):
-            result['unreachable'] = True
+            result["unreachable"] = True
         else:
-            result['failed'] = True
+            result["failed"] = True
 
-        result['msg'] = to_text(e)
-        result['exception'] = traceback.format_exc()
+        result["msg"] = str(e)
+        result["exception"] = traceback.format_exc()
         return result
 
     # Get the original connection_timeout option var so it can be reset after
-    original_connection_timeout = None
-    reset_connection_timeout = True
+    original_connection_timeout: t.Optional[float] = None
     try:
-        original_connection_timeout = connection.get_option('connection_timeout')
-        display.vvv("%s: saving original connection_timeout of %s" % (task_action, original_connection_timeout))
+        original_connection_timeout = connection.get_option("connection_timeout")
+        display.vvvv(
+            f"{task_action}: saving original connection_timeout of {original_connection_timeout}"
+        )
     except KeyError:
-        display.vvv("%s: connection_timeout connection option has not been set" % task_action)
-        reset_connection_timeout = False
+        display.vvvv(
+            f"{task_action}: connection_timeout connection option has not been set"
+        )
 
     # Initiate reboot
     # This command may be wrapped in other shells or command making it hard to detect what shutdown.exe actually
     # returned. We use this hackery to return a json that contains the stdout/stderr/rc as a structured object for our
     # code to parse and detect if something went wrong.
-    reboot_command = '''$ErrorActionPreference = 'Continue'
+    reboot_command = """$ErrorActionPreference = 'Continue'
 
 if ($%s) {
     Remove-Item -LiteralPath '%s' -Force -ErrorAction SilentlyContinue
@@ -189,9 +190,16 @@ ConvertTo-Json -Compress -InputObject @{
     stderr = (@($stderr) -join "`n")
     rc = $LASTEXITCODE
 }
-''' % (str(not test_command), _LOGON_UI_KEY, int(pre_reboot_delay), quote_pwsh(msg))
+""" % (
+        str(not test_command),
+        _LOGON_UI_KEY,
+        int(pre_reboot_delay),
+        quote_pwsh(msg),
+    )
 
-    expected_test_result = None  # We cannot have an expected result if the command is user defined
+    expected_test_result = (
+        None  # We cannot have an expected result if the command is user defined
+    )
     if not test_command:
         # It turns out that LogonUI will create this registry key if it does not exist when it's about to show the
         # logon prompt. Normally this is a volatile key but if someone has explicitly created it that might no longer
@@ -199,82 +207,141 @@ ConvertTo-Json -Compress -InputObject @{
         # the host is actually online and ready, e.g. no configurations/updates still to be applied.
         # We echo a known successful statement to catch issues with powershell failing to start but the rc mysteriously
         # being 0 causing it to consider a successful reboot too early (seen on ssh connections).
-        expected_test_result = 'success-%s' % str(uuid.uuid4())
-        test_command = "Get-Item -LiteralPath '%s' -ErrorAction Stop; '%s'" % (_LOGON_UI_KEY, expected_test_result)
+        expected_test_result = f"success-{uuid.uuid4()}"
+        test_command = f"Get-Item -LiteralPath '{_LOGON_UI_KEY}' -ErrorAction Stop; '{expected_test_result}'"
 
     start = None
     try:
         _perform_reboot(task_action, connection, reboot_command)
 
         start = datetime.datetime.utcnow()
-        result['changed'] = True
-        result['rebooted'] = True
+        result["changed"] = True
+        result["rebooted"] = True
 
         if post_reboot_delay != 0:
-            display.vv("%s: waiting an additional %s seconds" % (task_action, post_reboot_delay))
+            display.vv(
+                f"{task_action}: waiting an additional {post_reboot_delay} seconds"
+            )
             time.sleep(post_reboot_delay)
 
         # Keep on trying to run the last boot time check until it is successful or the timeout is raised
-        display.vv('%s validating reboot' % task_action)
-        _do_until_success_or_timeout(task_action, connection, host_context, 'last boot time check', reboot_timeout,
-                                     _check_boot_time, task_action, connection, host_context, previous_boot_time,
-                                     boot_time_command, connect_timeout)
+        display.vv(f"{task_action} validating reboot")
+        _do_until_success_or_timeout(
+            task_action,
+            connection,
+            host_context,
+            "last boot time check",
+            reboot_timeout,
+            _check_boot_time,
+            task_action,
+            connection,
+            host_context,
+            previous_boot_time,
+            boot_time_command,
+            connect_timeout,
+        )
 
         # Reset the connection plugin connection timeout back to the original
-        if reset_connection_timeout:
-            _set_connection_timeout(task_action, connection, host_context, original_connection_timeout)
+        if original_connection_timeout is not None:
+            _set_connection_timeout(
+                task_action,
+                connection,
+                host_context,
+                original_connection_timeout,
+            )
 
         # Run test command until ti is successful or a timeout occurs
-        display.vv('%s running post reboot test command' % task_action)
-        _do_until_success_or_timeout(task_action, connection, host_context, 'post-reboot test command', reboot_timeout,
-                                     _run_test_command, task_action, connection, test_command,
-                                     expected=expected_test_result)
+        display.vv(f"{task_action} running post reboot test command")
+        _do_until_success_or_timeout(
+            task_action,
+            connection,
+            host_context,
+            "post-reboot test command",
+            reboot_timeout,
+            _run_test_command,
+            task_action,
+            connection,
+            test_command,
+            expected=expected_test_result,
+        )
 
-        display.vv("%s: system successfully rebooted" % task_action)
+        display.vv(f"{task_action}: system successfully rebooted")
 
     except Exception as e:
         if isinstance(e, _ReturnResultException):
             result.update(e.result)
 
-        result['failed'] = True
-        result['msg'] = to_text(e)
-        result['exception'] = traceback.format_exc()
+        result["failed"] = True
+        result["msg"] = str(e)
+        result["exception"] = traceback.format_exc()
 
     if start:
         elapsed = datetime.datetime.utcnow() - start
-        result['elapsed'] = elapsed.seconds
+        result["elapsed"] = elapsed.seconds
 
     return result
 
 
-def _check_boot_time(task_action, connection, host_context, previous_boot_time, boot_time_command, timeout):
+def _check_boot_time(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    previous_boot_time: int,
+    boot_time_command: str,
+    timeout: int,
+):
     """Checks the system boot time has been changed or not"""
-    display.vvv("%s: attempting to get system boot time" % task_action)
+    display.vvvv("%s: attempting to get system boot time" % task_action)
 
     # override connection timeout from defaults to custom value
     if timeout:
         _set_connection_timeout(task_action, connection, host_context, timeout)
 
     # try and get boot time
-    current_boot_time = _get_system_boot_time(task_action, connection, boot_time_command)
+    current_boot_time = _get_system_boot_time(
+        task_action, connection, boot_time_command
+    )
     if current_boot_time == previous_boot_time:
         raise _TestCommandFailure("boot time has not changed")
 
 
-def _do_until_success_or_retry_limit(task_action, connection, host_context, action_desc, retries, func, *args,
-                                     **kwargs):
-    # type: (str, ConnectionBase, Dict, str, int, Callable, Any, Any) -> Any
+def _do_until_success_or_retry_limit(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    action_desc: str,
+    retries: int,
+    func: t.Callable[..., T],
+    *args: t.Any,
+    **kwargs: t.Any,
+) -> t.Optional[T]:
     """Runs the function multiple times ignoring errors until the retry limit is hit"""
 
     def wait_condition(idx):
         return idx < retries
 
-    return _do_until_success_or_condition(task_action, connection, host_context, action_desc, wait_condition,
-                                          func, *args, **kwargs)
+    return _do_until_success_or_condition(
+        task_action,
+        connection,
+        host_context,
+        action_desc,
+        wait_condition,
+        func,
+        *args,
+        **kwargs,
+    )
 
 
-def _do_until_success_or_timeout(task_action, connection, host_context, action_desc, timeout, func, *args, **kwargs):
-    # type: (str, ConnectionBase, Dict, str, float, Callable, Any, Any) -> Any
+def _do_until_success_or_timeout(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    action_desc: str,
+    timeout: float,
+    func: t.Callable[..., T],
+    *args: t.Any,
+    **kwargs: t.Any,
+) -> t.Optional[T]:
     """Runs the function multiple times ignoring errors until a timeout occurs"""
     max_end_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=timeout)
 
@@ -282,15 +349,32 @@ def _do_until_success_or_timeout(task_action, connection, host_context, action_d
         return datetime.datetime.utcnow() < max_end_time
 
     try:
-        return _do_until_success_or_condition(task_action, connection, host_context, action_desc, wait_condition,
-                                              func, *args, **kwargs)
+        return _do_until_success_or_condition(
+            task_action,
+            connection,
+            host_context,
+            action_desc,
+            wait_condition,
+            func,
+            *args,
+            **kwargs,
+        )
     except Exception:
-        raise Exception('Timed out waiting for %s (timeout=%s)' % (action_desc, timeout))
+        raise Exception(
+            "Timed out waiting for %s (timeout=%s)" % (action_desc, timeout)
+        )
 
 
-def _do_until_success_or_condition(task_action, connection, host_context, action_desc, condition, func, *args,
-                                   **kwargs):
-    # type: (str, ConnectionBase, Dict, str, Callable, Callable, Any, Any) -> Any
+def _do_until_success_or_condition(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    action_desc: str,
+    condition: t.Callable[[int], bool],
+    func: t.Callable[..., T],
+    *args: t.Any,
+    **kwargs: t.Any,
+) -> t.Optional[T]:
     """Runs the function multiple times ignoring errors until the condition is false"""
     fail_count = 0
     max_fail_sleep = 12
@@ -306,7 +390,7 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
 
             else:
                 res = func(*args, **kwargs)
-                display.vvvvv('%s: %s success' % (task_action, action_desc))
+                display.vvvvv("%s: %s success" % (task_action, action_desc))
 
                 return res
 
@@ -319,23 +403,25 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
 
             # Use exponential backoff with a max timeout, plus a little bit of randomness
             random_int = random.randint(0, 1000) / 1000
-            fail_sleep = 2 ** fail_count + random_int
+            fail_sleep = 2**fail_count + random_int
             if fail_sleep > max_fail_sleep:
                 fail_sleep = max_fail_sleep + random_int
 
             try:
-                error = to_text(e).splitlines()[-1]
+                error = str(e).splitlines()[-1]
             except IndexError:
-                error = to_text(e)
+                error = str(e)
 
-            display.vvvvv("{action}: {desc} fail {e_type} '{err}', retrying in {sleep:.4} seconds...\n{tcb}".format(
-                action=task_action,
-                desc=action_desc,
-                e_type=type(e).__name__,
-                err=error,
-                sleep=fail_sleep,
-                tcb=traceback.format_exc(),
-            ))
+            display.vvvvv(
+                "{action}: {desc} fail {e_type} '{err}', retrying in {sleep:.4} seconds...\n{tcb}".format(
+                    action=task_action,
+                    desc=action_desc,
+                    e_type=type(e).__name__,
+                    err=error,
+                    sleep=fail_sleep,
+                    tcb=traceback.format_exc(),
+                )
+            )
 
             fail_count += 1
             time.sleep(fail_sleep)
@@ -343,10 +429,16 @@ def _do_until_success_or_condition(task_action, connection, host_context, action
     if last_error:
         raise last_error
 
+    return None
 
-def _execute_command(task_action, connection, command):  # type: (str, ConnectionBase, str) -> Tuple[int, str, str]
+
+def _execute_command(
+    task_action: str,
+    connection: ConnectionBase,
+    command: str,
+) -> t.Tuple[int, str, str]:
     """Runs a command on the Windows host and returned the result"""
-    display.vvvvv("%s: running command: %s" % (task_action, command))
+    display.vvvvv(f"{task_action}: running command: {command}")
 
     # Need to wrap the command in our PowerShell encoded wrapper. This is done to align the command input to a
     # common shell and to allow the psrp connection plugin to report the correct exit code without manually setting
@@ -354,38 +446,50 @@ def _execute_command(task_action, connection, command):  # type: (str, Connectio
     command = connection._shell._encode_script(command)
 
     try:
-        rc, stdout, stderr = connection.exec_command(command, in_data=None, sudoable=False)
+        rc, stdout, stderr = connection.exec_command(
+            command, in_data=None, sudoable=False
+        )
     except RequestException as e:
         # The psrp connection plugin should be doing this but until we can guarantee it does we just convert it here
         # to ensure AnsibleConnectionFailure refers to actual connection errors.
-        raise AnsibleConnectionFailure("Failed to connect to the host: %s" % to_native(e))
+        raise AnsibleConnectionFailure(f"Failed to connect to the host: {e}")
 
     rc = rc or 0
-    stdout = to_text(stdout, errors='surrogate_or_strict').strip()
-    stderr = to_text(stderr, errors='surrogate_or_strict').strip()
+    stdout = to_text(stdout, errors="surrogate_or_strict").strip()
+    stderr = to_text(stderr, errors="surrogate_or_strict").strip()
 
-    display.vvvvv("%s: command result - rc: %s, stdout: %s, stderr: %s" % (task_action, rc, stdout, stderr))
+    display.vvvvv(
+        f"{task_action}: command result - rc: {rc}, stdout: {stdout}, stderr: {stderr}"
+    )
 
     return rc, stdout, stderr
 
 
-def _get_system_boot_time(task_action, connection, boot_time_command):  # type: (str, ConnectionBase, str) -> str
+def _get_system_boot_time(
+    task_action: str,
+    connection: ConnectionBase,
+    boot_time_command: str,
+) -> str:
     """Gets a unique identifier to represent the boot time of the Windows host"""
-    display.vvv("%s: getting boot time" % task_action)
+    display.vvvv(f"{task_action}: getting boot time")
     rc, stdout, stderr = _execute_command(task_action, connection, boot_time_command)
 
     if rc != 0:
-        msg = "%s: failed to get host boot time info" % task_action
+        msg = f"{task_action}: failed to get host boot time info"
         raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
-    display.vvv("%s: last boot time: %s" % (task_action, stdout))
+    display.vvvv(f"{task_action}: last boot time: {stdout}")
     return stdout
 
 
-def _perform_reboot(task_action, connection, reboot_command, handle_abort=True):
-    # type: (str, ConnectionBase, str, bool) -> None
+def _perform_reboot(
+    task_action: str,
+    connection: ConnectionBase,
+    reboot_command: str,
+    handle_abort: bool = True,
+) -> None:
     """Runs the reboot command"""
-    display.vv("%s: rebooting server..." % task_action)
+    display.vv(f"{task_action}: rebooting server...")
 
     stdout = stderr = None
     try:
@@ -393,40 +497,50 @@ def _perform_reboot(task_action, connection, reboot_command, handle_abort=True):
 
     except AnsibleConnectionFailure as e:
         # If the connection is closed too quickly due to the system being shutdown, carry on
-        display.vvv('%s: AnsibleConnectionFailure caught and handled: %s' % (task_action, to_text(e)))
+        display.vvvv(f"{task_action}: AnsibleConnectionFailure caught and handled: {e}")
         rc = 0
 
     if stdout:
         try:
             reboot_result = json.loads(stdout)
-        except getattr(json.decoder, 'JSONDecodeError', ValueError):
+        except getattr(json.decoder, "JSONDecodeError", ValueError):
             # While the reboot command should output json it may have failed for some other reason. We continue
             # reporting with that output instead
             pass
         else:
-            stdout = reboot_result.get('stdout', stdout)
-            stderr = reboot_result.get('stderr', stderr)
-            rc = int(reboot_result.get('rc', rc))
+            stdout = reboot_result.get("stdout", stdout)
+            stderr = reboot_result.get("stderr", stderr)
+            rc = int(reboot_result.get("rc", rc))
 
     # Test for "A system shutdown has already been scheduled. (1190)" and handle it gracefully
-    if handle_abort and (rc == 1190 or (rc != 0 and "(1190)" in stderr)):
-        display.warning('A scheduled reboot was pre-empted by Ansible.')
+    if handle_abort and (rc == 1190 or (rc != 0 and stderr and "(1190)" in stderr)):
+        display.warning("A scheduled reboot was pre-empted by Ansible.")
 
         # Try to abort (this may fail if it was already aborted)
-        rc, stdout, stderr = _execute_command(task_action, connection, 'shutdown.exe /a')
-        display.vvv("%s: result from trying to abort existing shutdown - rc: %s, stdout: %s, stderr: %s"
-                    % (task_action, rc, stdout, stderr))
+        rc, stdout, stderr = _execute_command(
+            task_action, connection, "shutdown.exe /a"
+        )
+        display.vvvv(
+            f"{task_action}: result from trying to abort existing shutdown - rc: {rc}, stdout: {stdout}, stderr: {stderr}"
+        )
 
-        return _perform_reboot(task_action, connection, reboot_command, handle_abort=False)
+        return _perform_reboot(
+            task_action, connection, reboot_command, handle_abort=False
+        )
 
     if rc != 0:
-        msg = "%s: Reboot command failed" % task_action
+        msg = f"{task_action}: Reboot command failed"
         raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
 
-def _reset_connection(task_action, connection, host_context, ignore_errors=False):
-    # type: (str, ConnectionBase, Dict, bool) -> None
+def _reset_connection(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    ignore_errors: bool = False,
+) -> None:
     """Resets the connection handling any errors"""
+
     def _wrap_conn_err(func, *args, **kwargs):
         try:
             func(*args, **kwargs)
@@ -435,7 +549,7 @@ def _reset_connection(task_action, connection, host_context, ignore_errors=False
             if ignore_errors:
                 return False
 
-            raise AnsibleError(to_native(e))
+            raise AnsibleError(e)
 
         return True
 
@@ -443,19 +557,19 @@ def _reset_connection(task_action, connection, host_context, ignore_errors=False
     # reset() leaving resources still in use on the target (WSMan shells). Instead we try to manually close the
     # connection then call reset. If it fails once we want to skip closing to avoid a perpetual loop and just hope
     # reset() brings us back into a good state. If it's successful we still want to try it again.
-    if host_context['do_close_on_reset']:
-        display.vvv("%s: closing connection plugin" % task_action)
+    if host_context["do_close_on_reset"]:
+        display.vvvv(f"{task_action}: closing connection plugin")
         try:
             success = _wrap_conn_err(connection.close)
 
         except Exception:
-            host_context['do_close_on_reset'] = False
+            host_context["do_close_on_reset"] = False
             raise
 
-        host_context['do_close_on_reset'] = success
+        host_context["do_close_on_reset"] = success
 
     # For some connection plugins (ssh) reset actually does something more than close so we also class that
-    display.vvv("%s: resetting connection plugin" % task_action)
+    display.vvvv(f"{task_action}: resetting connection plugin")
     try:
         _wrap_conn_err(connection.reset)
 
@@ -464,27 +578,35 @@ def _reset_connection(task_action, connection, host_context, ignore_errors=False
         pass
 
 
-def _run_test_command(task_action, connection, command, expected=None):
-    # type: (str, ConnectionBase, str, Optional[str]) -> None
+def _run_test_command(
+    task_action: str,
+    connection: ConnectionBase,
+    command: str,
+    expected: t.Optional[str] = None,
+) -> None:
     """Runs the user specified test command until the host is able to run it properly"""
-    display.vvv("%s: attempting post-reboot test command" % task_action)
+    display.vvvv(f"{task_action}: attempting post-reboot test command")
 
     rc, stdout, stderr = _execute_command(task_action, connection, command)
 
     if rc != 0:
-        msg = "%s: Test command failed - rc: %s, stdout: %s, stderr: %s" % (task_action, rc, stdout, stderr)
+        msg = f"{task_action}: Test command failed - rc: {rc}, stdout: {stdout}, stderr: {stderr}"
         raise _TestCommandFailure(msg)
 
     if expected and expected not in stdout:
-        msg = "%s: Test command failed - '%s' was not in stdout: %s" % (task_action, expected, stdout)
+        msg = f"{task_action}: Test command failed - '{expected}' was not in stdout: {stdout}"
         raise _TestCommandFailure(msg)
 
 
-def _set_connection_timeout(task_action, connection, host_context, timeout):
-    # type: (str, ConnectionBase, Dict, float) -> None
+def _set_connection_timeout(
+    task_action: str,
+    connection: ConnectionBase,
+    host_context: t.Dict[str, t.Any],
+    timeout: float,
+) -> None:
     """Sets the connection plugin connection_timeout option and resets the connection"""
     try:
-        current_connection_timeout = connection.get_option('connection_timeout')
+        current_connection_timeout = connection.get_option("connection_timeout")
     except KeyError:
         # Not all connection plugins implement this, just ignore the setting if it doesn't work
         return
@@ -492,7 +614,7 @@ def _set_connection_timeout(task_action, connection, host_context, timeout):
     if timeout == current_connection_timeout:
         return
 
-    display.vvv("%s: setting connect_timeout %s" % (task_action, timeout))
+    display.vvvv(f"{task_action}: setting connect_timeout {timeout}")
     connection.set_option("connection_timeout", timeout)
 
     _reset_connection(task_action, connection, host_context, ignore_errors=True)
