@@ -143,32 +143,6 @@ namespace Ansible.Windows.Setup
             // There are more fields but we only need up to SerialNumber.
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct ProcessorInformation
-        {
-            public byte SocketDesignation;
-            public byte ProcessorType;
-            public byte ProcessorFamily;
-            public byte ProcessorManufacturer;
-            public UInt64 ProcessorId;
-            public byte ProcessorVersion;
-            public byte Voltage;
-            public UInt16 ExternalClock;
-            public UInt16 MaxSpeed;
-            public UInt16 CurrentSpeed;
-            public byte Status;
-            public byte ProcessorUpgrade;
-            public UInt16 L1CacheHandle;
-            public UInt16 L2CacheHandle;
-            public UInt16 L3CacheHandle;
-            public byte SerialNumber;
-            public byte AssetTag;
-            public byte PartNumber;
-            public byte CoreCount;
-            public byte CoreEnabled;
-            public byte ThreadCount;
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         public struct SYSTEM_INFO
         {
@@ -391,7 +365,8 @@ namespace Ansible.Windows.Setup
         public string Manufacturer;
         public string Model;
         public string SerialNumber;
-        public List<Tuple<byte, byte>> ProcessorInfo = new List<Tuple<byte, byte>>();
+        public bool ProcessorCountFound = false;
+        public List<Tuple<int, int>> ProcessorInfo = new List<Tuple<int, int>>();
 
         public SMBIOSInfo()
         {
@@ -434,12 +409,43 @@ namespace Ansible.Windows.Setup
                     }
                     else if (header.Type == 4)
                     {
-                        var processorInfo = (NativeHelpers.ProcessorInformation)Marshal.PtrToStructure(headerDataPtr,
-                            typeof(NativeHelpers.ProcessorInformation));
+                        // Section 7.5 Processor Information (Type 4)
+                        // https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.4.0a.pdf
+                        byte status = Marshal.ReadByte(headerDataPtr, 20);
+                        if ((status & (1 << 6)) == 0)
+                        {
+                            // CPU Socket Unpopulated
+                            continue;
+                        }
+                        else if ((status & 0x7) != 1)
+                        {
+                            // Not CPU Enabled
+                            continue;
+                        }
 
-                        // TODO: Technically if CoreCount or ThreadCount == 255 then we should look at another field
-                        // but the chances of that happening are slim compared to the complexity of the checks required.
-                        ProcessorInfo.Add(Tuple.Create(processorInfo.CoreCount, processorInfo.ThreadCount));
+                        byte coreCount = 0;
+                        ushort coreCount2 = 0;
+                        byte threadCount = 0;
+                        ushort threadCount2 = 0;
+
+                        if ((header.Length - headerSize) >= 34)
+                        {
+                            ProcessorCountFound = true;
+                            coreCount = Marshal.ReadByte(headerDataPtr, 31);
+                            threadCount = Marshal.ReadByte(headerDataPtr, 33);
+                        }
+
+                        if ((header.Length - headerSize) >= 44)
+                        {
+                            ProcessorCountFound = true;
+                            coreCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 38);
+                            threadCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 42);
+                        }
+
+                        ProcessorInfo.Add(Tuple.Create(
+                            CalculateCount(coreCount, coreCount2),
+                            CalculateCount(threadCount, threadCount2)
+                        ));
                     }
                     else
                         continue;
@@ -507,6 +513,11 @@ namespace Ansible.Windows.Setup
 
             DateTime rawDateTime = DateTime.ParseExact(date, dateFormat, null);
             return DateTime.SpecifyKind(rawDateTime, DateTimeKind.Utc);
+        }
+
+        private int CalculateCount(byte count1, ushort count2)
+        {
+            return (int)(count2 == 0 ? count1 : count2);
         }
     }
 
@@ -959,10 +970,22 @@ $factMeta = @(
                 })
 
             $ansibleFacts.ansible_processor = $processors
-            $ansibleFacts.ansible_processor_cores = $bios.ProcessorInfo[0].Item1
             $ansibleFacts.ansible_processor_count = $bios.ProcessorInfo.Count
-            $ansibleFacts.ansible_processor_threads_per_core = $bios.ProcessorInfo[0].Item2
             $ansibleFacts.ansible_processor_vcpus = $systemInfo.NumberOfProcessors
+            if ($bios.ProcessorCountFound) {
+                $coresPerProcessor = $bios.ProcessorInfo[0].Item1
+                $threadsPerProcessor = $bios.ProcessorInfo[0].Item2
+                $ansibleFacts.ansible_processor_cores = $coresPerProcessor
+                $ansibleFacts.ansible_processor_threads_per_core = $threadsPerProcessor / $coresPerProcessor
+            }
+            else {
+                # SMBIOS version is too old to get this information. Fallback
+                # to using CIM for this case.
+                $win32Proc = Get-CimInstance -ClassName Win32_Processor -Property NumberOfCores, NumberOfLogicalProcessors |
+                    Select-Object -First 1
+                $ansibleFacts.ansible_processor_cores = $win32Proc.NumberOfCores
+                $ansibleFacts.ansible_processor_threads_per_core = $win32Proc.NumberOfLogicalProcessors / $win32Proc.NumberOfCores
+            }
         }
     },
     @{
@@ -1013,7 +1036,7 @@ $factMeta = @(
             try {
                 $certs = @(Get-ChildItem -Path WSMan:\localhost\Listener\* -ErrorAction SilentlyContinue | Where-Object {
                         'Transport=HTTPS' -in $_.Keys
-                    } | Get-ChildItem | Where-Object Name -eq 'CertificateThumbprint' | ForEach-Object {
+                    } | Get-ChildItem | Where-Object Name -EQ 'CertificateThumbprint' | ForEach-Object {
                         Get-Item -LiteralPath Cert:\LocalMachine\My\$($_.Value)
                     })
             }
