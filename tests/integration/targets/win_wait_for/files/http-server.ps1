@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$port = { { test_win_wait_for_port } }
+$port = [int]$args[0]
 
 $endpoint = New-Object -TypeName System.Net.IPEndPoint([System.Net.IPAddress]::Parse("0.0.0.0"), $port)
 $listener = New-Object -TypeName System.Net.Sockets.TcpListener($endpoint)
