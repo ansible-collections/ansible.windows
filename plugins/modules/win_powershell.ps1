@@ -514,9 +514,18 @@ if ($removes -and -not (Test-AnsiblePath -Path $removes)) {
 }
 
 # Check if the script has [CmdletBinding(SupportsShouldProcess)] on it
-$scriptAst = [ScriptBlock]::Create($module.Params.script).Ast
+try {
+    $scriptAst = [ScriptBlock]::Create($module.Params.script).Ast
+}
+catch [System.Management.Automation.ParseException] {
+    # Trying to parse pwsh 7 code may fail if using new syntax not available in
+    # WinPS. Need to fallback to a more rudimentary scanner.
+    # https://github.com/ansible-collections/ansible.windows/issues/452
+    $scriptAst = $null
+}
+
 $supportsShouldProcess = $false
-if ($scriptAst -is [Management.Automation.Language.ScriptBlockAst] -and $scriptAst.ParamBlock.Attributes) {
+if ($scriptAst -and $scriptAst -is [Management.Automation.Language.ScriptBlockAst] -and $scriptAst.ParamBlock.Attributes) {
     $supportsShouldProcess = [bool]($scriptAst.ParamBlock.Attributes |
             Where-Object { $_.TypeName.Name -eq 'CmdletBinding' } |
             Select-Object -First 1 |
@@ -525,6 +534,9 @@ if ($scriptAst -is [Management.Automation.Language.ScriptBlockAst] -and $scriptA
                     $_.ArgumentName -eq 'SupportsShouldProcess' -and ($_.ExpressionOmitted -or $_.Argument.ToString() -eq '$true')
                 }
             })
+}
+elseif (-not $scriptAst) {
+    $supportsShouldProcess = $module.Params.script -match '\[CmdletBinding\((?:[\w=\$]+,\s*)?SupportsShouldProcess(?:=\$true)?(?:,\s*[\w=\$]+)?\)\]'
 }
 
 if ($module.CheckMode -and -not $supportsShouldProcess) {
