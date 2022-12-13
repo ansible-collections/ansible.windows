@@ -100,8 +100,10 @@ notes:
   module has finished.
 - C($Ansible.Verbosity) reveals Ansible's verbosity level for this play. Allows the script to set VerbosePreference/DebugPreference
   based on verbosity. Added in C(1.9.0).
-- Any host/console output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object, they are
+- Any host/console direct output like C(Write-Host) or C([Console]::WriteLine) is not considered an output object, they are
   returned as a string in I(host_out) and I(host_err).
+- Any output stream object is instead returned as a list in I(output). This is true not only for C(Write-Output) and its
+  built-in alias C(echo), but also for implicit output; i.e. C(Write-Output "foo") and C("foo") give the same result.
 - The module will skip running the script when in check mode unless the script defines
   C([CmdletBinding(SupportsShouldProcess)]).
 author:
