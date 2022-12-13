@@ -98,8 +98,8 @@ if ($null -ne $disk_number -and $null -ne $partition_number) {
     $ansible_partition = Get-Partition -DiskNumber $disk_number -PartitionNumber $partition_number -ErrorAction SilentlyContinue
 }
 # Check if drive_letter is either auto-assigned or a character from A-Z
-elseif ($drive_letter -and -not ($disk_number -and $partition_number)) {
-    if ($drive_letter -eq "auto" -or $drive_letter -match "^[a-zA-Z]$") {
+elseif ($drive_letter -and $drive_letter -ne "auto" -and -not ($disk_number -and $partition_number)) {
+    if ($drive_letter -match "^[a-zA-Z]$") {
         $ansible_partition = Get-Partition -DriveLetter $drive_letter -ErrorAction SilentlyContinue
     }
     else {
