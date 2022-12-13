@@ -428,18 +428,23 @@ namespace Ansible.Windows.Setup
                         byte threadCount = 0;
                         ushort threadCount2 = 0;
 
-                        if ((header.Length - headerSize) >= 34)
+                        // SMBIOS 2.5 is when the core and thread count fields
+                        // were added.
+                        if (rawData.SMBIOSMajorVersion > 3 || (rawData.SMBIOSMajorVersion == 2 && rawData.SMBIOSMajorVersion > 4))
                         {
-                            ProcessorCountFound = true;
-                            coreCount = Marshal.ReadByte(headerDataPtr, 31);
-                            threadCount = Marshal.ReadByte(headerDataPtr, 33);
-                        }
+                            if ((header.Length - headerSize) >= 34)
+                            {
+                                ProcessorCountFound = true;
+                                coreCount = Marshal.ReadByte(headerDataPtr, 31);
+                                threadCount = Marshal.ReadByte(headerDataPtr, 33);
+                            }
 
-                        if ((header.Length - headerSize) >= 44)
-                        {
-                            ProcessorCountFound = true;
-                            coreCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 38);
-                            threadCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 42);
+                            if ((header.Length - headerSize) >= 44)
+                            {
+                                ProcessorCountFound = true;
+                                coreCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 38);
+                                threadCount2 = (ushort)Marshal.ReadInt16(headerDataPtr, 42);
+                            }
                         }
 
                         ProcessorInfo.Add(Tuple.Create(
