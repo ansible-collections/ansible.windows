@@ -9,8 +9,8 @@
     path: '{{test_win_wait_for_path}}'
     state: directory
 
-- name: template out the test server
-  win_template:
+- name: copy out the test server
+  win_copy:
     src: http-server.ps1
     dest: '{{test_win_wait_for_path}}\http-server.ps1'
 
@@ -241,7 +241,7 @@
     - fail_timeout_port_online.elapsed > 5
 
 - name: run async task to start web server
-  win_shell: Start-Sleep -Seconds 5; {{test_win_wait_for_path}}\http-server.ps1
+  win_shell: Start-Sleep -Seconds 5; {{test_win_wait_for_path}}\http-server.ps1 {{ test_win_wait_for_port }}
   async: 30
   poll: 0
 
@@ -257,7 +257,7 @@
     - wait_for_port_to_start.wait_attempts > 1
 
 - name: start web server
-  win_shell: '{{test_win_wait_for_path}}\http-server.ps1'
+  win_shell: '{{test_win_wait_for_path}}\http-server.ps1 {{ test_win_wait_for_port }}'
   async: 30
   poll: 0
 
@@ -290,7 +290,7 @@
     - wait_for_port_already_stopped.wait_attempts == 1
 
 - name: start web server for offline port test
-  win_shell: '{{test_win_wait_for_path}}\http-server.ps1'
+  win_shell: '{{test_win_wait_for_path}}\http-server.ps1 {{ test_win_wait_for_port }}'
   async: 30
   poll: 0
 

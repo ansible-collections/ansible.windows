@@ -227,7 +227,7 @@ elseif ($null -ne $port) {
         $complete = $false
         while (((Get-Date) - $start_time).TotalSeconds -lt $timeout) {
             $attempts += 1
-            $active_connections = Get-PortConnections -hostname $hostname -port $port
+            $active_connections = Get-PortConnection -hostname $hostname -port $port
             if ($null -eq $active_connections) {
                 $complete = $true
                 break
