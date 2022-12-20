@@ -1,2 +1,0 @@
-bugfixes:
-- 'win_powershell - Support PowerShell 7 script syntax when targeting ``executable: pwsh.exe`` - https://github.com/ansible-collections/ansible.windows/issues/452'

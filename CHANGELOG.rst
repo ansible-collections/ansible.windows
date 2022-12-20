@@ -5,6 +5,35 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.13.0
+=======
+
+Release Summary
+---------------
+
+Release summary for v1.13.0
+
+Major Changes
+-------------
+
+- Set the minimum Ansible version supported by this collection to Ansible 2.12
+
+Minor Changes
+-------------
+
+- win_reboot - Display connection messages under 4 v's ``-vvvv`` instead of 3
+
+Bugfixes
+--------
+
+- setup - Fallback to using the WMI Win32_Processor provider if the SMBIOS version is too old to return processor core counts
+- setup - Fix calculation for ``ansible_processor_threads_per_core`` to reflect the number of threads per core instead of threads per processor
+- setup - Ignore processors that are not enabled in the ``ansible_processor_count`` return value
+- setup - Support core and thread counts greater than 256 in ``ansible_processor_count`` and ``ansible_processor_threads_per_core``
+- win_dns_client - Fix failure to lookup registry DNS servers when it contains null characters
+- win_powershell - Support PowerShell 7 script syntax when targeting ``executable: pwsh.exe`` - https://github.com/ansible-collections/ansible.windows/issues/452
+- win_wait_for - fix incorrect function name during ``state=drained`` - https://github.com/ansible-collections/ansible.windows/issues/451
+
 v1.12.0
 =======
 

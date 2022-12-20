@@ -1,2 +1,0 @@
-bugfixes:
-- win_dns_client - Fix failure to lookup registry DNS servers when it contains null characters
