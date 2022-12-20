@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_service module – Manage and query Windows services &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/ansible.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/antsibull-minimal.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/rtd-ethical-ads.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_service_info module – Gather information about Windows services" href="win_service_info_module.html" />
+    <link rel="prev" title="ansible.windows.win_regedit module – Add, change, or remove registry keys and values" href="win_regedit_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/ansiblefest" target="_blank">AnsibleFest</a></li>
+    <li><a href="https://www.ansible.com/tower" target="_blank">Products</a></li>
+    <li><a href="https://www.ansible.com/community" target="_blank">Community</a></li>
+    <li><a href="https://www.ansible.com/webinars-training" target="_blank">Webinars & Training</a></li>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#communication">Communication</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_service module – Manage and query Windows services</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_service.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-service-module"></span><section id="ansible-windows-win-service-module-manage-and-query-windows-services">
+<h1>ansible.windows.win_service module – Manage and query Windows services<a class="headerlink" href="#ansible-windows-win-service-module-manage-and-query-windows-services" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.13.0).</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_service</span></code>.</p>
+</div>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id6">Return Values</a></p></li>
+</ul>
+</div>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Manage and query Windows services.</p></li>
+<li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.service</span></a> module instead.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<table class="colwidths-auto ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-dependencies"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-dependencies"><strong>dependencies</strong></p>
+<a class="ansibleOptionLink" href="#parameter-dependencies" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of service dependencies to set for this particular service.</p>
+<p>This should be a list of service names and not the display name of the service.</p>
+<p>This works by <code class="docutils literal notranslate"><span class="pre">dependency_action</span></code> to either add/remove or set the services in this list.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-dependency_action"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-dependency-action"><strong>dependency_action</strong></p>
+<a class="ansibleOptionLink" href="#parameter-dependency_action" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used in conjunction with <code class="docutils literal notranslate"><span class="pre">dependency</span></code> to either add the dependencies to the existing service dependencies.</p>
+<p>Remove the dependencies to the existing dependencies.</p>
+<p>Set the dependencies to only the values in the list replacing the existing dependencies.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;add&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;remove&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;set&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-description"><strong>description</strong></p>
+<a class="ansibleOptionLink" href="#parameter-description" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The description to set for the service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-desktop_interact"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-desktop-interact"><strong>desktop_interact</strong></p>
+<a class="ansibleOptionLink" href="#parameter-desktop_interact" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether to allow the service user to interact with the desktop.</p>
+<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> when using the <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code> username.</p>
+<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> when the <em>service_type</em> is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-display_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-display-name"><strong>display_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-display_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The display name to set for the service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-error_control"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-error-control"><strong>error_control</strong></p>
+<a class="ansibleOptionLink" href="#parameter-error_control" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The severity of the error and action token if the service fails to start.</p>
+<p>A new service defaults to <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">critical</span></code> will log the error and restart the system with the last-known good configuration. If the startup fails on reboot then the system will fail to operate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ignore</span></code> ignores the error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">normal</span></code> logs the error in the event log but continues.</p>
+<p><code class="docutils literal notranslate"><span class="pre">severe</span></code> is like <code class="docutils literal notranslate"><span class="pre">critical</span></code> but a failure on the last-known good configuration reboot startup will be ignored.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;critical&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;ignore&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;normal&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;severe&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_actions"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-actions"><strong>failure_actions</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_actions" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of failure actions the service controller should take on each failure of a service.</p>
+<p>The service manager will run the actions from first to last defined until the service starts. If <em>failure_reset_period_sec</em> has been exceeded then the failure actions will restart from the beginning.</p>
+<p>If all actions have been performed the the service manager will repeat the last service defined.</p>
+<p>The existing actions will be replaced with the list defined in the task if there is a mismatch with any of them.</p>
+<p>Set to an empty list to delete all failure actions on a service otherwise an omitted or null value preserves the existing actions on the service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_actions/delay_ms"></div>
+<div class="ansibleOptionAnchor" id="parameter-failure_actions/delay"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-actions-delay-ms"><span id="ansible-collections-ansible-windows-win-service-module-parameter-failure-actions-delay"></span><strong>delay_ms</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_actions/delay_ms" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: delay</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">any</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The time to wait, in milliseconds, before performing the specified action.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_actions/type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-actions-type"><strong>type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_actions/type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The action to be performed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">none</span></code> will perform no action, when used this should only be set as the last action.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reboot</span></code> will reboot the host, when used this should only be set as the last action as the reboot will reset the action list back to the beginning.</p>
+<p><code class="docutils literal notranslate"><span class="pre">restart</span></code> will restart the service.</p>
+<p><code class="docutils literal notranslate"><span class="pre">run_command</span></code> will run the command specified by <em>failure_command</em>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;reboot&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restart&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;run_command&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_actions_on_non_crash_failure"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-actions-on-non-crash-failure"><strong>failure_actions_on_non_crash_failure</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_actions_on_non_crash_failure" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Controls whether failure actions will be performed on non crash failures or not.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_command"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-command"><strong>failure_command</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_command" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command to run for a <code class="docutils literal notranslate"><span class="pre">run_command</span></code> failure action.</p>
+<p>Set to an empty string to remove the command.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_reboot_msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-reboot-msg"><strong>failure_reboot_msg</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_reboot_msg" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The message to be broadcast to users logged on the host for a <code class="docutils literal notranslate"><span class="pre">reboot</span></code> failure action.</p>
+<p>Set to an empty string to remove the message.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-failure_reset_period_sec"></div>
+<div class="ansibleOptionAnchor" id="parameter-failure_reset_period"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-failure-reset-period-sec"><span id="ansible-collections-ansible-windows-win-service-module-parameter-failure-reset-period"></span><strong>failure_reset_period_sec</strong></p>
+<a class="ansibleOptionLink" href="#parameter-failure_reset_period_sec" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: failure_reset_period</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">any</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The time in seconds after which the failure action list resets back to the start of the list if there are no failures.</p>
+<p>To set this value, <em>failure_actions</em> must have at least 1 action present.</p>
+<p>Specify <code class="docutils literal notranslate"><span class="pre">'0xFFFFFFFF'</span></code> to set an infinite reset period.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-force_dependent_services"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-force-dependent-services"><strong>force_dependent_services</strong></p>
+<a class="ansibleOptionLink" href="#parameter-force_dependent_services" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">yes</span></code>, stopping or restarting a service with dependent services will force the dependent services to stop or restart also.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">no</span></code>, stopping or restarting a service with dependent services may fail.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-load_order_group"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-load-order-group"><strong>load_order_group</strong></p>
+<a class="ansibleOptionLink" href="#parameter-load_order_group" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The name of the load ordering group of which this service is a member.</p>
+<p>Specify an empty string to remove the existing load order group of a service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Name of the service.</p>
+<p>If only the name parameter is specified, the module will report on whether the service exists or not without making any changes.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-password"><strong>password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password to set the service to start as.</p>
+<p>This and the <code class="docutils literal notranslate"><span class="pre">username</span></code> argument should be supplied together when using a local or domain account.</p>
+<p>If omitted then the password will continue to use the existing value password set.</p>
+<p>If specifying <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code>, <code class="docutils literal notranslate"><span class="pre">NetworkService</span></code>, <code class="docutils literal notranslate"><span class="pre">LocalService</span></code>, the <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE</span></code>, or a gMSA this field can be omitted as those accounts have no password.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path to the executable to set for the service.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-pre_shutdown_timeout_ms"></div>
+<div class="ansibleOptionAnchor" id="parameter-pre_shutdown_timeout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-pre-shutdown-timeout-ms"><span id="ansible-collections-ansible-windows-win-service-module-parameter-pre-shutdown-timeout"></span><strong>pre_shutdown_timeout_ms</strong></p>
+<a class="ansibleOptionLink" href="#parameter-pre_shutdown_timeout_ms" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: pre_shutdown_timeout</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">any</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The time in which the service manager waits after sending a preshutdown notification to the service until it proceeds to continue with the other shutdown actions.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-required_privileges"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-required-privileges"><strong>required_privileges</strong></p>
+<a class="ansibleOptionLink" href="#parameter-required_privileges" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of privileges the service must have when starting up.</p>
+<p>When set the service will only have the privileges specified on its access token.</p>
+<p>The <em>username</em> of the service must already have the privileges assigned.</p>
+<p>The existing privileges will be replace with the list defined in the task if there is a mismatch with any of them.</p>
+<p>Set to an empty list to remove all required privileges, otherwise an omitted or null value will keep the existing privileges.</p>
+<p>See <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/secauthz/privilege-constants">privilege text constants</a> for a list of privilege constants that can be used.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-service_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-service-type"><strong>service_type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-service_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The type of service.</p>
+<p>The default type of a new service is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code>.</p>
+<p><em>desktop_interact</em> can only be set if the service type is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user_own_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user_share_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;win32_own_process&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;win32_share_process&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sid_info"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-sid-info"><strong>sid_info</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sid_info" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used to define the behaviour of the service’s access token groups.</p>
+<p><code class="docutils literal notranslate"><span class="pre">none</span></code> will not add any groups to the token.</p>
+<p><code class="docutils literal notranslate"><span class="pre">restricted</span></code> will add the <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE\&lt;service</span> <span class="pre">name&gt;</span></code> SID to the access token’s groups and restricted groups.</p>
+<p><code class="docutils literal notranslate"><span class="pre">unrestricted</span></code> will add the <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE\&lt;service</span> <span class="pre">name&gt;</span></code> SID to the access token’s groups.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restricted&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;unrestricted&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-start_mode"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-start-mode"><strong>start_mode</strong></p>
+<a class="ansibleOptionLink" href="#parameter-start_mode" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the startup type for the service.</p>
+<p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;delayed&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;disabled&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;manual&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The desired state of the service.</p>
+<p><code class="docutils literal notranslate"><span class="pre">started</span></code>/<code class="docutils literal notranslate"><span class="pre">stopped</span></code>/<code class="docutils literal notranslate"><span class="pre">absent</span></code>/<code class="docutils literal notranslate"><span class="pre">paused</span></code> are idempotent actions that will not run commands unless necessary.</p>
+<p><code class="docutils literal notranslate"><span class="pre">restarted</span></code> will always bounce the service.</p>
+<p>Only services that support the paused state can be paused, you can check the return value <code class="docutils literal notranslate"><span class="pre">can_pause_and_continue</span></code>.</p>
+<p>You can only pause a service that is already started.</p>
+<p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">stopped</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;paused&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;started&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;stopped&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;restarted&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-update_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-update-password"><strong>update_password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-update_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>When set to <code class="docutils literal notranslate"><span class="pre">always</span></code> and <em>password</em> is set, the module will always report a change and set the password.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">on_create</span></code> to only set the password if the module needs to create the service.</p>
+<p>If <em>username</em> was specified and the service changed to that username then <em>password</em> will also be changed if specified.</p>
+<p>The current default is <code class="docutils literal notranslate"><span class="pre">on_create</span></code> but this behaviour may change in the future, it is best to be explicit here.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;on_create&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-username"><strong>username</strong></p>
+<a class="ansibleOptionLink" href="#parameter-username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The username to set the service to start as.</p>
+<p>Can also be set to <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code> or <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code> to use the SYSTEM account.</p>
+<p>A newly created service will default to <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code>.</p>
+<p>If using a custom user account, it must have the <code class="docutils literal notranslate"><span class="pre">SeServiceLogonRight</span></code> granted to be able to start up. You can use the <a class="reference internal" href="win_user_right_module.html#ansible-collections-ansible-windows-win-user-right-module"><span class="std std-ref">ansible.windows.win_user_right</span></a> module to grant this user right for you.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">NT</span> <span class="pre">SERVICE\service</span> <span class="pre">name</span></code> to run as the NT SERVICE account for that service.</p>
+<p>This can also be a gMSA in the form <code class="docutils literal notranslate"><span class="pre">DOMAIN\gMSA$</span></code>.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This module historically returning information about the service in its return values. These should be avoided in favour of the <a class="reference internal" href="win_service_info_module.html#ansible-collections-ansible-windows-win-service-info-module"><span class="std std-ref">ansible.windows.win_service_info</span></a> module.</p></li>
+<li><p>Most of the options in this module are non-driver services that you can view in SCManager. While you can edit driver services, not all functionality may be available.</p></li>
+<li><p>The user running the module must have the following access rights on the service to be able to use it with this module - <code class="docutils literal notranslate"><span class="pre">SERVICE_CHANGE_CONFIG</span></code>, <code class="docutils literal notranslate"><span class="pre">SERVICE_ENUMERATE_DEPENDENTS</span></code>, <code class="docutils literal notranslate"><span class="pre">SERVICE_QUERY_CONFIG</span></code>, <code class="docutils literal notranslate"><span class="pre">SERVICE_QUERY_STATUS</span></code>.</p></li>
+<li><p>Changing the state or removing the service will also require futher rights depending on what needs to be done.</p></li>
+</ul>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id4">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.service</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.service</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/win_nssm_module.html#ansible-collections-community-windows-win-nssm-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_nssm</span></a></dt><dd><p>The official documentation on the <strong>community.windows.win_nssm</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_service_info_module.html#ansible-collections-ansible-windows-win-service-info-module"><span class="std std-ref">ansible.windows.win_service_info</span></a></dt><dd><p>Gather information about Windows services.</p>
+</dd>
+<dt><a class="reference internal" href="win_user_right_module.html#ansible-collections-ansible-windows-win-user-right-module"><span class="std std-ref">ansible.windows.win_user_right</span></a></dt><dd><p>Manage Windows User Rights.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Restart a service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spooler</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set service startup mode to auto and ensure it is started</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spooler</span><span class="w"></span>
+<span class="w">    </span><span class="nt">start_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">started</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Pause a service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Netlogon</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">paused</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure that WinRM is started when the system has settled</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WinRM</span><span class="w"></span>
+<span class="w">    </span><span class="nt">start_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">delayed</span><span class="w"></span>
+
+<span class="c1"># A new service will also default to the following values:</span><span class="w"></span>
+<span class="c1"># - username: LocalSystem</span><span class="w"></span>
+<span class="c1"># - state: stopped</span><span class="w"></span>
+<span class="c1"># - start_mode: auto</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a new service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp\test.exe</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a new service with extra details</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp\test.exe</span><span class="w"></span>
+<span class="w">    </span><span class="nt">display_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Service Name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">A test service description</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove a service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span><span class="w"></span>
+
+<span class="c1"># This is required to be set for non-service accounts that need to run as a service</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Grant domain account the SeServiceLogonRight user right</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_user_right</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SeServiceLogonRight</span><span class="w"></span>
+<span class="w">    </span><span class="nt">users</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\User</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to a domain account</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\User</span><span class="w"></span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Password</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to a local account</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.\Administrator</span><span class="w"></span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Password</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to Local System</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to Local System and allow it to interact with the desktop</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span><span class="w"></span>
+<span class="w">    </span><span class="nt">desktop_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to Network Service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT AUTHORITY\NetworkService</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to Local Service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT AUTHORITY\LocalService</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user as the services&#39; virtual account</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT SERVICE\service name</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user as a gMSA</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\gMSA$</span><span class="w">  </span><span class="c1"># The end $ is important and should be set for all gMSA</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set dependencies to ones only in the list</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">service1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">service2</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add dependencies to existing dependencies</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">service1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">service2</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dependency_action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove dependencies from existing dependencies</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service1</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service2</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dependency_action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">remove</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set required privileges for a service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT SERVICE\LocalService</span><span class="w"></span>
+<span class="w">    </span><span class="nt">required_privileges</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SeBackupPrivilege</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SeRestorePrivilege</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove all required privileges for a service</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT SERVICE\LocalService</span><span class="w"></span>
+<span class="w">    </span><span class="nt">required_privileges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set failure actions for a service with no reset period</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_actions</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restart</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">run_command</span><span class="w"></span>
+<span class="w">      </span><span class="nt">delay_ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restart</span><span class="w"></span>
+<span class="w">      </span><span class="nt">delay_ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reboot</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\System32\cmd.exe /c mkdir C:\temp</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_reboot_msg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Restarting host because service name has failed</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_reset_period_sec</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0xFFFFFFFF&#39;</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set only 1 failure action without a repeat of the last action</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_actions</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restart</span><span class="w"></span>
+<span class="w">      </span><span class="nt">delay_ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove failure action information</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_command</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># removes the existing command</span><span class="w"></span>
+<span class="w">    </span><span class="nt">failure_reboot_msg</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># removes the existing reboot msg</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id6">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="colwidths-auto ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-can_pause_and_continue"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-can-pause-and-continue"><strong>can_pause_and_continue</strong></p>
+<a class="ansibleOptionLink" href="#return-can_pause_and_continue" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the service can be paused and unpaused.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-depended_by"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-depended-by"><strong>depended_by</strong></p>
+<a class="ansibleOptionLink" href="#return-depended_by" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of services that depend on this service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;False&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-dependencies"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-dependencies"><strong>dependencies</strong></p>
+<a class="ansibleOptionLink" href="#return-dependencies" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of services that is depended by this service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;False&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-description"><strong>description</strong></p>
+<a class="ansibleOptionLink" href="#return-description" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The description of the service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Manages</span> <span class="pre">communication</span> <span class="pre">between</span> <span class="pre">system</span> <span class="pre">components.&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-desktop_interact"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-desktop-interact"><strong>desktop_interact</strong></p>
+<a class="ansibleOptionLink" href="#return-desktop_interact" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the current user is allowed to interact with the desktop.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-display_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-display-name"><strong>display_name</strong></p>
+<a class="ansibleOptionLink" href="#return-display_name" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The display name of the installed service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CoreMessaging&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-exists"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-exists"><strong>exists</strong></p>
+<a class="ansibleOptionLink" href="#return-exists" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the service exists or not.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#return-name" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The service name or id of the service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CoreMessagingRegistrar&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#return-path" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path to the service executable.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Windows\\system32\\svchost.exe</span> <span class="pre">-k</span> <span class="pre">LocalServiceNoNetwork&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-start_mode"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-start-mode"><strong>start_mode</strong></p>
+<a class="ansibleOptionLink" href="#return-start_mode" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The startup type of the service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;manual&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#return-state" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The current running status of the service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;stopped&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-return-username"><strong>username</strong></p>
+<a class="ansibleOptionLink" href="#return-username" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The username that runs the service.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success and service exists</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;LocalSystem&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Chris Hoffman (&#64;chrishoffman)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Permalink to this heading"></a></h3>
+<p class="ansible-links">
+  <a href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" aria-role="button" target="_blank" rel="noopener external">Issue Tracker</a>
+  <a href="https://github.com/ansible-collections/ansible.windows" aria-role="button" target="_blank" rel="noopener external">Repository (Sources)</a>
+  <a href="./#communication-for-ansible-windows" aria-role="button" target="_blank">Communication</a>
+</p></section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_regedit_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_regedit module – Add, change, or remove registry keys and values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_service_info_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_service_info module – Gather information about Windows services" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
