@@ -1,2 +1,0 @@
-minor_changes:
-- win_reboot - Display connection messages under 4 v's ``-vvvv`` instead of 3

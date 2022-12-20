@@ -1,2 +1,0 @@
-bugfixes:
-- win_wait_for - fix incorrect function name during ``state=drained`` - https://github.com/ansible-collections/ansible.windows/issues/451
