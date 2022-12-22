@@ -877,7 +877,7 @@ namespace Ansible.Windows.WinUpdates
 
         private delegate object BuildOnCompleted(Action<object, object> action);
 
-        private Task<T>InvokeAsync<T>(object com, string method, BuildOnCompleted buildOnCompleted, object onProgress,
+        private Task<T> InvokeAsync<T>(object com, string method, BuildOnCompleted buildOnCompleted, object onProgress,
             CancellationToken cancelToken)
             where T : class
         {
@@ -887,6 +887,8 @@ namespace Ansible.Windows.WinUpdates
 
             object onCompleted = buildOnCompleted((_job, callbackArgs) =>
             {
+                WriteLog(String.Format("Async task {0} complete begin", method));
+
                 try
                 {
                     T res = com.GetType().InvokeMember(
@@ -896,7 +898,10 @@ namespace Ansible.Windows.WinUpdates
                         com,
                         new object[] { _job }
                     ) as T;
-                    task.TrySetResult(res);
+                    if (!task.TrySetResult(res))
+                    {
+                        WriteLog(String.Format("Async task {0} failed to set result", method));
+                    }
                 }
                 catch (TargetInvocationException e)
                 {
@@ -904,8 +909,11 @@ namespace Ansible.Windows.WinUpdates
                     if (e.InnerException is COMException)
                         exp = e.InnerException;
 
-                    task.TrySetException(exp);
                     WriteLog(String.Format("{0} on completed callback failed: {1}", method, exp.Message));
+                    if (!task.TrySetException(exp))
+                    {
+                        WriteLog(String.Format("Async task {0} failed to set exception", method));
+                    }
                 }
                 finally
                 {
@@ -913,6 +921,7 @@ namespace Ansible.Windows.WinUpdates
                     if (reg != null)
                         ((CancellationTokenRegistration)reg).Dispose();
                 }
+                WriteLog(String.Format("Async task {0} complete end", method));
             });
 
             job = com.GetType().InvokeMember(
@@ -924,6 +933,7 @@ namespace Ansible.Windows.WinUpdates
             );
             reg = cancelToken.Register(() =>
             {
+                WriteLog(String.Format("Async task {0} cancel begin", method));
                 //task.TrySetCanceled(cancelToken);
                 if (job != null)
                 {
@@ -935,6 +945,7 @@ namespace Ansible.Windows.WinUpdates
                         new object[] {}
                     );
                 }
+                WriteLog(String.Format("Async task {0} cancel end", method));
             });
 
             return task.Task;
@@ -1039,6 +1050,8 @@ namespace Ansible.Windows.WinUpdates
         try {
             $cancelToken = New-Object -TypeName System.Threading.CancellationTokenSource
             $task = &$ScriptBlock $cancelToken.Token
+            [GC]::Collect()
+            [GC]::WaitForPendingFinalizers()
 
             while ($true) {
                 # Tells the host not to go to sleep every minute, this
@@ -1049,6 +1062,9 @@ namespace Ansible.Windows.WinUpdates
                 $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
                         $cancelTask, $task
                     ), 60000)
+
+                $api.WriteLog("Task.WaitAny returned: $waitIdx")
+                $api.WriteLog("task.Status is: $($task.Status)")
 
                 if ($waitIdx -ge 0) {
                     break
@@ -1061,7 +1077,14 @@ namespace Ansible.Windows.WinUpdates
                 }
             }
 
-            [void]$task.Wait()
+            try {
+                [void]$task.Wait()
+            }
+            catch [System.AggregateException] {
+                # Use the base exception to get the actual exception details
+                throw $_.Exception.GetBaseException()
+            }
+
             $task.Result
         }
         catch {
