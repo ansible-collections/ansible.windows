@@ -185,15 +185,15 @@
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id4">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test connectivity to a windows host</span><span class="w"></span>
-<span class="c1"># ansible winserver -m ansible.windows.win_ping</span><span class="w"></span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test connectivity to a windows host</span>
+<span class="c1"># ansible winserver -m ansible.windows.win_ping</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Example from an Ansible Playbook</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_ping</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Example from an Ansible Playbook</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_ping</span><span class="p">:</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Induce an exception to see what happens</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_ping</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crash</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Induce an exception to see what happens</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_ping</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crash</span>
 </pre></div>
 </div>
 </section>

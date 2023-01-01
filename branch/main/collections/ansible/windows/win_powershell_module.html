@@ -284,102 +284,102 @@
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run basic PowerShell script</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">echo &quot;Hello World&quot;</span><span class="w"></span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run basic PowerShell script</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">echo &quot;Hello World&quot;</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script with parameters</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">[CmdletBinding()]</span><span class="w"></span>
-<span class="w">      </span><span class="no">param (</span><span class="w"></span>
-<span class="w">          </span><span class="no">[String]</span><span class="w"></span>
-<span class="w">          </span><span class="no">$Path,</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script with parameters</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">[CmdletBinding()]</span>
+<span class="w">      </span><span class="no">param (</span>
+<span class="w">          </span><span class="no">[String]</span>
+<span class="w">          </span><span class="no">$Path,</span>
 
-<span class="w">          </span><span class="no">[Switch]</span><span class="w"></span>
-<span class="w">          </span><span class="no">$Force</span><span class="w"></span>
-<span class="w">      </span><span class="no">)</span><span class="w"></span>
+<span class="w">          </span><span class="no">[Switch]</span>
+<span class="w">          </span><span class="no">$Force</span>
+<span class="w">      </span><span class="no">)</span>
 
-<span class="w">      </span><span class="no">New-Item -Path $Path -ItemType Directory -Force:$Force</span><span class="w"></span>
-<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">Path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp</span><span class="w"></span>
-<span class="w">      </span><span class="nt">Force</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="w">      </span><span class="no">New-Item -Path $Path -ItemType Directory -Force:$Force</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">Path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp</span>
+<span class="w">      </span><span class="nt">Force</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script that modifies the module changed result</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">if (Get-Service -Name test -ErrorAction SilentlyContinue) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">Remove-Service -Name test</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">else {</span><span class="w"></span>
-<span class="w">          </span><span class="no">$Ansible.Changed = $false</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script that modifies the module changed result</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">if (Get-Service -Name test -ErrorAction SilentlyContinue) {</span>
+<span class="w">          </span><span class="no">Remove-Service -Name test</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">else {</span>
+<span class="w">          </span><span class="no">$Ansible.Changed = $false</span>
+<span class="w">      </span><span class="no">}</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script in PowerShell 7</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">$PSVersionTable.PSVersion.Major</span><span class="w"></span>
-<span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh.exe</span><span class="w"></span>
-<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ByPass</span><span class="w"></span>
-<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output</span><span class="w"></span>
-<span class="w">  </span><span class="nt">failed_when</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output.output[0] != 7</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script in PowerShell 7</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">$PSVersionTable.PSVersion.Major</span>
+<span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh.exe</span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ByPass</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output</span>
+<span class="w">  </span><span class="nt">failed_when</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output.output[0] != 7</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run code in check mode</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">[CmdletBinding(SupportsShouldProcess)]</span><span class="w"></span>
-<span class="w">      </span><span class="no">param ()</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run code in check mode</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">[CmdletBinding(SupportsShouldProcess)]</span>
+<span class="w">      </span><span class="no">param ()</span>
 
-<span class="w">      </span><span class="no"># Use $Ansible to detect check mode</span><span class="w"></span>
-<span class="w">      </span><span class="no">if ($Ansible.CheckMode) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">echo &#39;running in check mode&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">else {</span><span class="w"></span>
-<span class="w">          </span><span class="no">echo &#39;running in normal mode&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
+<span class="w">      </span><span class="no"># Use $Ansible to detect check mode</span>
+<span class="w">      </span><span class="no">if ($Ansible.CheckMode) {</span>
+<span class="w">          </span><span class="no">echo &#39;running in check mode&#39;</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">else {</span>
+<span class="w">          </span><span class="no">echo &#39;running in normal mode&#39;</span>
+<span class="w">      </span><span class="no">}</span>
 
-<span class="w">      </span><span class="no"># Use builtin ShouldProcess (-WhatIf)</span><span class="w"></span>
-<span class="w">      </span><span class="no">if ($PSCmdlet.ShouldProcess(&#39;target&#39;)) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">echo &#39;also running in normal mode&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">else {</span><span class="w"></span>
-<span class="w">          </span><span class="no">echo &#39;also running in check mode&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span><span class="w"></span>
+<span class="w">      </span><span class="no"># Use builtin ShouldProcess (-WhatIf)</span>
+<span class="w">      </span><span class="no">if ($PSCmdlet.ShouldProcess(&#39;target&#39;)) {</span>
+<span class="w">          </span><span class="no">echo &#39;also running in normal mode&#39;</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">else {</span>
+<span class="w">          </span><span class="no">echo &#39;also running in check mode&#39;</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Return a failure back to Ansible</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">if (Test-Path C:\bad.file) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">$Ansible.Failed = $true</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Return a failure back to Ansible</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">if (Test-Path C:\bad.file) {</span>
+<span class="w">          </span><span class="no">$Ansible.Failed = $true</span>
+<span class="w">      </span><span class="no">}</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Define when the script made a change or not</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">if ((Get-Item WSMan:\localhost\Service\Auth\Basic).Value -eq &#39;true&#39;) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">Set-Item WSMan:\localhost\Service\Auth\Basic -Value false</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">else {</span><span class="w"></span>
-<span class="w">          </span><span class="no">$Ansible.Changed = $true</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Define when the script made a change or not</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">if ((Get-Item WSMan:\localhost\Service\Auth\Basic).Value -eq &#39;true&#39;) {</span>
+<span class="w">          </span><span class="no">Set-Item WSMan:\localhost\Service\Auth\Basic -Value false</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">else {</span>
+<span class="w">          </span><span class="no">$Ansible.Changed = $true</span>
+<span class="w">      </span><span class="no">}</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Define when to enable Verbose/Debug output</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
-<span class="w">      </span><span class="no">if ($Ansible.Verbosity -ge 3) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">$VerbosePreference = &quot;Continue&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">if ($Ansible.Verbosity -eq 5) {</span><span class="w"></span>
-<span class="w">          </span><span class="no">$DebugPreference = &quot;Continue&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="no">}</span><span class="w"></span>
-<span class="w">      </span><span class="no">Write-Output &quot;Hello World!&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="no">Write-Verbose &quot;Hello World!&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="no">Write-Debug &quot;Hello World!&quot;</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Define when to enable Verbose/Debug output</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">if ($Ansible.Verbosity -ge 3) {</span>
+<span class="w">          </span><span class="no">$VerbosePreference = &quot;Continue&quot;</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">if ($Ansible.Verbosity -eq 5) {</span>
+<span class="w">          </span><span class="no">$DebugPreference = &quot;Continue&quot;</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">Write-Output &quot;Hello World!&quot;</span>
+<span class="w">      </span><span class="no">Write-Verbose &quot;Hello World!&quot;</span>
+<span class="w">      </span><span class="no">Write-Debug &quot;Hello World!&quot;</span>
 </pre></div>
 </div>
 </section>
