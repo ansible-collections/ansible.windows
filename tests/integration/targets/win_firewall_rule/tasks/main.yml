@@ -19,7 +19,7 @@
 - name: Check that creating new firewall rule succeeds with a change
   assert:
     that:
-    - add_firewall_rule.changed == true
+      - add_firewall_rule.changed == true
 
 - name: Add same firewall rule (again)
   win_firewall_rule:
@@ -35,7 +35,7 @@
 - name: Check that creating same firewall rule succeeds without a change
   assert:
     that:
-    - add_firewall_rule_again.changed == false
+      - add_firewall_rule_again.changed == false
 
 - name: Remove firewall rule
   win_firewall_rule:
@@ -51,7 +51,7 @@
 - name: Check that removing existing firewall rule succeeds with a change
   assert:
     that:
-    - remove_firewall_rule.changed == true
+      - remove_firewall_rule.changed == true
 
 - name: Remove absent firewall rule
   win_firewall_rule:
@@ -67,7 +67,7 @@
 - name: Check that removing non existing firewall rule succeeds without a change
   assert:
     that:
-    - remove_absent_firewall_rule.changed == false
+      - remove_absent_firewall_rule.changed == false
 
 - name: Add firewall rule
   win_firewall_rule:
@@ -84,29 +84,29 @@
 - name: Check that creating new firewall rule succeeds with a change
   assert:
     that:
-    - add_firewall_rule.changed == true
+      - add_firewall_rule.changed == true
 
 - name: Enable all the rules in application group
   win_firewall_rule:
     group: application
-    enabled: yes 
+    enabled: yes
   register: change_firewall_rule
 
 - name: Check if the rules are enabled in application group
   assert:
     that:
-    - change_firewall_rule.changed == true 
+      - change_firewall_rule.changed == true
 
 - name: Enable all the rules in application group (again)
   win_firewall_rule:
     group: application
-    enabled: yes 
+    enabled: yes
   register: change_firewall_rule
 
 - name: Check if the rules are enabled without a change
   assert:
     that:
-    - change_firewall_rule.changed == false
+      - change_firewall_rule.changed == false
 
 - name: Disable all the rules in application group
   win_firewall_rule:
@@ -117,18 +117,18 @@
 - name: Check if the rules are disabled
   assert:
     that:
-    - change_firewall_rule.changed == true 
+      - change_firewall_rule.changed == true
 
 - name: Disable all the rules in application group (again)
   win_firewall_rule:
     group: application
-    enabled: no 
+    enabled: no
   register: change_firewall_rule
 
 - name: Check if the rules are disabled without a change
   assert:
     that:
-    - change_firewall_rule.changed == false
+      - change_firewall_rule.changed == false
 
 - name: Remove firewall rule
   win_firewall_rule:
@@ -145,7 +145,7 @@
 - name: Check that removing existing firewall rule succeeds with a change
   assert:
     that:
-    - remove_firewall_rule.changed == true
+      - remove_firewall_rule.changed == true
 
 - name: Add firewall rule
   win_firewall_rule:
@@ -171,7 +171,7 @@
 - name: Check that changing firewall rule succeeds
   assert:
     that:
-    - change_firewall_rule.changed == true
+      - change_firewall_rule.changed == true
 
 - name: Disable firewall rule
   win_firewall_rule:
@@ -217,7 +217,7 @@
 - name: Check that creating same firewall rule when remoteip is range succeeds without a change
   assert:
     that:
-    - add_firewall_rule_with_range_remoteip_again.changed == false
+      - add_firewall_rule_with_range_remoteip_again.changed == false
 
 - name: Add firewall rule when remoteip in CIDR notation
   win_firewall_rule:
@@ -245,7 +245,7 @@
 - name: Check that creating same firewall rule succeeds without a change when remoteip in CIDR notation
   assert:
     that:
-    - add_firewall_rule_with_cidr_remoteip_again.changed == false
+      - add_firewall_rule_with_cidr_remoteip_again.changed == false
 
 - name: Add firewall rule when remoteip contains a netmask
   win_firewall_rule:
@@ -273,7 +273,7 @@
 - name: Check that creating same firewall rule succeeds without a change when remoteip contains a netmask
   assert:
     that:
-    - add_firewall_rule_remoteip_contains_netmask_again.changed == false
+      - add_firewall_rule_remoteip_contains_netmask_again.changed == false
 
 - name: Add firewall rule when remoteip is IPv4
   win_firewall_rule:
@@ -301,7 +301,7 @@
 - name: Check that creating same firewall rule when remoteip is IPv4 succeeds without a change
   assert:
     that:
-    - add_firewall_rule_with_ipv4_remoteip_again.changed == false
+      - add_firewall_rule_with_ipv4_remoteip_again.changed == false
 
 - name: Add firewall rule when remoteip contains a netmask
   win_firewall_rule:
@@ -329,7 +329,7 @@
 - name: Check that creating same firewall rule succeeds without a change when remoteip contains a netmask or CIDR
   assert:
     that:
-    - add_same_firewall_rule_with_cidr_remoteip.changed == false
+      - add_same_firewall_rule_with_cidr_remoteip.changed == false
 
 - name: Add firewall rule with multiple ports
   win_firewall_rule:
@@ -345,7 +345,7 @@
 - name: Check that creating firewall rule with multiple ports succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_multiple_ports.changed == true
+      - add_firewall_rule_with_multiple_ports.changed == true
 
 - name: Add firewall rule with interface types in string format
   win_firewall_rule:
@@ -362,7 +362,7 @@
 - name: Check that creating firewall rule with interface types in string format succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_string_interface_types.changed == true
+      - add_firewall_rule_with_string_interface_types.changed == true
 
 - name: Add firewall rule with interface types in list format
   win_firewall_rule:
@@ -379,7 +379,7 @@
 - name: Check that creating firewall rule with interface types in list format succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_list_interface_types.changed == true
+      - add_firewall_rule_with_list_interface_types.changed == true
 
 - name: Add firewall rule with interface type 'any'
   win_firewall_rule:
@@ -396,7 +396,7 @@
 - name: Check that creating firewall rule with interface type 'any' succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_interface_type_any.changed == true
+      - add_firewall_rule_with_interface_type_any.changed == true
 
 - name: Add firewall rule with edge traversal option 'deferapp'
   win_firewall_rule:
@@ -416,7 +416,7 @@
 - name: Check that creating firewall rule with enge traversal option 'deferapp' succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_edge_traversal.changed == true
+      - add_firewall_rule_with_edge_traversal.changed == true
   # Works on windows >= Windows 7/Windows Server 2008 R2
   when: ansible_distribution_version is version('6.1', '>=')
 
@@ -435,7 +435,7 @@
 - name: Check that creating firewall rule with secure flag 'authenticate' succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_secure_flags.changed == true
+      - add_firewall_rule_with_secure_flags.changed == true
   # Works on windows >= Windows 8/Windows Server 2012
   when: ansible_distribution_version is version('6.2', '>=')
 
@@ -454,7 +454,7 @@
 - name: Check that creating firewall rule with profiles in string format succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_string_profiles.changed == true
+      - add_firewall_rule_with_string_profiles.changed == true
 
 - name: Set firewall rule profile back to 'all'
   win_firewall_rule:
@@ -471,7 +471,7 @@
 - name: Check that setting firewall rule profile back to 'all' succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_string_profiles.changed == true
+      - add_firewall_rule_with_string_profiles.changed == true
 
 - name: Add firewall rule with profiles in list format
   win_firewall_rule:
@@ -488,7 +488,7 @@
 - name: Check that creating firewall rule with profiles in list format succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_list_profiles.changed == true
+      - add_firewall_rule_with_list_profiles.changed == true
 
 # Test for variable expansion in the path
 - name: Add rule with path that needs to be expanded
@@ -515,7 +515,7 @@
 - name: Check that creating same firewall rule with expanded vars identified
   assert:
     that:
-    - add_firewall_rule_with_var_expand_path.changed == false
+      - add_firewall_rule_with_var_expand_path.changed == false
 
 - name: Add firewall rule for application group
   win_firewall_rule:
@@ -532,7 +532,7 @@
 - name: Check that creating firewall rule for application group succeeds with a change
   assert:
     that:
-    - add_firewall_rule_with_group.changed == true
+      - add_firewall_rule_with_group.changed == true
 
 # Test icmptypecode
 - name: Add rule with icmptypecode
@@ -549,7 +549,7 @@
 - name: Check that creating same firewall rule with expanded vars identified
   assert:
     that:
-    - add_firewall_rule_with_icmptypecode.changed == true
+      - add_firewall_rule_with_icmptypecode.changed == true
 
 - name: Remove rule with icmptypecode
   win_firewall_rule:
@@ -565,4 +565,45 @@
 - name: Check that removing same firewall rule with expanded vars identified
   assert:
     that:
-    - remove_firewall_rule_with_icmptypecode.changed == true
+      - remove_firewall_rule_with_icmptypecode.changed == true
+
+# test for application name / program changes to any (and if they null the property)
+# -----------------------------------------------------------------------------
+- name: Add rule with an accociated program
+  win_firewall_rule:
+    name: ApplicationToAnyTest
+    enabled: true
+    state: present
+    action: allow
+    direction: in
+    protocol: tcp
+    program: '%SystemRoot%\system32\svchost.exe'
+  register: add_firewall_rule_with_program
+
+- name: Check that creating firewall rule succeeds with a change
+  ansible.builtin.assert:
+    that:
+      - add_firewall_rule_with_program.changed == true
+
+- name: Add same rule with program set to any
+  win_firewall_rule:
+    name: ApplicationToAnyTest
+    enabled: true
+    state: present
+    action: allow
+    direction: in
+    protocol: tcp
+    program: any
+  register: change_firewall_rule_with_program
+
+- name: Check that changing firewall rule succeeds with a change
+  ansible.builtin.assert:
+    that:
+      - change_firewall_rule_with_program.changed == true
+
+- name: Get the actual values from the changed firewall rule and check if ApplicationName is null
+  ansible.windows.win_shell: >-
+    ((New-Object -ComObject HNetCfg.FwPolicy2).Rules | Where-Object { $_.Name -eq "ApplicationToAnyTest" } | Foreach-Object { $_.ApplicationName }) -eq $null
+  register: firewall_rule_actual
+  failed_when: 'firewall_rule_actual.stdout_lines[0] != "True"'
+# -----------------------------------------------------------------------------
