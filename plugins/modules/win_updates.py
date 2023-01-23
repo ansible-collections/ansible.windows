@@ -5,7 +5,7 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: win_updates
 short_description: Download and install Windows updates
@@ -140,9 +140,9 @@ seealso:
 - module: ansible.windows.win_package
 author:
 - Matt Davis (@nitzmahone)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Install all updates and reboot as many times as needed
   ansible.windows.win_updates:
     category_names: '*'
@@ -169,7 +169,7 @@ EXAMPLES = r'''
 
 - name: Install only particular updates based on the KB numbers
   ansible.windows.win_updates:
-    category_name:
+    category_names:
     - SecurityUpdates
     accept_list:
     - KB4056892
@@ -177,7 +177,7 @@ EXAMPLES = r'''
 
 - name: Exclude updates based on the update title
   ansible.windows.win_updates:
-    category_name:
+    category_names:
     - SecurityUpdates
     - CriticalUpdates
     reject_list:
@@ -194,9 +194,9 @@ EXAMPLES = r'''
 - name: Search and download Windows updates without installing them
   ansible.windows.win_updates:
     state: downloaded
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 reboot_required:
     description: True when the target server requires a reboot to complete updates (no further updates can be installed until after a reboot).
     returned: success
@@ -298,4 +298,4 @@ failed_update_count:
     returned: always
     type: int
     sample: 0
-'''
+"""
