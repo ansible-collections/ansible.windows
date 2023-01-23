@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 function ConvertTo-ProtocolType {
     param($protocol)
@@ -129,6 +130,32 @@ $security = Get-AnsibleParam -obj $params -name "security" -type "str" -validate
 $icmp_type_code = Get-AnsibleParam -obj $params -name "icmp_type_code" -type "list"
 
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
+
+$_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
+Add-CSharpType -TempPath $_remote_tmp -References @'
+using System;
+using System.Runtime.InteropServices;
+
+namespace Community.Windows.WinFirewallRule
+{
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [Guid("AF230D27-BABA-4E42-ACED-F524F22CFCE2")]
+    public interface INetFwRule
+    {
+        [DispId(3)]
+        string ApplicationName { get; set; }
+    }
+
+    public static class NetFwRule
+    {
+        public static void PutApplicationName(object rule, string value)
+        {
+            ((INetFwRule)rule).ApplicationName = string.IsNullOrEmpty(value) ? null : value;
+        }
+    }
+}
+'@
 
 if (-not $name -and -not $group) {
     Fail-Json -obj $result -message "Either name or group must be specified"
@@ -282,6 +309,10 @@ try {
                                     # so must cast to [int] to prevent InvalidCastException under PS5+
                                     If ($prop -eq 'Profiles') {
                                         $existingRule.Profiles = [int] $new_rule.$prop
+                                    }
+                                    # There is a fundamental problem with the COM binder in PowerShell and how it treats null values.
+                                    ElseIf ($prop -eq 'ApplicationName') {
+                                        [Community.Windows.WinFirewallRule.NetFwRule]::PutApplicationName($existingRule, $new_rule.$prop)
                                     }
                                     Else {
                                         $existingRule.$prop = $new_rule.$prop
