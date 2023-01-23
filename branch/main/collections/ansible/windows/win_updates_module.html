@@ -367,7 +367,7 @@
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install only particular updates based on the KB numbers</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">category_name</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
 <span class="w">    </span><span class="nt">accept_list</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KB4056892</span>
@@ -375,7 +375,7 @@
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exclude updates based on the update title</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">category_name</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CriticalUpdates</span>
 <span class="w">    </span><span class="nt">reject_list</span><span class="p">:</span>
