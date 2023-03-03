@@ -269,6 +269,19 @@ EXAMPLES = r'''
       DBNAME=ApplicationDB
       DBSERVER=.\SQLEXPRESS
       INSTALLDIR="C:\Program Files (x86)\App lication\App Server"
+      
+- name: Install Microsoft® SQL Server® 2019 Express (DPAPI example)
+  path: C:\temp\SQLEXPR_x64_ENU\SETUP.EXE
+    product_id: Microsoft SQL Server SQL2019
+    arguments:
+    - SAPWD=VeryHardPassword
+    - /ConfigurationFile=C:\temp\configuration.ini
+  become: yes
+  become_flags: logon_type=batch
+  vars:
+    ansible_become_method: runas
+    ansible_become_user: "{{ user }}"
+    ansible_become_pass: "{{ password }}"
 
 - name: Uninstall Remote Desktop Connection Manager
   ansible.windows.win_package:
