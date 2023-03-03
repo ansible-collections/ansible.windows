@@ -271,11 +271,12 @@ EXAMPLES = r'''
       INSTALLDIR="C:\Program Files (x86)\App lication\App Server"
       
 - name: Install Microsoft® SQL Server® 2019 Express (DPAPI example)
-  path: C:\temp\SQLEXPR_x64_ENU\SETUP.EXE
+  ansible.windows.win_package:
+    path: C:\temp\SQLEXPR_x64_ENU\SETUP.EXE
     product_id: Microsoft SQL Server SQL2019
     arguments:
-    - SAPWD=VeryHardPassword
-    - /ConfigurationFile=C:\temp\configuration.ini
+      - SAPWD=VeryHardPassword
+      - /ConfigurationFile=C:\temp\configuration.ini
   become: yes
   become_flags: logon_type=batch
   vars:
