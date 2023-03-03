@@ -255,7 +255,7 @@ EXAMPLES = r'''
     product_id: '{0240359E-6A4C-4884-9E94-B397A02D893C}'
     state: present
     log_path: D:\logs\vcredist_x64-exe-{{lookup('pipe', 'date +%Y%m%dT%H%M%S')}}.log
-    
+
 - name: Install Application from msi with multiple properties for installer
   ansible.windows.win_package:
     path: C:\temp\Application.msi
@@ -269,7 +269,7 @@ EXAMPLES = r'''
       DBNAME=ApplicationDB
       DBSERVER=.\SQLEXPRESS
       INSTALLDIR="C:\Program Files (x86)\App lication\App Server"
-      
+
 - name: Install Microsoft® SQL Server® 2019 Express (DPAPI example)
   ansible.windows.win_package:
     path: C:\temp\SQLEXPR_x64_ENU\SETUP.EXE
