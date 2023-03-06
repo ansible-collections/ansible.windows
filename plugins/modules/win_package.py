@@ -261,10 +261,6 @@ EXAMPLES = r'''
     path: C:\temp\Application.msi
     state: present
     arguments: >-
-      /quiet
-      /norestart
-      /log
-      C:\application_server.log
       SERVICE=1
       DBNAME=ApplicationDB
       DBSERVER=.\SQLEXPRESS
