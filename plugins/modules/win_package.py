@@ -274,7 +274,6 @@ EXAMPLES = r'''
       - SAPWD=VeryHardPassword
       - /ConfigurationFile=C:\temp\configuration.ini
   become: yes
-  become_flags: logon_type=batch
   vars:
     ansible_become_method: runas
     ansible_become_user: "{{ user }}"
