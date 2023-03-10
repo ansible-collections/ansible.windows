@@ -783,7 +783,7 @@ class ActionModule(ActionBase):
                 update_info = self._get_update_info(update_id)
 
                 # add a property to confirm all available updates are downloaded
-                if update_info['is_downloaded'] == False:
+                if update_info['is_downloaded'] is false:
                     result['updates_downloaded'] = False
 
                 result['updates'][update_id] = update_info
