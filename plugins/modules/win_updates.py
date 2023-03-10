@@ -233,6 +233,12 @@ updates:
             type: bool
             sample: true
             version_added: 1.7.0
+        is_downloaded:
+            description: Is the update downloaded and available to install.
+            returned: always
+            type: bool
+            sample: true
+            version_added: 1.14.0
         installed:
             description: Was the update successfully installed.
             returned: always
@@ -298,4 +304,9 @@ failed_update_count:
     returned: always
     type: int
     sample: 0
+updates_downloaded:
+    description: The available updates are downloaded
+    returned: always
+    type: bool
+    sample: true
 """

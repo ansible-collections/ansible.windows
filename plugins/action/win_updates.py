@@ -778,8 +778,14 @@ class ActionModule(ActionBase):
             result['installed_update_count'] = 0
             result['updates'] = {}
             result['filtered_updates'] = {}
+            result['updates_downloaded'] = True
             for update_id in self._selected_updates:
                 update_info = self._get_update_info(update_id)
+
+                # add a property to confirm all available updates are downloaded
+                if update_info['is_downloaded'] == False:
+                    result['updates_downloaded'] = False
+
                 result['updates'][update_id] = update_info
                 result['found_update_count'] += 1
 
@@ -1029,6 +1035,7 @@ class ActionModule(ActionBase):
             'categories': raw_info['categories'],
             'id': update_id,
             'downloaded': False,
+            'is_downloaded': raw_info['is_downloaded'],
             'installed': False,
         }
 
