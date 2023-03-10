@@ -7,7 +7,6 @@ __metaclass__ = type
 import json
 import os.path
 import shutil
-import tempfile
 import traceback
 
 from ansible import constants as C
