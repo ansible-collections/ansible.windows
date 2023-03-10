@@ -7,7 +7,6 @@ __metaclass__ = type
 
 import os
 import shutil
-import stat
 import tempfile
 
 from ansible import constants as C
