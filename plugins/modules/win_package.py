@@ -256,6 +256,29 @@ EXAMPLES = r'''
     state: present
     log_path: D:\logs\vcredist_x64-exe-{{lookup('pipe', 'date +%Y%m%dT%H%M%S')}}.log
 
+- name: Install Application from msi with multiple properties for installer
+  ansible.windows.win_package:
+    path: C:\temp\Application.msi
+    state: present
+    arguments: >-
+      SERVICE=1
+      DBNAME=ApplicationDB
+      DBSERVER=.\SQLEXPRESS
+      INSTALLDIR="C:\Program Files (x86)\App lication\App Server"
+
+- name: Install Microsoft® SQL Server® 2019 Express (DPAPI example)
+  ansible.windows.win_package:
+    path: C:\temp\SQLEXPR_x64_ENU\SETUP.EXE
+    product_id: Microsoft SQL Server SQL2019
+    arguments:
+      - SAPWD=VeryHardPassword
+      - /ConfigurationFile=C:\temp\configuration.ini
+  become: yes
+  vars:
+    ansible_become_method: runas
+    ansible_become_user: "{{ user }}"
+    ansible_become_pass: "{{ password }}"
+
 - name: Uninstall Remote Desktop Connection Manager
   ansible.windows.win_package:
     product_id: '{0240359E-6A4C-4884-9E94-B397A02D893C}'
