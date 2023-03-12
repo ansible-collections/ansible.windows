@@ -580,6 +580,29 @@
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
 <span class="w">    </span><span class="nt">log_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\logs\vcredist_x64-exe-</span><span class="cp">{{</span><span class="nv">lookup</span><span class="o">(</span><span class="s1">&#39;pipe&#39;</span><span class="o">,</span> <span class="s1">&#39;date +%Y%m%dT%H%M%S&#39;</span><span class="o">)</span><span class="cp">}}</span><span class="l l-Scalar l-Scalar-Plain">.log</span>
 
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Application from msi with multiple properties for installer</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp\Application.msi</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+<span class="w">      </span><span class="no">SERVICE=1</span>
+<span class="w">      </span><span class="no">DBNAME=ApplicationDB</span>
+<span class="w">      </span><span class="no">DBSERVER=.\SQLEXPRESS</span>
+<span class="w">      </span><span class="no">INSTALLDIR=&quot;C:\Program Files (x86)\App lication\App Server&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Microsoft® SQL Server® 2019 Express (DPAPI example)</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp\SQLEXPR_x64_ENU\SETUP.EXE</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Microsoft SQL Server SQL2019</span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SAPWD=VeryHardPassword</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/ConfigurationFile=C:\temp\configuration.ini</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ansible_become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">user</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">ansible_become_pass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">password</span> <span class="cp">}}</span><span class="s">&quot;</span>
+
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Uninstall Remote Desktop Connection Manager</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{0240359E-6A4C-4884-9E94-B397A02D893C}&#39;</span>
