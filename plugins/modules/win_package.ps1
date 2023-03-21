@@ -1434,7 +1434,7 @@ try {
         CreatesService = $createsService
     }
 
-    # If the packge is a remote file, productId is set and state is set to present 
+    # If the packge is a remote file, productId is set and state is set to present
     # then check if the package is installed and avoid downloading the package to a temp file.
     if ($pathType -and $productId -and ($state -eq 'present')) {
         $packageStatus = Get-InstalledStatus @getParams
