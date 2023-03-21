@@ -4,7 +4,6 @@
 
 # Make coding more python3-ish
 from __future__ import (absolute_import, division, print_function)
-from sys import call_tracing
 __metaclass__ = type
 
 import ntpath
