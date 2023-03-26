@@ -1434,8 +1434,14 @@ try {
         CreatesService = $createsService
     }
 
-    # If the path is a URL or UNC with credentials and no ID is set then create a temp copy for idempotency checks.
-    if ($pathType -and -not $Id) {
+    # If the packge is a remote file, productId is set and state is set to present
+    # then check if the package is installed and avoid downloading the package to a temp file.
+    if ($pathType -and $productId -and ($state -eq 'present')) {
+        $packageStatus = Get-InstalledStatus @getParams
+    }
+    # If the path is a URL or UNC with credentials and no productId is set or we already checked and the package is not installed
+    # then create a temp copy for idempotency checks.
+    if (($pathType) -and (-not $productId -or -not $packageStatus.Installed)) {
         $tempFile = switch ($pathType) {
             url { Get-UrlFile -Module $module -Url $path }
             unc { Copy-ItemWithCredential -Path $path -Destination $module.Tmpdir -Credential $credential }
@@ -1450,7 +1456,10 @@ try {
         $getParams.Path = $path
     }
 
-    $packageStatus = Get-InstalledStatus @getParams
+    # Check package installation status unless this was already done and we know the package is installed
+    if (-not $packageStatus.Installed) {
+        $packageStatus = Get-InstalledStatus @getParams
+    }
 
     $changed = -not $packageStatus.Skip -and (($state -eq 'present') -ne $packageStatus.Installed)
     $module.Result.rc = 0  # Make sure rc is always set
