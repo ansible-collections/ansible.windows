@@ -84,44 +84,44 @@ foreach ($disk in $disks) {
             if (-not $pdisk.CanPool) {
                 $disk_info.physical_disk.cannot_pool_reason = $pdisk.CannotPoolReason
             }
-        }
-        if ("virtual_disk" -in $module.Params.filter) {
-            $vdisk = Get-VirtualDisk -PhysicalDisk $pdisk -ErrorAction SilentlyContinue
-            if ($vdisk) {
-                $disk_info["virtual_disk"] += @{
-                    size = $vdisk.Size
-                    allocated_size = $vdisk.AllocatedSize
-                    footprint_on_pool = $vdisk.FootprintOnPool
-                    name = $vdisk.name
-                    friendly_name = $vdisk.FriendlyName
-                    operational_status = $vdisk.OperationalStatus
-                    health_status = $vdisk.HealthStatus
-                    provisioning_type = $vdisk.ProvisioningType
-                    allocation_unit_size = $vdisk.AllocationUnitSize
-                    media_type = $vdisk.MediaType
-                    parity_layout = $vdisk.ParityLayout
-                    access = $vdisk.Access
-                    detached_reason = $vdisk.DetachedReason
-                    write_cache_size = $vdisk.WriteCacheSize
-                    fault_domain_awareness = $vdisk.FaultDomainAwareness
-                    inter_leave = $vdisk.InterLeave
-                    deduplication_enabled = $vdisk.IsDeduplicationEnabled
-                    enclosure_aware = $vdisk.IsEnclosureAware
-                    manual_attach = $vdisk.IsManualAttach
-                    snapshot = $vdisk.IsSnapshot
-                    tiered = $vdisk.IsTiered
-                    physical_sector_size = $vdisk.PhysicalSectorSize
-                    logical_sector_size = $vdisk.LogicalSectorSize
-                    available_copies = $vdisk.NumberOfAvailableCopies
-                    columns = $vdisk.NumberOfColumns
-                    groups = $vdisk.NumberOfGroups
-                    physical_disk_redundancy = $vdisk.PhysicalDiskRedundancy
-                    read_cache_size = $vdisk.ReadCacheSize
-                    request_no_spof = $vdisk.RequestNoSinglePointOfFailure
-                    resiliency_setting_name = $vdisk.ResiliencySettingName
-                    object_id = $vdisk.ObjectId
-                    unique_id_format = $vdisk.UniqueIdFormat
-                    unique_id = $vdisk.UniqueId
+            if ("virtual_disk" -in $module.Params.filter) {
+                $vdisk = Get-VirtualDisk -PhysicalDisk $pdisk -ErrorAction SilentlyContinue
+                if ($vdisk) {
+                    $disk_info["virtual_disk"] += @{
+                        size = $vdisk.Size
+                        allocated_size = $vdisk.AllocatedSize
+                        footprint_on_pool = $vdisk.FootprintOnPool
+                        name = $vdisk.name
+                        friendly_name = $vdisk.FriendlyName
+                        operational_status = $vdisk.OperationalStatus
+                        health_status = $vdisk.HealthStatus
+                        provisioning_type = $vdisk.ProvisioningType
+                        allocation_unit_size = $vdisk.AllocationUnitSize
+                        media_type = $vdisk.MediaType
+                        parity_layout = $vdisk.ParityLayout
+                        access = $vdisk.Access
+                        detached_reason = $vdisk.DetachedReason
+                        write_cache_size = $vdisk.WriteCacheSize
+                        fault_domain_awareness = $vdisk.FaultDomainAwareness
+                        inter_leave = $vdisk.InterLeave
+                        deduplication_enabled = $vdisk.IsDeduplicationEnabled
+                        enclosure_aware = $vdisk.IsEnclosureAware
+                        manual_attach = $vdisk.IsManualAttach
+                        snapshot = $vdisk.IsSnapshot
+                        tiered = $vdisk.IsTiered
+                        physical_sector_size = $vdisk.PhysicalSectorSize
+                        logical_sector_size = $vdisk.LogicalSectorSize
+                        available_copies = $vdisk.NumberOfAvailableCopies
+                        columns = $vdisk.NumberOfColumns
+                        groups = $vdisk.NumberOfGroups
+                        physical_disk_redundancy = $vdisk.PhysicalDiskRedundancy
+                        read_cache_size = $vdisk.ReadCacheSize
+                        request_no_spof = $vdisk.RequestNoSinglePointOfFailure
+                        resiliency_setting_name = $vdisk.ResiliencySettingName
+                        object_id = $vdisk.ObjectId
+                        unique_id_format = $vdisk.UniqueIdFormat
+                        unique_id = $vdisk.UniqueId
+                    }
                 }
             }
         }
@@ -211,7 +211,7 @@ foreach ($disk in $disks) {
     $disk_info.unique_id = $disk.UniqueId
     $disk_info.guid = $disk.Guid
     $disk_info.path = $disk.Path
-    if ("partitions" -in $module.Params.filter -or "volumes" -in $module.Params.filter) {
+    if (("partitions" -in $module.Params.filter -or "volumes" -in $module.Params.filter) -and ($null -ne $disk.Number)) {
         $parts = Get-Partition -DiskNumber $($disk.Number) -ErrorAction SilentlyContinue
         if ($parts) {
             $disk_info["partitions"] += @()
