@@ -14,7 +14,8 @@ $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
 
 $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest", "name"
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch"
+$src = Get-AnsibleParam -obj $params -name "src" -type "path" -failifempty ($state -in @("hard", "link", "junction"))
+$state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch", "hard", "link", "junction"
 
 # used in template/copy when dest is the path to a dir and source is a file
 $original_basename = Get-AnsibleParam -obj $params -name "_original_basename" -type "str"
@@ -89,6 +90,17 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
+# If state is not supplied, test the $path to see if it looks like
+# a file or a folder and set state to file or folder
+if ($null -eq $state) {
+    $basename = Split-Path -Path $path -Leaf
+    if ($basename.length -gt 0) {
+        $state = "file"
+    }
+    else {
+        $state = "directory"
+    }
+}
 
 if ($state -eq "touch") {
     if (Test-Path -LiteralPath $path) {
@@ -102,39 +114,61 @@ if ($state -eq "touch") {
         $result.changed = $true
     }
 }
+elseif ($state -in @("hard", "link", "junction")) {
+    if (Test-Path -LiteralPath $path) {
+        $fileinfo = Get-Item -LiteralPath $path -Force
+        if ($state -eq "hard" -and -not $fileinfo.LinkType -eq "HardLink") {
+            Fail-Json $result "path $path is not a HardLink"
+        }
 
-if (Test-Path -LiteralPath $path) {
-    $fileinfo = Get-Item -LiteralPath $path -Force
-    if ($state -eq "absent") {
-        Remove-File -file $fileinfo -checkmode $check_mode
+        if ($state -eq "link" -and -not $fileinfo.LinkType -eq "SymbolicLink") {
+            Fail-Json $result "path $path is not a SymbolicLink"
+        }
+
+        if ($state -eq "junction" -and -not $fileinfo.LinkType -eq "Junction") {
+            Fail-Json $result "path $path is not a Junction"
+        }
+
+        if (($src -replace "^\\\\", "UNC\") -in $fileinfo.Target) {
+            Exit-Json $result
+        }
+    }
+    if (Test-Path -LiteralPath $src) {
+        try {
+            if ($state -eq "hard") {
+                New-Item -Path $path -Target $src -ItemType HardLink -Force -WhatIf:$check_mode | Out-Null
+            }
+            elseif ($state -eq "link") {
+                New-Item -Path $path -Target $src -ItemType SymbolicLink -Force -WhatIf:$check_mode | Out-Null
+            }
+            elseif ($state -eq "hard") {
+                New-Item -Path $path -Target $src -ItemType Junction -Force -WhatIf:$check_mode | Out-Null
+            }
+        }
+        catch {
+                Fail-Json $result $_.Exception.Message
+        }
         $result.changed = $true
     }
     else {
-        if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
+        Fail-Json $result "target $src does not exist"
+    }
+}
+elseif ($state -eq "absent") {
+    if (Test-Path -LiteralPath $path) {
+        $fileinfo = Get-Item -LiteralPath $path -Force
+        Remove-File -file $fileinfo -checkmode $check_mode
+        $result.changed = $true
+    }
+}
+elseif ($state -eq "directory") {
+    if (Test-Path -LiteralPath $path) {
+        $fileinfo = Get-Item -LiteralPath $path -Force
+        if (-not $fileinfo.PsIsContainer) {
             Fail-Json $result "path $path is not a directory"
         }
-
-        if ($state -eq "file" -and $fileinfo.PsIsContainer) {
-            Fail-Json $result "path $path is not a file"
-        }
     }
-
-}
-else {
-
-    # If state is not supplied, test the $path to see if it looks like
-    # a file or a folder and set state to file or folder
-    if ($null -eq $state) {
-        $basename = Split-Path -Path $path -Leaf
-        if ($basename.length -gt 0) {
-            $state = "file"
-        }
-        else {
-            $state = "directory"
-        }
-    }
-
-    if ($state -eq "directory") {
+    else {
         try {
             New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
         }
@@ -151,10 +185,17 @@ else {
         }
         $result.changed = $true
     }
-    elseif ($state -eq "file") {
+}
+elseif ($state -eq "file") {
+    if (Test-Path -LiteralPath $path) {
+        $fileinfo = Get-Item -LiteralPath $path -Force
+        if ($fileinfo.PsIsContainer) {
+            Fail-Json $result "path $path is not a file"
+        }
+    }
+    else {
         Fail-Json $result "path $path will not be created"
     }
-
 }
 
 Exit-Json $result

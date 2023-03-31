@@ -20,6 +20,12 @@ options:
     required: yes
     type: path
     aliases: [ dest, name ]
+  src:
+    description:
+      - Path of the file or directory to link to.
+      - This applies only to C(state=link), C(state=hard) and C(state=junction).
+      - The path must be present.
+    type: path
   state:
     description:
       - If C(directory), all immediate subdirectories will be created if they
@@ -30,8 +36,11 @@ options:
       - If C(touch), an empty file will be created if the C(path) does not
         exist, while an existing file or directory will receive updated file access and
         modification times (similar to the way C(touch) works from the command line).
+      - If C(hard), a hard link will be created, or updated.
+      - If C(link), a symbolic link will be created, or updated.
+      - If C(junction), a junction will be created, or updated.
     type: str
-    choices: [ absent, directory, file, touch ]
+    choices: [ absent, directory, file, touch, hard, link, junction ]
 seealso:
 - module: ansible.builtin.file
 - module: ansible.windows.win_acl
