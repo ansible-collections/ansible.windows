@@ -146,7 +146,7 @@ elseif ($state -in @("hard", "link", "junction")) {
             }
         }
         catch {
-                Fail-Json $result $_.Exception.Message
+            Fail-Json $result $_.Exception.Message
         }
         $result.changed = $true
     }
