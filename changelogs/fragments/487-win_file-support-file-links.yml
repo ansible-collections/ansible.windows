@@ -1,0 +1,2 @@
+minor_changes:
+- win_file - Add ``hard``, ``link``, and ``junction`` as state options - https://github.com/ansible-collections/ansible.windows/pull/487
