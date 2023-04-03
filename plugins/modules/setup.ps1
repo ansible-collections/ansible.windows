@@ -43,11 +43,10 @@ $gatherSubset = $module.Params.gather_subset
 $gatherTimeout = $module.Params.gather_timeout
 
 $osversion = [Environment]::OSVersion.Version
-if ($osversion -lt [version]"6.2") {
-    # Server 2008, 2008 R2, and Windows 7 are not tested in CI and we want to let customers know about it before
-    # removing support altogether.
+if ($osversion -lt [version]"10.0") {
+    # Anything older than Server 2016 is not supported by Ansible or this collection.
     $versionString = "{0}.{1}" -f ($osversion.Major, $osversion.Minor)
-    $module.Warn("The Windows version '$versionString' will no longer be supported or tested in future releases")
+    $module.Warn("The Windows version '$versionString' is no longer supported or tested by Ansible.")
 }
 
 Add-CSharpType -AnsibleModule $module -References @'
