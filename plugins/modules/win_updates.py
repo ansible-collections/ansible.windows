@@ -203,6 +203,14 @@ reboot_required:
     type: bool
     sample: true
 
+rebooted:
+    description:
+    - Set to C(true) when the target Windows host has been rebooted by C(win_updates).
+    returned: success
+    type: bool
+    sample: false
+    version_added: 1.14.0
+
 updates:
     description:
     - Updates that were found/installed.

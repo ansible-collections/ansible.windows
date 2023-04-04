@@ -823,6 +823,7 @@ class ActionModule(ActionBase):
         result = {
             'changed': False,
             'reboot_required': False,
+            'rebooted': False,
         }
         has_rebooted_on_failure = False
         round = 0
@@ -880,10 +881,12 @@ class ActionModule(ActionBase):
                 else:
                     reboot_res = reboot_host(self._task.action, self._connection, reboot_timeout=reboot_timeout)
 
+                result['rebooted'] = True
+
                 if reboot_res['failed']:
                     msg = 'Failed to reboot host'
                     if 'msg' in reboot_res:
-                        msg += ': ' + reboot_res['msg']
+                        msg += ': ' + str(reboot_res['msg'])
                     reboot_res['msg'] = msg
 
                     result.update(reboot_res)
