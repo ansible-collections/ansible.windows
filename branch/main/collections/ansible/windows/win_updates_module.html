@@ -473,6 +473,16 @@
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-rebooted"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-rebooted"><strong>rebooted</strong></p>
+<a class="ansibleOptionLink" href="#return-rebooted" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><span class="ansible-option-versionadded">added in ansible.windows 1.14.0</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> when the target Windows host has been rebooted by <code class="docutils literal notranslate"><span class="pre">win_updates</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates"><strong>updates</strong></p>
 <a class="ansibleOptionLink" href="#return-updates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
@@ -481,7 +491,7 @@
 <p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/categories"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-categories"><strong>categories</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/categories" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -490,7 +500,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Critical</span> <span class="pre">Updates&quot;,</span> <span class="pre">&quot;Windows</span> <span class="pre">Server</span> <span class="pre">2012</span> <span class="pre">R2&quot;]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/downloaded"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-downloaded"><strong>downloaded</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/downloaded" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 <p><span class="ansible-option-versionadded">added in ansible.windows 1.7.0</span></p>
@@ -500,7 +510,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/failure_hresult_code"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-hresult-code"><strong>failure_hresult_code</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/failure_hresult_code" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -509,7 +519,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2147942402</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/failure_msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-msg"><strong>failure_msg</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/failure_msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 <p><span class="ansible-option-versionadded">added in ansible.windows 1.7.0</span></p>
@@ -519,7 +529,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Operation</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">complete</span> <span class="pre">because</span> <span class="pre">there</span> <span class="pre">is</span> <span class="pre">no</span> <span class="pre">logged-on</span> <span class="pre">interactive</span> <span class="pre">user</span> <span class="pre">(WU_E_NO_INTERACTIVE_USER</span> <span class="pre">0x80240020)&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-id"><strong>id</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/id" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -528,7 +538,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;fb95c1c8-de23-4089-ae29-fd3351d55421&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/installed"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-installed"><strong>installed</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/installed" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -537,7 +547,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/kb"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-kb"><strong>kb</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/kb" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -546,7 +556,7 @@
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;3004365&quot;]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/title"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-title"><strong>title</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/title" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
