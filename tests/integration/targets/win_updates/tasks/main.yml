@@ -140,6 +140,8 @@
       - not search_async is changed
       - not search_sync.reboot_required
       - not search_async.reboot_required
+      - not search_sync.rebooted
+      - not search_async.rebooted
       - search_sync.failed_update_count == 0
       - search_async.failed_update_count == 0
       - search_sync.installed_update_count == 0

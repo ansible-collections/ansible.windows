@@ -1613,6 +1613,7 @@ finally {
 if ($invokeSplat.Wait) {
     # Format the output for legacy async behaviour
     $module.Result.reboot_required = $false
+    $module.Result.rebooted = $false
     $module.Result.changed = $false
     $module.Result.found_update_count = 0
     $module.Result.failed_update_count = 0

@@ -239,6 +239,7 @@ def test_install_with_multiple_reboots(monkeypatch):
     assert reboot_mock.call_count == 2
     assert actual['changed']
     assert not actual['reboot_required']
+    assert actual['rebooted'] is True
     assert actual['found_update_count'] == 8
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 8
@@ -268,6 +269,7 @@ def test_install_without_reboot(monkeypatch):
     assert reboot_mock.call_count == 0
     assert actual['changed']
     assert actual['reboot_required']
+    assert actual['rebooted'] is False
     assert actual['found_update_count'] == 3
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 3
@@ -315,6 +317,7 @@ def test_install_with_initial_reboot_required(monkeypatch):
     assert reboot_mock.call_count == 2
     assert actual['changed']
     assert not actual['reboot_required']
+    assert actual['rebooted'] is True
     assert actual['found_update_count'] == 6
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 5  # 1 found update was already installed at the beginning
@@ -350,6 +353,7 @@ def test_install_with_reboot_fail(monkeypatch):
     assert reboot_mock.call_count == 1
     assert not actual['changed']
     assert actual['reboot_required']
+    assert actual['rebooted'] is True
     assert actual['failed']
     assert actual['msg'] == 'Failed to reboot host: Failure msg from reboot'
     assert actual['found_update_count'] == 6
@@ -382,6 +386,7 @@ def test_install_with_reboot_check_mode(monkeypatch):
     assert reboot_mock.call_count == 0
     assert actual['changed']
     assert not actual['reboot_required']
+    assert actual['rebooted'] is True
     assert 'failed' not in actual
     assert 'msg' not in actual
     assert actual['found_update_count'] == 6
@@ -414,6 +419,7 @@ def test_install_reboot_with_two_failures(monkeypatch):
     assert reboot_mock.call_count == 1
     assert actual['changed']
     assert not actual['reboot_required']
+    assert actual['rebooted'] is True
     assert actual['failed']
     assert actual['msg'] == 'Searching for updates: Exception from HRESULT: 0x80240032 - The search criteria string was invalid ' \
         '(WU_E_INVALID_CRITERIA 80240032)'
@@ -439,6 +445,7 @@ def test_install_with_initial_reboot_required_but_no_reboot(monkeypatch):
     assert actual['failed']
     assert actual['msg'] == 'A reboot is required before more updates can be installed'
     assert actual['reboot_required']
+    assert actual['rebooted'] is False
     assert actual['found_update_count'] == 5
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 0
@@ -507,6 +514,7 @@ def test_fail_install(monkeypatch):
     assert actual['changed']
     assert actual['failed']
     assert actual['reboot_required']
+    assert actual['rebooted'] is False
     assert actual['found_update_count'] == 2
     assert actual['failed_update_count'] == 1
     assert actual['installed_update_count'] == 1
@@ -598,6 +606,7 @@ def test_reboot_with_tmpdir_cleanup(monkeypatch):
 
     assert actual['changed']
     assert not actual['reboot_required']
+    assert actual['rebooted'] is True
     assert actual['found_update_count'] == 6
     assert actual['failed_update_count'] == 0
     assert actual['installed_update_count'] == 6
