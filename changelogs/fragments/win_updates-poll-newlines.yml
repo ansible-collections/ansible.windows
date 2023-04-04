@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - Add better handling for the polling output for connection plugins that might drop newlines on the output - https://github.com/ansible-collections/ansible.windows/issues/477

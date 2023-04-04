@@ -93,7 +93,7 @@ try {
         $line
     }
 
-    $fs.Position
+    '{{"position": {0}}}' -f $fs.Position
 }
 finally {
     if ($sr) { $sr.Dispose() }
@@ -986,15 +986,27 @@ class ActionModule(ActionBase):
             msg = "Failed to poll update task, see rc, stdout, stderr for more info"
             raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
 
-        lines = stdout.splitlines()
-        offset = int(lines.pop(-1))
+        # https://github.com/ansible-collections/ansible.windows/issues/477
+        # We can't rely on the output containing newlines so use JSONDecoder to
+        # stream the JSON objects until there is nothing left
+        stdout = stdout.lstrip()
+        decoder = json.JSONDecoder()
+
         entries = []
-        for l in lines:
+        offset = 0
+        while stdout:
             try:
-                entries.append(json.loads(l))
+                entry, pos = decoder.raw_decode(stdout)
             except getattr(json.decoder, 'JSONDecodeError', ValueError) as e:
                 msg = 'Failed to decode poll result json: %s' % to_native(e)
                 raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
+
+            if list(entry.keys()) == ["position"]:
+                offset = int(entry["position"])
+            else:
+                entries.append(entry)
+
+            stdout = stdout[pos:].lstrip()
 
         return entries, offset
 

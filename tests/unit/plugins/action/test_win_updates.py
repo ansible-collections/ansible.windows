@@ -9,7 +9,6 @@ __metaclass__ = type
 import ntpath
 import os
 
-from ansible.module_utils.common.text.converters import to_bytes
 from ansible.playbook.task import Task
 
 from ansible_collections.ansible.windows.tests.unit.compat.mock import MagicMock
@@ -80,11 +79,12 @@ UPDATE_INFO = {
 class UpdateProgressHelper:
     """Mocks the functionality of POLL_SCRIPT to get update results for testing"""
 
-    def __init__(self, test_name, default_rc=0, default_stderr=b''):
+    def __init__(self, test_name, default_rc=0, default_stderr=b'', newline_separator=b'\n'):
         self._path = os.path.abspath(os.path.join(__file__, '..', '..', '..', 'test_data', 'win_updates', test_name))
         self._reader = self._read_gen()
         self._rc = default_rc
         self._stderr = default_stderr
+        self._newline_separator = newline_separator
 
     def poll(self, cmd, **kwargs):
         return next(self._reader)
@@ -99,8 +99,8 @@ class UpdateProgressHelper:
                 # Every blank line is treated as no more data is available and the script should return the values
                 # retrieved. A subsequent call will continue to return the remaining data.
                 if not line:
-                    lines.append(to_bytes(offset))
-                    b_stdout = b'\n'.join(lines)
+                    lines.append(('{"position": %d}' % offset).encode())
+                    b_stdout = self._newline_separator.join(lines)
                     lines = []
                     yield self._rc, b_stdout, self._stderr
 
@@ -108,8 +108,13 @@ class UpdateProgressHelper:
                 offset += len(line)
 
 
-def mock_connection_init(test_id, default_rc=0, default_stderr=b''):
-    progress_helper = UpdateProgressHelper(test_id, default_rc=default_rc, default_stderr=default_stderr)
+def mock_connection_init(test_id, default_rc=0, default_stderr=b'', newline_separator=b'\n'):
+    progress_helper = UpdateProgressHelper(
+        test_id,
+        default_rc=default_rc,
+        default_stderr=default_stderr,
+        newline_separator=newline_separator,
+    )
     mock_connection = MagicMock()
     mock_connection._shell.tmpdir = 'shell_tmpdir'
     mock_connection._shell.join_path = ntpath.join
@@ -135,12 +140,18 @@ def win_updates_init(task_args, async_val=0, check_mode=False, connection=None):
     return plugin
 
 
-def run_action(monkeypatch, test_id, task_vars, check_mode=False, poll_rc=0, poll_stderr=b''):
+def run_action(monkeypatch, test_id, task_vars, check_mode=False, poll_rc=0, poll_stderr=b'', poll_newline_separator=b'\n'):
     module_arg_return = task_vars.copy()
     module_arg_return['_wait'] = False
 
+    connection = mock_connection_init(
+        test_id,
+        default_rc=poll_rc,
+        default_stderr=poll_stderr,
+        newline_separator=poll_newline_separator,
+    )
     plugin = win_updates_init(task_vars, check_mode=check_mode,
-                              connection=mock_connection_init(test_id, default_rc=poll_rc, default_stderr=poll_stderr))
+                              connection=connection)
     execute_module = MagicMock()
     execute_module.return_value = {
         'invocation': {'module_args': module_arg_return},
@@ -196,7 +207,7 @@ def test_failure_with_poll_script(monkeypatch):
     actual = run_action(monkeypatch, 'fail_poll_script.txt', {}, poll_rc=1, poll_stderr=b'stderr msg')
 
     assert actual['rc'] == 1
-    assert actual['stdout'] == 'stdout message\n14'
+    assert actual['stdout'] == 'stdout message\n{"position": 14}'
     assert actual['stderr'] == 'stderr msg'
     assert actual['failed']
     assert actual['msg'] == 'Failed to poll update task, see rc, stdout, stderr for more info'
@@ -212,7 +223,7 @@ def test_poll_script_invalid_json_output(monkeypatch):
     actual = run_action(monkeypatch, 'fail_poll_script_invalid_json.txt', {}, poll_rc=0, poll_stderr=b'stderr msg')
 
     assert actual['rc'] == 0
-    assert actual['stdout'] == '{"task":unquoted}\n17'
+    assert actual['stdout'] == '{"task":unquoted}\n{"position": 17}'
     assert actual['stderr'] == 'stderr msg'
     assert actual['failed']
     assert actual['msg'].startswith('Failed to decode poll result json: ')
@@ -222,6 +233,45 @@ def test_poll_script_invalid_json_output(monkeypatch):
     assert actual['installed_update_count'] == 0
     assert actual['filtered_updates'] == {}
     assert actual['updates'] == {}
+
+
+def test_poll_script_without_newlines(monkeypatch):
+    actual = run_action(monkeypatch, 'install_no_reboot.txt', {}, poll_newline_separator=b'')
+
+    assert actual['changed'] is True
+    assert actual['reboot_required'] is True
+    assert actual['found_update_count'] == 3
+    assert actual['failed_update_count'] == 0
+    assert actual['installed_update_count'] == 3
+
+    assert len(actual['filtered_updates']) == 3
+    for u_id, u in actual['filtered_updates'].items():
+        assert u['id'] == u_id
+        assert u['id'] in UPDATE_INFO
+        u_info = UPDATE_INFO[u['id']]
+        assert u['title'] == u_info['title']
+        assert u['kb'] == [u_info['kb']]
+        assert u['categories'] == u_info['categories']
+        assert not u['downloaded']
+        assert not u['installed']
+
+        if u_info['kb'] == '2267602':
+            assert u['filtered_reason'] == 'blacklist'
+            assert u['filtered_reasons'] == ['reject_list', 'category_names']
+        else:
+            assert u['filtered_reason'] == 'category_names'
+            assert u['filtered_reasons'] == ['category_names']
+
+    assert len(actual['updates']) == 3
+    for u_id, u in actual['updates'].items():
+        assert u['id'] == u_id
+        assert u['id'] in UPDATE_INFO
+        u_info = UPDATE_INFO[u['id']]
+        assert u['title'] == u_info['title']
+        assert u['kb'] == [u_info['kb']]
+        assert u['categories'] == u_info['categories']
+        assert u['downloaded']
+        assert u['installed']
 
 
 def test_install_with_multiple_reboots(monkeypatch):
