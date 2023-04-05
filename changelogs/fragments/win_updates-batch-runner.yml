@@ -1,0 +1,5 @@
+bugfixes:
+- win_updates - Improve batch task runner reliability and attempt to return more info on failures - https://github.com/ansible-collections/ansible.windows/issues/448
+
+minor_changes:
+- Process - Add support for starting a process with a custom parent
