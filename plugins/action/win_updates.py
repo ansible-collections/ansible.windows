@@ -974,7 +974,15 @@ class ActionModule(ActionBase):
             'cancel_id' not in result
         ):
             msg = result.get('msg', 'Unknown failure when running win_updates')
-            raise _ReturnResultException(msg, exception=result.get('exception', None))
+
+            extra_result = {}
+            if 'rc' in result:
+                extra_result['rc'] = result['rc']
+            if 'stdout' in result:
+                extra_result['stdout'] = result['stdout']
+            if 'stderr' in result:
+                extra_result['stderr'] = result['stderr']
+            raise _ReturnResultException(msg, exception=result.get('exception', None), **extra_result)
 
         return result['output_path'], result['task_pid'], result['cancel_id']
 

@@ -396,6 +396,87 @@ exit 1
             $actual.Dispose()
         }
     }
+
+    "NativeCreateProcess with ParentProcess" = {
+        $parentProc = Start-Process -FilePath cmd.exe -PassThru -WindowStyle Hidden
+        try {
+            $cmd = 'powershell.exe -Command sleep 60'
+
+            $si = [Ansible.Windows.Process.StartupInfo]@{
+                WindowStyle = 'Hidden'
+                ParentProcess = $parentProc.Id
+            }
+
+            $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+                $null,
+                $cmd,
+                $null,
+                $null,
+                $false,
+                'CreateNewConsole',
+                $null,
+                $null,
+                $si
+            )
+
+            try {
+                $info = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId=$($actual.ProcessId)" -Property ParentProcessId
+                $info.ParentProcessId | Assert-Equal -Expected $parentProc.Id
+            }
+            finally {
+                Stop-Process -Id $actual.ProcessId -Force
+                $actual.Dispose()
+            }
+        }
+        finally {
+            Stop-Process -Id $parentProc.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    "NativeCreateProcess with ParentProcess and redirected stdio" = {
+        $stdoutPipe = New-Object -TypeName System.IO.Pipes.AnonymousPipeServerStream -ArgumentList @(
+            [System.IO.Pipes.PipeDirection]::In,
+            [System.IO.HandleInheritability]::Inheritable
+        )
+        $stdoutReader = New-Object -TypeName System.IO.StreamReader -ArgumentList $stdoutPipe
+        $parentProc = Start-Process -FilePath cmd.exe -PassThru -WindowStyle Hidden
+        try {
+            $cmd = 'powershell.exe -Command (Get-CimInstance -ClassName Win32_Process -Filter \"ProcessId=$pid\" -Property ParentProcessId).ParentProcessId'
+
+            $si = [Ansible.Windows.Process.StartupInfo]@{
+                WindowStyle = 'Hidden'
+                ParentProcess = $parentProc.Id
+                StandardOutput = $stdoutPipe.ClientSafePipeHandle
+            }
+
+            $actual = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+                $null,
+                $cmd,
+                $null,
+                $null,
+                $true,
+                'CreateNewConsole',
+                $null,
+                $null,
+                $si
+            )
+            $stdoutPipe.DisposeLocalCopyOfClientHandle()
+
+            try {
+                Wait-Process -Id $actual.ProcessId
+                $info = $stdoutReader.ReadToEnd().Trim()
+                $info | Assert-Equal -Expected ([string]($parentProc.Id))
+            }
+            finally {
+                $actual.Dispose()
+            }
+        }
+        finally {
+            Stop-Process -Id $parentProc.Id -Force -ErrorAction SilentlyContinue
+            $stdoutReader.Dispose()
+            $stdoutPipe.Dispose()
+        }
+    }
 }
 
 foreach ($test_impl in $tests.GetEnumerator()) {

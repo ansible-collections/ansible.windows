@@ -1,6 +1,7 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -56,9 +57,9 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             public UInt16 wShowWindow;
             public UInt16 cbReserved2;
             public IntPtr lpReserved2;
-            public SafeHandle hStdInput = new SafeNativeHandle(IntPtr.Zero);
-            public SafeHandle hStdOutput = new SafeNativeHandle(IntPtr.Zero);
-            public SafeHandle hStdError = new SafeNativeHandle(IntPtr.Zero);
+            public SafeHandle hStdInput = new SafeNativeHandle(IntPtr.Zero, false);
+            public SafeHandle hStdOutput = new SafeNativeHandle(IntPtr.Zero, false);
+            public SafeHandle hStdError = new SafeNativeHandle(IntPtr.Zero, false);
 
             public STARTUPINFOW()
             {
@@ -70,7 +71,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         public class STARTUPINFOEX
         {
             public STARTUPINFOW startupInfo;
-            public IntPtr lpAttributeList;
+            public SafeHandle lpAttributeList = new SafeNativeHandle(IntPtr.Zero, false);
             public STARTUPINFOEX()
             {
                 startupInfo = new STARTUPINFOW();
@@ -85,6 +86,15 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             public IntPtr hThread;
             public int dwProcessId;
             public int dwThreadId;
+        }
+
+
+        [Flags]
+        public enum DuplicateHandleOptions : uint
+        {
+            NONE = 0x0000000,
+            DUPLICATE_CLOSE_SOURCE = 0x00000001,
+            DUPLICATE_SAME_ACCESS = 0x00000002,
         }
 
         public enum JobObjectInformationClass : uint
@@ -158,11 +168,28 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             NativeHelpers.STARTUPINFOEX lpStartupInfo,
             out NativeHelpers.PROCESS_INFORMATION lpProcessInformation);
 
+        [DllImport("kernel32.dll")]
+        public static extern void DeleteProcThreadAttributeList(
+            IntPtr lpAttributeList);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool DuplicateHandle(
+            SafeHandle hSourceProcessHandle,
+            SafeHandle hSourceHandle,
+            SafeHandle hTargetProcessHandle,
+            out IntPtr lpTargetHandle,
+            UInt32 dwDesiredAccess,
+            bool bInheritHandle,
+            NativeHelpers.DuplicateHandleOptions dwOptions);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool FreeConsole();
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetConsoleWindow();
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetCurrentProcess();
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool GetExitCodeProcess(
@@ -176,6 +203,19 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             out UIntPtr lpCompletionKey,
             out IntPtr lpOverlapped,
             UInt32 dwMilliseconds);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool InitializeProcThreadAttributeList(
+            IntPtr lpAttributeList,
+            Int32 dwAttributeCount,
+            UInt32 dwFlags,
+            ref IntPtr lpSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern SafeNativeHandle OpenProcess(
+            Int32 dwDesiredAccess,
+            bool bInheritHandle,
+            Int32 dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UInt32 ResumeThread(
@@ -202,10 +242,55 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             IntPtr lpJobObjectInformation,
             Int32 cbJobObjectInformationLength);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool UpdateProcThreadAttribute(
+            SafeHandle lpAttributeList,
+            UInt32 dwFlags,
+            UIntPtr Attribute,
+            SafeHandle lpValue,
+            UIntPtr cbSize,
+            IntPtr lpPreviousValue,
+            IntPtr lpReturnSize);
+
         [DllImport("kernel32.dll")]
         public static extern UInt32 WaitForSingleObject(
             SafeHandle hHandle,
             UInt32 dwMilliseconds);
+    }
+
+    internal class SafeDuplicateHandle : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        private readonly SafeHandle _process;
+        private readonly bool _ownsHandle;
+
+        public SafeDuplicateHandle(IntPtr handle, SafeHandle process) : this(handle, process, true) { }
+
+        public SafeDuplicateHandle(IntPtr handle, SafeHandle process, bool ownsHandle) : base(true)
+        {
+            SetHandle(handle);
+            _process = process;
+            _ownsHandle = ownsHandle;
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            if (_ownsHandle)
+            {
+                // Cannot pass this SafeHandle object to DuplicateHandle as it
+                // will appeared as closed/invalid already. Use a temporary
+                // SafeHandle that is set not to dispose itself.
+                ProcessUtil.DuplicateHandle(
+                    _process,
+                    new SafeNativeHandle(handle, false),
+                    null,
+                    0,
+                    false,
+                    NativeHelpers.DuplicateHandleOptions.DUPLICATE_CLOSE_SOURCE,
+                    false);
+                _process.Dispose();
+            }
+            return true;
+        }
     }
 
     internal class SafeMemoryBuffer : SafeHandleZeroOrMinusOneIsInvalid
@@ -224,6 +309,35 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
+            return true;
+        }
+    }
+
+    internal class SafeProcThreadAttribute : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        internal List<SafeHandle> values = new List<SafeHandle>();
+
+        public SafeProcThreadAttribute() : base(true) { }
+        public SafeProcThreadAttribute(IntPtr preexistingHandle, bool ownsHandle) : base(ownsHandle)
+        {
+            SetHandle(preexistingHandle);
+        }
+
+        public void AddValue(SafeHandle value)
+        {
+            values.Add(value);
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            foreach (SafeHandle val in values)
+            {
+                val.Dispose();
+            }
+
+            NativeMethods.DeleteProcThreadAttributeList(handle);
+            Marshal.FreeHGlobal(handle);
+
             return true;
         }
     }
@@ -268,7 +382,8 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
     public class SafeNativeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeNativeHandle() : base(true) { }
-        public SafeNativeHandle(IntPtr handle) : base(true) { this.handle = handle; }
+        public SafeNativeHandle(IntPtr handle) : this(handle, true) { }
+        public SafeNativeHandle(IntPtr handle, bool ownsHandle) : base(ownsHandle) { this.handle = handle; }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
@@ -333,6 +448,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         public SafeHandle StandardInput { get; set; }
         public SafeHandle StandardOutput { get; set; }
         public SafeHandle StandardError { get; set; }
+        public int ParentProcess { get; set; }
 
         // TODO: Support PROC_THREAD_ATTRIBUTE_HANDLE_LIST
     }
@@ -454,28 +570,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             if (!String.IsNullOrWhiteSpace(startupInfo.Title))
                 si.startupInfo.lpTitle = startupInfo.Title;
 
-            bool useStdHandles = false;
-            if (startupInfo.StandardInput != null)
-            {
-                si.startupInfo.hStdInput = startupInfo.StandardInput;
-                useStdHandles = true;
-            }
-
-            if (startupInfo.StandardOutput != null)
-            {
-                si.startupInfo.hStdOutput = startupInfo.StandardOutput;
-                useStdHandles = true;
-            }
-
-            if (startupInfo.StandardError != null)
-            {
-                si.startupInfo.hStdError = startupInfo.StandardError;
-                useStdHandles = true;
-            }
-
-            if (useStdHandles)
-                si.startupInfo.dwFlags |= NativeHelpers.StartupInfoFlags.USESTDHANDLES;
-
             if (startupInfo.WindowStyle != null)
             {
                 switch (startupInfo.WindowStyle)
@@ -496,11 +590,28 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
                 si.startupInfo.dwFlags |= NativeHelpers.StartupInfoFlags.STARTF_USESHOWWINDOW;
             }
 
+            si.lpAttributeList = CreateProcThreadAttributes(startupInfo);
+
             NativeHelpers.PROCESS_INFORMATION pi = new NativeHelpers.PROCESS_INFORMATION();
+            using (SafeHandle stdinHandle = PrepareStdioHandle(startupInfo.StandardInput, startupInfo))
+            using (SafeHandle stdoutHandle = PrepareStdioHandle(startupInfo.StandardOutput, startupInfo))
+            using (SafeHandle stderrHandle = PrepareStdioHandle(startupInfo.StandardError, startupInfo))
             using (SafeMemoryBuffer lpProcessAttr = CreateSecurityAttributes(processAttributes))
             using (SafeMemoryBuffer lpThreadAttributes = CreateSecurityAttributes(threadAttributes))
             using (SafeMemoryBuffer lpEnvironment = CreateEnvironmentPointer(environment))
             {
+                si.startupInfo.hStdInput = stdinHandle;
+                si.startupInfo.hStdOutput = stdoutHandle;
+                si.startupInfo.hStdError = stderrHandle;
+                if (
+                    si.startupInfo.hStdInput.DangerousGetHandle() != IntPtr.Zero ||
+                    si.startupInfo.hStdOutput.DangerousGetHandle() != IntPtr.Zero ||
+                    si.startupInfo.hStdError.DangerousGetHandle() != IntPtr.Zero
+                )
+                {
+                    si.startupInfo.dwFlags |= NativeHelpers.StartupInfoFlags.USESTDHANDLES;
+                }
+
                 StringBuilder commandLineBuff = new StringBuilder(commandLine);
                 if (!NativeMethods.CreateProcessW(applicationName, commandLineBuff, lpProcessAttr, lpThreadAttributes,
                     inheritHandles, creationFlags, lpEnvironment, currentDirectory, si, out pi))
@@ -526,6 +637,21 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         {
             if (NativeMethods.ResumeThread(thread) == 0xFFFFFFFF)
                 throw new Win32Exception("ResumeThread() failed");
+        }
+
+        /// <summary>
+        /// Gets the exit code for the specified process handle.
+        /// </summary>
+        /// <param name="processHandle">The process handle to get the exit code for.</param>
+        /// <returns>The process exit code.</returns>
+        public static UInt32 GetProcessExitCode(SafeHandle processHandle)
+        {
+            NativeMethods.WaitForSingleObject(processHandle, 0xFFFFFFFF);
+
+            UInt32 exitCode;
+            if (!NativeMethods.GetExitCodeProcess(processHandle, out exitCode))
+                throw new Win32Exception("GetExitCodeProcess() failed");
+            return exitCode;
         }
 
         internal static void CreateStdioPipes(StartupInfo si, out SafeFileHandle stdoutRead,
@@ -585,6 +711,27 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             }
 
             return new SafeMemoryBuffer(lpAttributes);
+        }
+
+        internal static SafeDuplicateHandle DuplicateHandle(SafeHandle sourceProcess, SafeHandle sourceHandle,
+            SafeHandle targetProcess, UInt32 access, bool inherit, NativeHelpers.DuplicateHandleOptions options,
+            bool ownsHandle)
+        {
+            if (targetProcess == null)
+            {
+                targetProcess = new SafeNativeHandle(IntPtr.Zero, false);
+                // If closing the duplicate then mark the returned handle so it doesn't try to close itself again.
+                ownsHandle = (options & NativeHelpers.DuplicateHandleOptions.DUPLICATE_CLOSE_SOURCE) == 0;
+            }
+
+            IntPtr dup = IntPtr.Zero;
+            if (!NativeMethods.DuplicateHandle(sourceProcess, sourceHandle, targetProcess, out dup, access,
+                inherit, options))
+            {
+                throw new Win32Exception("DuplicateHandle() failed");
+            }
+
+            return new SafeDuplicateHandle(dup, targetProcess, ownsHandle);
         }
 
         internal static Result WaitProcess(SafeFileHandle stdoutRead, SafeFileHandle stdoutWrite, SafeFileHandle stderrRead,
@@ -690,16 +837,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             stderr = se;
         }
 
-        internal static UInt32 GetProcessExitCode(SafeHandle processHandle)
-        {
-            NativeMethods.WaitForSingleObject(processHandle, 0xFFFFFFFF);
-
-            UInt32 exitCode;
-            if (!NativeMethods.GetExitCodeProcess(processHandle, out exitCode))
-                throw new Win32Exception("GetExitCodeProcess() failed");
-            return exitCode;
-        }
-
         private static SafeHandle CreateJob(bool ignoreErrors)
         {
             SafeNativeHandle job = NativeMethods.CreateJobObjectW(IntPtr.Zero, null);
@@ -718,6 +855,118 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
                 throw new Win32Exception("Failed to create IoCompletionPort");
 
             return ioPort;
+        }
+
+        private static SafeHandle CreateProcThreadAttributes(StartupInfo startupInfo)
+        {
+            int count = 0;
+            if (startupInfo.ParentProcess > 0)
+            {
+                count++;
+            }
+
+            if (count == 0)
+            {
+                return new SafeNativeHandle(IntPtr.Zero, false);
+            }
+
+            SafeProcThreadAttribute attr = InitializeProcThreadAttributeList(count);
+            try
+            {
+                if (startupInfo.ParentProcess > 0)
+                {
+                    SafeNativeHandle parentProcess = OpenProcess(startupInfo.ParentProcess,
+                        0x00000080,  // PROCESS_CREATE_PROCESS
+                        false);
+                    attr.AddValue(parentProcess);
+
+                    SafeMemoryBuffer val = new SafeMemoryBuffer(IntPtr.Size);
+                    attr.AddValue(val);
+
+                    Marshal.WriteIntPtr(val.DangerousGetHandle(), parentProcess.DangerousGetHandle());
+                    UpdateProcThreadAttribute(attr,
+                        0x00020000,  // PROC_THREAD_ATTRIBUTE_PARENT_PROCESS
+                        val,
+                        IntPtr.Size);
+                }
+            }
+            catch
+            {
+                attr.Dispose();
+                throw;
+            }
+
+            return attr;
+        }
+
+        private static SafeProcThreadAttribute InitializeProcThreadAttributeList(int count)
+        {
+            IntPtr size = IntPtr.Zero;
+            NativeMethods.InitializeProcThreadAttributeList(IntPtr.Zero, count, 0, ref size);
+
+            IntPtr h = Marshal.AllocHGlobal((int)size);
+            try
+            {
+                if (!NativeMethods.InitializeProcThreadAttributeList(h, count, 0, ref size))
+                    throw new Win32Exception("Failed to create process thread attribute list");
+
+                return new SafeProcThreadAttribute(h, true);
+            }
+            catch
+            {
+                Marshal.FreeHGlobal(h);
+                throw;
+            }
+        }
+
+        private static SafeNativeHandle OpenProcess(int processId, int access, bool inherit)
+        {
+            SafeNativeHandle proc = NativeMethods.OpenProcess(access, inherit, processId);
+            if (proc.DangerousGetHandle() == IntPtr.Zero)
+            {
+                throw new Win32Exception(string.Format(
+                    "OpenProcess(0x{0:X8}, {1}, {2}) failed",
+                    access, inherit, processId));
+            }
+
+            return proc;
+        }
+
+        private static SafeHandle PrepareStdioHandle(SafeHandle handle, StartupInfo startupInfo)
+        {
+            if (handle == null || handle.DangerousGetHandle() == IntPtr.Zero)
+                return new SafeNativeHandle(IntPtr.Zero, false);
+
+            if (startupInfo.ParentProcess > 0)
+            {
+                // The handle needs to be duplicated into the target process so
+                // it can be inherited.
+                SafeNativeHandle currentProcess = new SafeNativeHandle(NativeMethods.GetCurrentProcess(), false);
+                SafeNativeHandle targetProcess = OpenProcess(startupInfo.ParentProcess,
+                        0x00000040,  // PROCESS_DUP_HANDLE
+                        false);
+
+                return DuplicateHandle(currentProcess, handle, targetProcess, 0, true,
+                    NativeHelpers.DuplicateHandleOptions.DUPLICATE_SAME_ACCESS, true);
+            }
+            else
+            {
+                // Create a copy of the handle and ensure it won't be disposed.
+                // The original owner is still in charge of it.
+                return new SafeNativeHandle(handle.DangerousGetHandle(), false);
+            }
+        }
+
+        private static void UpdateProcThreadAttribute(SafeProcThreadAttribute attributeList, int attr,
+            SafeHandle value, int size)
+        {
+            if (!NativeMethods.UpdateProcThreadAttribute(attributeList, 0, (UIntPtr)attr, value, (UIntPtr)size,
+                IntPtr.Zero, IntPtr.Zero))
+            {
+                throw new Win32Exception("UpdateProcThreadAttribute() failed");
+            }
+
+            attributeList.AddValue(value);
         }
     }
 }

@@ -7,6 +7,8 @@
 #AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
+#AnsibleRequires -PowerShell ..module_utils.Process
+
 $spec = @{
     options = @{
         accept_list = @{ type = 'list'; elements = 'str'; aliases = 'whitelist' }
@@ -47,189 +49,34 @@ $categoryNames = $module.Params.category_names | ForEach-Object -Process {
     }
 }
 
-Function Invoke-TaskInfo {
+Function New-AnonPipe {
     <#
     .SYNOPSIS
-    Bootstrap script used as the entrypoint for our ephemeral task to invoke the code written to the pipe.
+    Creates an anonymous pipe.
 
-    .PARAMETER PipeName
-    The named pipe to read the invocation details from.
-
-    .PARAMETER LogPath
-    Write any failures to this path for reporting an error to the parent.
+    .PARAMETER Direction
+    The direction of the anonymous pipe, In creates a StreamReader and out
+    creates a StreamWriter.
     #>
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
-        [String]
-        $Id,
-
-        [Parameter(Mandatory)]
-        [String]
-        $LogPath
+        [System.IO.Pipes.PipeDirection]
+        $Direction
     )
 
-    $ErrorActionPreference = 'Stop'
-
-    # Traps are icky but it does have the convenience of capturing all failures for us to log
-    trap {
-        $errInfo = $runInfo = [System.Management.Automation.PSSerializer]::Serialize($_)
-        $errInfo | Out-File (Join-Path $LogPath 'error.txt')
-        [System.Environment]::Exit(1)
-    }
-
-    # NamedPipeClientStream does not fail if the pipe does not exist and will hang indefinitely. In case there was a
-    # problem with starting the pipe fail straight away instead of hanging. We cannot use Test-Path as that will
-    # connect to the pipe which we want to reserve for our explicit .Connect() call later on. We also cannot use the
-    # $Id as the filter part because old Win versions (2008/08R2) do not seem to support filtering for pipes there.
-    # While we don't guarantee support for these versions I'm not ready to fully drop it when there's a simple
-    # workaround.
-    # Also need to enumerate the output manually to ignore illegal paths in .NET logic
-    # https://github.com/ansible-collections/ansible.windows/issues/291
-    $pipeEnumerator = [System.IO.Directory]::EnumerateFiles('\\.\pipe\', '*').GetEnumerator()
-    try {
-        while ($true) {
-            try {
-                $remaining = $pipeEnumerator.MoveNext()
-            }
-            catch {
-                continue
-            }
-
-            if (-not $remaining) {
-                throw "Pipe $Id does not exist"
-            }
-
-            if ($pipeEnumerator.Current -eq "\\.\pipe\$Id") {
-                break
-            }
-        }
-    }
-    finally {
-        $pipeEnumerator.Dispose()
-    }
-
-    $clientReader = $null
-    $client = New-Object -TypeName System.IO.Pipes.NamedPipeClientStream -ArgumentList @(
-        '.',
-        $Id,
-        [System.IO.Pipes.PipeDirection]::In,
-        [System.IO.Pipes.PipeOptions]::None,
-        [System.Security.Principal.TokenImpersonationLevel]::Anonymous
+    $server = New-Object -TypeName System.IO.Pipes.AnonymousPipeServerStream -ArgumentList @(
+        $Direction,
+        [System.IO.HandleInheritability]::Inheritable
     )
-    try {
-        $client.Connect()
-        $clientReader = New-Object -TypeName System.IO.StreamReader -ArgumentList $client
-        $details = $clientReader.ReadToEnd()
+    $utf8 = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false
+
+    if ($Direction -eq 'In') {
+        New-Object -TypeName System.IO.StreamReader -ArgumentList $server, $utf8
     }
-    finally {
-        if ($clientReader) { $clientReader.Dispose() }
-        $client.Dispose()
+    else {
+        New-Object -TypeName System.IO.StreamWriter -ArgumentList $server, $utf8
     }
-
-    $rs = $null
-    try {
-        $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$Id")
-        try {
-            $runInfo = [System.Management.Automation.PSSerializer]::Deserialize($details)
-
-            $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-            foreach ($funcInfo in $runInfo.Commands.GetEnumerator()) {
-                $cmd = New-Object -TypeName System.Management.Automation.Runspaces.SessionStateFunctionEntry -ArgumentList @(
-                    $funcInfo.Key,
-                    $funcInfo.Value,
-                    [System.Management.Automation.ScopedItemOptions]::AllScope,
-                    $null
-                )
-                $iss.Commands.Add($cmd)
-            }
-
-            $rs = [RunspaceFactory]::CreateRunspace($iss)
-            $rs.Open()
-
-            $ps = [PowerShell]::Create()
-            $ps.Runspace = $rs
-            [void]$ps.AddScript($runInfo.ScriptBlock).AddParameters($runInfo.Parameters)
-            $task = $ps.BeginInvoke()
-
-            # Signal parent that the data was received/decoded and is running.
-            [void]$eventHandle.Set()
-        }
-        finally {
-            $eventHandle.Dispose()
-        }
-
-        $ps.EndInvoke($task)
-    }
-    finally {
-        if ($rs) { $rs.Dispose() }
-    }
-}
-
-Function New-NamedPipe {
-    <#
-    .SYNOPSIS
-    Creates a namedpipe accessible to the current user.
-
-    .PARAMETER Name
-    The pipe name to create.
-    #>
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "",
-        Justification = "We don't care about failures on dispoable, especially ones we know will occur")]
-    [OutputType([System.IO.StreamWriter])]
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory)]
-        [String]
-        $Name
-    )
-
-    $currentUser = ([Security.Principal.WindowsIdentity]::GetCurrent()).User
-    $systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
-            [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
-
-    $pipeSec = New-Object -TypeName System.IO.Pipes.PipeSecurity
-    foreach ($sid in @($currentUser, $systemSid)) {
-        $pipeSec.AddAccessRule($pipeSec.AccessRuleFactory(
-                $sid,
-                [Int32]([System.IO.Pipes.PipeAccessRights]'ReadData,ReadAttributes,ReadExtendedAttributes,Synchronize'),
-                $false,
-                [System.Security.AccessControl.InheritanceFlags]::None,
-                [System.Security.AccessControl.PropagationFlags]::None,
-                [System.Security.AccessControl.AccessControlType]::Allow
-            ))
-    }
-
-    # FUTURE: This won't work on pwsh as it doesn't take the PipeSecurity overload. Unfortunately the only way to do
-    # that before .NET 5 (pwsh 7.2+) is to use PInvoke to call CreateNamedPipeW.
-    $server = New-Object -TypeName System.IO.Pipes.NamedPipeServerStream -ArgumentList @(
-        $Name,
-        [System.IO.Pipes.PipeDirection]::Out,
-        1,
-        [System.IO.Pipes.PipeTransmissionMode]::Byte,
-        [System.IO.Pipes.PipeOptions]::Asynchronous,
-        0,
-        0,
-        $pipeSec
-    )
-
-    $sw = New-Object -TypeName System.IO.StreamWriter -ArgumentList $server
-
-    # Calling Dispose() on the stream will throw an exception is no client has connected to the server. It still
-    # closes the stream which is what we want so we just ignore the exception.
-    $sw.PSObject.Members.Add(
-        (
-            New-Object -TypeName System.Management.Automation.PSScriptMethod -ArgumentList @(
-                'Dispose',
-                {
-                    try {
-                        $this.PSBase.Dispose()
-                    }
-                    catch [System.InvalidOperationException] {}
-                }
-            )))
-
-    $sw
 }
 
 Function Start-EphemeralTask {
@@ -257,7 +104,7 @@ Function Start-EphemeralTask {
         [String]
         $Path,
 
-        [Parameter(Mandatory)]
+        [Parameter()]
         [String]
         $Arguments
     )
@@ -289,7 +136,9 @@ Function Start-EphemeralTask {
 
         $taskAction = $taskDefinition.Actions.Create(0)  # TASK_ACTION_EXEC
         $taskAction.Path = $Path
-        $taskAction.Arguments = $Arguments
+        if ($Arguments) {
+            $taskAction.Arguments = $Arguments
+        }
 
         $taskDefinition.Settings.AllowDemandStart = $true
         $taskDefinition.Settings.AllowHardTerminate = $true
@@ -438,69 +287,160 @@ Function Invoke-AsBatchLogon {
         $Wait
     )
 
-    $errPath = Join-Path $Module.Tmpdir 'error.txt'
-    if (Test-Path -LiteralPath $errPath) {
-        Remove-Item -LiteralPath $errpath -Force
+    # FUTURE: Use NamedPipeConnectionInfo once PowerShell 5.1 is the baseline
+    # to avoid the parent proc and stdio smuggling mess.
+
+    $runner = {
+        param ([Parameter(Mandatory)][string]$RunInfo)
+
+        $info = [System.Management.Automation.PSSerializer]::Deserialize($RunInfo)
+        $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+        foreach ($funcInfo in $info.Commands.GetEnumerator()) {
+            $cmd = New-Object -TypeName System.Management.Automation.Runspaces.SessionStateFunctionEntry -ArgumentList @(
+                $funcInfo.Key,
+                $funcInfo.Value,
+                [System.Management.Automation.ScopedItemOptions]::AllScope,
+                $null
+            )
+            $iss.Commands.Add($cmd)
+        }
+
+        $rs = [RunspaceFactory]::CreateRunspace($iss)
+        try {
+            $rs.Open()
+
+            $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$($info.Id)")
+            try {
+                $ps = [PowerShell]::Create()
+                $ps.Runspace = $rs
+                [void]$ps.AddScript($info.ScriptBlock).AddParameters($info.Parameters)
+                $task = $ps.BeginInvoke()
+
+                # Signal parent that the data was received/decoded and is running.
+                [void]$eventHandle.Set()
+            }
+            finally {
+                $eventHandle.Dispose()
+            }
+
+            $ps.EndInvoke($task)
+        }
+        finally {
+            $rs.Dispose()
+        }
     }
 
-    $eventHandle = $server = $null
-    try {
-        $pipeName = "ansible-$($Module.ModuleName)-$([Guid]::NewGuid().Guid)"
-        $server = New-NamedPipe -Name $pipeName
-        $waitConnect = $server.BaseStream.BeginWaitForConnection($null, $null)
+    $stubRunner = @'
+try {
+    chcp.com 65001 > $null
+    $execWrapper = $input | Out-String
+    $splitParts = $execWrapper.Split(@(\"`0`0`0`0\"), 2, [StringSplitOptions]::RemoveEmptyEntries)
+    & ([ScriptBlock]::Create($splitParts[0])) $splitParts[1]
+}
+catch {
+    $result = @{
+        message = $_.ToString()
+        exception = ($_ | Out-String) + \"`r`n`r`n$($_.ScriptStackTrace)\"
+    }
+    $msg = \"ANSIBLE_BOOTSTRAP_ERROR: $(ConvertTo-Json $result -Compress)\"
+    Write-Host $msg
+    exit -1
+}
+'@
 
+    $eventHandle = $pi = $stdout = $stdin = $null
+    $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path "$env:SystemRoot\System32\cmd.exe"
+    try {
+        $stdout = New-AnonPipe -Direction In
+        $stderr = New-AnonPipe -Direction In
+        $stdin = New-AnonPipe -Direction Out
+        $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+
+        $exitWithFailureInfo = {
+            param ([Parameter(Mandatory)][string]$Action)
+
+            $rc = [Ansible.Windows.Process.ProcessUtil]::GetProcessExitCode($pi.Process)
+            $stdoutStr = $stdout.ReadToEnd()
+            $stderrStr = $stderr.ReadToEnd()
+
+            if ($rc -eq [UInt32]::MaxValue -and $stdoutStr.StartsWith('ANSIBLE_BOOTSTRAP_ERROR: ')) {
+                $info = ConvertFrom-Json -InputObject $stdoutStr.Substring(25)
+                $module.Result.exception = $info.exception
+                $module.FailJson("Unknown failure $Action win_updates bootstrap process: $($info.message))")
+            }
+            else {
+                $module.Result.rc = $rc
+                $module.Result.stdout = $stdoutStr
+                $module.Result.stderr = $stderrStr
+                $module.FailJson("Unknown failure $Action win_updates bootstrap process, see rc/stdout/stderr for more info")
+            }
+        }
+
+        # By setting the ParentProcess, the new one will inherit the same
+        # environment/job as the ephemeral task created allowing it to live
+        # outside the Network logon scope the current process is in.
+        $si = [Ansible.Windows.Process.StartupInfo]@{
+            WindowStyle = 'Hidden'  # Useful when debugging locally, doesn't really matter in normal Ansible.
+            ParentProcess = $taskPid
+            StandardInput = $stdin.BaseStream.ClientSafePipeHandle
+            StandardOutput = $stdout.BaseStream.ClientSafePipeHandle
+            StandardError = $stderr.BaseStream.ClientSafePipeHandle
+        }
+        $pi = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
+            $pwsh,
+            "`"$pwsh`" -NoProfile -NonInteractive -Command `$input | &{ $stubRunner }",
+            $null,
+            $null,
+            $true,
+            'CreateNewConsole', # Ensures we don't mess with the current console output.
+            $null,
+            $null,
+            $si
+        )
+
+        # Once the process has started we can dispose the local client handles
+        $stdin.BaseStream.DisposeLocalCopyOfClientHandle()
+        $stdout.BaseStream.DisposeLocalCopyOfClientHandle()
+        $stderr.BaseStream.DisposeLocalCopyOfClientHandle()
+
+        $eventName = "ansible-$($Module.ModuleName)-$([Guid]::NewGuid().Guid)"
         $eventHandle = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
             $false,
             [System.Threading.EventResetMode]::ManualReset,
-            "Global\$pipeName"
+            "Global\$eventName"
         )
         [void]$eventHandle.Reset()
-
-        $scriptPath = Join-Path $Module.Tmpdir 'task.ps1'
-        Set-Content -LiteralPath $scriptPath -Value ${function:Invoke-TaskInfo}
-
-        $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-        # Cannot use -File in case the host has a GPO defined execution policy. Instead this will read the script
-        # and run it like an in memory scriptblock bypassing the execution policy.
-        $arguments = @(
-            '-NoProfile'
-            '-NonInteractive'
-            '-Command'
-            '$cmd = Get-Content -LiteralPath ''{0}'' -Raw;' -f $scriptPath
-            '&([ScriptBlock]::Create($cmd)) -Id ''{0}'' -LogPath ''{1}''' -f $pipeName, $module.TmpDir
-        ) -join ' '
-        $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path $pwsh -Arguments $arguments
-
-        # Wait for the task to connect to our pipe or for the process to end (failed and should be reported)
-        $waitProcPS = [PowerShell]::Create()
-        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id = $taskPid; ErrorAction = 'SilentlyContinue' })
-        $waitProcTask = $waitProcPS.BeginInvoke()
-
-        $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
-                $waitProcTask.AsyncWaitHandle, $waitConnect.AsyncWaitHandle
-            ))
-        if ($waitIdx -eq 0) {
-            throw "Task failed to connect to pipe"
-        }
-
-        $server.BaseStream.EndWaitForConnection($waitConnect)
-        $runInfo = [System.Management.Automation.PSSerializer]::Serialize(@{
+        $runPayload = [System.Management.Automation.PSSerializer]::Serialize(@{
+                Id = $eventName
                 Commands = $Commands
                 ScriptBlock = $ScriptBlock.ToString()
                 Parameters = $Parameters
             })
-        $server.WriteLine($runInfo)
-        $server.BaseStream.WaitForPipeDrain()
-        # Close the named pipe so the client knows it's reached the end
-        $server.Dispose()
 
-        # Wait for confirmation the task has received the data and has started the task or failed (proc has ended)
+        try {
+            $stdin.WriteLine("$runner`0`0`0`0$runPayload")
+            $stdin.Flush()
+            $stdin.Dispose()
+        }
+        catch [System.IO.IOException] {
+            # stdin pipe has been closed, the process has ended unexpected.
+            & $exitWithFailureInfo 'starting'
+        }
+        finally {
+            $stdin = $null
+        }
+
+        # Wait for the task to signal it started the code or it failed and has ended
+        $waitProcPS = [PowerShell]::Create()
+        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id = $pi.ProcessId; ErrorAction = 'SilentlyContinue' })
+        $waitProcTask = $waitProcPS.BeginInvoke()
+
         $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
                 $waitProcTask.AsyncWaitHandle, $eventHandle
             ))
 
         if ($waitIdx -eq 0) {
-            throw "Task failed to invoke script"
+            & $exitWithFailureInfo 'running'
         }
 
         if ($Wait) {
@@ -510,36 +450,18 @@ Function Invoke-AsBatchLogon {
             $waitProcPS.Stop()
         }
 
-        $taskPid
+        $pi.ProcessId
     }
     catch {
-        if (Test-Path -LiteralPath $errPath) {
-            $rawError = Get-Content -LiteralPath $errPath -Raw
-            $errDetails = [System.Management.Automation.PSSerializer]::Deserialize($rawError)
-
-            # Because the ErrorRecord is a deserialized object we need to manually build the exception msg.
-            $catInfo = '{0}: ({1}:{2}) [{3}], {4}' -f (
-                [System.Management.Automation.ErrorCategory]$errDetails.ErrorCategory_Category,
-                $errDetails.ErrorCategory_TargetName,
-                $errDetails.ErrorCategory_TargetType,
-                $errDetails.ErrorCategory_Activity,
-                $errDetails.ErrorCategory_Reason
-            )
-            $exceptionString = "{0}`r`n{1}" -f ($errDetails.ToString(), $errDetails.InvocationInfo.PositionMessage)
-            $exceptionString += "`r`n    + CategoryInfo          : {0}" -f $catInfo
-            $exceptionString += "`r`n    + FullyQualifiedErrorId : {0}" -f $errDetails.FullyQualifiedErrorId
-            $exceptionString += "`r`n`r`nScriptStackTrace:`r`n{0}" -f $errDetails.ErrorDetails_ScriptStackTrace
-
-            $Module.Result.exception = $exceptionString
-            $Module.FailJson("Failure in task bootstrap script ($($_.Exception.Message)): $($errDetails.ToString())")
-        }
-        else {
-            $Module.FailJson("Failed to invoke batch script: $($_.Exception.Message)", $_)
-        }
+        $Module.FailJson("Failed to invoke batch job: $($_.Exception.Message)", $_)
     }
     finally {
+        Stop-Process -Id $taskPid -Force -ErrorAction SilentlyContinue
         if ($eventHandle) { $eventHandle.Dispose() }
-        if ($server) { $server.Dispose() }
+        if ($pi) { $pi.Dispose() }
+        if ($stdout) { $stdout.Dispose() }
+        if ($stderr) { $stderr.Dispose() }
+        if ($stdin) { $stdin.Dispose() }
     }
 }
 
@@ -1707,7 +1629,6 @@ if ($invokeSplat.Wait) {
     }
 
     foreach ($updateKvp in $updates.GetEnumerator()) {
-        $id = $updateKvp.Key
         $info = $updateKvp.Value
 
         if ($info.Contains('filtered_reasons')) {
