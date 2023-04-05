@@ -1278,7 +1278,20 @@ namespace Ansible.Windows.WinUpdates
                 task = 'exit'
                 result = $exitResult
             }
-            Set-Content -LiteralPath $OutputPath -Value (ConvertTo-Json $exit -Compress)
+
+            # https://github.com/ansible-collections/ansible.windows/issues/490
+            # Set-Content locks the file stopping the poller from reading it.
+            # Open the file with Read share permissions.
+            $fs = $sw = $null
+            try {
+                $fs = [System.IO.File]::Open($OutputPath, "Append", "Write", "Read")
+                $sw = New-Object -TypeName System.IO.StreamWriter -ArgumentList $fs
+                $sw.WriteLine((ConvertTo-Json $exit -Compress))
+            }
+            finally {
+                if ($sw) { $sw.Dispose() }
+                if ($fs) { $fs.Dispose() }
+            }
         }
     }
 
