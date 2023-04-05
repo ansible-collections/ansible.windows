@@ -1,0 +1,2 @@
+bugfixes:
+- win_updates - Ensure failure condition doesn't lock the polling file - https://github.com/ansible-collections/ansible.windows/issues/490
