@@ -516,8 +516,13 @@ namespace Ansible.Windows.Setup
             // Older standards could use a 2 digit year that indicates 19yy.
             string dateFormat = date.Length == 10 ? "MM/dd/yyyy" : "MM/dd/yy";
 
-            DateTime rawDateTime = DateTime.ParseExact(date, dateFormat, null);
-            return DateTime.SpecifyKind(rawDateTime, DateTimeKind.Utc);
+            DateTime rawDateTime;
+            if (DateTime.TryParseExact(date, dateFormat, null, System.Globalization.DateTimeStyles.None, out rawDateTime)) {
+                return DateTime.SpecifyKind(rawDateTime, DateTimeKind.Utc);
+            }
+            else {
+                return null;
+            }
         }
 
         private int CalculateCount(byte count1, ushort count2)
