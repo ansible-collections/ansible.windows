@@ -41,7 +41,7 @@ options:
   backup:
     description:
     - Determine whether a backup should be created.
-    - When set to C(yes), create a backup file including the timestamp information
+    - When set to C(true), create a backup file including the timestamp information
       so you can get the original file back if you somehow clobbered it incorrectly.
     - No backup is taken when C(remote_src=False) and multiple files are being
       copied.
@@ -49,11 +49,11 @@ options:
     default: no
   force:
     description:
-    - If set to C(yes), the file will only be transferred if the content
+    - If set to C(true), the file will only be transferred if the content
       is different than destination.
-    - If set to C(no), the file will only be transferred if the
+    - If set to C(false), the file will only be transferred if the
       destination does not exist.
-    - If set to C(no), no checksuming of the content is performed which can
+    - If set to C(false), no checksuming of the content is performed which can
       help improve performance on larger files.
     type: bool
     default: yes
@@ -65,8 +65,8 @@ options:
     default: yes
   remote_src:
     description:
-    - If C(no), it will search for src at originating/controller machine.
-    - If C(yes), it will go to the remote/target machine for the src.
+    - If C(false), it will search for src at originating/controller machine.
+    - If C(true), it will go to the remote/target machine for the src.
     type: bool
     default: no
   src:
@@ -131,13 +131,13 @@ EXAMPLES = r'''
   ansible.windows.win_copy:
     src: C:\Temp\foo.txt
     dest: C:\ansible\foo.txt
-    remote_src: yes
+    remote_src: true
 
 - name: Copy a folder recursively where the source is on the remote host
   ansible.windows.win_copy:
     src: C:\Temp
     dest: C:\ansible
-    remote_src: yes
+    remote_src: true
 
 - name: Set the contents of a file
   ansible.windows.win_copy:

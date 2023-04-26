@@ -87,7 +87,7 @@ options:
   key_exportable:
     description:
     - Whether to allow the private key to be exported.
-    - If C(no), then this module and other process will only be able to export
+    - If C(false), then this module and other process will only be able to export
       the certificate and the private key cannot be exported.
     - Used when C(state=present) only.
     type: bool
@@ -143,14 +143,14 @@ EXAMPLES = r'''
     path: C:\Temp\cert.pfx
     state: present
     password: VeryStrongPasswordHere!
-  become: yes
+  become: true
   become_method: runas
 
 - name: Import pfx certificate without password and set private key as un-exportable
   ansible.windows.win_certificate_store:
     path: C:\Temp\cert.pfx
     state: present
-    key_exportable: no
+    key_exportable: false
   # usually you don't set this here but it is for illustrative purposes
   vars:
     ansible_winrm_transport: credssp
@@ -184,7 +184,7 @@ EXAMPLES = r'''
     state: exported
     file_type: pkcs12
     password: AnotherStrongPass!
-  become: yes
+  become: true
   become_method: runas
   become_user: SYSTEM
 
@@ -196,7 +196,7 @@ EXAMPLES = r'''
     store_location: LocalMachine
     key_storage: machine
     state: present
-  become: yes
+  become: true
   become_method: runas
   become_user: SYSTEM
 
@@ -206,7 +206,7 @@ EXAMPLES = r'''
     password: StrongPassword!
     store_type: service
     store_location: NTDS
-    key_exportable: no
+    key_exportable: false
     key_storage: machine
     state: present
 '''

@@ -26,7 +26,7 @@ options:
     required: yes
   force:
     description:
-    - If C(yes), will download the file every time and replace the file if the contents change. If C(no), will only
+    - If C(true), will download the file every time and replace the file if the contents change. If C(false), will only
       download the file if it does not exist or the remote file has been
       modified more recently than the local file.
     - This works by sending an http HEAD request to retrieve last modified
@@ -110,7 +110,7 @@ EXAMPLES = r'''
   ansible.windows.win_get_url:
     url: http://www.example.com/earthrise.jpg
     dest: C:\Users\RandomUser\earthrise.jpg
-    force: no
+    force: false
 
 - name: Download earthrise.jpg to specified path through a proxy server.
   ansible.windows.win_get_url:
@@ -157,7 +157,7 @@ checksum_dest:
     sample: 6e642bb8dd5c2e027bf21dd923337cbb4214f827
 checksum_src:
     description: <algorithm> checksum of the remote resource
-    returned: force=yes or dest did not exist
+    returned: force=true or dest did not exist
     type: str
     sample: 6e642bb8dd5c2e027bf21dd923337cbb4214f827
 elapsed:

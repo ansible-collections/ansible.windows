@@ -186,13 +186,13 @@ options:
     description:
     - The module will wait for the process it spawns to finish but any
       processes spawned in that child process as ignored.
-    - Set to C(yes) to wait for all descendent processes to finish before the
+    - Set to C(true) to wait for all descendent processes to finish before the
       module returns.
     - This is useful if the install/uninstaller is just a wrapper which then
       calls the actual installer as its own child process. When this option is
-      C(yes) then the module will wait for both processes to finish before
+      C(true) then the module will wait for both processes to finish before
       returning.
-    - This should not be required for most installers and setting to C(yes)
+    - This should not be required for most installers and setting to C(true)
       could result in the module not returning until the process it is waiting
       for has been stopped manually.
     - Requires Windows Server 2012 or Windows 8 or newer to use.
@@ -273,7 +273,7 @@ EXAMPLES = r'''
     arguments:
       - SAPWD=VeryHardPassword
       - /ConfigurationFile=C:\temp\configuration.ini
-  become: yes
+  become: true
   vars:
     ansible_become_method: runas
     ansible_become_user: "{{ user }}"
@@ -301,7 +301,7 @@ EXAMPLES = r'''
     product_id: 7-Zip
     arguments: /S
     state: present
-  become: yes
+  become: true
   become_method: runas
   become_flags: logon_type=new_credential logon_flags=netcredentials_only
   vars:

@@ -61,7 +61,7 @@ options:
   delete_key:
     description:
     - When C(state) is 'absent' then this will delete the entire key.
-    - If C(no) then it will only clear out the '(Default)' property for
+    - If C(false) then it will only clear out the '(Default)' property for
       that key.
     type: bool
     default: yes
@@ -160,13 +160,13 @@ EXAMPLES = r'''
   ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     state: absent
-    delete_key: yes
+    delete_key: true
 
 - name: Clear the existing (Default) entry at path MyCompany
   ansible.windows.win_regedit:
     path: HKCU:\Software\MyCompany
     state: absent
-    delete_key: no
+    delete_key: false
 
 - name: Remove entry 'hello' from registry path MyCompany
   ansible.windows.win_regedit:

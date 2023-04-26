@@ -67,7 +67,7 @@ EXAMPLES = r'''
 - name: Get MD5 checksum of a file
   ansible.windows.win_stat:
     path: C:\foo.ini
-    get_checksum: yes
+    get_checksum: true
     checksum_algorithm: md5
   register: md5_checksum
 
@@ -77,7 +77,7 @@ EXAMPLES = r'''
 - name: Get SHA1 checksum of file
   ansible.windows.win_stat:
     path: C:\foo.ini
-    get_checksum: yes
+    get_checksum: true
   register: sha1_checksum
 
 - debug:
@@ -86,7 +86,7 @@ EXAMPLES = r'''
 - name: Get SHA256 checksum of file
   ansible.windows.win_stat:
     path: C:\foo.ini
-    get_checksum: yes
+    get_checksum: true
     checksum_algorithm: sha256
   register: sha256_checksum
 

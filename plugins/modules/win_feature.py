@@ -75,8 +75,8 @@ EXAMPLES = r'''
   ansible.windows.win_feature:
     name: Web-Server
     state: present
-    include_sub_features: yes
-    include_management_tools: yes
+    include_sub_features: true
+    include_management_tools: true
   register: win_feature
 
 - name: Reboot if installing Web-Server feature requires it
