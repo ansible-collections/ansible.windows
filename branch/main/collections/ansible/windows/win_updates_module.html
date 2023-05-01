@@ -220,7 +220,7 @@
 </div></td>
 <td><div class="ansible-option-cell"><p>Ansible will automatically reboot the remote host if it is required and continue to install updates after the reboot.</p>
 <p>This can be used instead of using a <a class="reference internal" href="win_reboot_module.html#ansible-collections-ansible-windows-win-reboot-module"><span class="std std-ref">ansible.windows.win_reboot</span></a> task after this one and ensures all updates for that category is installed in one go.</p>
-<p>Async does not work when <code class="docutils literal notranslate"><span class="pre">reboot=yes</span></code>.</p>
+<p>Async does not work when <code class="docutils literal notranslate"><span class="pre">reboot=true</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
@@ -233,7 +233,7 @@
 <a class="ansibleOptionLink" href="#parameter-reboot_timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The time in seconds to wait until the host is back online from a reboot.</p>
-<p>This is only used if <code class="docutils literal notranslate"><span class="pre">reboot=yes</span></code> and a reboot is required.</p>
+<p>This is only used if <code class="docutils literal notranslate"><span class="pre">reboot=true</span></code> and a reboot is required.</p>
 <p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">1200</span></code></p>
 </div></td>
 </tr>
@@ -345,7 +345,7 @@
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all updates and reboot as many times as needed</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
-<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all security, critical, and rollup updates without a scheduled task</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
@@ -364,7 +364,7 @@
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
-<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install only particular updates based on the KB numbers</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
@@ -386,7 +386,7 @@
 <span class="c1"># Optionally, you can increase the reboot_timeout to survive long updates during reboot</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure we wait long enough for the updates to be applied during reboot</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">    </span><span class="nt">reboot_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span>
 
 <span class="c1"># Search and download Windows updates</span>

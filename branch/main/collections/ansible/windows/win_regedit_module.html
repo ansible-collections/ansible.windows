@@ -181,7 +181,7 @@
 <a class="ansibleOptionLink" href="#parameter-delete_key" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>When <code class="docutils literal notranslate"><span class="pre">state</span></code> is ‘absent’ then this will delete the entire key.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">no</span></code> then it will only clear out the ‘(Default)’ property for that key.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">false</span></code> then it will only clear out the ‘(Default)’ property for that key.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -348,13 +348,13 @@
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
-<span class="w">    </span><span class="nt">delete_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">delete_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Clear the existing (Default) entry at path MyCompany</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
-<span class="w">    </span><span class="nt">delete_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">    </span><span class="nt">delete_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove entry &#39;hello&#39; from registry path MyCompany</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>

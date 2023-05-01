@@ -198,8 +198,8 @@
 <a class="ansibleOptionLink" href="#parameter-desktop_interact" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether to allow the service user to interact with the desktop.</p>
-<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> when using the <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code> username.</p>
-<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> when the <em>service_type</em> is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
+<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> when using the <code class="docutils literal notranslate"><span class="pre">LocalSystem</span></code> username.</p>
+<p>This can only be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> when the <em>service_type</em> is <code class="docutils literal notranslate"><span class="pre">win32_own_process</span></code> or <code class="docutils literal notranslate"><span class="pre">win32_share_process</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
@@ -315,8 +315,8 @@
 <div class="ansibleOptionAnchor" id="parameter-force_dependent_services"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-service-module-parameter-force-dependent-services"><strong>force_dependent_services</strong></p>
 <a class="ansibleOptionLink" href="#parameter-force_dependent_services" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">yes</span></code>, stopping or restarting a service with dependent services will force the dependent services to stop or restart also.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">no</span></code>, stopping or restarting a service with dependent services may fail.</p>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">true</span></code>, stopping or restarting a service with dependent services will force the dependent services to stop or restart also.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">false</span></code>, stopping or restarting a service with dependent services may fail.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
@@ -580,7 +580,7 @@
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span>
 <span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
-<span class="w">    </span><span class="nt">desktop_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">desktop_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user to Network Service</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span>

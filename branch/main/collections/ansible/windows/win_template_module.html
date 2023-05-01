@@ -179,7 +179,7 @@
 <a class="ansibleOptionLink" href="#parameter-backup" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Determine whether a backup should be created.</p>
-<p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code>, create a backup file including the timestamp information so you can get the original file back if you somehow clobbered it incorrectly.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, create a backup file including the timestamp information so you can get the original file back if you somehow clobbered it incorrectly.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
@@ -215,8 +215,8 @@
 <a class="ansibleOptionLink" href="#parameter-force" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Determine when the file is being transferred if the destination already exists.</p>
-<p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code>, replace the remote file when contents are different than the source.</p>
-<p>When set to <code class="docutils literal notranslate"><span class="pre">no</span></code>, the file will only be transferred if the destination does not exist.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, replace the remote file when contents are different than the source.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, the file will only be transferred if the destination does not exist.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -229,7 +229,7 @@
 <a class="ansibleOptionLink" href="#parameter-lstrip_blocks" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Determine when leading spaces and tabs should be stripped.</p>
-<p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> leading spaces and tabs are stripped from the start of a line to a block.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">true</span></code> leading spaces and tabs are stripped from the start of a line to a block.</p>
 <p>This functionality requires Jinja 2.7 or newer.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
@@ -275,7 +275,7 @@
 <a class="ansibleOptionLink" href="#parameter-trim_blocks" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Determine when newlines should be removed from blocks.</p>
-<p>When set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> the first newline after a block is removed (block, not variable tag!).</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">true</span></code> the first newline after a block is removed (block, not variable tag!).</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -343,7 +343,7 @@
 <span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unix/config.conf.j2</span>
 <span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\share\unix\config.conf</span>
 <span class="w">    </span><span class="nt">newline_sequence</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;\n&#39;</span>
-<span class="w">    </span><span class="nt">backup</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">backup</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
 </section>
@@ -362,7 +362,7 @@
 <a class="ansibleOptionLink" href="#return-backup_file" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Name of the backup file that was created.</p>
-<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> if backup=yes</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> if backup=true</p>
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Path\\To\\File.txt.11540.20150212-220915.bak&quot;</span></code></p>
 </div></td>
 </tr>

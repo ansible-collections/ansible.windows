@@ -217,7 +217,7 @@
 <div class="ansibleOptionAnchor" id="parameter-follow"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-follow"><strong>follow</strong></p>
 <a class="ansibleOptionLink" href="#parameter-follow" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>Set this to <code class="docutils literal notranslate"><span class="pre">yes</span></code> to follow symlinks in the path.</p>
+<td><div class="ansible-option-cell"><p>Set this to <code class="docutils literal notranslate"><span class="pre">true</span></code> to follow symlinks in the path.</p>
 <p>This needs to be used in conjunction with <code class="docutils literal notranslate"><span class="pre">recurse</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
@@ -297,7 +297,7 @@
 <div class="ansibleOptionAnchor" id="parameter-use_regex"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-use-regex"><strong>use_regex</strong></p>
 <a class="ansibleOptionLink" href="#parameter-use_regex" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>Will set patterns to run as a regex check if set to <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+<td><div class="ansible-option-cell"><p>Will set patterns to run as a regex check if set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
@@ -326,7 +326,7 @@
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find hidden files in path</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\Temp</span>
-<span class="w">    </span><span class="nt">hidden</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">hidden</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files in multiple paths</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
@@ -337,13 +337,13 @@
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files in directory while searching recursively</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\Temp</span>
-<span class="w">    </span><span class="nt">recurse</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">recurse</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files in directory while following symlinks</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\Temp</span>
-<span class="w">    </span><span class="nt">recurse</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
-<span class="w">    </span><span class="nt">follow</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">recurse</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">follow</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files with .log and .out extension using powershell wildcards</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
@@ -411,13 +411,13 @@
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files and return SHA256 checksum of files found</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp</span>
-<span class="w">    </span><span class="nt">get_checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">get_checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">    </span><span class="nt">checksum_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sha256</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Find files and do not return the checksum</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_find</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp</span>
-<span class="w">    </span><span class="nt">get_checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">    </span><span class="nt">get_checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </pre></div>
 </div>
 </section>

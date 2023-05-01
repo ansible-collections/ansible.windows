@@ -501,9 +501,9 @@
 <p><span class="ansible-option-versionadded">added in ansible.windows 1.3.0</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The module will wait for the process it spawns to finish but any processes spawned in that child process as ignored.</p>
-<p>Set to <code class="docutils literal notranslate"><span class="pre">yes</span></code> to wait for all descendent processes to finish before the module returns.</p>
-<p>This is useful if the install/uninstaller is just a wrapper which then calls the actual installer as its own child process. When this option is <code class="docutils literal notranslate"><span class="pre">yes</span></code> then the module will wait for both processes to finish before returning.</p>
-<p>This should not be required for most installers and setting to <code class="docutils literal notranslate"><span class="pre">yes</span></code> could result in the module not returning until the process it is waiting for has been stopped manually.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to wait for all descendent processes to finish before the module returns.</p>
+<p>This is useful if the install/uninstaller is just a wrapper which then calls the actual installer as its own child process. When this option is <code class="docutils literal notranslate"><span class="pre">true</span></code> then the module will wait for both processes to finish before returning.</p>
+<p>This should not be required for most installers and setting to <code class="docutils literal notranslate"><span class="pre">true</span></code> could result in the module not returning until the process it is waiting for has been stopped manually.</p>
 <p>Requires Windows Server 2012 or Windows 8 or newer to use.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
@@ -596,7 +596,7 @@
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SAPWD=VeryHardPassword</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/ConfigurationFile=C:\temp\configuration.ini</span>
-<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">ansible_become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
 <span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">user</span> <span class="cp">}}</span><span class="s">&quot;</span>
@@ -624,7 +624,7 @@
 <span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7-Zip</span>
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/S</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
 <span class="w">  </span><span class="nt">become_flags</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">logon_type=new_credential logon_flags=netcredentials_only</span>
 <span class="w">  </span><span class="nt">vars</span><span class="p">:</span>

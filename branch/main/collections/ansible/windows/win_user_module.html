@@ -166,8 +166,8 @@
 <div class="ansibleOptionAnchor" id="parameter-account_disabled"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-account-disabled"><strong>account_disabled</strong></p>
 <a class="ansibleOptionLink" href="#parameter-account_disabled" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">yes</span></code> will disable the user account.</p>
-<p><code class="docutils literal notranslate"><span class="pre">no</span></code> will clear the disabled flag.</p>
+<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> will disable the user account.</p>
+<p><code class="docutils literal notranslate"><span class="pre">false</span></code> will clear the disabled flag.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -179,7 +179,7 @@
 <div class="ansibleOptionAnchor" id="parameter-account_locked"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-account-locked"><strong>account_locked</strong></p>
 <a class="ansibleOptionLink" href="#parameter-account_locked" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>Only <code class="docutils literal notranslate"><span class="pre">no</span></code> can be set and it will unlock the user account if locked.</p>
+<td><div class="ansible-option-cell"><p>Only <code class="docutils literal notranslate"><span class="pre">false</span></code> can be set and it will unlock the user account if locked.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -259,8 +259,8 @@
 <div class="ansibleOptionAnchor" id="parameter-password_expired"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-password-expired"><strong>password_expired</strong></p>
 <a class="ansibleOptionLink" href="#parameter-password_expired" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">yes</span></code> will require the user to change their password at next login.</p>
-<p><code class="docutils literal notranslate"><span class="pre">no</span></code> will clear the expired password flag.</p>
+<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> will require the user to change their password at next login.</p>
+<p><code class="docutils literal notranslate"><span class="pre">false</span></code> will clear the expired password flag.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -272,8 +272,8 @@
 <div class="ansibleOptionAnchor" id="parameter-password_never_expires"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-password-never-expires"><strong>password_never_expires</strong></p>
 <a class="ansibleOptionLink" href="#parameter-password_never_expires" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">yes</span></code> will set the password to never expire.</p>
-<p><code class="docutils literal notranslate"><span class="pre">no</span></code> will allow the password to expire.</p>
+<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> will set the password to never expire.</p>
+<p><code class="docutils literal notranslate"><span class="pre">false</span></code> will allow the password to expire.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -321,8 +321,8 @@
 <div class="ansibleOptionAnchor" id="parameter-user_cannot_change_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-user-cannot-change-password"><strong>user_cannot_change_password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-user_cannot_change_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">yes</span></code> will prevent the user from changing their password.</p>
-<p><code class="docutils literal notranslate"><span class="pre">no</span></code> will allow the user to change their password.</p>
+<td><div class="ansible-option-cell"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> will prevent the user from changing their password.</p>
+<p><code class="docutils literal notranslate"><span class="pre">false</span></code> will allow the user to change their password.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>

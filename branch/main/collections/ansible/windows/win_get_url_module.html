@@ -240,7 +240,7 @@
 <div class="ansibleOptionAnchor" id="parameter-force"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-get-url-module-parameter-force"><strong>force</strong></p>
 <a class="ansibleOptionLink" href="#parameter-force" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">yes</span></code>, will download the file every time and replace the file if the contents change. If <code class="docutils literal notranslate"><span class="pre">no</span></code>, will only download the file if it does not exist or the remote file has been modified more recently than the local file.</p>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">true</span></code>, will download the file every time and replace the file if the contents change. If <code class="docutils literal notranslate"><span class="pre">false</span></code>, will only download the file if it does not exist or the remote file has been modified more recently than the local file.</p>
 <p>This works by sending an http HEAD request to retrieve last modified time of the requested resource, so for this to work, the remote web server must support HEAD requests.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
@@ -452,7 +452,7 @@
 <span class="w">  </span><span class="nt">ansible.windows.win_get_url</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://www.example.com/earthrise.jpg</span>
 <span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Users\RandomUser\earthrise.jpg</span>
-<span class="w">    </span><span class="nt">force</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">    </span><span class="nt">force</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Download earthrise.jpg to specified path through a proxy server.</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_get_url</span><span class="p">:</span>
@@ -511,7 +511,7 @@
 <a class="ansibleOptionLink" href="#return-checksum_src" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>&lt;algorithm&gt; checksum of the remote resource</p>
-<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> force=yes or dest did not exist</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> force=true or dest did not exist</p>
 <p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;6e642bb8dd5c2e027bf21dd923337cbb4214f827&quot;</span></code></p>
 </div></td>
 </tr>
