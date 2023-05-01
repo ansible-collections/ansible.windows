@@ -1,2 +1,0 @@
-minor_changes:
-- win_updates - Added the ``rebooted`` return value to document if a host was rebooted - https://github.com/ansible-collections/ansible.windows/issues/485

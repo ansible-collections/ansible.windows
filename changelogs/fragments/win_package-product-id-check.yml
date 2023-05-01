@@ -1,2 +1,0 @@
-bugfixes:
-- win_package - Fix ``product_id`` check and skip downloaded requested file if the package is already installed - https://github.com/ansible-collections/ansible.windows/issues/479

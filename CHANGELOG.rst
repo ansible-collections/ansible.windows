@@ -5,6 +5,29 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v1.14.0
+=======
+
+Release Summary
+---------------
+
+Release summary for v1.14.0
+
+Minor Changes
+-------------
+
+- Process - Add support for starting a process with a custom parent
+- win_updates - Added the ``rebooted`` return value to document if a host was rebooted - https://github.com/ansible-collections/ansible.windows/issues/485
+
+Bugfixes
+--------
+
+- setup - Be more resilient when parsing the BIOS release date - https://github.com/ansible-collections/ansible.windows/pull/496
+- win_package - Fix ``product_id`` check and skip downloaded requested file if the package is already installed - https://github.com/ansible-collections/ansible.windows/issues/479
+- win_updates - Add better handling for the polling output for connection plugins that might drop newlines on the output - https://github.com/ansible-collections/ansible.windows/issues/477
+- win_updates - Ensure failure condition doesn't lock the polling file - https://github.com/ansible-collections/ansible.windows/issues/490
+- win_updates - Improve batch task runner reliability and attempt to return more info on failures - https://github.com/ansible-collections/ansible.windows/issues/448
+
 v1.13.0
 =======
 
