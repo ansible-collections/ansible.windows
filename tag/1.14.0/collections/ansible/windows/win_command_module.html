@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_command module – Executes a command on a remote Windows node &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/ansible.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/antsibull-minimal.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/rtd-ethical-ads.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_copy module – Copies files to remote locations on windows hosts" href="win_copy_module.html" />
+    <link rel="prev" title="ansible.windows.win_certificate_store module – Manages the certificate store" href="win_certificate_store_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/ansiblefest" target="_blank">AnsibleFest</a></li>
+    <li><a href="https://www.ansible.com/tower" target="_blank">Products</a></li>
+    <li><a href="https://www.ansible.com/community" target="_blank">Community</a></li>
+    <li><a href="https://www.ansible.com/webinars-training" target="_blank">Webinars & Training</a></li>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#communication">Communication</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_command module – Executes a command on a remote Windows node</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_command.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-command-module"></span><section id="ansible-windows-win-command-module-executes-a-command-on-a-remote-windows-node">
+<h1>ansible.windows.win_command module – Executes a command on a remote Windows node<a class="headerlink" href="#ansible-windows-win-command-module-executes-a-command-on-a-remote-windows-node" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.14.0).</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_command</span></code>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id6">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">win_command</span></code> module takes the command name followed by a list of space-delimited arguments.</p></li>
+<li><p>The given command will be executed on all selected nodes. It will not be processed through the shell, so variables like <code class="docutils literal notranslate"><span class="pre">$env:HOME</span></code> and operations like <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;;&quot;</span></code> will not work (use the <a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a> module if you need these features).</p></li>
+<li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/command_module.html#ansible-collections-ansible-builtin-command-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.command</span></a> module instead.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<table class="ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-_raw_params"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-raw-params"><strong>_raw_params</strong></p>
+<a class="ansibleOptionLink" href="#parameter-_raw_params" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The <code class="docutils literal notranslate"><span class="pre">win_command</span></code> module takes a free form command to run.</p>
+<p>This is mutually exclusive with the <code class="docutils literal notranslate"><span class="pre">cmd</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> options.</p>
+<p>There is no parameter actually named ‘_raw_params’. See the examples!</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-argv"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-argv"><strong>argv</strong></p>
+<a class="ansibleOptionLink" href="#parameter-argv" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+<p><span class="ansible-option-versionadded">added in ansible.windows 1.11.0</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list that contains the executable and arguments to run.</p>
+<p>The module will attempt to quote the arguments specified based on the <a class="reference external" href="https://docs.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments">Win32 C command-line argument rules</a>.</p>
+<p>Not all applications use the same quoting rules so the escaping may not work, for those scenarios use <code class="docutils literal notranslate"><span class="pre">cmd</span></code> instead.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-chdir"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-chdir"><strong>chdir</strong></p>
+<a class="ansibleOptionLink" href="#parameter-chdir" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the specified path as the current working directory before executing a command.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-cmd"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-cmd"><strong>cmd</strong></p>
+<a class="ansibleOptionLink" href="#parameter-cmd" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><span class="ansible-option-versionadded">added in ansible.windows 1.11.0</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command and arguments to run.</p>
+<p>This is mutually exclusive with the <code class="docutils literal notranslate"><span class="pre">_raw_params</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> options.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-creates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-creates"><strong>creates</strong></p>
+<a class="ansibleOptionLink" href="#parameter-creates" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A path or path filter pattern; when the referenced path exists on the target host, the task will be skipped.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-output_encoding_override"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-output-encoding-override"><strong>output_encoding_override</strong></p>
+<a class="ansibleOptionLink" href="#parameter-output_encoding_override" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>This option overrides the encoding of stdout/stderr output.</p>
+<p>You can use this option when you need to run a command which ignore the console’s codepage.</p>
+<p>You should only need to use this option in very rare circumstances.</p>
+<p>This value can be any valid encoding <code class="docutils literal notranslate"><span class="pre">Name</span></code> based on the output of <code class="docutils literal notranslate"><span class="pre">[System.Text.Encoding]::GetEncodings(</span></code>). See <a class="reference external" href="https://docs.microsoft.com/dotnet/api/system.text.encoding.getencodings">https://docs.microsoft.com/dotnet/api/system.text.encoding.getencodings</a>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-removes"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-removes"><strong>removes</strong></p>
+<a class="ansibleOptionLink" href="#parameter-removes" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A path or path filter pattern; when the referenced path <strong>does not</strong> exist on the target host, the task will be skipped.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-stdin"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-parameter-stdin"><strong>stdin</strong></p>
+<a class="ansibleOptionLink" href="#parameter-stdin" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the stdin of the command directly to the specified value.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>If you want to run a command through a shell (say you are using <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, etc), you actually want the <a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a> module instead. The <a class="reference internal" href="#ansible-collections-ansible-windows-win-command-module"><span class="std std-ref">ansible.windows.win_command</span></a> module is much more secure as it’s not affected by the user’s environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">creates</span></code>, <code class="docutils literal notranslate"><span class="pre">removes</span></code>, and <code class="docutils literal notranslate"><span class="pre">chdir</span></code> can be specified after the command. For instance, if you only want to run a command if a certain file does not exist, use this.</p></li>
+<li><p>Do not try to use the older style free form format and the newer style cmd/argv format. See the examples for how both of these formats are defined.</p></li>
+</ul>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/command_module.html#ansible-collections-ansible-builtin-command-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.command</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.command</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/psexec_module.html#ansible-collections-community-windows-psexec-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.psexec</span></a></dt><dd><p>The official documentation on the <strong>community.windows.psexec</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/ansible/builtin/raw_module.html#ansible-collections-ansible-builtin-raw-module" title="(in Ansible vdevel)"><span class="xref std std-ref">ansible.builtin.raw</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.raw</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/win_psexec_module.html#ansible-collections-community-windows-win-psexec-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_psexec</span></a></dt><dd><p>The official documentation on the <strong>community.windows.win_psexec</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a></dt><dd><p>Execute shell commands on target hosts.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="c1"># Older style using the free-form and args format. The command is on the same</span>
+<span class="c1"># line as the module and &#39;args&#39; is used to define the options for win_command.</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Save the result of &#39;whoami&#39; in &#39;whoami_out&#39;</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">whoami</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">whoami_out</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run command that only runs if folder exists and runs from a specific folder</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wbadmin -backupTarget:C:\backup\</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\somedir\</span>
+<span class="w">    </span><span class="nt">creates</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\backup\</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run an executable and send data to the stdin for the executable</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">powershell.exe -</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">stdin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Write-Host test</span>
+
+<span class="c1"># Newer style using module options. The command and other arguments are</span>
+<span class="c1"># defined as module options and are indended like another other module.</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run the &#39;whoami&#39; executable with the &#39;/all&#39; argument</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">whoami.exe /all</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run executable in &#39;C:\Program Files&#39; with a custom chdir</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># When using cmd, the arguments need to be quoted manually</span>
+<span class="w">    </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&quot;C:\Program</span><span class="nv"> </span><span class="s">Files\My</span><span class="nv"> </span><span class="s">Application\run.exe&quot;</span><span class="nv"> </span><span class="s">&quot;argument</span><span class="nv"> </span><span class="s">1&quot;</span><span class="nv"> </span><span class="s">-force&#39;</span>
+<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\TEMP</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run executable using argv and have win_command escape the spaces as needed</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># When using argv, each entry is quoted in the module</span>
+<span class="w">    </span><span class="nt">argv</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Program Files\My Application\run.exe</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">argument 1</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-force</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-cmd"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-cmd"><strong>cmd</strong></p>
+<a class="ansibleOptionLink" href="#return-cmd" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command executed by the task</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;rabbitmqctl</span> <span class="pre">join_cluster</span> <span class="pre">rabbit&#64;main&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-delta"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-delta"><strong>delta</strong></p>
+<a class="ansibleOptionLink" href="#return-delta" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command execution delta time</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;0:00:00.325771&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-end"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-end"><strong>end</strong></p>
+<a class="ansibleOptionLink" href="#return-end" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command execution end time</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;2016-02-25</span> <span class="pre">09:18:26.755339&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-msg"><strong>msg</strong></p>
+<a class="ansibleOptionLink" href="#return-msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>changed</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-rc"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-rc"><strong>rc</strong></p>
+<a class="ansibleOptionLink" href="#return-rc" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command return code (0 means success)</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-start"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-start"><strong>start</strong></p>
+<a class="ansibleOptionLink" href="#return-start" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command execution start time</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;2016-02-25</span> <span class="pre">09:18:26.429568&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-stderr"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-stderr"><strong>stderr</strong></p>
+<a class="ansibleOptionLink" href="#return-stderr" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command standard error</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;ls:</span> <span class="pre">cannot</span> <span class="pre">access</span> <span class="pre">foo:</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-stdout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-stdout"><strong>stdout</strong></p>
+<a class="ansibleOptionLink" href="#return-stdout" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command standard output</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Clustering</span> <span class="pre">node</span> <span class="pre">rabbit&#64;slave1</span> <span class="pre">with</span> <span class="pre">rabbit&#64;main</span> <span class="pre">...&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-stdout_lines"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-command-module-return-stdout-lines"><strong>stdout_lines</strong></p>
+<a class="ansibleOptionLink" href="#return-stdout_lines" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The command standard output split in lines</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> always</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;u'Clustering</span> <span class="pre">node</span> <span class="pre">rabbit&#64;slave1</span> <span class="pre">with</span> <span class="pre">rabbit&#64;main</span> <span class="pre">...'&quot;]</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Matt Davis (&#64;nitzmahone)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Permalink to this heading"></a></h3>
+<p class="ansible-links">
+  <a href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" aria-role="button" target="_blank" rel="noopener external">Issue Tracker</a>
+  <a href="https://github.com/ansible-collections/ansible.windows" aria-role="button" target="_blank" rel="noopener external">Repository (Sources)</a>
+  <a href="./#communication-for-ansible-windows" aria-role="button" target="_blank">Communication</a>
+</p></section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_certificate_store_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_certificate_store module – Manages the certificate store" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_copy_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_copy module – Copies files to remote locations on windows hosts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
