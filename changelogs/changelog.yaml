@@ -300,6 +300,31 @@ releases:
     - win_reboot-msg.yml
     - win_wait_for-drained.yml
     release_date: '2022-12-20'
+  1.14.0:
+    changes:
+      bugfixes:
+      - setup - Be more resilient when parsing the BIOS release date - https://github.com/ansible-collections/ansible.windows/pull/496
+      - win_package - Fix ``product_id`` check and skip downloaded requested file
+        if the package is already installed - https://github.com/ansible-collections/ansible.windows/issues/479
+      - win_updates - Add better handling for the polling output for connection plugins
+        that might drop newlines on the output - https://github.com/ansible-collections/ansible.windows/issues/477
+      - win_updates - Ensure failure condition doesn't lock the polling file - https://github.com/ansible-collections/ansible.windows/issues/490
+      - win_updates - Improve batch task runner reliability and attempt to return
+        more info on failures - https://github.com/ansible-collections/ansible.windows/issues/448
+      minor_changes:
+      - Process - Add support for starting a process with a custom parent
+      - win_updates - Added the ``rebooted`` return value to document if a host was
+        rebooted - https://github.com/ansible-collections/ansible.windows/issues/485
+      release_summary: Release summary for v1.14.0
+    fragments:
+    - release-1.14.0.yml
+    - setup-bios-date.yml
+    - win_package-product-id-check.yml
+    - win_updates-batch-runner.yml
+    - win_updates-file-locking.yml
+    - win_updates-poll-newlines.yml
+    - win_updates-rebooted.yml
+    release_date: '2023-05-02'
   1.2.0:
     fragments:
     - 1.1.0-release.yml
