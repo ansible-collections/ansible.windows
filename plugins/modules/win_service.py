@@ -34,8 +34,8 @@ options:
   desktop_interact:
     description:
     - Whether to allow the service user to interact with the desktop.
-    - This can only be set to C(yes) when using the C(LocalSystem) username.
-    - This can only be set to C(yes) when the I(service_type) is
+    - This can only be set to C(true) when using the C(LocalSystem) username.
+    - This can only be set to C(true) when the I(service_type) is
       C(win32_own_process) or C(win32_share_process).
     type: bool
     default: no
@@ -133,9 +133,9 @@ options:
     - failure_reset_period
   force_dependent_services:
     description:
-    - If C(yes), stopping or restarting a service with dependent services will
+    - If C(true), stopping or restarting a service with dependent services will
       force the dependent services to stop or restart also.
-    - If C(no), stopping or restarting a service with dependent services may
+    - If C(false), stopping or restarting a service with dependent services may
       fail.
     type: bool
     default: no
@@ -344,7 +344,7 @@ EXAMPLES = r'''
     name: service name
     state: restarted
     username: SYSTEM
-    desktop_interact: yes
+    desktop_interact: true
 
 - name: Set the log on user to Network Service
   ansible.windows.win_service:

@@ -54,14 +54,14 @@ options:
           and continue to install updates after the reboot.
         - This can be used instead of using a M(ansible.windows.win_reboot) task after this one
           and ensures all updates for that category is installed in one go.
-        - Async does not work when C(reboot=yes).
+        - Async does not work when C(reboot=true).
         type: bool
         default: no
     reboot_timeout:
         description:
         - The time in seconds to wait until the host is back online from a
           reboot.
-        - This is only used if C(reboot=yes) and a reboot is required.
+        - This is only used if C(reboot=true) and a reboot is required.
         default: 1200
         type: int
     server_selection:
@@ -146,7 +146,7 @@ EXAMPLES = r"""
 - name: Install all updates and reboot as many times as needed
   ansible.windows.win_updates:
     category_names: '*'
-    reboot: yes
+    reboot: true
 
 - name: Install all security, critical, and rollup updates without a scheduled task
   ansible.windows.win_updates:
@@ -165,7 +165,7 @@ EXAMPLES = r"""
   ansible.windows.win_updates:
     category_names:
     - SecurityUpdates
-    reboot: yes
+    reboot: true
 
 - name: Install only particular updates based on the KB numbers
   ansible.windows.win_updates:
@@ -187,7 +187,7 @@ EXAMPLES = r"""
 # Optionally, you can increase the reboot_timeout to survive long updates during reboot
 - name: Ensure we wait long enough for the updates to be applied during reboot
   ansible.windows.win_updates:
-    reboot: yes
+    reboot: true
     reboot_timeout: 3600
 
 # Search and download Windows updates

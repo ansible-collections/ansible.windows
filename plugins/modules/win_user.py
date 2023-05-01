@@ -14,12 +14,12 @@ description:
 options:
   account_disabled:
     description:
-    - C(yes) will disable the user account.
-    - C(no) will clear the disabled flag.
+    - C(true) will disable the user account.
+    - C(false) will clear the disabled flag.
     type: bool
   account_locked:
     description:
-    - Only C(no) can be set and it will unlock the user account if locked.
+    - Only C(false) can be set and it will unlock the user account if locked.
     type: bool
   description:
     description:
@@ -66,13 +66,13 @@ options:
     type: str
   password_expired:
     description:
-    - C(yes) will require the user to change their password at next login.
-    - C(no) will clear the expired password flag.
+    - C(true) will require the user to change their password at next login.
+    - C(false) will clear the expired password flag.
     type: bool
   password_never_expires:
     description:
-    - C(yes) will set the password to never expire.
-    - C(no) will allow the password to expire.
+    - C(true) will set the password to never expire.
+    - C(false) will allow the password to expire.
     type: bool
   profile:
     description:
@@ -96,8 +96,8 @@ options:
     default: always
   user_cannot_change_password:
     description:
-    - C(yes) will prevent the user from changing their password.
-    - C(no) will allow the user to change their password.
+    - C(true) will prevent the user from changing their password.
+    - C(false) will allow the user to change their password.
     type: bool
 notes:
 - The return values are based on the user object after the module options have been set. When running in check mode

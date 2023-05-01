@@ -39,13 +39,13 @@ EXAMPLES = r'''
   ansible.windows.win_owner:
     path: C:\apache
     user: apache
-    recurse: yes
+    recurse: true
 
 - name: Set the owner of root directory
   ansible.windows.win_owner:
     path: C:\apache
     user: SYSTEM
-    recurse: no
+    recurse: false
 '''
 
 RETURN = r'''

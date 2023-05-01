@@ -44,7 +44,7 @@ options:
         default: file
     follow:
         description:
-            - Set this to C(yes) to follow symlinks in the path.
+            - Set this to C(true) to follow symlinks in the path.
             - This needs to be used in conjunction with C(recurse).
         type: bool
         default: no
@@ -88,7 +88,7 @@ options:
         type: str
     use_regex:
         description:
-            - Will set patterns to run as a regex check if set to C(yes).
+            - Will set patterns to run as a regex check if set to C(true).
         type: bool
         default: no
 notes:
@@ -107,7 +107,7 @@ EXAMPLES = r'''
 - name: Find hidden files in path
   ansible.windows.win_find:
     paths: D:\Temp
-    hidden: yes
+    hidden: true
 
 - name: Find files in multiple paths
   ansible.windows.win_find:
@@ -118,13 +118,13 @@ EXAMPLES = r'''
 - name: Find files in directory while searching recursively
   ansible.windows.win_find:
     paths: D:\Temp
-    recurse: yes
+    recurse: true
 
 - name: Find files in directory while following symlinks
   ansible.windows.win_find:
     paths: D:\Temp
-    recurse: yes
-    follow: yes
+    recurse: true
+    follow: true
 
 - name: Find files with .log and .out extension using powershell wildcards
   ansible.windows.win_find:
@@ -192,13 +192,13 @@ EXAMPLES = r'''
 - name: Find files and return SHA256 checksum of files found
   ansible.windows.win_find:
     paths: C:\Temp
-    get_checksum: yes
+    get_checksum: true
     checksum_algorithm: sha256
 
 - name: Find files and do not return the checksum
   ansible.windows.win_find:
     paths: C:\Temp
-    get_checksum: no
+    get_checksum: false
 '''
 
 RETURN = r'''

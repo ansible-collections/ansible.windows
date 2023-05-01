@@ -24,7 +24,7 @@ options:
   backup:
     description:
     - Determine whether a backup should be created.
-    - When set to C(yes), create a backup file including the timestamp information
+    - When set to C(true), create a backup file including the timestamp information
       so you can get the original file back if you somehow clobbered it incorrectly.
     type: bool
     default: no
@@ -46,14 +46,14 @@ options:
   force:
     description:
     - Determine when the file is being transferred if the destination already exists.
-    - When set to C(yes), replace the remote file when contents are different than the source.
-    - When set to C(no), the file will only be transferred if the destination does not exist.
+    - When set to C(true), replace the remote file when contents are different than the source.
+    - When set to C(false), the file will only be transferred if the destination does not exist.
     type: bool
     default: yes
   lstrip_blocks:
     description:
     - Determine when leading spaces and tabs should be stripped.
-    - When set to C(yes) leading spaces and tabs are stripped from the start of a line to a block.
+    - When set to C(true) leading spaces and tabs are stripped from the start of a line to a block.
     - This functionality requires Jinja 2.7 or newer.
     type: bool
     default: no
@@ -81,7 +81,7 @@ options:
   trim_blocks:
     description:
     - Determine when newlines should be removed from blocks.
-    - When set to C(yes) the first newline after a block is removed (block, not variable tag!).
+    - When set to C(true) the first newline after a block is removed (block, not variable tag!).
     type: bool
     default: yes
   variable_end_string:
@@ -129,13 +129,13 @@ EXAMPLES = r'''
     src: unix/config.conf.j2
     dest: C:\share\unix\config.conf
     newline_sequence: '\n'
-    backup: yes
+    backup: true
 '''
 
 RETURN = r'''
 backup_file:
     description: Name of the backup file that was created.
-    returned: if backup=yes
+    returned: if backup=true
     type: str
     sample: C:\Path\To\File.txt.11540.20150212-220915.bak
 '''

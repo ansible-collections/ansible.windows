@@ -85,7 +85,7 @@ EXAMPLES = r'''
     name: internal
     description: top secret share
     path: C:\shares\internal
-    list: no
+    list: false
     full: Administrators,CEO
     read: HR-Global
     deny: HR-External
