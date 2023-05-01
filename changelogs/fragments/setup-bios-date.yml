@@ -1,0 +1,2 @@
+bugfixes:
+- setup - Be more resilient when parsing the BIOS release date - https://github.com/ansible-collections/ansible.windows/pull/496
