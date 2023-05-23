@@ -1,4 +1,4 @@
-remove_features:
+removed_features:
 - >-
   win_regedit - Removed support for using a ``path`` with forward slashes as a key separator. Using a forward slash has
   been deprecated since Ansible 2.9. If using forward slashes in the ``win_regedit`` ``path`` value, make sure to
