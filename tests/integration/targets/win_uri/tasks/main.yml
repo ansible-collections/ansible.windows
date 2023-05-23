@@ -255,8 +255,8 @@
 - name: test basic auth
   win_uri:
     url: https://{{httpbin_host}}/basic-auth/user/passwd
-    user: user
-    password: passwd
+    url_username: user
+    url_password: passwd
   register: basic_auth
 
 - name: assert test basic auth
@@ -268,8 +268,8 @@
 - name: test basic auth with force auth
   win_uri:
     url: https://{{httpbin_host}}/hidden-basic-auth/user/passwd
-    user: user
-    password: passwd
+    url_username: user
+    url_password: passwd
     force_basic_auth: yes
   register: basic_auth_forced
 
