@@ -10,6 +10,10 @@ short_description: Manage domain/workgroup membership for a Windows host
 description:
 - Manages domain membership or workgroup membership for a Windows host. Also supports hostname changes.
 - This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
+deprecated:
+  removed_in: 3.0.0
+  why: This module has been moved into the C(microsoft.ad) collection.
+  alternative: Use the M(microsoft.ad.membership) module instead.
 options:
   dns_domain_name:
     description:

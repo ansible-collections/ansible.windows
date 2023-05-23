@@ -62,23 +62,6 @@ options:
   url_timeout:
     aliases:
     - timeout
-
-  # Following defined in the web_request fragment but the module contains deprecated aliases for backwards compatibility.
-  url_username:
-    description:
-    - The username to use for authentication.
-    - The alias I(user) and I(username) is deprecated and will be removed on
-      the major release after C(2022-07-01).
-    aliases:
-    - user
-    - username
-  url_password:
-    description:
-    - The password for I(url_username).
-    - The alias I(password) is deprecated and will be removed on the major
-      release after C(2022-07-01).
-    aliases:
-    - password
 extends_documentation_fragment:
 - ansible.windows.web_request
 

@@ -1,0 +1,7 @@
+deprecated_features:
+- >- win_domain - Module is deprecated in favour of the ``microsoft.ad.domain`` module, the
+  ``ansible.windows.win_domain`` module will be removed in the ``3.0.0`` release of this collection.
+- >- win_domain_controller - Module is deprecated in favour of the ``microsoft.ad.domain_controller`` module, the
+  ``ansible.windows.win_domain_controller`` module will be removed in the ``3.0.0`` release of this collection.
+- >- win_domain_membership - Module is deprecated in favour of the ``microsoft.ad.membership`` module, the
+  ``ansible.windows.win_domain_membership`` module will be removed in the ``3.0.0`` release of this collection.

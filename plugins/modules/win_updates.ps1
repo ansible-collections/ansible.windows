@@ -11,14 +11,14 @@
 
 $spec = @{
     options = @{
-        accept_list = @{ type = 'list'; elements = 'str'; aliases = 'whitelist' }
+        accept_list = @{ type = 'list'; elements = 'str' }
         category_names = @{
             type = 'list'
             elements = 'str'
             default = 'CriticalUpdates', 'SecurityUpdates', 'UpdateRollups'
         }
         log_path = @{ type = 'path' }
-        reject_list = @{ type = 'list'; elements = 'str'; aliases = 'blacklist' }
+        reject_list = @{ type = 'list'; elements = 'str' }
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
         state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
         skip_optional = @{ type = 'bool'; default = $false }
@@ -26,7 +26,6 @@ $spec = @{
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
         reboot_timeout = @{ type = 'int'; default = 1200 }
-        use_scheduled_task = @{ type = 'bool'; default = $false }
         _wait = @{ type = 'bool'; default = $false }
         _output_path = @{ type = 'str' }
     }

@@ -27,21 +27,6 @@ $spec = @{
         url_timeout = @{
             aliases = "timeout"
         }
-
-        # Defined for the alias backwards compatibility, remove once aliases are removed
-        url_username = @{
-            aliases = @("user", "username")
-            deprecated_aliases = @(
-                @{ name = "user"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' },
-                @{ name = "username"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
-            )
-        }
-        url_password = @{
-            aliases = @("password")
-            deprecated_aliases = @(
-                @{ name = "password"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
-            )
-        }
     }
     mutually_exclusive = @(
         , @('checksum', 'checksum_url')

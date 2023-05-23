@@ -82,14 +82,6 @@ options:
     - This is only valid for MSI files, use C(arguments) for the C(registry)
       provider.
     type: path
-  password:
-    description:
-    - The password for C(user_name), must be set when C(user_name) is.
-    - This option is deprecated in favour of using become, see examples for
-      more information. Will be removed on the major release after
-      C(2022-07-01).
-    type: str
-    aliases: [ user_password ]
   path:
     description:
     - Location of the package to be installed or uninstalled.
@@ -121,10 +113,7 @@ options:
     - This SHOULD be set when the package is an C(exe), or the path is a url
       or a network share and credential delegation is not being used. The
       C(creates_*) options can be used instead but is not recommended.
-    - The alias I(productid) is deprecated and will be removed on the major
-      release after C(2022-07-01).
     type: str
-    aliases: [ productid ]
   provider:
     description:
     - Set the package provider to use when searching for a package.
@@ -164,24 +153,9 @@ options:
       installed or not.
     - For all providers but C(auto), the I(path) can be used for idempotency
       checks if it is locally accesible filesystem path.
-    - The alias I(ensure) is deprecated and will be removed on the major
-      release after C(2022-07-01).
     type: str
     choices: [ absent, present ]
     default: present
-    aliases: [ ensure ]
-  username:
-    description:
-    - Username of an account with access to the package if it is located on a
-      file share.
-    - This is only needed if the WinRM transport is over an auth method that
-      does not support credential delegation like Basic or NTLM or become is
-      not used.
-    - This option is deprecated in favour of using become, see examples for
-      more information. Will be removed on the major release after
-      C(2022-07-01).
-    type: str
-    aliases: [ user_name ]
   wait_for_children:
     description:
     - The module will wait for the process it spawns to finish but any
