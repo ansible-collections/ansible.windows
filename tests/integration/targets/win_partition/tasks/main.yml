@@ -12,7 +12,7 @@
 
 - name: Run tests
   block:
-    - include: tests.yml
+    - import_tasks: tests.yml
   always:
     - name: Detach disk
       ansible.windows.win_command: diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_deletion_script.txt"
