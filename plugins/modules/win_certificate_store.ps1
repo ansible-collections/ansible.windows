@@ -245,10 +245,7 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
                     $module.FailJson("Cannot export cert with key as PKCS12 $($cert.PublicKey.Oid.FriendlyName) algorithm isn't supported")
                 }
             }
-            if ($null -ne $certPrivateKey) {
-                $missing_key = $false
-            }
-            elseif ($certPrivateKey.ExportPolicy -ne [System.Security.Cryptography.CngExportPolicies]::None) {
+            if (($null -ne $certPrivateKey) -and ($certPrivateKey.ExportPolicy -ne [System.Security.Cryptography.CngExportPolicies]::None)) {
                 $missing_key = $false
             }
         }
