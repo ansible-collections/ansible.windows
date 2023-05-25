@@ -1,0 +1,2 @@
+minor_changes:
+  - win_certificate_store - the private key check, when exporting to pkcs12, has been modified to handle the case where the ``PrivateKey`` property is null despite it being there
