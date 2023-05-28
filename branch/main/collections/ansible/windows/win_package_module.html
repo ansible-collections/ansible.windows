@@ -134,7 +134,7 @@
 <h1>ansible.windows.win_package module – Installs/uninstalls an installable package<a class="headerlink" href="#ansible-windows-win-package-module-installs-uninstalls-an-installable-package" title="Permalink to this heading"></a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.14.0).</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 2.0.0).</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_package</span></code>.</p>
 </div>
@@ -305,16 +305,6 @@
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-password"></div>
-<div class="ansibleOptionAnchor" id="parameter-user_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-user-password"><span id="ansible-collections-ansible-windows-win-package-module-parameter-password"></span><strong>password</strong></p>
-<a class="ansibleOptionLink" href="#parameter-password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: user_password</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
-</div></td>
-<td><div class="ansible-option-cell"><p>The password for <code class="docutils literal notranslate"><span class="pre">user_name</span></code>, must be set when <code class="docutils literal notranslate"><span class="pre">user_name</span></code> is.</p>
-<p>This option is deprecated in favour of using become, see examples for more information. Will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-path"><strong>path</strong></p>
 <a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -325,11 +315,9 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> then this value does not need to be set if <code class="docutils literal notranslate"><span class="pre">product_id</span></code> is.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-product_id"></div>
-<div class="ansibleOptionAnchor" id="parameter-productid"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-productid"><span id="ansible-collections-ansible-windows-win-package-module-parameter-product-id"></span><strong>product_id</strong></p>
-<a class="ansibleOptionLink" href="#parameter-product_id" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: productid</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-product_id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-product-id"><strong>product_id</strong></p>
+<a class="ansibleOptionLink" href="#parameter-product_id" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The product id of the installed packaged.</p>
 <p>This is used for checking whether the product is already installed and getting the uninstall information if <code class="docutils literal notranslate"><span class="pre">state=absent</span></code>.</p>
@@ -339,10 +327,9 @@
 <p>For registry (exe) packages, this is the registry key name under the registry paths specified in <em>provider</em>.</p>
 <p>This value is ignored if <code class="docutils literal notranslate"><span class="pre">path</span></code> is set to a local accesible file path and the package is not an <code class="docutils literal notranslate"><span class="pre">exe</span></code>.</p>
 <p>This SHOULD be set when the package is an <code class="docutils literal notranslate"><span class="pre">exe</span></code>, or the path is a url or a network share and credential delegation is not being used. The <code class="docutils literal notranslate"><span class="pre">creates_*</span></code> options can be used instead but is not recommended.</p>
-<p>The alias <em>productid</em> is deprecated and will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-provider"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-provider"><strong>provider</strong></p>
 <a class="ansibleOptionLink" href="#parameter-provider" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -362,14 +349,14 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-proxy_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-proxy-password"><strong>proxy_password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-proxy_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The password for <em>proxy_username</em>.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-proxy_url"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-proxy-url"><strong>proxy_url</strong></p>
 <a class="ansibleOptionLink" href="#parameter-proxy_url" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -377,7 +364,7 @@
 <p>By default, the request will use the IE defined proxy unless <em>use_proxy</em> is set to <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-proxy_use_default_credential"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-proxy-use-default-credential"><strong>proxy_use_default_credential</strong></p>
 <a class="ansibleOptionLink" href="#parameter-proxy_use_default_credential" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -392,23 +379,20 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-proxy_username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-proxy-username"><strong>proxy_username</strong></p>
 <a class="ansibleOptionLink" href="#parameter-proxy_username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The username to use for proxy authentication.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-state"></div>
-<div class="ansibleOptionAnchor" id="parameter-ensure"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-state"><span id="ansible-collections-ansible-windows-win-package-module-parameter-ensure"></span><strong>state</strong></p>
-<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: ensure</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether to install or uninstall the package.</p>
 <p>The module uses <em>product_id</em> to determine whether the package is installed or not.</p>
 <p>For all providers but <code class="docutils literal notranslate"><span class="pre">auto</span></code>, the <em>path</em> can be used for idempotency checks if it is locally accesible filesystem path.</p>
-<p>The alias <em>ensure</em> is deprecated and will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
@@ -416,21 +400,21 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-url_method"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-url-method"><strong>url_method</strong></p>
 <a class="ansibleOptionLink" href="#parameter-url_method" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The HTTP Method of the request.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-url_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-url-password"><strong>url_password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-url_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The password for <em>url_username</em>.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-url_timeout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-url-timeout"><strong>url_timeout</strong></p>
 <a class="ansibleOptionLink" href="#parameter-url_timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -439,14 +423,14 @@
 <p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">30</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-url_username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-url-username"><strong>url_username</strong></p>
 <a class="ansibleOptionLink" href="#parameter-url_username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The username to use for authentication.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-use_default_credential"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-use-default-credential"><strong>use_default_credential</strong></p>
 <a class="ansibleOptionLink" href="#parameter-use_default_credential" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -461,7 +445,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-use_proxy"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-use-proxy"><strong>use_proxy</strong></p>
 <a class="ansibleOptionLink" href="#parameter-use_proxy" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -471,17 +455,6 @@
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 </ul>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-username"></div>
-<div class="ansibleOptionAnchor" id="parameter-user_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-username"><span id="ansible-collections-ansible-windows-win-package-module-parameter-user-name"></span><strong>username</strong></p>
-<a class="ansibleOptionLink" href="#parameter-username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: user_name</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
-</div></td>
-<td><div class="ansible-option-cell"><p>Username of an account with access to the package if it is located on a file share.</p>
-<p>This is only needed if the WinRM transport is over an auth method that does not support credential delegation like Basic or NTLM or become is not used.</p>
-<p>This option is deprecated in favour of using become, see examples for more information. Will be removed on the major release after <code class="docutils literal notranslate"><span class="pre">2022-07-01</span></code>.</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">

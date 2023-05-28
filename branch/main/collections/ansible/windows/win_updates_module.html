@@ -134,7 +134,7 @@
 <h1>ansible.windows.win_updates module – Download and install Windows updates<a class="headerlink" href="#ansible-windows-win-updates-module-download-and-install-windows-updates" title="Permalink to this heading"></a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 1.14.0).</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 2.0.0).</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_updates</span></code>.</p>
 </div>
@@ -187,16 +187,13 @@
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-accept_list"></div>
-<div class="ansibleOptionAnchor" id="parameter-whitelist"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-whitelist"><span id="ansible-collections-ansible-windows-win-updates-module-parameter-accept-list"></span><strong>accept_list</strong></p>
-<a class="ansibleOptionLink" href="#parameter-accept_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: whitelist</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+<div class="ansibleOptionAnchor" id="parameter-accept_list"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-accept-list"><strong>accept_list</strong></p>
+<a class="ansibleOptionLink" href="#parameter-accept_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of update titles or KB numbers that can be used to specify which updates are to be searched or installed.</p>
 <p>If an available update does not match one of the entries, then it is skipped and not installed.</p>
 <p>Each entry can either be the KB article or Update title as a regex according to the PowerShell regex rules.</p>
 <p>The accept list is only validated on updates that were found based on <em>category_names</em>. It will not force the module to install an update if it was not in the category specified.</p>
-<p>The alias <code class="docutils literal notranslate"><span class="pre">whitelist</span></code> is deprecated and will be removed in a release after <code class="docutils literal notranslate"><span class="pre">2023-06-01</span></code>.</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -240,15 +237,12 @@
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-reject_list"></div>
-<div class="ansibleOptionAnchor" id="parameter-blacklist"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-reject-list"><span id="ansible-collections-ansible-windows-win-updates-module-parameter-blacklist"></span><strong>reject_list</strong></p>
-<a class="ansibleOptionLink" href="#parameter-reject_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: blacklist</span></p>
-<p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+<div class="ansibleOptionAnchor" id="parameter-reject_list"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-reject-list"><strong>reject_list</strong></p>
+<a class="ansibleOptionLink" href="#parameter-reject_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>A list of update titles or KB numbers that can be used to specify which updates are to be excluded from installation.</p>
 <p>If an available update does match one of the entries, then it is skipped and not installed.</p>
 <p>Each entry can either be the KB article or Update title as a regex according to the PowerShell regex rules.</p>
-<p>The alias <code class="docutils literal notranslate"><span class="pre">blacklist</span></code> is deprecated and will be removed in a release after <code class="docutils literal notranslate"><span class="pre">2023-06-01</span></code>.</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -292,19 +286,6 @@
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;installed&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;searched&quot;</span></code></p></li>
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;downloaded&quot;</span></code></p></li>
-</ul>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-use_scheduled_task"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-use-scheduled-task"><strong>use_scheduled_task</strong></p>
-<a class="ansibleOptionLink" href="#parameter-use_scheduled_task" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
-</div></td>
-<td><div class="ansible-option-cell"><p>This option is deprecated and no longer does anything since <code class="docutils literal notranslate"><span class="pre">v1.7.0</span></code> of this collection.</p>
-<p>The option will be removed in a release after <code class="docutils literal notranslate"><span class="pre">2023-06-01</span></code>.</p>
-<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
-<ul class="simple">
-<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
-<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div></td>
 </tr>
