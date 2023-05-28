@@ -87,14 +87,4 @@ class ActionModule(ActionBase):
 
         result = reboot_host(self._task.action, self._connection, **parameters)
 
-        # Historical behaviour had ignore_errors=True being able to ignore unreachable hosts and not just task errors.
-        # This snippet will allow that to continue but state that it will be removed in a future version and to use
-        # ignore_unreachable to ignore unreachable hosts.
-        if result['unreachable'] and self._task.ignore_errors and not self._task.ignore_unreachable:
-            dep_msg = "Host was unreachable but is being skipped because ignore_errors=True is set. In the future " \
-                      "only ignore_unreachable will be able to ignore an unreachable host for %s" % self._task.action
-            display.deprecated(dep_msg, date="2023-05-01", collection_name="ansible.windows")
-            result['unreachable'] = False
-            result['failed'] = True
-
         return result

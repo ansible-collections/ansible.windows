@@ -4,9 +4,6 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# AccessToken should be removed once the username/password options are gone
-#AnsibleRequires -CSharpUtil Ansible.AccessToken
-
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.AddType
 #AnsibleRequires -PowerShell ..module_utils.Process
@@ -439,54 +436,6 @@ Function Add-SystemReadAce {
         $acl | Set-Acl -LiteralPath $path
     }
     catch {}
-}
-
-Function Copy-ItemWithCredential {
-    [CmdletBinding(SupportsShouldProcess = $false)]
-    param (
-        [String]
-        $Path,
-
-        [String]
-        $Destination,
-
-        [PSCredential]
-        $Credential
-    )
-
-    $filename = Split-Path -Path $Path -Leaf
-    $targetPath = Join-Path -Path $Destination -ChildPath $filename
-
-    # New-PSDrive with -Credentials seems to have lots of issues, just impersonate a NewCredentials token and copy the
-    # file locally. NewCredentials will ensure the outbound auth to the UNC path is with the new credentials specified.
-
-    $domain = [NullString]::Value
-    $username = $Credential.UserName
-    if ($username.Contains('\')) {
-        $userSplit = $username.Split('\', 2)
-        $domain = $userSplit[0]
-        $username = $userSplit[1]
-    }
-
-    $impersonated = $false
-    $token = [Ansible.AccessToken.TokenUtil]::LogonUser(
-        $username, $domain, $Credential.GetNetworkCredential().Password,
-        [Ansible.AccessToken.LogonType]::NewCredentials, [Ansible.AccessToken.LogonProvider]::WinNT50
-    )
-    try {
-        [Ansible.AccessToken.TokenUtil]::ImpersonateToken($token)
-        $impersonated = $true
-
-        Copy-Item -LiteralPath $Path -Destination $targetPath
-    }
-    finally {
-        if ($impersonated) {
-            [Ansible.AccessToken.TokenUtil]::RevertToSelf()
-        }
-        $token.Dispose()
-    }
-
-    $targetPath
 }
 
 Function Get-UrlFile {
@@ -1335,34 +1284,11 @@ $spec = @{
         expected_return_code = @{ type = "list"; elements = "int"; default = @(0, 3010) }
         path = @{ type = "str" }
         chdir = @{ type = "path" }
-        product_id = @{
-            type = "str"
-            aliases = @("productid")
-            deprecated_aliases = @(
-                @{ name = "productid"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
-            )
-        }
+        product_id = @{ type = "str" }
         state = @{
             type = "str"
             default = "present"
             choices = "absent", "present"
-            aliases = @(, "ensure")
-            deprecated_aliases = @(
-                @{ name = "ensure"; date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null); collection_name = 'ansible.windows' }
-            )
-        }
-        username = @{
-            type = "str"
-            aliases = @(, "user_name")
-            removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
-            removed_from_collection = 'ansible.windows'
-        }
-        password = @{
-            type = "str"
-            no_log = $true
-            aliases = @(, "user_password")
-            removed_at_date = [DateTime]::ParseExact("2022-07-01", "yyyy-MM-dd", $null)
-            removed_from_collection = 'ansible.windows'
         }
         creates_path = @{ type = "path" }
         creates_version = @{ type = "str" }
@@ -1378,7 +1304,6 @@ $spec = @{
         @("state", "present", @("path")),
         @("state", "absent", @("path", "product_id"), $true)
     )
-    required_together = @(, @("username", "password"))
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
@@ -1389,8 +1314,6 @@ $path = $module.Params.path
 $chdir = $module.Params.chdir
 $productId = $module.Params.product_id
 $state = $module.Params.state
-$username = $module.Params.username
-$password = $module.Params.password
 $createsPath = $module.Params.creates_path
 $createsVersion = $module.Params.creates_version
 $createsService = $module.Params.creates_service
@@ -1407,21 +1330,12 @@ if ($null -ne $arguments) {
     }
 }
 
-$credential = $null
-if ($null -ne $username) {
-    $secPassword = ConvertTo-SecureString -String $password -AsPlainText -Force
-    $credential = New-Object -TypeName PSCredential -ArgumentList $username, $secPassword
-}
-
 # This must be set after the module spec so the validate-modules sanity-test can get the arg spec.
 Import-PInvokeCode -Module $module
 
 $pathType = $null
 if ($path -and $path.StartsWith('http', [System.StringComparison]::InvariantCultureIgnoreCase)) {
     $pathType = 'url'
-}
-elseif ($path -and ($path.StartsWith('\\') -or $path.StartsWith('//') -and $username)) {
-    $pathType = 'unc'
 }
 
 $tempFile = $null
@@ -1439,12 +1353,11 @@ try {
     if ($pathType -and $productId -and ($state -eq 'present')) {
         $packageStatus = Get-InstalledStatus @getParams
     }
-    # If the path is a URL or UNC with credentials and no productId is set or we already checked and the package is not installed
+    # If the path is a URL and no productId is set or we already checked and the package is not installed
     # then create a temp copy for idempotency checks.
     if (($pathType) -and (-not $productId -or -not $packageStatus.Installed)) {
         $tempFile = switch ($pathType) {
             url { Get-UrlFile -Module $module -Url $path }
-            unc { Copy-ItemWithCredential -Path $path -Destination $module.Tmpdir -Credential $credential }
         }
         $path = $tempFile
         $getParams.Path = $path
@@ -1468,7 +1381,6 @@ try {
         if ($pathType -and -not $tempFile -and ($state -eq 'present' -or -not $packageStatus.SkipFileForRemove)) {
             $tempFile = switch ($pathType) {
                 url { Get-UrlFile -Module $module -Url $path }
-                unc { Copy-ItemWithCredential -Path $path -Destination $module.Tmpdir -Credential $credential }
             }
             $path = $tempFile
         }

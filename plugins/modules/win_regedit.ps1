@@ -125,15 +125,7 @@ if ($null -eq $name -and $type -ne "string") {
 if ($path -notmatch "^HK(CC|CR|CU|LM|U):\\") {
     $module.FailJson("path: $path is not a valid powershell path, see module documentation for examples.")
 }
-
-# Add a warning if the path does not contains a \ and is not the leaf path
 $registry_path = (Split-Path -Path $path -NoQualifier).Substring(1)  # removes the hive: and leading \
-$registry_leaf = Split-Path -Path $path -Leaf
-if ($registry_path -ne $registry_leaf -and -not $registry_path.Contains('\')) {
-    $msg = "path is not using '\' as a separator, support for '/' as a separator will be removed in a future Ansible version"
-    $module.Deprecate($msg, [DateTime]::ParseExact("2021-07-01", "yyyy-MM-dd", $null))
-    $registry_path = $registry_path.Replace('/', '\')
-}
 
 # Simplified version of Convert-HexStringToByteArray from
 # https://cyber-defense.sans.org/blog/2010/02/11/powershell-byte-array-hex-convert
@@ -160,10 +152,10 @@ Function Convert-RegExportHexStringToByteArray($string) {
         return , @([System.Convert]::ToByte($string, 16))
     }
     elseif (($string.Length % 2 -eq 0) -and ($string.IndexOf(":") -eq -1)) {
-        return , @($string -split '([a-f0-9]{2})' | foreach-object { if ($_) { [System.Convert]::ToByte($_, 16) } })
+        return , @($string -split '([a-f0-9]{2})' | ForEach-Object { if ($_) { [System.Convert]::ToByte($_, 16) } })
     }
     elseif ($string.IndexOf(":") -ne -1) {
-        return , @($string -split ':+' | foreach-object { [System.Convert]::ToByte($_, 16) })
+        return , @($string -split ':+' | ForEach-Object { [System.Convert]::ToByte($_, 16) })
     }
     else {
         return , @()

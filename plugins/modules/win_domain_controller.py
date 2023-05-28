@@ -11,6 +11,10 @@ short_description: Manage domain controller/member server state for a Windows ho
 description:
     - Ensure that a Windows Server 2012+ host is configured as a domain controller or demoted to member server.
     - This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
+deprecated:
+  removed_in: 3.0.0
+  why: This module has been moved into the C(microsoft.ad) collection.
+  alternative: Use the M(microsoft.ad.domain_controller) module instead.
 options:
   dns_domain_name:
     description:

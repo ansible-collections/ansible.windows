@@ -11,6 +11,10 @@ description:
 - Ensure that the domain named by C(dns_domain_name) exists and is reachable.
 - If the domain is not reachable, the domain is created in a new forest on the target Windows Server 2012R2+ host.
 - This module may require subsequent use of the M(ansible.windows.win_reboot) action if changes are made.
+deprecated:
+  removed_in: 3.0.0
+  why: This module has been moved into the C(microsoft.ad) collection.
+  alternative: Use the M(microsoft.ad.domain) module instead.
 options:
   dns_domain_name:
     description:

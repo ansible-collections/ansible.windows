@@ -1,0 +1,3 @@
+removed_features:
+- win_uri - Removed the deprecated option alias ``user`` and ``username``, use ``url_username`` instead.
+- win_uri - Removed the deprecated option alias ``password``, use ``url_password`` instead.

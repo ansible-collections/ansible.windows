@@ -23,11 +23,8 @@ options:
         - The accept list is only validated on updates that were found based on
           I(category_names). It will not force the module to install an update
           if it was not in the category specified.
-        - The alias C(whitelist) is deprecated and will be removed in a release after C(2023-06-01).
         type: list
         elements: str
-        aliases:
-        - whitelist
     category_names:
         description:
         - A scalar or list of categories to install updates from. To get the list
@@ -98,17 +95,8 @@ options:
           skipped and not installed.
         - Each entry can either be the KB article or Update title as a regex
           according to the PowerShell regex rules.
-        - The alias C(blacklist) is deprecated and will be removed in a release after C(2023-06-01).
         type: list
         elements: str
-        aliases:
-        - blacklist
-    use_scheduled_task:
-        description:
-        - This option is deprecated and no longer does anything since C(v1.7.0) of this collection.
-        - The option will be removed in a release after C(2023-06-01).
-        type: bool
-        default: no
     _output_path:
         description:
         - Internal use only.

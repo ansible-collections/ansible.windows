@@ -689,16 +689,15 @@ class _RecreateTempPathException(Exception):
 class ActionModule(ActionBase):
 
     _VALID_ARGS = [
-        'accept_list', 'whitelist',
+        'accept_list',
         'category_names',
         'log_path',
         'reboot',
         'skip_optional',
         'reboot_timeout',
-        'reject_list', 'blacklist',
+        'reject_list',
         'server_selection',
         'state',
-        'use_scheduled_task',
     ]
 
     DEFAULT_REBOOT_TIMEOUT = 1200
@@ -722,11 +721,6 @@ class ActionModule(ActionBase):
         super(ActionModule, self).run(tmp, task_vars)
         del tmp  # tmp no longer has any effect
         task_vars = task_vars or {}
-
-        for dep_arg in ['whitelist', 'blacklist', 'use_scheduled_task']:
-            if dep_arg in self._task.args:
-                dep_msg = "'%s' is deprecated. See the module docs for more information" % dep_arg
-                display.deprecated(dep_msg, date="2023-06-01", collection_name="ansible.windows")
 
         try:
             reboot = check_type_bool(self._task.args.get('reboot', False))
