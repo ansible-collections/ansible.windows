@@ -71,8 +71,23 @@ param (
 $ErrorActionPreference = 'Stop'
 
 $fs = $sr = $null
+for ($i = 0; $i -lt 5; $i++) {
+    try {
+        $fs = [System.IO.File]::Open($OutputPath, 'Open', 'Read', 'ReadWrite')
+    }
+    catch [System.IO.IOException] {
+        if ($i -eq 4) {
+            throw
+        }
+
+        Start-Sleep -Seconds 5
+        continue
+    }
+
+    break
+}
+
 try {
-    $fs = [System.IO.File]::Open($OutputPath, 'Open', 'Read', 'ReadWrite')
     [void]$fs.Seek($Offset, [System.IO.SeekOrigin]::Begin)
     $sr = New-Object -TypeName System.IO.StreamReader -ArgumentList $fs
 

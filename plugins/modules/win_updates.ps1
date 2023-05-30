@@ -1158,7 +1158,7 @@ namespace Ansible.Windows.WinUpdates
     }
 
     # Make sure the output file exists before running
-    [IO.File]::Create($OutputPath).Dispose()
+    [IO.File]::Open($OutputPath, 'Create', 'Write', 'ReadWrite').Dispose()
     $cancelEvent = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
         $false,
         [System.Threading.EventResetMode]::ManualReset,
