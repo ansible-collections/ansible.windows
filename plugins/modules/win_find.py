@@ -37,6 +37,12 @@ options:
         type: str
         choices: [ md5, sha1, sha256, sha384, sha512 ]
         default: sha1
+    depth:
+        description:
+            - Set the maximum number of levels to descend into.
+            - Setting recurse to C(false) will override this value, which is effectively depth 1.
+            - Default depth is effectively unlimited (2147483647).
+        type: int
     file_type:
         description: Type of file to search for.
         type: str
