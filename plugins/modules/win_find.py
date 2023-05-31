@@ -43,6 +43,7 @@ options:
             - Setting recurse to C(false) will override this value, which is effectively depth 1.
             - Default depth is effectively unlimited (2147483647).
         type: int
+        default: 2147483647
     file_type:
         description: Type of file to search for.
         type: str
