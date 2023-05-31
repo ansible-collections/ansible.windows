@@ -228,31 +228,6 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         "der" { [System.Security.Cryptography.X509Certificates.X509ContentType]::Cert }
         "pkcs12" { [System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12 }
     }
-    if ($type -eq "pkcs12") {
-        $missing_key = $true
-        if ($cert.HasPrivateKey) {
-            switch ($cert.PublicKey.Oid.FriendlyName) {
-                "DSA" {
-                    $certPrivateKey = [Security.Cryptography.X509Certificates.DSACertificateExtensions]::GetDSAPrivateKey($cert[0]).Key
-                }
-                "RSA" {
-                    $certPrivateKey = [Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert[0]).Key
-                }
-                "ECC" {
-                    $certPrivateKey = [Security.Cryptography.X509Certificates.ECDsaCertificateExtensions]::GetECDsaPrivateKey($cert[0]).Key
-                }
-                default {
-                    $module.FailJson("Cannot export cert with key as PKCS12 $($cert.PublicKey.Oid.FriendlyName) algorithm isn't supported")
-                }
-            }
-            if (($null -ne $certPrivateKey) -and ($certPrivateKey.ExportPolicy -ne [System.Security.Cryptography.CngExportPolicies]::None)) {
-                $missing_key = $false
-            }
-        }
-        if ($missing_key) {
-            $module.FailJson("Cannot export cert with key as PKCS12 when the key is not marked as exportable or not accessible by the current user")
-        }
-    }
 
     if (Test-Path -LiteralPath $path) {
         Remove-Item -LiteralPath $path -Force
@@ -275,7 +250,8 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         $cert_bytes = $file_encoding.GetBytes($cert_content)
     }
     elseif ($type -eq "pkcs12") {
-        $module.Result.key_exportable = [string]$certPrivateKey.ExportPolicy
+        # to ensure backwards compatibility, if $false Export will fail.
+        $module.Result.key_exportable = $true
     }
 
     if (-not $module.CheckMode) {
