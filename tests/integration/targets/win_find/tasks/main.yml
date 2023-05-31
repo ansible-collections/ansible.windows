@@ -16,6 +16,7 @@
         "junction-link-dest",
         "broken-link-dest",
         "nested\sub-nest",
+        "nested\sub-nest\sub-sub-nest"
         "shared\folder",
         "hidden",
         "date",
@@ -36,6 +37,7 @@
         "nested\archive.log",
         "nested\sub-nest\test.ps1",
         "nested\sub-nest\readonly.txt",
+        "nested\sub-nest\sub-sub-nest\test.ps1",
         "link-dest\link.ps1",
         "single\test.ps1",
         "single\hidden.ps1",
