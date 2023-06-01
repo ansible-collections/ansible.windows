@@ -250,8 +250,10 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         $cert_bytes = $file_encoding.GetBytes($cert_content)
     }
     elseif ($type -eq "pkcs12") {
-        # to ensure backwards compatibility, if $false Export will fail.
-        $module.Result.key_exportable = $true
+        $module.Result.key_exported = $false
+        if ($null -ne $cert.PrivateKey) {
+            $module.Result.key_exportable = $cert.PrivateKey.CspKeyContainerInfo.Exportable
+        }
     }
 
     if (-not $module.CheckMode) {
