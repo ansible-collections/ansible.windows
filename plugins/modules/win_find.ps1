@@ -20,7 +20,7 @@ $spec = @{
         use_regex = @{ type = "bool"; default = $false }
         get_checksum = @{ type = "bool"; default = $true }
         checksum_algorithm = @{ type = "str"; default = "sha1"; choices = "md5", "sha1", "sha256", "sha384", "sha512" }
-        depth = @{ type = "int"; default = [System.Int32]::MaxValue }
+        depth = @{ type = "int" }
     }
     supports_check_mode = $true
 }
@@ -203,7 +203,6 @@ Function Search-Path {
         [Switch]
         $Recurse,
 
-        [Parameter(Mandatory = $true)]
         [System.Int32]
         $Depth,
 
@@ -234,7 +233,7 @@ Function Search-Path {
     catch [System.UnauthorizedAccessException] {}  # No ListDirectory permissions, Get-ChildItem ignored this
 
     foreach ($dir_child in $dir_files) {
-        if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory) -and $Recurse -and $Depth -gt 1) {
+        if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory) -and $Recurse -and $Depth -ne 1) {
             if ($Follow -or -not $dir_child.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint)) {
                 $PSBoundParameters.Remove('Path') > $null
                 $PSBoundParameters['Depth'] = ($PSBoundParameters['Depth']) - 1

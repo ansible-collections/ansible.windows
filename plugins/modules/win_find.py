@@ -41,9 +41,8 @@ options:
         description:
             - Set the maximum number of levels to descend into.
             - Setting recurse to C(false) will override this value, which is effectively depth 1.
-            - Default depth is effectively unlimited (2147483647).
+            - Default depth is unlimited.
         type: int
-        default: 2147483647
     file_type:
         description: Type of file to search for.
         type: str
