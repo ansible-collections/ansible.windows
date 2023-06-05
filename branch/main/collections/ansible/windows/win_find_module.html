@@ -204,6 +204,16 @@
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-depth"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-depth"><strong>depth</strong></p>
+<a class="ansibleOptionLink" href="#parameter-depth" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+<p><span class="ansible-option-versionadded">added in ansible.windows 2.0.0</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the maximum number of levels to descend into.</p>
+<p>Setting recurse to <code class="docutils literal notranslate"><span class="pre">false</span></code> will override this value, which is effectively depth 1.</p>
+<p>Default depth is unlimited.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-file_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-file-type"><strong>file_type</strong></p>
 <a class="ansibleOptionLink" href="#parameter-file_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -215,7 +225,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-follow"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-follow"><strong>follow</strong></p>
 <a class="ansibleOptionLink" href="#parameter-follow" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -228,7 +238,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-get_checksum"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-get-checksum"><strong>get_checksum</strong></p>
 <a class="ansibleOptionLink" href="#parameter-get_checksum" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -240,7 +250,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-hidden"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-hidden"><strong>hidden</strong></p>
 <a class="ansibleOptionLink" href="#parameter-hidden" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -252,7 +262,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-paths"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-paths"><strong>paths</strong></p>
 <a class="ansibleOptionLink" href="#parameter-paths" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
@@ -260,7 +270,7 @@
 <p>This can be supplied as a single path or a list of paths.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-patterns"></div>
 <div class="ansibleOptionAnchor" id="parameter-regex"></div>
 <div class="ansibleOptionAnchor" id="parameter-regexp"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-regexp"><span id="ansible-collections-ansible-windows-win-find-module-parameter-regex"></span><span id="ansible-collections-ansible-windows-win-find-module-parameter-patterns"></span><strong>patterns</strong></p>
@@ -273,7 +283,7 @@
 <p>For a file to be matched it only has to match with one pattern in a list provided.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-recurse"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-recurse"><strong>recurse</strong></p>
 <a class="ansibleOptionLink" href="#parameter-recurse" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -285,7 +295,7 @@
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-size"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-size"><strong>size</strong></p>
 <a class="ansibleOptionLink" href="#parameter-size" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -295,7 +305,7 @@
 <p>Size is not evaluated for symbolic links.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-use_regex"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-find-module-parameter-use-regex"><strong>use_regex</strong></p>
 <a class="ansibleOptionLink" href="#parameter-use_regex" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
