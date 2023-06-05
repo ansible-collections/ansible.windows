@@ -228,18 +228,6 @@ Function New-CertFile($module, $cert, $path, $type, $password) {
         "der" { [System.Security.Cryptography.X509Certificates.X509ContentType]::Cert }
         "pkcs12" { [System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12 }
     }
-    if ($type -eq "pkcs12") {
-        $missing_key = $false
-        if ($null -eq $cert.PrivateKey) {
-            $missing_key = $true
-        }
-        elseif ($cert.PrivateKey.CspKeyContainerInfo.Exportable -eq $false) {
-            $missing_key = $true
-        }
-        if ($missing_key) {
-            $module.FailJson("Cannot export cert with key as PKCS12 when the key is not marked as exportable or not accessible by the current user")
-        }
-    }
 
     if (Test-Path -LiteralPath $path) {
         Remove-Item -LiteralPath $path -Force

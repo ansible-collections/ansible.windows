@@ -795,7 +795,7 @@
     file_type: pkcs12
   vars: *become_vars
   register: fail_export_non_exportable
-  failed_when: fail_export_non_exportable.msg != 'Cannot export cert with key as PKCS12 when the key is not marked as exportable or not accessible by the current user'
+  failed_when: fail_export_non_exportable.msg is not search("Key not valid for use in specified state.")
 
 - name: fail to import with invalid service name
   win_certificate_store:
@@ -922,3 +922,89 @@
       store_type: service
       store_location: WinRM
       state: absent
+
+- name: Generate nonexportable certificate using Microsoft Software Key Storage Provider (CNG)
+  win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy NonExportable -Provider "Microsoft Software Key Storage Provider").Thumbprint
+  register: certificat_using_cng_nonexportable
+
+- name: Fail to export certificate using Microsoft Software Key Storage Provider (CNG) with key as pfx with password when not marked as exportable
+  win_certificate_store:
+    path: "{{ win_cert_dir }}\\exported\\cert-fail.pfx"
+    thumbprint: "{{ certificat_using_cng_nonexportable.stdout_lines[0] }}"
+    state: exported
+    file_type: pkcs12
+  vars: *become_vars
+  register: fail_export_cng_non_exportable
+  failed_when: fail_export_cng_non_exportable.msg is not search("Key not valid for use in specified state.")
+
+- name: Generate exportable certificate using Microsoft Software Key Storage Provider (CNG)
+  win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy Exportable -Provider "Microsoft Software Key Storage Provider").Thumbprint
+  register: certificat_using_cng_exportable
+
+- name: Got to export certificate using Microsoft Software Key Storage Provider (CNG) with key without password as pfx when marked as exportable
+  win_certificate_store:
+    path: "{{ win_cert_dir }}\\exported\\{{ certificat_using_cng_exportable.stdout_lines[0] }}-pass.pfx"
+    thumbprint: "{{ certificat_using_cng_exportable.stdout_lines[0] }}"
+    state: exported
+    file_type: pkcs12
+    password: "{{ key_password }}"
+  vars: *become_vars
+  register: export_cng_pfx_with_pass
+
+- name: Get result of export certificate using Microsoft Software Key Storage Provider (CNG) with key and password as pfx when marked as exportable
+  win_shell: |
+    $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
+    $cert.Import("{{ win_cert_dir }}\\exported\\{{ certificat_using_cng_exportable.stdout_lines[0] }}-pass.pfx", "{{ key_password }}", 0)
+    $cert.HasPrivateKey
+  vars: *become_vars
+  register: export_cng_pfx_with_pass_result
+
+- name: Assert results of export certificate using Microsoft Software Key Storage Provider (CNG) with key and password as pfx when marked as exportable
+  assert:
+    that:
+      - export_cng_pfx_with_pass is changed
+      - export_cng_pfx_with_pass.thumbprints == [certificat_using_cng_exportable.stdout_lines[0]]
+      - export_cng_pfx_with_pass_result.stdout_lines[0] == "True"
+
+- name: Generate nonexportable certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI)
+  win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy NonExportable -Provider "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
+  register: certificat_using_capi_nonexportable
+
+- name: Fail to export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key as pfx with password when not marked as exportable
+  win_certificate_store:
+    path: "{{ win_cert_dir }}\\exported\\cert-fail.pfx"
+    thumbprint: "{{ certificat_using_capi_nonexportable.stdout_lines[0] }}"
+    state: exported
+    file_type: pkcs12
+  vars: *become_vars
+  register: fail_export_capi_non_exportable
+  failed_when: fail_export_capi_non_exportable.msg is not search("Key not valid for use in specified state.")
+
+- name: Generate exportable certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI)
+  win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy Exportable -Provider "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
+  register: certificat_using_capi_exportable
+
+- name: Got to export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key without password as pfx when marked as exportable
+  win_certificate_store:
+    path: "{{ win_cert_dir }}\\exported\\{{ certificat_using_capi_exportable.stdout_lines[0] }}-pass.pfx"
+    thumbprint: "{{ certificat_using_capi_exportable.stdout_lines[0] }}"
+    state: exported
+    file_type: pkcs12
+    password: "{{ key_password }}"
+  vars: *become_vars
+  register: export_capi_pfx_with_pass
+
+- name: Get result of export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key and password as pfx when marked as exportable
+  win_shell: |
+    $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
+    $cert.Import("{{ win_cert_dir }}\\exported\\{{ certificat_using_capi_exportable.stdout_lines[0] }}-pass.pfx", "{{ key_password }}", 0)
+    $cert.HasPrivateKey
+  vars: *become_vars
+  register: export_capi_pfx_with_pass_result
+
+- name: Assert results of export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key and password as pfx when marked as exportable
+  assert:
+    that:
+      - export_capi_pfx_with_pass is changed
+      - export_capi_pfx_with_pass.thumbprints == [certificat_using_capi_exportable.stdout_lines[0]]
+      - export_capi_pfx_with_pass_result.stdout_lines[0] == "True"
