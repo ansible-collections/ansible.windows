@@ -43,6 +43,7 @@ options:
             - Setting recurse to C(false) will override this value, which is effectively depth 1.
             - Default depth is unlimited.
         type: int
+        version_added: 2.0.0
     file_type:
         description: Type of file to search for.
         type: str

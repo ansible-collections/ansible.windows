@@ -1,0 +1,2 @@
+minor_changes:
+- win_find - Added ``depth`` option to control how deep to go when scanning into the target path - https://github.com/ansible-collections/ansible.windows/issues/335
