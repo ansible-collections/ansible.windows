@@ -1,2 +1,0 @@
-bugfixes:
-- win_updates - Add retry mechanism when polling output in case file is locked by another process like an Anti Virus - https://github.com/ansible-collections/ansible.windows/issues/490

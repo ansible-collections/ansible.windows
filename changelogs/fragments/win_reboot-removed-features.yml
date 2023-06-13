@@ -1,5 +1,0 @@
-removed_features:
-- >-
-  win_reboot - Removed backwards compatibility check where ``ignore_errors: true`` will be treated like
-  ``ignore_unreachable: true``. Going forward ``ignore_errors: true`` will only ignore errors the plugin encountered
-  and not an unreachable host. Use ``ignore_unreachable: true`` to ignore that error like any other module.
