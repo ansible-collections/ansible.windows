@@ -1,7 +1,0 @@
-removed_features:
-- win_package - Removed deprecated module option ``productid``, use ``product_id`` instead.
-- win_package - Removed deprecated module option ``ensure``, use ``state`` instead.
-- >-
-  win_package - Removed deprecated module option ``username``, ``user_name``, ``password``, and ``user_password``. Use
-  ``become`` with ``become_flags: logon_type=new_credentials logon_flags=netcredentials_only`` on the task instead to
-  replicate the same functionality instead.

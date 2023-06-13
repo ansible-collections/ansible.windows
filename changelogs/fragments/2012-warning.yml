@@ -1,3 +1,0 @@
-deprecated_features:
-- Add warning when using Server 2012 or 2012 R2 with the ``setup`` module. These OS' are nearing the End of Life
-  and will not be tested in CI when that time is reached.

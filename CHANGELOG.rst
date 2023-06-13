@@ -5,6 +5,49 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v2.0.0
+======
+
+Release Summary
+---------------
+
+Version ``2.0.0`` is a major release of the ``ansible.windows`` collection that removes some deprecated features. Please review the changelog to see what deprecated features have been removed in this release.
+
+Minor Changes
+-------------
+
+- win_certificate_store - the private key check, when exporting to pkcs12, has been modified to handle the case where the ``PrivateKey`` property is null despite it being there
+- win_find - Added ``depth`` option to control how deep to go when scanning into the target path - https://github.com/ansible-collections/ansible.windows/issues/335
+
+Deprecated Features
+-------------------
+
+- Add warning when using Server 2012 or 2012 R2 with the ``setup`` module. These OS' are nearing the End of Life and will not be tested in CI when that time is reached.
+- win_domain - Module is deprecated in favour of the ``microsoft.ad.domain`` module, the ``ansible.windows.win_domain`` module will be removed in the ``3.0.0`` release of this collection.
+- win_domain_controller - Module is deprecated in favour of the ``microsoft.ad.domain_controller`` module, the ``ansible.windows.win_domain_controller`` module will be removed in the ``3.0.0`` release of this collection.
+- win_domain_membership - Module is deprecated in favour of the ``microsoft.ad.membership`` module, the ``ansible.windows.win_domain_membership`` module will be removed in the ``3.0.0`` release of this collection.
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- win_get_url - Removed the deprecated option alias ``passwordd``, use ``url_password`` instead.
+- win_get_url - Removed the deprecated option alias ``user`` and ``username``, use ``url_username`` instead.
+- win_package - Removed deprecated module option ``ensure``, use ``state`` instead.
+- win_package - Removed deprecated module option ``productid``, use ``product_id`` instead.
+- win_package - Removed deprecated module option ``username``, ``user_name``, ``password``, and ``user_password``. Use ``become`` with ``become_flags: logon_type=new_credentials logon_flags=netcredentials_only`` on the task instead to replicate the same functionality instead.
+- win_reboot - Removed backwards compatibility check where ``ignore_errors: true`` will be treated like ``ignore_unreachable: true``. Going forward ``ignore_errors: true`` will only ignore errors the plugin encountered and not an unreachable host. Use ``ignore_unreachable: true`` to ignore that error like any other module.
+- win_regedit - Removed support for using a ``path`` with forward slashes as a key separator. Using a forward slash has been deprecated since Ansible 2.9. If using forward slashes in the ``win_regedit`` ``path`` value, make sure to change the forward slash ``/`` to a backslash ``\``. If enclosed in double quotes the backslash will have to be doubled up.
+- win_updates - Removed deprecated alias ``blacklist``, use ``reject_list`` instead.
+- win_updates - Removed deprecated alias ``whitelist``, use ``accept_list`` instead.
+- win_updates - Removed deprecated module option ``use_scheduled_task``. This option did not change any functionality in the module and can be safely removed from the task entry.
+- win_uri - Removed the deprecated option alias ``password``, use ``url_password`` instead.
+- win_uri - Removed the deprecated option alias ``user`` and ``username``, use ``url_username`` instead.
+
+Bugfixes
+--------
+
+- win_updates - Add retry mechanism when polling output in case file is locked by another process like an Anti Virus - https://github.com/ansible-collections/ansible.windows/issues/490
+
 v1.14.0
 =======
 

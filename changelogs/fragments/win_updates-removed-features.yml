@@ -1,5 +1,0 @@
-removed_features:
-- win_updates - Removed deprecated alias ``whitelist``, use ``accept_list`` instead.
-- win_updates - Removed deprecated alias ``blacklist``, use ``reject_list`` instead.
-- win_updates - Removed deprecated module option ``use_scheduled_task``. This option did not change any functionality
-  in the module and can be safely removed from the task entry.
