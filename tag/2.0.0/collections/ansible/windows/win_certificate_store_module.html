@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_certificate_store module – Manages the certificate store &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/ansible.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/antsibull-minimal.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/rtd-ethical-ads.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_command module – Executes a command on a remote Windows node" href="win_command_module.html" />
+    <link rel="prev" title="ansible.windows.win_acl_inheritance module – Change ACL inheritance" href="win_acl_inheritance_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/ansiblefest" target="_blank">AnsibleFest</a></li>
+    <li><a href="https://www.ansible.com/tower" target="_blank">Products</a></li>
+    <li><a href="https://www.ansible.com/community" target="_blank">Community</a></li>
+    <li><a href="https://www.ansible.com/webinars-training" target="_blank">Webinars & Training</a></li>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#communication">Communication</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_certificate_store module – Manages the certificate store</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_certificate_store.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-certificate-store-module"></span><section id="ansible-windows-win-certificate-store-module-manages-the-certificate-store">
+<h1>ansible.windows.win_certificate_store module – Manages the certificate store<a class="headerlink" href="#ansible-windows-win-certificate-store-module-manages-the-certificate-store" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 2.0.0).</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_certificate_store</span></code>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Used to import/export and remove certificates and keys from the local certificate store.</p></li>
+<li><p>This module is not used to create certificates and will only manage existing certs as a file or in the store.</p></li>
+<li><p>It can be used to import PEM, DER, P7B, PKCS12 (PFX) certificates and export PEM, DER and PKCS12 certificates.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<table class="ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-file_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-file-type"><strong>file_type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-file_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The file type to export the certificate as when <code class="docutils literal notranslate"><span class="pre">state=exported</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">der</span></code> is a binary ASN.1 encoded file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pem</span></code> is a base64 encoded file of a der file in the OpenSSL form.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pkcs12</span></code> (also known as pfx) is a binary container that contains both the certificate and private key unlike the other options.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">pkcs12</span></code> is set and the private key is not exportable or accessible by the current user, it will throw an exception.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;der&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;pem&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;pkcs12&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-key_exportable"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-key-exportable"><strong>key_exportable</strong></p>
+<a class="ansibleOptionLink" href="#parameter-key_exportable" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether to allow the private key to be exported.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then this module and other process will only be able to export the certificate and the private key cannot be exported.</p>
+<p>Used when <code class="docutils literal notranslate"><span class="pre">state=present</span></code> only.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">true</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-key_storage"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-key-storage"><strong>key_storage</strong></p>
+<a class="ansibleOptionLink" href="#parameter-key_storage" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies where Windows will store the private key when it is imported.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">default</span></code>, the default option as set by Windows is used, typically <code class="docutils literal notranslate"><span class="pre">user</span></code>.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">machine</span></code>, the key is stored in a path accessible by various users.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">user</span></code>, the key is stored in a path only accessible by the current user.</p>
+<p>Used when <code class="docutils literal notranslate"><span class="pre">state=present</span></code> only and cannot be changed once imported.</p>
+<p>See <a class="reference external" href="https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx">https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509keystorageflags.aspx</a> for more details.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;machine&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;user&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-password"><strong>password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password of the pkcs12 certificate key.</p>
+<p>This is used when reading a pkcs12 certificate file or the password to set when <code class="docutils literal notranslate"><span class="pre">state=exported</span></code> and <code class="docutils literal notranslate"><span class="pre">file_type=pkcs12</span></code>.</p>
+<p>If the pkcs12 file has no password set or no password should be set on the exported file, do not set this option.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path to a certificate file.</p>
+<p>This is required when <em>state</em> is <code class="docutils literal notranslate"><span class="pre">present</span></code> or <code class="docutils literal notranslate"><span class="pre">exported</span></code>.</p>
+<p>When <em>state</em> is <code class="docutils literal notranslate"><span class="pre">absent</span></code> and <em>thumbprint</em> is not specified, the thumbprint is derived from the certificate at this path.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If <code class="docutils literal notranslate"><span class="pre">present</span></code>, will ensure that the certificate at <em>path</em> is imported into the certificate store specified.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">absent</span></code>, will ensure that the certificate specified by <em>thumbprint</em> or the thumbprint of the cert at <em>path</em> is removed from the store specified.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">exported</span></code>, will ensure the file at <em>path</em> is a certificate specified by <em>thumbprint</em>.</p>
+<p>When exporting a certificate, if <em>path</em> is a directory then the module will fail, otherwise the file will be replaced if needed.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;exported&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;present&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-store_location"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-store-location"><strong>store_location</strong></p>
+<a class="ansibleOptionLink" href="#parameter-store_location" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The store location to use when importing a certificate or searching for a certificate.</p>
+<p>Can be set to <code class="docutils literal notranslate"><span class="pre">CurrentUser</span></code> or <code class="docutils literal notranslate"><span class="pre">LocalMachine</span></code> when <code class="docutils literal notranslate"><span class="pre">store_type=system</span></code>.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">LocalMachine</span></code> when <code class="docutils literal notranslate"><span class="pre">store_type=system</span></code>.</p>
+<p>Must be set to any service name when <code class="docutils literal notranslate"><span class="pre">store_type=service</span></code>.</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;LocalMachine&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-store_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-store-name"><strong>store_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-store_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The store name to use when importing a certificate or searching for a certificate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">AddressBook</span></code>: The X.509 certificate store for other users</p>
+<p><code class="docutils literal notranslate"><span class="pre">AuthRoot</span></code>: The X.509 certificate store for third-party certificate authorities (CAs)</p>
+<p><code class="docutils literal notranslate"><span class="pre">CertificateAuthority</span></code>: The X.509 certificate store for intermediate certificate authorities (CAs)</p>
+<p><code class="docutils literal notranslate"><span class="pre">Disallowed</span></code>: The X.509 certificate store for revoked certificates</p>
+<p><code class="docutils literal notranslate"><span class="pre">My</span></code>: The X.509 certificate store for personal certificates</p>
+<p><code class="docutils literal notranslate"><span class="pre">Root</span></code>: The X.509 certificate store for trusted root certificate authorities (CAs)</p>
+<p><code class="docutils literal notranslate"><span class="pre">TrustedPeople</span></code>: The X.509 certificate store for directly trusted people and resources</p>
+<p><code class="docutils literal notranslate"><span class="pre">TrustedPublisher</span></code>: The X.509 certificate store for directly trusted publishers</p>
+<p class="ansible-option-line"><span class="ansible-option-default-bold">Default:</span> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;My&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-store_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-store-type"><strong>store_type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-store_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><span class="ansible-option-versionadded">added in ansible.windows 1.5.0</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The store type to manage.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">system</span></code> to manage locations in the system store, <code class="docutils literal notranslate"><span class="pre">LocalMachine</span></code> and <code class="docutils literal notranslate"><span class="pre">CurrentUser</span></code>.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">service</span></code> to manage the store of a service account specified by <em>store_location</em>.</p>
+<p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;system&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;service&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-thumbprint"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-parameter-thumbprint"><strong>thumbprint</strong></p>
+<a class="ansibleOptionLink" href="#parameter-thumbprint" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The thumbprint as a hex string to either export or remove.</p>
+<p>See the examples for how to specify the thumbprint.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Some actions on PKCS12 certificates and keys may fail with the error <code class="docutils literal notranslate"><span class="pre">the</span> <span class="pre">specified</span> <span class="pre">network</span> <span class="pre">password</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">correct</span></code>, either use CredSSP or Kerberos with credential delegation, or use <code class="docutils literal notranslate"><span class="pre">become</span></code> to bypass these restrictions.</p></li>
+<li><p>The certificates must be located on the Windows host to be set with <em>path</em>.</p></li>
+<li><p>When importing a certificate for usage in IIS, it is generally required to use the <code class="docutils literal notranslate"><span class="pre">machine</span></code> key_storage option, as both <code class="docutils literal notranslate"><span class="pre">default</span></code> and <code class="docutils literal notranslate"><span class="pre">user</span></code> will make the private key unreadable to IIS APPPOOL identities and prevent binding the certificate to the https endpoint.</p></li>
+</ul>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import a certificate</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pem</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import pfx certificate that is password protected</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">VeryStrongPasswordHere!</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import pfx certificate without password and set private key as un-exportable</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">key_exportable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="c1"># usually you don&#39;t set this here but it is for illustrative purposes</span>
+<span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ansible_winrm_transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credssp</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove a certificate based on file thumbprint</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pem</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove a certificate based on thumbprint</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">thumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BD7AF104CF1872BDB518D95C9534EA941665FD27</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove certificate based on thumbprint is CurrentUser/TrustedPublishers store</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">thumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BD7AF104CF1872BDB518D95C9534EA941665FD27</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+<span class="w">    </span><span class="nt">store_location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CurrentUser</span>
+<span class="w">    </span><span class="nt">store_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TrustedPublisher</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export certificate as der encoded file</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.cer</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exported</span>
+<span class="w">    </span><span class="nt">file_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">der</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export certificate and key as pfx encoded file</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exported</span>
+<span class="w">    </span><span class="nt">file_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pkcs12</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AnotherStrongPass!</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">  </span><span class="nt">become_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import certificate be used by IIS</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">file_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pkcs12</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">StrongPassword!</span>
+<span class="w">    </span><span class="nt">store_location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LocalMachine</span>
+<span class="w">    </span><span class="nt">key_storage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">machine</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">  </span><span class="nt">become_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import certificate to be used for LDAPS</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">StrongPassword!</span>
+<span class="w">    </span><span class="nt">store_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service</span>
+<span class="w">    </span><span class="nt">store_location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NTDS</span>
+<span class="w">    </span><span class="nt">key_exportable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">key_storage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">machine</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-thumbprints"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-store-module-return-thumbprints"><strong>thumbprints</strong></p>
+<a class="ansibleOptionLink" href="#return-thumbprints" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of certificate thumbprints that were touched by the module.</p>
+<p class="ansible-option-line"><span class="ansible-option-returned-bold">Returned:</span> success</p>
+<p class="ansible-option-line ansible-option-sample"><span class="ansible-option-sample-bold">Sample:</span> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;BC05633694E675449136679A658281F17A191087&quot;]</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Jordan Borean (&#64;jborean93)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Permalink to this heading"></a></h3>
+<p class="ansible-links">
+  <a href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" aria-role="button" target="_blank" rel="noopener external">Issue Tracker</a>
+  <a href="https://github.com/ansible-collections/ansible.windows" aria-role="button" target="_blank" rel="noopener external">Repository (Sources)</a>
+  <a href="./#communication-for-ansible-windows" aria-role="button" target="_blank">Communication</a>
+</p></section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_acl_inheritance_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_acl_inheritance module – Change ACL inheritance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_command_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_command module – Executes a command on a remote Windows node" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
