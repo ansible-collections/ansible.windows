@@ -1,0 +1,2 @@
+minor_changes:
+  - win_copy/win_file/win_template - when using `--diff`, no diff would be shown, this fixes that.
