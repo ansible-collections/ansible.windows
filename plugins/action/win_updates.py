@@ -831,7 +831,7 @@ class ActionModule(ActionBase):
 
         return result
 
-    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout, post_reboot_delay):  # type: (Dict, Dict, bool, int) -> Dict
+    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout, post_reboot_delay):  # type: (Dict, Dict, bool, int, int) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
         # In case we are running with become we need to make sure the module uses the correct dir
         module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
