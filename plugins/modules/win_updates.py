@@ -61,6 +61,12 @@ options:
         - This is only used if C(reboot=true) and a reboot is required.
         default: 1200
         type: int
+    post_reboot_delay:
+        description:
+        - Seconds to wait after the reboot command was successful before attempting to validate the system rebooted successfully.
+        - This is only used if C(reboot=true) and a reboot is required.
+        default: 0
+        type: int
     server_selection:
         description:
         - Defines the Windows Update source catalog.
