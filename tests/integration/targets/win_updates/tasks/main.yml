@@ -26,6 +26,17 @@
     - reboot_timeout_not_int is failed
     - '"Invalid value given for ''reboot_timeout''" in reboot_timeout_not_int.msg'
 
+- name: failure with post_reboot_delay not an int
+  win_updates:
+    post_reboot_delay: a
+  register: post_reboot_delay_not_int
+  ignore_errors: yes
+
+- assert:
+    that:
+    - post_reboot_delay_not_int is failed
+    - '"Invalid value given for ''post_reboot_delay''" in post_reboot_delay_not_int.msg'
+
 - name: failure on async with reboot=True
   win_updates:
     reboot: True
