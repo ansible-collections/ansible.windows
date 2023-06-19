@@ -710,12 +710,14 @@ class ActionModule(ActionBase):
         'reboot',
         'skip_optional',
         'reboot_timeout',
+        'post_reboot_delay',
         'reject_list',
         'server_selection',
         'state',
     ]
 
     DEFAULT_REBOOT_TIMEOUT = 1200
+    DEFAULT_POST_REBOOT_DELAY = 0
 
     def __init__(self, *args, **kwargs):
         super(ActionModule, self).__init__(*args, **kwargs)
@@ -747,6 +749,11 @@ class ActionModule(ActionBase):
         except TypeError as e:
             raise AnsibleActionFail("Invalid value given for 'reboot_timeout': %s." % to_native(e))
 
+        try:
+            post_reboot_delay = check_type_int(self._task.args.get('post_reboot_delay', self.DEFAULT_POST_REBOOT_DELAY))
+        except TypeError as e:
+            raise AnsibleActionFail("Invalid value given for 'post_reboot_delay': %s." % to_native(e))
+
         module_options = self._task.args.copy()
 
         if self._task.async_val > 0:
@@ -766,7 +773,7 @@ class ActionModule(ActionBase):
             module_options['_wait'] = False
 
             try:
-                result = self._run_sync(task_vars, module_options, reboot, reboot_timeout)
+                result = self._run_sync(task_vars, module_options, reboot, reboot_timeout, post_reboot_delay)
             except Exception as e:
                 result = {}
                 if isinstance(e, _ReturnResultException):
@@ -824,7 +831,7 @@ class ActionModule(ActionBase):
 
         return result
 
-    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout):  # type: (Dict, Dict, bool, int) -> Dict
+    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout, post_reboot_delay):  # type: (Dict, Dict, bool, int) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
         # In case we are running with become we need to make sure the module uses the correct dir
         module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
@@ -888,7 +895,7 @@ class ActionModule(ActionBase):
                     reboot_res = {'failed': False}
 
                 else:
-                    reboot_res = reboot_host(self._task.action, self._connection, reboot_timeout=reboot_timeout)
+                    reboot_res = reboot_host(self._task.action, self._connection, reboot_timeout=reboot_timeout, post_reboot_delay=post_reboot_delay)
 
                 result['rebooted'] = True
 
