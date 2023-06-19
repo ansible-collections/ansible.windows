@@ -26,6 +26,7 @@ $spec = @{
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
         reboot_timeout = @{ type = 'int'; default = 1200 }
+        post_reboot_delay = @{ type = 'int'; default = 0 }
         _wait = @{ type = 'bool'; default = $false }
         _output_path = @{ type = 'str' }
     }
