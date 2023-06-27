@@ -34,6 +34,7 @@ Try {
 
     # TODO: move this into module_utils/powershell.ps1?
     $jss = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+    $jss.MaxJsonLength = [int]::MaxValue
     $data = $jss.DeserializeObject($data_raw)
 }
 Catch {
