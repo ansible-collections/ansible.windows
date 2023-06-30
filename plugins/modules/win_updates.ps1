@@ -26,25 +26,104 @@ $spec = @{
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
         reboot_timeout = @{ type = 'int'; default = 1200 }
-        _wait = @{ type = 'bool'; default = $false }
-        _output_path = @{ type = 'str' }
+        _operation = @{ type = 'str'; choices = 'start', 'cancel', 'poll'; default = 'start' }
+        _operation_options = @{ type = 'dict' }
     }
     supports_check_mode = $true
 }
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-# For backwards compatibility - allow the camel case names but internally use the full names
-$categoryNames = $module.Params.category_names | ForEach-Object -Process {
-    switch -exact ($_) {
-        CriticalUpdates { 'Critical Updates' }
-        DefinitionUpdates { 'Definition Updates' }
-        DeveloperKits { 'Developer Kits' }
-        FeaturePacks { 'Feature Packs' }
-        SecurityUpdates { 'Security Updates' }
-        ServicePacks { 'Service Packs' }
-        UpdateRollups { 'Update Rollups' }
-        default { $_ }
+Function Set-CancelEvent {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [string]
+        $CancelId,
+
+        [Parameter(Mandatory)]
+        [int]
+        $TaskPid
+    )
+
+    $cancelEvent = $null
+    if ([Threading.EventWaitHandle]::TryOpenExisting($CancelId, [ref]$cancelEvent)) {
+        [void]$cancelEvent.Set()
+        $cancelEvent.Dispose()
+    }
+
+    # We don't want to wait around forever, try out best to wait until the task has ended.
+    Wait-Process -Id $TaskPid -ErrorAction SilentlyContinue -Timeout 10
+}
+
+Function Receive-ProgressOutput {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [string]
+        $PipeName,
+
+        [Parameter()]
+        [switch]
+        $WaitForExit
+    )
+
+    $pipe = $reader = $null
+    try {
+        $pipe = New-Object -TypeName System.IO.Pipes.NamedPipeClientStream -ArgumentList @(
+            '.',
+            $PipeName,
+            [System.IO.Pipes.PipeDirection]::InOut,
+            [System.IO.Pipes.PipeOptions]'Asynchronous, WriteThrough'
+        )
+
+        # The server might be under heavy load when installing the updates
+        # which delays it from creating the named pipe. Set a timeout of 5
+        # minutes to account for this but don't hang in case something bad
+        # happened.
+        # Note: I saw a 30-60 delay on some Windows Server 2016 hosts during
+        # testing (2 CPU cores).
+        try {
+            $pipe.Connect(300000)
+        }
+        catch [System.TimeoutException] {
+            $module.FailJson("Timed out waiting for server pipe to be available", $_)
+        }
+
+        $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList @(
+            $pipe,
+            (New-Object -TypeName System.Text.UTF8Encoding)
+        )
+
+        $firstResult = $true
+        while ($true) {
+            # Try to read as much data as possible, wait up to 1 second for
+            # server to write more data before giving up this round.
+            $readTask = $reader.ReadLineAsync()
+            if (-not $firstResult -and -not $readTask.AsyncWaitHandle.WaitOne(1000)) {
+                break
+            }
+
+            $line = $readTask.GetAwaiter().GetResult()
+            $firstResult = $WaitForExit
+            $parsedResult = ConvertFrom-Json -InputObject $line
+            $parsedResult
+
+            # If the task is exit do not read anymore as the server is
+            # waiting to be told it is done.
+            if ($parsedResult.task -eq 'exit') {
+                break
+            }
+        }
+
+        # First byte signals the server to prepare for disposal.
+        # Second byte is a cheap way for the server to signal it is ready for disposal
+        $pipe.WriteByte(1)
+        $pipe.WriteByte(1)
+    }
+    finally {
+        if ($reader) { $reader.Dispose() }
+        if ($pipe) { $pipe.Dispose() }
     }
 }
 
@@ -259,9 +338,6 @@ Function Invoke-AsBatchLogon {
 
     .PARAMETER Parameters
     The parameters to invoke on the scriptblock.
-
-    .PARAMETER Wait
-    Wait for the scriptblock to finish instead of it running in the background.
     #>
     [OutputType([int])]
     [CmdletBinding()]
@@ -271,19 +347,28 @@ Function Invoke-AsBatchLogon {
         $Module,
 
         [Parameter(Mandatory)]
-        [ScriptBlock]
+        [String]
+        $FunctionName,
+
+        [Parameter(Mandatory)]
+        [int]
+        $FunctionLine,
+
+        [Parameter(Mandatory)]
+        [String]
         $ScriptBlock,
 
         [Parameter(Mandatory)]
         [Hashtable]
         $Parameters,
 
+        [Parameter(Mandatory)]
+        [ScriptBlock]
+        $WaitFunction,
+
         [Parameter()]
         [Hashtable]
-        $Commands = @{},
-
-        [Switch]
-        $Wait
+        $Commands = @{}
     )
 
     # FUTURE: Use NamedPipeConnectionInfo once PowerShell 5.1 is the baseline
@@ -308,33 +393,31 @@ Function Invoke-AsBatchLogon {
         try {
             $rs.Open()
 
-            $eventHandle = [System.Threading.EventWaitHandle]::OpenExisting("Global\$($info.Id)")
-            try {
-                $ps = [PowerShell]::Create()
-                $ps.Runspace = $rs
-                [void]$ps.AddScript($info.ScriptBlock).AddParameters($info.Parameters)
-                $task = $ps.BeginInvoke()
-
-                # Signal parent that the data was received/decoded and is running.
-                [void]$eventHandle.Set()
+            $ps = [PowerShell]::Create()
+            $ps.Runspace = $rs
+            [void]$ps.AddScript(@"
+$([System.Environment]::NewLine * $($info.FunctionLine - 1))$($info.ScriptBlock)
+"@).AddStatement()
+            [void]$ps.AddCommand($info.FunctionName).AddParameters($info.Parameters)
+            $ps.Invoke()
+            foreach ($err in $ps.Streams.Error) {
+                throw $err
             }
-            finally {
-                $eventHandle.Dispose()
-            }
-
-            $ps.EndInvoke($task)
         }
         finally {
             $rs.Dispose()
         }
     }
 
+    # Using Invoke-Expression gives us a nicer error and stack trace.
     $stubRunner = @'
 try {
     chcp.com 65001 > $null
     $execWrapper = $input | Out-String
     $splitParts = $execWrapper.Split(@(\"`0`0`0`0\"), 2, [StringSplitOptions]::RemoveEmptyEntries)
-    & ([ScriptBlock]::Create($splitParts[0])) $splitParts[1]
+
+    Invoke-Expression ('Function Invoke-AsBatchLogonStub { ' + $splitParts[0] + '}')
+    Invoke-AsBatchLogonStub $splitParts[1]
 }
 catch {
     $result = @{
@@ -347,25 +430,44 @@ catch {
 }
 '@
 
-    $eventHandle = $pi = $stdout = $stdin = $null
+    $pi = $stdout = $stdin = $null
     $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path "$env:SystemRoot\System32\cmd.exe"
     try {
         $stdout = New-AnonPipe -Direction In
         $stderr = New-AnonPipe -Direction In
         $stdin = New-AnonPipe -Direction Out
-        $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+
+        # The psrp connection plugin runs in wsmprovhost, change to the builtin
+        # PowerShell executable for that scenario
+        $pwsh = (Get-Process -Id $pid).MainModule.FileName
+        if ($pwsh -eq "$env:SystemRoot\System32\wsmprovhost.exe") {
+            $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+        }
+
+        # We need to continuously pump the pipes to ensure the process doesn't
+        # block when writing to a full pipe buffer. The async WaitOne method is
+        # used so the task can response to Stop requests.
+        $readScript = {
+            $readTask = $args[0].ReadToEndAsync()
+            while (-not $readTask.AsyncWaitHandle.WaitOne(300)) {}
+            $readTask.GetAwaiter().GetResult()
+        }
+        $stdoutPS = [PowerShell]::Create()
+        $stdoutTask = $stdoutPS.AddScript($readScript).AddArgument($stdout).BeginInvoke()
+        $stderrPS = [PowerShell]::Create()
+        $stderrTask = $stderrPS.AddScript($readScript).AddArgument($stderr).BeginInvoke()
 
         $exitWithFailureInfo = {
             param ([Parameter(Mandatory)][string]$Action)
 
             $rc = [Ansible.Windows.Process.ProcessUtil]::GetProcessExitCode($pi.Process)
-            $stdoutStr = $stdout.ReadToEnd()
-            $stderrStr = $stderr.ReadToEnd()
+            $stdoutStr = $stdoutPS.EndInvoke($stdoutTask)[0]
+            $stderrStr = $stderrPS.EndInvoke($stderrTask)[0]
 
             if ($rc -eq [UInt32]::MaxValue -and $stdoutStr.StartsWith('ANSIBLE_BOOTSTRAP_ERROR: ')) {
                 $info = ConvertFrom-Json -InputObject $stdoutStr.Substring(25)
                 $module.Result.exception = $info.exception
-                $module.FailJson("Unknown failure $Action win_updates bootstrap process: $($info.message))")
+                $module.FailJson("Unknown failure $Action win_updates bootstrap process: $($info.message)")
             }
             else {
                 $module.Result.rc = $rc
@@ -387,7 +489,7 @@ catch {
         }
         $pi = [Ansible.Windows.Process.ProcessUtil]::NativeCreateProcess(
             $pwsh,
-            "`"$pwsh`" -NoProfile -NonInteractive -Command `$input | &{ $stubRunner }",
+            "`"$pwsh`" -NoProfile -NonInteractive -Command `$input | & { $stubRunner }",
             $null,
             $null,
             $true,
@@ -396,23 +498,24 @@ catch {
             $null,
             $si
         )
+        $procWaitHandle = New-Object -TypeName System.Threading.ManualResetEvent -ArgumentList $false
+        $procSafeWaitHandle = New-Object -TypeName Microsoft.Win32.SafeHandles.SafeWaitHandle -ArgumentList @(
+            $pi.Process.DangerousGetHandle(),
+            $false
+        )
+        $procWaitHandle.SafeWaitHandle = $procSafeWaitHandle
 
         # Once the process has started we can dispose the local client handles
         $stdin.BaseStream.DisposeLocalCopyOfClientHandle()
         $stdout.BaseStream.DisposeLocalCopyOfClientHandle()
         $stderr.BaseStream.DisposeLocalCopyOfClientHandle()
 
-        $eventName = "ansible-$($Module.ModuleName)-$([Guid]::NewGuid().Guid)"
-        $eventHandle = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
-            $false,
-            [System.Threading.EventResetMode]::ManualReset,
-            "Global\$eventName"
-        )
-        [void]$eventHandle.Reset()
         $runPayload = [System.Management.Automation.PSSerializer]::Serialize(@{
                 Id = $eventName
                 Commands = $Commands
-                ScriptBlock = $ScriptBlock.ToString()
+                FunctionName = $FunctionName
+                FunctionLine = $FunctionLine
+                ScriptBlock = $ScriptBlock
                 Parameters = $Parameters
             })
 
@@ -430,23 +533,28 @@ catch {
         }
 
         # Wait for the task to signal it started the code or it failed and has ended
-        $waitProcPS = [PowerShell]::Create()
-        [void]$waitProcPS.AddCommand('Wait-Process').AddParameters(@{Id = $pi.ProcessId; ErrorAction = 'SilentlyContinue' })
-        $waitProcTask = $waitProcPS.BeginInvoke()
+        $waitPS = [PowerShell]::Create()
+        [void]$waitPS.AddScript($WaitFunction)
+        $waitTask = $waitPS.BeginInvoke()
 
         $waitIdx = [System.Threading.WaitHandle]::WaitAny(@(
-                $waitProcTask.AsyncWaitHandle, $eventHandle
+                $procWaitHandle, $waitTask.AsyncWaitHandle
             ))
 
         if ($waitIdx -eq 0) {
             & $exitWithFailureInfo 'running'
         }
-
-        if ($Wait) {
-            [void]$waitProcPS.EndInvoke($waitProcTask)
-        }
         else {
-            $waitProcPS.Stop()
+            try {
+                $waitPS.EndInvoke($waitTask)
+            }
+            catch {
+                Stop-Process -Id $pi.ProcessId -Force -ErrorAction SilentlyContinue
+                throw
+            }
+
+            $stdoutPS.Stop()
+            $stderrPS.Stop()
         }
 
         $pi.ProcessId
@@ -456,11 +564,472 @@ catch {
     }
     finally {
         Stop-Process -Id $taskPid -Force -ErrorAction SilentlyContinue
-        if ($eventHandle) { $eventHandle.Dispose() }
         if ($pi) { $pi.Dispose() }
         if ($stdout) { $stdout.Dispose() }
         if ($stderr) { $stderr.Dispose() }
         if ($stdin) { $stdin.Dispose() }
+    }
+}
+
+Function Invoke-WithPipeOutput {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '',
+        Justification = 'The inputs are safely validated and using it gives better stacktrace frames')]
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $FunctionName,
+
+        [Parameter(Mandatory)]
+        [String]
+        $ScriptBlock,
+
+        [Parameter(Mandatory)]
+        [int]
+        $FunctionLine,
+
+        [Parameter(Mandatory)]
+        [Hashtable]
+        $Parameters,
+
+        [Parameter(Mandatory)]
+        [String]
+        $CancelId,
+
+        [Parameter(Mandatory)]
+        [String]
+        $PipeName,
+
+        [Parameter(Mandatory)]
+        [String]
+        $PipeIdentity,
+
+        [Parameter(Mandatory)]
+        [String]
+        $WaitId,
+
+        [Parameter(Mandatory)]
+        [String]
+        $TempPath,
+
+        [Parameter()]
+        [String]
+        $LogPath,
+
+        [Switch]
+        $CheckMode
+    )
+
+    Add-CSharpType -TempPath $TempPath -References @'
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.IO;
+using System.IO.Pipes;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Ansible.Windows.WinUpdates
+{
+    public class PipeServer : IDisposable
+    {
+        private EventWaitHandle _cancelEvent;
+        private CancellationTokenSource _cancelTokenSource = new CancellationTokenSource();
+        private bool _closed = false;
+        private StreamWriter _logger = null;
+        private SemaphoreSlim _openLock = new SemaphoreSlim(1);
+        private ManualResetEvent _waitOpenEvent = new ManualResetEvent(false);
+        private NamedPipeServerStream _pipe = null;
+        private string _pipeName;
+        private PipeSecurity _pipeSec;
+        private Task _readTask;
+        private UTF8Encoding _utf8 = new UTF8Encoding();
+        private RegisteredWaitHandle _registeredWaitHandle;
+
+        public CancellationToken CancelToken
+        {
+            get
+            {
+                return _cancelTokenSource.Token;
+            }
+        }
+        public PipeServer(string name, string clientSid, string cancelId, StreamWriter logger)
+        {
+            SecurityIdentifier clientId = new SecurityIdentifier(clientSid);
+
+            EventWaitHandleSecurity eventSecurity = new EventWaitHandleSecurity();
+            eventSecurity.AddAccessRule(new EventWaitHandleAccessRule(
+                WindowsIdentity.GetCurrent().User,
+                EventWaitHandleRights.FullControl,
+                AccessControlType.Allow
+            ));
+            eventSecurity.AddAccessRule(new EventWaitHandleAccessRule(
+                clientId,
+                EventWaitHandleRights.Modify | EventWaitHandleRights.Synchronize,
+                AccessControlType.Allow
+            ));
+#if CORECLR
+            _cancelEvent = EventWaitHandleAcl.Create(
+                false,
+                EventResetMode.ManualReset,
+                cancelId,
+                out bool _,
+                eventSecurity
+            );
+#else
+            bool wasCreated;
+            _cancelEvent = new EventWaitHandle(
+                false,
+                EventResetMode.ManualReset,
+                cancelId,
+                out wasCreated,
+                eventSecurity
+            );
+#endif
+            _cancelEvent.Reset();
+            _registeredWaitHandle = ThreadPool.RegisterWaitForSingleObject(
+                _cancelEvent, WaitCallback, null, -1, true);
+            _logger = logger;
+            _pipeName = name;
+            _pipeSec = new PipeSecurity();
+            _pipeSec.AddAccessRule(new PipeAccessRule(
+                WindowsIdentity.GetCurrent().User,
+                PipeAccessRights.FullControl,
+                AccessControlType.Allow
+            ));
+            _pipeSec.AddAccessRule(new PipeAccessRule(
+                clientId,
+                PipeAccessRights.ReadWrite | PipeAccessRights.Synchronize,
+                AccessControlType.Allow
+            ));
+        }
+
+        public void WaitCallback(object state, bool timedOut)
+        {
+            _cancelTokenSource.Cancel();
+        }
+
+        public void WaitForConnection()
+        {
+            WriteLog("Starting to acquire WaitForConnection lock");
+            _openLock.Wait();
+            WriteLog("Acquired WaitForConnection lock");
+            try
+            {
+                if (_pipe != null)
+                {
+                    WriteLog("Disposing pipe server for a new connection");
+                    _pipe.Dispose();
+                    _pipe = null;
+                }
+
+                WriteLog(string.Format("Creating named pipe server '{0}'", _pipeName));
+#if CORECLR
+                _pipe = NamedPipeServerStreamAcl.Create(
+                    _pipeName,
+                    PipeDirection.InOut,
+                    1,
+                    PipeTransmissionMode.Byte,
+                    PipeOptions.Asynchronous | PipeOptions.WriteThrough,
+                    0,
+                    0,
+                    _pipeSec,
+                    inheritability: HandleInheritability.None,
+                    additionalAccessRights: (PipeAccessRights)0
+                );
+#else
+                _pipe = new NamedPipeServerStream(
+                    _pipeName,
+                    PipeDirection.InOut,
+                    1,
+                    PipeTransmissionMode.Byte,
+                    PipeOptions.Asynchronous | PipeOptions.WriteThrough,
+                    0,
+                    0,
+                    _pipeSec,
+                    HandleInheritability.None
+                );
+#endif
+
+                WriteLog("Waiting for client to connect to pipe");
+#if CORECLR
+                _pipe.WaitForConnectionAsync(CancelToken).GetAwaiter().GetResult();
+#else
+                // Use above when dotnet 4.6 is the minimum
+                IAsyncResult waitTask = _pipe.BeginWaitForConnection(null, null);
+                int waitIdx = WaitHandle.WaitAny(
+                    new WaitHandle[] { waitTask.AsyncWaitHandle, CancelToken.WaitHandle });
+
+                WriteLog(string.Format("Client connect wait idx {0}", waitIdx));
+                if (waitIdx == 1)
+                {
+                    _pipe.Dispose();
+                    throw new OperationCanceledException("Pipe WaitForConnect was cancelled", CancelToken);
+                }
+
+                _pipe.EndWaitForConnection(waitTask);
+#endif
+                WriteLog("Client successfully connected to pipe");
+
+                if (_readTask == null)
+                {
+                    _readTask = Task.Run(() => Read());
+                }
+
+                // Signals the WriteLine is ready to go.
+                _waitOpenEvent.Set();
+            }
+            finally
+            {
+                WriteLog("Starting to release WaitForConnection lock");
+                _openLock.Release();
+                _waitOpenEvent.Set();
+                WriteLog("Released WaitForConnection lock");
+            }
+        }
+
+        public void WriteLine(string line)
+        {
+            while (!CancelToken.IsCancellationRequested)
+            {
+                // Wait until the Read thread has created the pipe.
+                _waitOpenEvent.WaitOne();
+                if (CancelToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException("Pipe WriteLine was cancelled", CancelToken);
+                }
+
+                WriteLog("Starting to acquire WriteLine lock");
+                _openLock.Wait();
+                WriteLog("Acquired WriteLine lock");
+                try
+                {
+                    WriteLog(string.Format("Writing to pipe server: {0}", line));
+                    byte[] data = _utf8.GetBytes(line + "\r\n");
+
+#if CORECLR
+                    _pipe.WriteAsync(data, 0, data.Length, CancelToken).GetAwaiter().GetResult();
+#else
+                    Task task = _pipe.WriteAsync(data, 0, data.Length);
+                    int waitIdx = WaitHandle.WaitAny(
+                        new WaitHandle[] { ((IAsyncResult)task).AsyncWaitHandle, CancelToken.WaitHandle });
+                    if (waitIdx == 1)
+                    {
+                        throw new OperationCanceledException("Pipe WriteLine was cancelled", CancelToken);
+                    }
+                    task.GetAwaiter().GetResult();
+#endif
+                    WriteLog("Writing task successful");
+                    break;
+                }
+                catch (IOException e)
+                {
+                    WriteLog(string.Format("Pipe failed to write: {0}({1})\r\n{2}", e.GetType().Name, e.Message, e.ToString()));
+                }
+                finally
+                {
+                    WriteLog("Starting to release WriteLine lock");
+                    _openLock.Release();
+                    WriteLog("Released WriteLine lock");
+                }
+            }
+        }
+
+        public void WriteLog(string msg)
+        {
+            if (_logger == null)
+            {
+                return;
+            }
+
+            string dateStr = DateTime.Now.ToString("u");
+            string logMsg = String.Format("{0} pipe_server {1}", dateStr, msg);
+            _logger.WriteLine(logMsg);
+        }
+
+        private void Read()
+        {
+            // The pipe needs to recreate itself as soon as the client
+            // disconnects. As nothing on the client end will write, the only
+            // time ReadByte() finishes is when the client or server has
+            // closed their end.
+            try
+            {
+                while (true)
+                {
+                    WriteLog("Starting pipe read");
+                    int res = _pipe.ReadByte();
+                    WriteLog(string.Format("Pipe read returned: {0}", res.ToString()));
+
+                    // If the client sends a 1 it is signalling it is going to
+                    // dispose the pipe. make sure the WriteLine thread knows
+                    // to wait by unsignalling the event.
+                    if (res == 1)
+                    {
+                        _waitOpenEvent.Reset();
+                        WriteLog("Waiting for client to acknowledge closing pipe");
+                        _pipe.ReadByte(); // Signal for client
+                    }
+
+                    if (_closed)
+                    {
+                        break;
+                    }
+                    WaitForConnection();
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLog(string.Format("Pipe reader failed with {0} {1}", e.GetType().Name, e.Message));
+            }
+        }
+
+        public void Dispose()
+        {
+            _closed = true;
+            if (_pipe != null)
+            {
+                _pipe.Dispose();
+                _pipe = null;
+            }
+            if (_readTask != null)
+            {
+                _readTask.Wait();
+                _readTask.Dispose();
+                _readTask = null;
+            }
+            _openLock.Dispose();
+            _registeredWaitHandle.Unregister(_cancelEvent);
+            _cancelEvent.Dispose();
+            _cancelTokenSource.Dispose();
+            _waitOpenEvent.Dispose();
+            GC.SuppressFinalize(this);
+
+        }
+        ~PipeServer() { Dispose(); }
+    }
+}
+'@
+
+    $progressScript = {
+        Param($Pipe, $OutputCollection, $WaitEvent)
+
+        $ErrorActionPreference = 'Stop'
+
+        try {
+            $Pipe.WaitForConnection()
+            $WaitEvent.Set()
+
+            # Any failures from here on out need to be communicated back over the pipe
+            try {
+                foreach ($toWrite in $OutputCollection.GetConsumingEnumerable()) {
+                    $toWriteStr = ConvertTo-Json -InputObject $toWrite -Compress -Depth 5
+
+                    # To avoid the exit task output from being lost, it will
+                    # continously be written to the pipe until the cancel
+                    # signal has been received by the action plugin.
+                    do {
+                        $pipe.WriteLine($toWriteStr)
+                    }
+                    while ($toWrite.task -eq 'exit')
+                }
+            }
+            catch [System.OperationCanceledException] {
+                $Pipe.WriteLog("Cancellation requested, shutting down output consumer")
+                return
+            }
+            catch {
+                # Forces the update task to fail when it next tries to send output back
+                $OutputCollection.CompleteAdding()
+
+                $Pipe.WriteLog("Failure during pipe writeline task`n$_`n$($_.ScriptStackTrace)`n$($_.Exception | Select-Object * | Out-String)`n")
+
+                $toWriteStr = ConvertTo-Json -Compress -InputObject @{
+                    task = 'exit'
+                    result = @{
+                        changed = $false
+                        failed = $true
+                        exception = @{
+                            message = "Failed during pipe writeline task: $($_.ToString())"
+                            exception = ($_ | Out-String) + "`r`n`r`n$($_.ScriptStackTrace)"
+                        }
+                        reboot_required = $false
+                    }
+                }
+                $Pipe.WriteLine($toWriteStr)
+            }
+        }
+        catch {
+            $Pipe.WriteLog("Failure during pipe processing task`n$_`n$($_.ScriptStackTrace)")
+            throw "Failure during pipe processing task: $_"
+        }
+    }
+
+    $outputCollection = $progressPS = $progressTask = $waitEvent = $logger = $null
+    if ($LogPath -and -not $CheckMode) {
+        $logFS = [System.IO.File]::Open($LogPath, 'Append', 'Write', 'Read')
+        $logger = New-Object -TypeName System.IO.StreamWriter -ArgumentList @(
+            $logFS,
+            (New-Object -TypeName System.Text.UTF8Encoding)
+        )
+        $logger.AutoFlush = $true
+    }
+    $pipe = New-Object -TypeName Ansible.Windows.WinUpdates.PipeServer -ArgumentList @(
+        $PipeName,
+        $PipeIdentity,
+        $CancelId
+        $logger
+    )
+    try {
+        $waitEvent = [System.Threading.EventWaitHandle]::OpenExisting($WaitId)
+        $outputCollection = New-Object -TypeName 'System.Collections.Concurrent.BlockingCollection[System.Collections.IDictionary]'
+
+        $progressPS = [PowerShell]::Create()
+        $null = $progressPS.AddScript($progressScript)
+        $null = $progressPS.AddParameters(@{
+                Pipe = $pipe
+                OutputCollection = $outputCollection
+                WaitEvent = $waitEvent
+            })
+        $progressTask = $progressPS.BeginInvoke()
+        while (-not $waitEvent.WaitOne(300)) {
+            if ($progressTask.IsCompleted) {
+                $tempTask = $progressTask
+                $progressTask = $null
+                $progressPS.EndInvoke($tempTask)
+            }
+        }
+
+        # # Use iex to preserve the function names in the error stack trace
+        Invoke-Expression @"
+$([System.Environment]::NewLine * $($FunctionLine - 1))$ScriptBlock
+
+$FunctionName @Parameters -CancelToken `$pipe.CancelToken -OutputCollection `$outputCollection -Logger `$logger
+"@
+    }
+    catch {
+        $pipe.WriteLog("Failure during Invoke-WithPipeOutput: $_`n$($_.ScriptStackTrace)")
+        throw
+    }
+    finally {
+        if ($outputCollection -and -not $outputCollection.IsAddingCompleted) {
+            $outputCollection.CompleteAdding()
+        }
+        if ($progressPS) {
+            if ($progressTask) {
+                $progressPS.EndInvoke($progressTask)
+            }
+            $progressPS.Dispose()
+        }
+        if ($waitEvent) { $waitEvent.Dispose() }
+        if ($outputCollection) {
+            $outputCollection.Dispose()
+        }
+        $pipe.Dispose()
+        if ($logger) { $logger.Dispose() }
     }
 }
 
@@ -481,11 +1050,15 @@ Function Install-WindowsUpdate {
 
         [Parameter(Mandatory)]
         [String]
-        $OutputPath,
+        $TempPath,
 
         [Parameter(Mandatory)]
-        [String]
-        $CancelId,
+        [System.Threading.CancellationToken]
+        $CancelToken,
+
+        [Parameter(Mandatory)]
+        [System.Collections.Concurrent.BlockingCollection[System.Collections.IDictionary]]
+        $OutputCollection,
 
         [Parameter()]
         [AllowEmptyCollection()]
@@ -502,8 +1075,8 @@ Function Install-WindowsUpdate {
         $Reject = @(),
 
         [Parameter()]
-        [String]
-        $LogPath,
+        [System.IO.StreamWriter]
+        $Logger,
 
         [Switch]
         $CheckMode,
@@ -512,20 +1085,10 @@ Function Install-WindowsUpdate {
         $LocalDebugger
     )
 
-    $ErrorActionPreference = 'Stop'
-
-    $exitResult = @{
-        changed = $false
-        failed = $false
-        reboot_required = $false
-        action = $null  # Current action, used for exception information if set
-        exception = $null  # Exception info in case of a failure @{message, exception, hresult}
-    }
-
-    $tmpDir = Split-Path -Path $outputPath -Parent
-    Add-CSharpType -TempPath $tmpDir -References @'
+    Add-CSharpType -TempPath $TempPath -References @'
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -661,34 +1224,15 @@ namespace Ansible.Windows.WinUpdates
     {
         public Dictionary<int, string> IndexMap = new Dictionary<int, string>();
 
-        private Mutex LogMutex = new Mutex();
-        private Mutex OutputMutex = new Mutex();
-        private string OutputPath;
-        private string LogPath;
-        private bool CheckMode;
+        private BlockingCollection<IDictionary> OutputCollection;
+        private StreamWriter Logger = null;
         private bool LocalDebugging;
 
-        public API(string outputPath, string logPath, bool checkMode, bool localDebugging)
+        public API(BlockingCollection<IDictionary> outputCollection, StreamWriter logger, bool localDebugging)
         {
-            OutputPath = outputPath;
-            LogPath = logPath;
-            CheckMode = checkMode;
+            OutputCollection = outputCollection;
+            Logger = logger;
             LocalDebugging = localDebugging;
-        }
-
-        public static Task WaitHandleToTask(WaitHandle waitHandle)
-        {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
-
-            ThreadPool.RegisterWaitForSingleObject(
-                waitHandle,
-                (o, timeout) => { tcs.SetResult(null); },
-                null,
-                Timeout.InfiniteTimeSpan,
-                true
-            );
-
-            return tcs.Task;
         }
 
         public Task<IDownloadResult> DownloadAsync(object downloader, ScriptBlock progress,
@@ -738,61 +1282,27 @@ namespace Ansible.Windows.WinUpdates
 
         public void WriteProgress(string task, IDictionary result)
         {
-            Dictionary<string, object> progress = new Dictionary<string, object>()
+            Hashtable progress = new Hashtable()
             {
                 { "task", task },
                 { "result", result },
             };
-
-            using (Runspace rs = RunspaceFactory.CreateRunspace())
-            using (PowerShell pipeline = PowerShell.Create())
-            {
-                rs.Open();
-                pipeline.Runspace = rs;
-                pipeline.AddCommand("ConvertTo-Json");
-                pipeline.AddParameter("InputObject", progress);
-                pipeline.AddParameter("Compress", true);
-                pipeline.AddParameter("Depth", 5);
-                string msg = pipeline.Invoke<string>()[0];
-
-                AppendFile(msg, OutputPath, OutputMutex);
-            }
+            OutputCollection.Add(progress);
         }
 
         public void WriteLog(string msg)
         {
             string dateStr = DateTime.Now.ToString("u");
-            string logMsg = String.Format("{0} {1}", dateStr, msg);
+            string logMsg = String.Format("{0} update_task {1}", dateStr, msg);
 
-            if (!String.IsNullOrWhiteSpace(LogPath) && !CheckMode)
-                AppendFile(logMsg, LogPath, LogMutex);
+            if (Logger != null)
+            {
+                Logger.WriteLine(logMsg);
+            }
 
             if (LocalDebugging)
             {
-                LogMutex.WaitOne();
-                try
-                {
-                    Console.WriteLine(logMsg);
-                }
-                finally
-                {
-                    LogMutex.ReleaseMutex();
-                }
-            }
-        }
-
-        private void AppendFile(string msg, string path, Mutex mut)
-        {
-            mut.WaitOne();
-            try
-            {
-                using (FileStream fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (StreamWriter sw = new StreamWriter(fs))
-                    sw.WriteLine(msg);
-            }
-            finally
-            {
-                mut.ReleaseMutex();
+                Console.WriteLine(logMsg);
             }
         }
 
@@ -848,13 +1358,25 @@ namespace Ansible.Windows.WinUpdates
                 //task.TrySetCanceled(cancelToken);
                 if (job != null)
                 {
-                    job.GetType().InvokeMember(
-                        "RequestAbort",
-                        BindingFlags.InvokeMethod,
-                        null,
-                        job,
-                        new object[] {}
-                    );
+                    WriteLog(String.Format("{0} RequestAbort", method));
+                    try
+                    {
+                        job.GetType().InvokeMember(
+                            "RequestAbort",
+                            BindingFlags.InvokeMethod,
+                            null,
+                            job,
+                            new object[] {}
+                        );
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        Exception exp = e;
+                        if (e.InnerException is COMException)
+                            exp = e.InnerException;
+
+                        WriteLog(String.Format("{0} RequestAbort failed: {1}", method, exp.Message));
+                    }
                 }
             });
 
@@ -953,37 +1475,19 @@ namespace Ansible.Windows.WinUpdates
             $Action,
 
             [Parameter(Mandatory, Position = 1)]
-            [ScriptBlock]
-            $ScriptBlock
+            [System.Threading.Tasks.Task]
+            $Task
         )
 
         try {
-            $cancelToken = New-Object -TypeName System.Threading.CancellationTokenSource
-            $task = &$ScriptBlock $cancelToken.Token
-
-            while ($true) {
-                # Tells the host not to go to sleep every minute, this
-                # passes in the flags ES_CONTINUOUS | ES_SYSTEM_REQUIRED.
-                # https://github.com/ansible-collections/ansible.windows/issues/310
+            # Tells the host not to go to sleep every minute, this
+            # passes in the flags ES_CONTINUOUS | ES_SYSTEM_REQUIRED.
+            # https://github.com/ansible-collections/ansible.windows/issues/310
+            while (-not $Task.AsyncWaitHandle.WaitOne(60000)) {
                 [void][Ansible.Windows.WinUpdates.NativeMethods]::SetThreadExecutionState([UInt32]"0x80000001")
-
-                $waitIdx = [System.Threading.Tasks.Task]::WaitAny(@(
-                        $cancelTask, $task
-                    ), 60000)
-
-                if ($waitIdx -ge 0) {
-                    break
-                }
-            }
-            if ($waitIdx -eq 0) {
-                if (-not $task.IsCompleted) {
-                    # Sends the COM RequestAbort signal to the job
-                    $cancelToken.Cancel()
-                }
             }
 
-            [void]$task.Wait()
-            $task.Result
+            $Task.GetAwaiter().GetResult()
         }
         catch {
             $exitResult.action = $Action
@@ -1157,22 +1661,15 @@ namespace Ansible.Windows.WinUpdates
         }
     }
 
-    # Make sure the output file exists before running
-    [IO.File]::Open($OutputPath, 'Create', 'Write', 'ReadWrite').Dispose()
-    $cancelEvent = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
-        $false,
-        [System.Threading.EventResetMode]::ManualReset,
-        $CancelId
-    )
-    [void]$cancelEvent.Reset()
-    $cancelTask = [Ansible.Windows.WinUpdates.API]::WaitHandleToTask($cancelEvent)
-    $api = New-Object -TypeName Ansible.Windows.WinUpdates.API -ArgumentList $OutputPath, $LogPath, $CheckMode, $LocalDebugger
-
-    # Make sure each exception is captured and logged to the file
+    # Makes sure an exception is captured and logged
     trap {
         if (-not $exitResult) {
-            $exitResult = @{}
+            $exitResult = @{
+                changed = $false
+                reboot_required = $false
+            }
         }
+
         $exitResult.failed = $true
         $exitResult.exception = @{
             message = $_.ToString()
@@ -1190,31 +1687,30 @@ namespace Ansible.Windows.WinUpdates
         }
 
         if ($api) {
-            $api.WriteProgress('exit', $exitResult)
-            $api.WriteLog("Exception encountered:`r`n$(ConvertTo-Json $exitResult)`r`nExiting...")
+            $api.WriteLog("Exception encountered:`r`n$($_ | Out-String)`r`nExiting...")
         }
-        else {
-            # May happen if a failure occurs before $api is defined, probably due to edits during development
-            $exit = @{
+        $OutputCollection.Add(@{
                 task = 'exit'
                 result = $exitResult
-            }
-
-            # https://github.com/ansible-collections/ansible.windows/issues/490
-            # Set-Content locks the file stopping the poller from reading it.
-            # Open the file with Read share permissions.
-            $fs = $sw = $null
-            try {
-                $fs = [System.IO.File]::Open($OutputPath, "Append", "Write", "Read")
-                $sw = New-Object -TypeName System.IO.StreamWriter -ArgumentList $fs
-                $sw.WriteLine((ConvertTo-Json $exit -Compress))
-            }
-            finally {
-                if ($sw) { $sw.Dispose() }
-                if ($fs) { $fs.Dispose() }
-            }
-        }
+            })
+        # We don't want to raise the error but we do want to exit the function
+        return
     }
+
+    $exitResult = @{
+        changed = $false
+        failed = $false
+        reboot_required = $false
+        action = $null  # Current action, used for exception information if set
+        exception = $null  # Exception info in case of a failure @{message, exception, hresult}
+    }
+
+    $api = New-Object -TypeName Ansible.Windows.WinUpdates.API -ArgumentList @(
+        $OutputCollection,
+        $Logger,
+        $LocalDebugger
+    )
+    $api.WriteProgress('started', @{})
 
     $rebootRequired = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
     $exitResult.reboot_required = $rebootRequired
@@ -1237,7 +1733,7 @@ namespace Ansible.Windows.WinUpdates
 
     $query = 'IsInstalled = 0'
     $api.WriteLog("Searching for updates to install with query '$query'")
-    $searchResult = Invoke-AsyncMethod 'Searching for updates' { $api.SearchAsync($searcher, $query, $args[0]) }
+    $searchResult = Invoke-AsyncMethod 'Searching for updates' $api.SearchAsync($searcher, $query, $CancelToken)
     $resCode = [Ansible.Windows.WinUpdates.OperationResultCode]$searchResult.ResultCode
 
     # If the search suceeded but had errors, continue on and try to log the warnings if any.
@@ -1258,7 +1754,7 @@ namespace Ansible.Windows.WinUpdates
     }
     $api.WriteLog("Found $($searchResult.Updates.Count) updates")
 
-    $api.WriteLog("Filtering found updated based on input search criteria")
+    $api.WriteLog("Filtering found updates based on input search criteria")
     $updateCollection = New-Object -ComObject Microsoft.Update.UpdateColl
 
     $allUpdates = [System.Collections.Generic.List[Hashtable]]@()
@@ -1328,7 +1824,7 @@ namespace Ansible.Windows.WinUpdates
         $exit = $true
     }
     elseif ($updateCollection.Count -eq 0) {
-        $api.WriteLog("No updated pending: exiting...")
+        $api.WriteLog("No updates pending: exiting...")
         $exit = $true
     }
     if ($exit) {
@@ -1358,7 +1854,7 @@ namespace Ansible.Windows.WinUpdates
         $api.WriteLog("Downloading updates...")
         $dl = $session.CreateUpdateDownloader()
         $dl.Updates = $downloadCollection
-        $downloadResult = Invoke-AsyncMethod 'Downloading updates' { $api.DownloadAsync($dl, ${function:Receive-CallbackProgress}, $args[0]) }
+        $downloadResult = Invoke-AsyncMethod 'Downloading updates' $api.DownloadAsync($dl, ${function:Receive-CallbackProgress}, $CancelToken)
         $exitResult.changed = $true
 
         # FUTURE: configurable download retry
@@ -1410,7 +1906,7 @@ namespace Ansible.Windows.WinUpdates
         $api.IndexMap[$i] = $installer.Updates.Item($i).Identity.UpdateId
     }
 
-    $installResult = Invoke-AsyncMethod 'Installing updates' { $api.InstallAsync($installer, ${function:Receive-CallbackProgress}, $args[0]) }
+    $installResult = Invoke-AsyncMethod 'Installing updates' $api.InstallAsync($installer, ${function:Receive-CallbackProgress}, $CancelToken)
     $exitResult.changed = $true
 
     $failed = $false
@@ -1452,6 +1948,32 @@ namespace Ansible.Windows.WinUpdates
     $api.WriteProgress('exit', $exitResult)
 }
 
+if ($module.Params._operation -eq 'cancel') {
+    # Cancels the background update process
+    $options = $module.Params._operation_options
+    Set-CancelEvent -CancelId $options.cancel_id -TaskPid $options.task_pid
+
+    $module.ExitJson()
+}
+elseif ($module.Params._operation -eq 'poll') {
+    $module.Result.output = @(Receive-ProgressOutput -PipeName $module.Params._operation_options.pipe_name)
+    $module.ExitJson()
+}
+
+# For backwards compatibility - allow the camel case names but internally use the full names
+$categoryNames = $module.Params.category_names | ForEach-Object -Process {
+    switch -exact ($_) {
+        CriticalUpdates { 'Critical Updates' }
+        DefinitionUpdates { 'Definition Updates' }
+        DeveloperKits { 'Developer Kits' }
+        FeaturePacks { 'Feature Packs' }
+        SecurityUpdates { 'Security Updates' }
+        ServicePacks { 'Service Packs' }
+        UpdateRollups { 'Update Rollups' }
+        default { $_ }
+    }
+}
+
 <#
 Most of the Windows Update Agent API will not run under a remote token which is typically what a WinRM process is.
 We can use a scheduled task to change the logon to a batch/service logon allowing us to bypass that restriction. The
@@ -1459,25 +1981,70 @@ other benefit of a scheduled task is that it is not tied to the lifetime of the 
 outlive any network drops. In the case of async we need to tie the lifetime of this process to the scheduled task, in
 other situations we poll the status in a separate process.
 #>
-$outputPathDir = $module.Params._output_path
-if (-not $outputPathDir) {
-    # Running async means this won't be set, just use the module tmpdir.
-    $outputPathDir = $module.Tmpdir
-}
-elseif (-not (Test-Path -LiteralPath $outputPathDir)) {
-    # If the _output_path is set but does not exist then it needs to be
-    # re-created by the action plugin and the module rerun. The recreate_tmpdir
-    # return value is used to flag this special failure from one to pass back
-    # to Ansible.
-    # https://github.com/ansible-collections/ansible.windows/issues/417
-    $module.Result.recreate_tmpdir = $true
-    $module.FailJson("Module tmpdir '$outputPathDir' does not exist")
-}
+$taskId = [Guid]::NewGuid().Guid
+$pipeName = "Ansible.Windows.WinUpdates-$taskId"
+$cancelId = "Global\Ansible.Windows.WinUpdates-$taskId"
+$waitId = "Global\Ansible.Windows.WinUpdates-$taskId-Started"
 
-# The scheduled task might need to fallback to run as SYSTEM so grant that SID rights to OutputDir
+$startupWait = {
+    $ErrorActionPreference = 'Stop'
+
+    $pipe = $reader = $waitEvent = $null
+    try {
+        $pipe = New-Object -TypeName System.IO.Pipes.NamedPipeClientStream -ArgumentList @(
+            '.',
+            'PIPE_NAME',
+            [System.IO.Pipes.PipeDirection]::In,
+            [System.IO.Pipes.PipeOptions]::Asynchronous
+        )
+
+        # Use ConnectAsync once .NET 4.6 is the minimum to simplify code
+        # We need to use short timeouts so this can response to stop requests
+        while ($true) {
+            try {
+                $pipe.Connect(1000)
+            }
+            catch [System.TimeoutException] {
+                continue
+            }
+            break
+        }
+
+        # Wait until this event is set, used to ensure the named pipe server is
+        # actually ready to start sending the data
+        $waitEvent = [System.Threading.EventWaitHandle]::OpenExisting('WAIT_ID')
+        while (-not $waitEvent.WaitOne(300)) {}
+
+        # Now wait until the first line was added, this signals the win_updates
+        # task is ready to run and report on its progress
+        $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList @(
+            $pipe,
+            (New-Object -TypeName System.Text.UTF8Encoding)
+        )
+
+        $readTask = $reader.ReadLineAsync()
+        while (-not $readTask.AsyncWaitHandle.WaitOne(300)) {}
+        $rawResult = $readTask.GetAwaiter().GetResult()
+
+        $result = $null
+        if ($rawResult) {
+            $result = ConvertFrom-Json -InputObject $rawResult
+        }
+        if ($result.task -ne 'started') {
+            throw "Expecting task started from remote pipe but got '$rawResult'"
+        }
+    }
+    finally {
+        if ($waitEvent) { $waitEvent.Dispose() }
+        if ($reader) { $reader.Dispose() }
+        if ($pipe) { $pipe.Dispose() }
+    }
+} -replace 'PIPE_NAME', $pipeName -replace 'WAIT_ID', $waitId
+
+# The scheduled task might need to fallback to run as SYSTEM so grant that SID rights to tmpdir
 $systemSid = (New-Object -TypeName Security.Principal.SecurityIdentifier -ArgumentList @(
         [Security.Principal.WellKnownSidType ]::LocalSystemSid, $null))
-$outputDirAcl = Get-Acl -LiteralPath $outputPathDir
+$outputDirAcl = Get-Acl -LiteralPath $module.Tmpdir
 $systemAce = $outputDirAcl.AccessRuleFactory(
     $systemSid,
     [System.Security.AccessControl.FileSystemRights]'Modify,Read,ExecuteFile,Synchronize',
@@ -1487,64 +2054,71 @@ $systemAce = $outputDirAcl.AccessRuleFactory(
     [System.Security.AccessControl.AccessControlType]::Allow
 )
 $outputDirAcl.AddAccessRule($systemAce)
-Set-Acl -LiteralPath $outputPathDir -AclObject $outputDirAcl
+Set-Acl -LiteralPath $module.Tmpdir -AclObject $outputDirAcl
 
-$outputPath = [IO.Path]::GetFullpath((Join-Path $outputPathDir 'output.txt'))
-$cancelId = "Global\Ansible.Windows.WinUpdates-$([Guid]::NewGuid().Guid)"
+$updateParameters = @{
+    Category = $categoryNames
+    Accept = @(if ($module.Params.accept_list) { $module.Params.accept_list })
+    Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
+    ServerSelection = $module.Params.server_selection
+    State = $module.Params.state
+    SkipOptional = $module.Params.skip_optional
+    TempPath = $module.Tmpdir
+    CheckMode = $module.CheckMode
+}
+$wait = [bool]$module.Params._operation_options.wait
 
 $invokeSplat = @{
     Module = $module
     Commands = @{
         'Add-CSharpType' = ${function:Add-CSharpType}
     }
-    ScriptBlock = ${function:Install-WindowsUpdate}
+    FunctionName = 'Invoke-WithPipeOutput'
+    ScriptBlock = ${function:Invoke-WithPipeOutput}.StartPosition.Content
+    FunctionLine = ${function:Invoke-WithPipeOutput}.StartPosition.StartLine
     Parameters = @{
-        Category = $categoryNames
-        Accept = @(if ($module.Params.accept_list) { $module.Params.accept_list })
-        Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
-        ServerSelection = $module.Params.server_selection
-        State = $module.Params.state
-        SkipOptional = $module.Params.skip_optional
+        FunctionName = 'Install-WindowsUpdate'
+        ScriptBlock = ${function:Install-WindowsUpdate}.StartPosition.Content
+        FunctionLine = ${function:Install-WindowsUpdate}.StartPosition.StartLine
+        Parameters = $updateParameters
+        PipeName = $pipeName
+        PipeIdentity = ([System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value)
         CancelId = $cancelId
-        OutputPath = $outputPath
+        TempPath = $module.Tmpdir
         LogPath = $module.Params.log_path
+        WaitId = $waitId
         CheckMode = $module.CheckMode
     }
-    Wait = $module.Params._wait
+    WaitFunction = [ScriptBlock]::Create($startupWait)
 }
 
-# In case of a reboot the tmpdir will be shared and we need to start from scratch again.
-Remove-Item -LiteralPath $outputPath -ErrorAction SilentlyContinue -Force
-
-$eventId = 'Ansible.Windows.WinUpdatesWatcher'
-$fsWatcher = [System.IO.FileSystemWatcher]@{
-    Path = Split-Path -Path $outputPath -Parent
-    Filter = Split-Path -Path $outputPath -Leaf
-}
+# We use an event to be notified when the pipe is up and running. This is
+# needed so our $startupWait task can only try and connect to the pipe when it
+# is ready. Failure to do so might have it connect but then fail before the
+# task is ready to actually receive the started result.
+$waitEvent = New-Object -TypeName System.Threading.EventWaitHandle -ArgumentList @(
+    $false,
+    [System.Threading.EventResetMode]::ManualReset,
+    $waitId
+)
 try {
-    Register-ObjectEvent -InputObject $fsWatcher -EventName Created -SourceIdentifier $eventId
-
     # If debugging locally change this to $true
     if ($false) {
-        $invokeSplat.Wait = $true
+        $wait = $true
+        $updateParameters.LocalDebugger = $true
+
         $params = $invokeSplat.Parameters
-        $null = Install-WindowsUpdate @params -LocalDebugger
+        $null = &$invokeSplat.ScriptBlock @params
     }
     else {
         $taskPid = Invoke-AsBatchLogon @invokeSplat
     }
-
-    # Make sure the output file exists before continuing (task has started)
-    $null = Wait-Event -SourceIdentifier $eventId
 }
 finally {
-    $fsWatcher.EnableRaisingEvents = $false
-    $fsWatcher.Dispose()
-    Remove-Event -SourceIdentifier $eventId -ErrorAction SilentlyContinue
-    Unregister-Event -SourceIdentifier $eventId -ErrorAction SilentlyContinue
+    $waitEvent.Dispose()
 }
 
-if ($invokeSplat.Wait) {
+if ($wait) {
     # Format the output for legacy async behaviour
     $module.Result.reboot_required = $false
     $module.Result.rebooted = $false
@@ -1556,75 +2130,80 @@ if ($invokeSplat.Wait) {
     $module.Result.filtered_updates = @{}
 
     $updates = @{}
-    Get-Content -LiteralPath $outputPath | ForEach-Object -Process {
-        $progress = ConvertFrom-Json -InputObject $_
-        $task = $progress.task
-        $result = $progress.result
 
-        if ($task -eq 'search_result') {
-            $filterMap = @{}
-            foreach ($filteredUpdate in $result.filtered) {
-                $filterMap[$filteredUpdate.id] = $filteredUpdate.reasons
+    try {
+        Receive-ProgressOutput -PipeName $pipeName -WaitForExit | ForEach-Object {
+            $task = $_.task
+            $result = $_.result
+
+            if ($task -eq 'search_result') {
+                $filterMap = @{}
+                foreach ($filteredUpdate in $result.filtered) {
+                    $filterMap[$filteredUpdate.id] = $filteredUpdate.reasons
+                }
+
+                foreach ($updateInfo in $result.updates) {
+                    $resultInfo = @{
+                        categories = @($updateInfo.categories)
+                        id = $updateInfo.id
+                        installed = $false
+                        downloaded = $false
+                        kb = @($updateInfo.kb | ForEach-Object {
+                                if ($_.StartsWith("KB")) {
+                                    $_.Substring(2)
+                                }
+                                else {
+                                    $_
+                                }
+                            })
+                        title = $updateInfo.title
+                    }
+
+                    if ($updateInfo.id -in $filterMap.Keys) {
+                        $reasons = @($filterMap[$updateInfo.id])
+
+                        # This value is deprecated in favour of the full list and should be removed in 2023-06-01. We also
+                        # need to rename the whitelist/blacklist reasons for backwards compatibility.
+                        $depReason = $reasons[0]
+                        if ($depReason -eq 'accept_list') { $depReason = 'whitelist' }
+                        if ($depReason -eq 'reject_list') { $depReason = 'blacklist' }
+
+                        $resultInfo.filtered_reasons = $reasons
+                        $resultInfo.filtered_reason = $depReason
+                    }
+
+                    $updates[$updateInfo.id] = $resultInfo
+                }
             }
-
-            foreach ($updateInfo in $result.updates) {
-                $resultInfo = @{
-                    categories = @($updateInfo.categories)
-                    id = $updateInfo.id
-                    installed = $false
-                    downloaded = $false
-                    kb = @($updateInfo.kb | ForEach-Object {
-                            if ($_.StartsWith("KB")) {
-                                $_.Substring(2)
-                            }
-                            else {
-                                $_
-                            }
-                        })
-                    title = $updateInfo.title
+            elseif ($task -in @('download_result', 'install_result')) {
+                foreach ($resultInfo in $result.info) {
+                    $updateInfo = $updates[$resultInfo.id]
+                    if ($resultInfo.result_code -ne 2) {
+                        $updateInfo.failure_hresult_code = $resultInfo.hresult
+                    }
+                    else {
+                        $taskType = if ($task -eq 'download_result') { 'downloaded' } else { 'installed' }
+                        $updateInfo[$taskType] = $true
+                    }
                 }
+            }
+            elseif ($task -eq 'exit') {
+                $module.Result.changed = $result.changed
+                $module.Result.reboot_required = $result.reboot_required
+                $module.Result.failed = $result.failed
 
-                if ($updateInfo.id -in $filterMap.Keys) {
-                    $reasons = @($filterMap[$updateInfo.id])
-
-                    # This value is deprecated in favour of the full list and should be removed in 2023-06-01. We also
-                    # need to rename the whitelist/blacklist reasons for backwards compatibility.
-                    $depReason = $reasons[0]
-                    if ($depReason -eq 'accept_list') { $depReason = 'whitelist' }
-                    if ($depReason -eq 'reject_list') { $depReason = 'blacklist' }
-
-                    $resultInfo.filtered_reasons = $reasons
-                    $resultInfo.filtered_reason = $depReason
+                if ($result.exception) {
+                    $module.Result.msg = $result.exception.message
+                    $module.Result.exception = $result.exception.exception
+                    if ($result.exception.hresult) {
+                        $module.Result.hresult = $result.exception.hresult
+                    }
                 }
-
-                $updates[$updateInfo.id] = $resultInfo
             }
         }
-        elseif ($task -in @('download_result', 'install_result')) {
-            foreach ($resultInfo in $result.info) {
-                $updateInfo = $updates[$resultInfo.id]
-                if ($resultInfo.result_code -ne 2) {
-                    $updateInfo.failure_hresult_code = $resultInfo.hresult
-                }
-                else {
-                    $taskType = if ($task -eq 'download_result') { 'downloaded' } else { 'installed' }
-                    $updateInfo[$taskType] = $true
-                }
-            }
-        }
-        elseif ($task -eq 'exit') {
-            $module.Result.changed = $result.changed
-            $module.Result.reboot_required = $result.reboot_required
-            $module.Result.failed = $result.failed
-
-            if ($result.exception) {
-                $module.Result.msg = $result.exception.message
-                $module.Result.exception = $result.exception.exception
-                if ($result.exception.hresult) {
-                    $module.Result.hresult = $result.exception.hresult
-                }
-            }
-        }
+    }
+    finally {
+        Set-CancelEvent -CancelId $cancelId -TaskPid $taskPid
     }
 
     foreach ($updateKvp in $updates.GetEnumerator()) {
@@ -1646,9 +2225,13 @@ if ($invokeSplat.Wait) {
     }
 }
 else {
-    $module.Result.output_path = $outputPath
-    $module.Result.task_pid = $taskPid
-    $module.Result.cancel_id = $cancelId
+    $module.Result.cancel_options = @{
+        cancel_id = $cancelId
+        task_pid = $taskPid
+    }
+    $module.Result.poll_options = @{
+        pipe_name = $pipeName
+    }
 }
 
 $module.ExitJson()

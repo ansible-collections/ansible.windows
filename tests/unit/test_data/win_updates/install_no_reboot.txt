@@ -154,3 +154,5 @@
 {"task":"install","result":{"result":{"ResultCode":2,"RebootRequired":false,"HResult":0},"progress":{"PercentComplete":100,"CurrentUpdateIndex":1,"CurrentUpdatePercentComplete":100,"CurrentUpdateId":"d4919b6d-584d-436f-b877-dc3fc352a774"}}}
 {"task":"install_result","result":{"info":[{"result_code":2,"reboot_required":true,"id":"1abb2377-20ef-43ff-aabc-0de4711ab205","hresult":0},{"result_code":2,"reboot_required":false,"id":"d4919b6d-584d-436f-b877-dc3fc352a774","hresult":0},{"result_code":2,"reboot_required":true,"id":"74819184-828b-4f97-bb4b-089a0c58e366","hresult":0}]}}
 {"task":"exit","result":{"action":null,"exception":null,"reboot_required":true,"failed":false,"changed":true}}
+
+{"changed": false}
