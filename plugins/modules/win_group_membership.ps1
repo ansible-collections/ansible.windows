@@ -136,15 +136,15 @@ foreach ($member in $members) {
         if ($state -in @("present", "pure") -and !$user_in_group) {
             if (!$check_mode) {
                 $group.Add($member_sid)
-                $result.added += $group_member.account_name
             }
+            $result.added += $group_member.account_name
             $result.changed = $true
         }
         elseif ($state -eq "absent" -and $user_in_group) {
             if (!$check_mode) {
                 $group.Remove($member_sid)
-                $result.removed += $group_member.account_name
             }
+            $result.removed += $group_member.account_name
             $result.changed = $true
         }
     }
@@ -172,8 +172,8 @@ if ($state -eq "pure") {
             if ($user_to_remove) {
                 if (!$check_mode) {
                     $group.Remove($member_sid)
-                    $result.removed += $current_member.account_name
                 }
+                $result.removed += $current_member.account_name
                 $result.changed = $true
             }
         }
@@ -187,6 +187,10 @@ $final_members = Get-GroupMember -Group $group
 
 if ($final_members) {
     $result.members = [Array]$final_members.account_name
+    if ($check_mode) {
+        $result.members += $result.added 
+        $result.members = $result.members | ? {$_ -notin $result.removed}
+    }
 }
 else {
     $result.members = @()
