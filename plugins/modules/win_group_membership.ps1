@@ -189,7 +189,7 @@ if ($final_members) {
     $result.members = [Array]$final_members.account_name
     if ($check_mode) {
         $result.members += $result.added
-        $result.members = $result.members | Where-Object {$_ -notin $result.removed}
+        $result.members = $result.members | Where-Object { $_ -notin $result.removed }
     }
 }
 else {
