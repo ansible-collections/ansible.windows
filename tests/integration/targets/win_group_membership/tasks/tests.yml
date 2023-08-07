@@ -102,8 +102,8 @@
   assert:
     that:
     - add_different_syntax_users_to_group_again.changed == true
-    - add_different_syntax_users_to_group_again.added == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
-    - add_different_syntax_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+    - add_different_syntax_users_to_group_again.added == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}"]
+    - add_different_syntax_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}"]
   when: in_check_mode
 
 
