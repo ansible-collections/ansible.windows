@@ -64,8 +64,8 @@
   assert:
     that:
     - add_users_to_group.changed == true
-    - add_users_to_group.added == []
-    - add_users_to_group.members == []
+    - add_users_to_group.added == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+    - add_users_to_group.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
   when: in_check_mode
 
 
@@ -101,9 +101,9 @@
 - name: Test add_different_syntax_users_to_group_again (check-mode)
   assert:
     that:
-    - add_different_syntax_users_to_group_again.changed == true
+    - add_different_syntax_users_to_group_again.changed == false
     - add_different_syntax_users_to_group_again.added == []
-    - add_different_syntax_users_to_group_again.members == []
+    - add_different_syntax_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
   when: in_check_mode
 
 
@@ -126,8 +126,8 @@
   assert:
     that:
     - add_another_user_to_group.changed == true
-    - add_another_user_to_group.added == []
-    - add_another_user_to_group.members == []
+    - add_another_user_to_group.added == ["NT AUTHORITY\\NETWORK SERVICE"]
+    - add_another_user_to_group.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM", "NT AUTHORITY\\NETWORK SERVICE"]
   when: in_check_mode
 
 
@@ -161,9 +161,9 @@
 - name: Test remove_users_from_group (check-mode)
   assert:
     that:
-    - remove_users_from_group.changed == false
-    - remove_users_from_group.removed == []
-    - remove_users_from_group.members == []
+    - remove_users_from_group.changed == true
+    - remove_users_from_group.removed == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+    - remove_users_from_group.members == ["NT AUTHORITY\\NETWORK SERVICE"]
   when: in_check_mode
 
 
@@ -201,7 +201,7 @@
     that:
     - remove_different_syntax_users_from_group_again.changed == false
     - remove_different_syntax_users_from_group_again.removed == []
-    - remove_different_syntax_users_from_group_again.members == []
+    - remove_different_syntax_users_from_group_again.members == ["NT AUTHORITY\\NETWORK SERVICE"]
   when: in_check_mode
 
 
@@ -224,7 +224,7 @@
   assert:
     that:
     - remove_another_user_from_group.changed == false
-    - remove_another_user_from_group.removed == []
+    - remove_another_user_from_group.removed == ["NT AUTHORITY\\NETWORK SERVICE"]
     - remove_another_user_from_group.members == []
   when: in_check_mode
 
@@ -269,9 +269,9 @@
   assert:
     that:
     - define_users_as_pure.changed == true
-    - define_users_as_pure.added == []
-    - define_users_as_pure.removed == []
-    - define_users_as_pure.members == []
+    - define_users_as_pure.added == ["{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+    - define_users_as_pure.removed == ["NT AUTHORITY\\NETWORK SERVICE"]
+    - define_users_as_pure.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
   when: in_check_mode
 
 
@@ -311,8 +311,8 @@
     that:
     - define_different_syntax_users_as_pure.changed == true
     - define_different_syntax_users_as_pure.added == []
-    - define_different_syntax_users_as_pure.removed == []
-    - define_different_syntax_users_as_pure.members == []
+    - define_different_syntax_users_as_pure.removed == ["NT AUTHORITY\\SYSTEM"]
+    - define_different_syntax_users_as_pure.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}"]
   when: in_check_mode
 
 
