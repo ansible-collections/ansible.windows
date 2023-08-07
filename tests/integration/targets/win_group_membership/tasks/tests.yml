@@ -163,7 +163,7 @@
     that:
     - remove_users_from_group.changed == false
     - remove_users_from_group.removed == []
-    - remove_users_from_group.members == []
+    - remove_users_from_group.members == null
   when: in_check_mode
 
 
@@ -201,7 +201,7 @@
     that:
     - remove_different_syntax_users_from_group_again.changed == false
     - remove_different_syntax_users_from_group_again.removed == []
-    - remove_different_syntax_users_from_group_again.members == []
+    - remove_different_syntax_users_from_group_again.members == null
   when: in_check_mode
 
 
@@ -225,7 +225,7 @@
     that:
     - remove_another_user_from_group.changed == false
     - remove_another_user_from_group.removed == []
-    - remove_another_user_from_group.members == []
+    - remove_another_user_from_group.members == null
   when: in_check_mode
 
 
