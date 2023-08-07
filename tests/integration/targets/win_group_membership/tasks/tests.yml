@@ -101,8 +101,8 @@
 - name: Test add_different_syntax_users_to_group_again (check-mode)
   assert:
     that:
-    - add_different_syntax_users_to_group_again.changed == false
-    - add_different_syntax_users_to_group_again.added == []
+    - add_different_syntax_users_to_group_again.changed == true
+    - add_different_syntax_users_to_group_again.added == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
     - add_different_syntax_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
   when: in_check_mode
 
@@ -199,8 +199,8 @@
 - name: Test add_different_syntax_users_to_group_again (check-mode)
   assert:
     that:
-    - remove_different_syntax_users_from_group_again.changed == false
-    - remove_different_syntax_users_from_group_again.removed == []
+    - remove_different_syntax_users_from_group_again.changed == true
+    - remove_different_syntax_users_from_group_again.removed == ["{{ ansible_hostname }}\\{{ admin_account_name }}", ".\\{{ win_local_user }}"]
     - remove_different_syntax_users_from_group_again.members == ["NT AUTHORITY\\NETWORK SERVICE"]
   when: in_check_mode
 
@@ -223,9 +223,9 @@
 - name: Test remove_another_user_from_group (check-mode)
   assert:
     that:
-    - remove_another_user_from_group.changed == false
+    - remove_another_user_from_group.changed == true
     - remove_another_user_from_group.removed == ["NT AUTHORITY\\NETWORK SERVICE"]
-    - remove_another_user_from_group.members == []
+    - remove_another_user_from_group.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]]
   when: in_check_mode
 
 
