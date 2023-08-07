@@ -127,7 +127,7 @@
     that:
     - add_another_user_to_group.changed == true
     - add_another_user_to_group.added == ["NT AUTHORITY\\NETWORK SERVICE"]
-    - add_another_user_to_group.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM", "NT AUTHORITY\\NETWORK SERVICE"]
+    - add_another_user_to_group.members == ["NT AUTHORITY\\NETWORK SERVICE"]
   when: in_check_mode
 
 
