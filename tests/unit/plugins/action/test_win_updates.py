@@ -3,17 +3,16 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import ntpath
 import os
+from unittest.mock import MagicMock
 
 from ansible.playbook.task import Task
-
-from ansible_collections.ansible.windows.tests.unit.compat.mock import MagicMock
 from ansible_collections.ansible.windows.plugins.action import win_updates
-
 
 # Some raw info on the updates in the test expectations
 UPDATE_INFO = {
