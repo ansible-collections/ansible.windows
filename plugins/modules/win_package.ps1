@@ -19,7 +19,6 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Principal;
@@ -180,7 +179,6 @@ namespace Ansible.WinPackage
     {
         public SafeMsiHandle() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             UInt32 res = NativeMethods.MsiCloseHandle(handle);

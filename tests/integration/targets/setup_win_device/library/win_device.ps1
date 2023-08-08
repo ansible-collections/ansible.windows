@@ -30,7 +30,6 @@ Add-CSharpType -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.ComponentModel;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -246,7 +245,6 @@ namespace Ansible.Device
     {
         public SafeDeviceInfoSet() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             return NativeMethods.SetupDiDestroyDeviceInfoList(handle);
@@ -271,7 +269,6 @@ namespace Ansible.Device
             base.SetHandle(Marshal.StringToHGlobalUni(sz));
         }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
