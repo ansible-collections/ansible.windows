@@ -60,7 +60,6 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -223,7 +222,6 @@ namespace Ansible.CredentialManager
     {
         public SafeCredentialBuffer() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             NativeMethods.CredFree(handle);
@@ -242,7 +240,6 @@ namespace Ansible.CredentialManager
         {
             base.SetHandle(handle);
         }
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
