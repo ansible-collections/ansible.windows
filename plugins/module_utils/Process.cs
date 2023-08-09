@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -305,7 +304,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             base.SetHandle(handle);
         }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
@@ -385,7 +383,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         public SafeNativeHandle(IntPtr handle) : this(handle, true) { }
         public SafeNativeHandle(IntPtr handle, bool ownsHandle) : base(ownsHandle) { this.handle = handle; }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             return NativeMethods.CloseHandle(handle);

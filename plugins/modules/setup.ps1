@@ -53,7 +53,6 @@ Add-CSharpType -AnsibleModule $module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -227,7 +226,6 @@ namespace Ansible.Windows.Setup
             base.SetHandle(Marshal.AllocHGlobal(cb));
         }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
@@ -239,7 +237,6 @@ namespace Ansible.Windows.Setup
     {
         public SafeDsMemoryBuffer() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             NativeMethods.DsRoleFreeMemory(this.handle);
@@ -251,7 +248,6 @@ namespace Ansible.Windows.Setup
     {
         public SafeNetAPIBuffer() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             NativeMethods.NetApiBufferFree(this.handle);
