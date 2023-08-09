@@ -41,7 +41,6 @@ Add-CSharpType -AnsibleModule $module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
 namespace Ansible.MappedDrive
@@ -160,7 +159,6 @@ namespace Ansible.MappedDrive
             base.SetHandle(handle);
         }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             Marshal.FreeHGlobal(handle);
