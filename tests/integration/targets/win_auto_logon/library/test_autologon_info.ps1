@@ -8,7 +8,6 @@ $module = [Ansible.Basic.AnsibleModule]::Create($args, @{})
 Add-CSharpType -AnsibleModule $module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -103,8 +102,6 @@ namespace Ansible.TestAutoLogonInfo
     {
         internal SafeLsaMemory() : base(true) { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-
         protected override bool ReleaseHandle()
         {
             return NativeMethods.LsaFreeMemory(handle) == 0;
@@ -120,8 +117,6 @@ namespace Ansible.TestAutoLogonInfo
             base.SetHandle(ptr);
         }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-
         protected override bool ReleaseHandle()
         {
             if (handle != IntPtr.Zero)
@@ -133,8 +128,6 @@ namespace Ansible.TestAutoLogonInfo
     public class SafeLsaHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         internal SafeLsaHandle() : base(true) { }
-
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
 
         protected override bool ReleaseHandle()
         {
