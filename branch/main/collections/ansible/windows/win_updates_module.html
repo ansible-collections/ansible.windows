@@ -168,22 +168,23 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-_output_path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-output-path"><strong>_output_path</strong></p>
-<a class="ansibleOptionLink" href="#parameter-_output_path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
-</div></td>
-<td><div class="ansible-option-cell"><p>Internal use only.</p>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="parameter-_wait"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-wait"><strong>_wait</strong></p>
-<a class="ansibleOptionLink" href="#parameter-_wait" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<div class="ansibleOptionAnchor" id="parameter-_operation"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-operation"><strong>_operation</strong></p>
+<a class="ansibleOptionLink" href="#parameter-_operation" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Internal use only.</p>
 <p class="ansible-option-line"><span class="ansible-option-choices">Choices:</span></p>
 <ul class="simple">
-<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">false</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
-<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><span class="pre">&quot;start&quot;</span></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;cancel&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;poll&quot;</span></code></p></li>
 </ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-_operation_options"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-operation-options"><strong>_operation_options</strong></p>
+<a class="ansibleOptionLink" href="#parameter-_operation_options" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Internal use only.</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
@@ -304,6 +305,7 @@
 <li><p>Beware that just after <a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> reboots the system, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.</p></li>
 <li><p>More information about PowerShell and how it handles RegEx strings can be found at <a class="reference external" href="https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx">https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx</a>.</p></li>
 <li><p>The current module doesn’t support Systems Center Configuration Manager (SCCM). See <a class="reference external" href="https://github.com/ansible-collections/ansible.windows/issues/194">https://github.com/ansible-collections/ansible.windows/issues/194</a></p></li>
+<li><p>By default the <code class="docutils literal notranslate"><span class="pre">ansible.builtin.ssh</span></code> connection plugin is configured to have no server timeout. As Windows Updates can restart the network adapter it is recommended to set <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">ServerAliveInterval=30</span></code> and disable control master in <em>ansible_ssh_args</em> to ensure the client can handle a network reset. See the examples showing one way this can be set.</p></li>
 </ul>
 </div>
 </section>
@@ -329,6 +331,17 @@
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
 <span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set a server alive interval during update stage for the ssh connection plugin</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># This can be set in a few ways, see the ssh connection plugin for more</span>
+<span class="w">    </span><span class="c1"># information. ControlMaster should be disabled to ensure the new timeout</span>
+<span class="w">    </span><span class="c1"># value is applied for this connection instead of through the cached</span>
+<span class="w">    </span><span class="c1"># connection.</span>
+<span class="w">    </span><span class="nt">ansible_ssh_args</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-o ControlMaster=no -o ServerAliveInterval=30</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all security, critical, and rollup updates without a scheduled task</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
