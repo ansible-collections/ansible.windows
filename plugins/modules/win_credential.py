@@ -97,7 +97,7 @@ options:
     - When C(absent), the credential specified by I(name) and I(type) is
       removed.
     - When C(present), the credential specified by I(name) and I(type) is
-      removed.
+      added.
     type: str
     choices: [ absent, present ]
     default: present
