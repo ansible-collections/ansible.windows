@@ -1,0 +1,3 @@
+{"failed": true, "changed": false, "rc": 1, "stdout": "stdout data", "stderr": "stderr data"}
+
+{"changed": false}

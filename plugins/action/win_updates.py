@@ -4,117 +4,34 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-import json
-import os.path
-import shutil
-import tempfile
 import traceback
 
-from ansible import constants as C
 from ansible.errors import AnsibleActionFail, AnsibleConnectionFailure
-from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+from ansible.module_utils.common.text.converters import to_native, to_text
 from ansible.module_utils.common.validation import check_type_bool, check_type_int
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
 
+# This is not ideal but the psrp connection plugin doesn't catch all these exceptions as an AnsibleConnectionFailure.
+# Until we can guarantee we are using a version of psrp that handles all this we try to handle those issues.
+try:
+    from requests.exceptions import Timeout as RequestTimeoutException
+except ImportError:
+    RequestTimeoutException = AnsibleConnectionFailure
+
 try:
     from typing import (
         Dict,
-        List,
         Optional,
-        Tuple,
     )
 except ImportError:
     # Satisfy Python 2 which doesn't have typing.
-    Dict = List = Optional = Tuple = None
+    Dict = Optional = None
 
-from ..plugin_utils._quote import quote_pwsh
 from ..plugin_utils._reboot import reboot_host
 
 
 display = Display()
-
-
-_CANCEL_SCRIPT = r'''[CmdletBinding()]
-param (
-    [Parameter(Mandatory)]
-    [string]
-    $CancelId,
-
-    [Parameter(Mandatory)]
-    [int]
-    $TaskPid
-)
-
-$cancelEvent = $null
-if ([Threading.EventWaitHandle]::TryOpenExisting($CancelId, [ref]$cancelEvent)) {
-    [void]$cancelEvent.Set()
-    $cancelEvent.Dispose()
-}
-
-# We don't want to wait around forever, try out best to wait until the task has ended.
-Wait-Process -Id $TaskPid -ErrorAction SilentlyContinue -Timeout 10
-'''
-
-
-_POLL_SCRIPT = r'''[CmdletBinding()]
-param (
-    [Parameter(Mandatory)]
-    [string]
-    $OutputPath,
-
-    [Parameter(Mandatory)]
-    [int]
-    $Offset
-)
-
-$ErrorActionPreference = 'Stop'
-
-$fs = $sr = $null
-for ($i = 0; $i -lt 5; $i++) {
-    try {
-        $fs = [System.IO.File]::Open($OutputPath, 'Open', 'Read', 'ReadWrite')
-    }
-    catch [System.IO.IOException] {
-        if ($i -eq 4) {
-            throw
-        }
-
-        Start-Sleep -Seconds 5
-        continue
-    }
-
-    break
-}
-
-try {
-    [void]$fs.Seek($Offset, [System.IO.SeekOrigin]::Begin)
-    $sr = New-Object -TypeName System.IO.StreamReader -ArgumentList $fs
-
-    $read = $false
-    while ($true) {
-        $line = $sr.ReadLine()
-        if (-not $line) {
-            if ($read) {
-                break
-            }
-            else {
-                Start-Sleep -Seconds 1
-                continue
-            }
-        }
-
-        $read = $true
-        $line
-    }
-
-    '{{"position": {0}}}' -f $fs.Position
-}
-finally {
-    if ($sr) { $sr.Dispose() }
-    if ($fs) { $fs.Dispose() }
-}
-'''
 
 
 def _get_hresult_error(hresult):  # type: (int) -> str
@@ -697,10 +614,6 @@ class _ReturnResultException(Exception):
         self.result = result
 
 
-class _RecreateTempPathException(Exception):
-    pass
-
-
 class ActionModule(ActionBase):
 
     _VALID_ARGS = [
@@ -754,8 +667,7 @@ class ActionModule(ActionBase):
                 raise AnsibleActionFail("async is not supported for this task when reboot=yes")
 
             # When running in async the module itself waits for the result and formats the results.
-            module_options['_wait'] = True
-            module_options['_output_path'] = None
+            module_options['_operation_options'] = {"wait": True}
             result = self._execute_module(
                 module_name='ansible.windows.win_updates',
                 module_args=module_options,
@@ -763,8 +675,6 @@ class ActionModule(ActionBase):
             )
 
         else:
-            module_options['_wait'] = False
-
             try:
                 result = self._run_sync(task_vars, module_options, reboot, reboot_timeout)
             except Exception as e:
@@ -819,16 +729,14 @@ class ActionModule(ActionBase):
 
         # Remove _wait in the invocation args to avoid confusing users
         if 'invocation' in result and 'module_args' in result['invocation']:
-            result['invocation']['module_args'].pop('_wait', None)
-            result['invocation']['module_args'].pop('_output_path', None)
+            result['invocation']['module_args'].pop('_operation', None)
+            result['invocation']['module_args'].pop('_operation_options', None)
 
         return result
 
     def _run_sync(self, task_vars, module_options, reboot, reboot_timeout):  # type: (Dict, Dict, bool, int) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
         # In case we are running with become we need to make sure the module uses the correct dir
-        module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
-
         result = {
             'changed': False,
             'reboot_required': False,
@@ -840,14 +748,7 @@ class ActionModule(ActionBase):
             round += 1
             display.v("Running win_updates - round %s" % round, host=task_vars.get('inventory_hostname', None))
 
-            try:
-                update_result = self._run_updates(task_vars, module_options, poll_script_path, cancel_script_path)
-            except _RecreateTempPathException:
-                display.vv("Failure when running win_updates module with existing tempdir, retrying with new dir")
-                self._connection._shell.tmpdir = None
-                module_options['_output_path'], poll_script_path, cancel_script_path = self._setup_updates_tmpdir()
-
-                continue
+            update_result = self._run_updates(task_vars, module_options)
 
             self._updates.update(update_result.updates)
             self._filtered_updates.update(update_result.filtered_updates)
@@ -866,7 +767,7 @@ class ActionModule(ActionBase):
 
                 # A failure could indicate a reboot was required from a previous install or just a faulty WUA. When
                 # reboot=True we should at least attempt to reboot once before considering it a failure.
-                if reboot and not has_rebooted_on_failure:
+                if reboot and not has_rebooted_on_failure and module_options.get('state', '') != 'searched':
                     display.vv("Failure when running win_updates module (Will retry after reboot): %s" % msg,
                                host=task_vars.get('inventory_hostname', None))
                     reboot_required = True
@@ -916,73 +817,102 @@ class ActionModule(ActionBase):
 
         return result
 
-    def _setup_updates_tmpdir(self):
-        """Sets up a remote tmpdir if needed and copies the files used by the action plugin."""
-        if not self._connection._shell.tmpdir:
-            self._make_tmp_path()  # Stores the update scheduled task script/progress
-
-        poll_script_path = self._copy_script(_POLL_SCRIPT, 'poll.ps1')
-        cancel_script_path = self._copy_script(_CANCEL_SCRIPT, 'cancel.ps1')
-
-        return self._connection._shell.tmpdir, poll_script_path, cancel_script_path
-
-    def _run_updates(self, task_vars, module_options, poll_script_path, cancel_script_path):
-        # type: (Dict, Dict, str, str) -> UpdateResult
+    def _run_updates(self, task_vars, module_options):
+        # type: (Dict, Dict) -> UpdateResult
         """Runs the win_updates module and returns the raw results from that task."""
         inventory_hostname = task_vars.get('inventory_hostname', None)
 
         display.vv("Starting update task", host=inventory_hostname)
-        output_path, task_pid, cancel_id = self._start_updates(task_vars, module_options)
+        start_result = self._execute_win_updates(
+            task_vars=task_vars,
+            module_options=module_options,
+        )
+        cancel_options = start_result.pop('cancel_options', {})
+        poll_options = start_result.pop('poll_options', {})
 
         display.vv("Starting polling for update results", host=inventory_hostname)
         update_result = UpdateResult()
-        offset = 0
 
+        has_errored = False
         try:
-            while offset != -1:
-                entries, offset = self._poll_result(poll_script_path, output_path, offset)
+            polling = True
+            while polling:
+                poll_result = self._execute_win_updates(
+                    task_vars,
+                    operation="poll",
+                    operation_options=poll_options,
+                    retry_on_failure=True,
+                )
 
-                for progress in entries:
+                for progress in poll_result['output']:
                     task = progress['task']
                     update_result.process_result(task, progress['result'], inventory_hostname)
 
                     if task == 'exit':
-                        offset = -1
+                        polling = False
 
         except Exception as e:
             # Try our best to cancel the update task on an unknown failure.
             display.warning("Unknown failure when polling update result - attempting to cancel task: %s" % to_text(e))
-            self._execute_script(cancel_script_path, {"CancelId": cancel_id, "TaskPid": task_pid})
-
+            has_errored = True
             raise
+
+        finally:
+            # The last thing we should be doing is to cancel the task. This
+            # stops a process that might still be running and is also used in
+            # a normal operation to signal the exit status has been received.
+            try:
+                self._execute_win_updates(
+                    task_vars,
+                    operation="cancel",
+                    operation_options=cancel_options,
+                )
+            except Exception as e:
+                if has_errored:
+                    display.warning("Unknown failure when cancelling update task: %s" % to_text(e))
+                else:
+                    raise
 
         return update_result
 
-    def _start_updates(self, task_vars, module_options):  # type: (Dict, Dict) -> Tuple[str, int, str]
-        """Starts the win_updates scheduled task and returns the output results path."""
-        result = self._execute_module(
-            module_name='ansible.windows.win_updates',
-            module_args=module_options,
-            task_vars=task_vars,
-        )
+    def _execute_win_updates(
+        self,
+        task_vars,
+        module_options=None,
+        operation="start",
+        operation_options=None,
+        retry_on_failure=False,
+    ):  # type: (Dict, Optional[Dict], str, Optional[Dict], bool) -> Dict
+        final_options = (module_options or {}).copy()
+        final_options["_operation"] = operation
+        final_options["_operation_options"] = operation_options or {}
+
+        # WinRM based connections are problematic when the host is under load.
+        # When polling the output, ignore connection/timeout failures and try
+        # again in case it was a temporary error. We can only do this during
+        # the polling stage as that's the only time we can ignore a dropped
+        # progress message.
+        result = {}
+        for idx in range(2):
+            try:
+                result = self._execute_module(
+                    module_name='ansible.windows.win_updates',
+                    module_args=final_options,
+                    task_vars=task_vars,
+                )
+                break
+            except (AnsibleConnectionFailure, RequestTimeoutException) as e:
+                if not retry_on_failure or idx == 1:
+                    raise
+
+                display.warning("Connection failure when polling update result - attempting to retry: %s" % to_text(e))
 
         if 'invocation' in result and not self._invocation:
             # First run through we want to update the invocation value in the final results
             self._invocation = result['invocation']
 
-        failed = result.get('failed', False)
-        if failed and result.get('recreate_tmpdir', False):
-            # Might have been deleted across a reboot, try to recreate for the next run.
-            # https://github.com/ansible-collections/ansible.windows/issues/417
-            raise _RecreateTempPathException()
-
-        if (
-            failed or
-            'output_path' not in result or
-            'task_pid' not in result or
-            'cancel_id' not in result
-        ):
-            msg = result.get('msg', 'Unknown failure when running win_updates')
+        if result.get('failed', False):
+            msg = result.get('msg', f"Failure while running win_updates {operation}")
 
             extra_result = {}
             if 'rc' in result:
@@ -993,64 +923,7 @@ class ActionModule(ActionBase):
                 extra_result['stderr'] = result['stderr']
             raise _ReturnResultException(msg, exception=result.get('exception', None), **extra_result)
 
-        return result['output_path'], result['task_pid'], result['cancel_id']
-
-    def _poll_result(self, script_path, output_path, offset):  # type: (str, str, int) -> Tuple[List[Dict], int]
-        """Reads the update scheduled task output results path and returns any new results."""
-        rc, stdout, stderr = self._execute_script(script_path, {'OutputPath': output_path, 'Offset': offset})
-
-        if rc != 0:
-            msg = "Failed to poll update task, see rc, stdout, stderr for more info"
-            raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
-
-        # https://github.com/ansible-collections/ansible.windows/issues/477
-        # We can't rely on the output containing newlines so use JSONDecoder to
-        # stream the JSON objects until there is nothing left
-        stdout = stdout.lstrip()
-        decoder = json.JSONDecoder()
-
-        entries = []
-        offset = 0
-        while stdout:
-            try:
-                entry, pos = decoder.raw_decode(stdout)
-            except getattr(json.decoder, 'JSONDecodeError', ValueError) as e:
-                msg = 'Failed to decode poll result json: %s' % to_native(e)
-                raise _ReturnResultException(msg, rc=rc, stdout=stdout, stderr=stderr)
-
-            if list(entry.keys()) == ["position"]:
-                offset = int(entry["position"])
-            else:
-                entries.append(entry)
-
-            stdout = stdout[pos:].lstrip()
-
-        return entries, offset
-
-    def _execute_script(self, script, parameters):  # typing: (str, typing.Dict) -> Tuple[int, str, str]
-        # The script is read from a file and executed as a scriptblock to avoid any execution policy shenanigans
-        encoded_parameters = ' '.join(
-            '-%s %s' % (k, v if isinstance(v, int) else quote_pwsh(v))
-            for k, v in parameters.items()
-        )
-        cmd = '$cmd = Get-Content -LiteralPath %s -Raw; &([ScriptBlock]::Create($cmd)) %s' \
-              % (quote_pwsh(script), encoded_parameters)
-        return self._execute_command(cmd)
-
-    def _execute_command(self, command):  # type: (str) -> Tuple[int, str, str]
-        """Runs a command on the Windows host and returned the result"""
-        # Need to wrap the command in our PowerShell encoded wrapper. This is done to align the command input to a
-        # common shell and to allow the psrp connection plugin to report the correct exit code without manually setting
-        # $LASTEXITCODE for just that plugin.
-        command = self._connection._shell._encode_script(command)
-
-        # FUTURE: Should we have a retry on a connection failure just in case an update brings the network down?
-        rc, stdout, stderr = self._connection.exec_command(command, in_data=None, sudoable=False)
-        rc = rc or 0
-        stdout = to_text(stdout, errors='surrogate_or_strict').strip()
-        stderr = to_text(stderr, errors='surrogate_or_strict').strip()
-
-        return rc, stdout, stderr
+        return result
 
     def _get_update_info(self, update_id):  # type: (str) -> Dict
         """Gets the update results info value to return."""
@@ -1078,21 +951,6 @@ class ActionModule(ActionBase):
                     info['failure_msg'] = _get_hresult_error(action_info['hresult'])
 
         return info
-
-    def _copy_script(self, script, name):  # type: (str, str) -> str
-        """Copes the script specified to the remote host"""
-        remote_path = self._connection._shell.join_path(self._connection._shell.tmpdir, name)
-        b_local_tempdir = tempfile.mkdtemp(dir=to_bytes(C.DEFAULT_LOCAL_TMP, errors='surrogate_or_strict'))
-        try:
-            b_local_script = os.path.join(b_local_tempdir, to_bytes(name))
-            with open(b_local_script, 'wb') as f:
-                f.write(to_bytes(script, errors='surrogate_or_strict'))
-
-            self._transfer_file(to_text(b_local_script, errors='surrogate_or_strict'), remote_path)
-        finally:
-            shutil.rmtree(b_local_tempdir)
-
-        return remote_path
 
 
 class UpdateResult:

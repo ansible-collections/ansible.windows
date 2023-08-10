@@ -97,15 +97,19 @@ options:
           according to the PowerShell regex rules.
         type: list
         elements: str
-    _output_path:
+    _operation:
         description:
         - Internal use only.
         type: str
-    _wait:
+        choices:
+        - start
+        - cancel
+        - poll
+        default: start
+    _operation_options:
         description:
         - Internal use only.
-        type: bool
-        default: no
+        type: dict
 notes:
 - M(ansible.windows.win_updates) must be run by a user with membership in the local Administrators group.
 - M(ansible.windows.win_updates) will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).
@@ -121,6 +125,11 @@ notes:
   found at U(https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx).
 - The current module doesn't support Systems Center Configuration Manager (SCCM).
   See U(https://github.com/ansible-collections/ansible.windows/issues/194)
+- By default the C(ansible.builtin.ssh) connection plugin is configured to have
+  no server timeout. As Windows Updates can restart the network adapter it is
+  recommended to set C(-o ServerAliveInterval=30) and disable control master
+  in I(ansible_ssh_args) to ensure the client can handle a network reset.
+  See the examples showing one way this can be set.
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: ansible.windows.win_feature
@@ -135,6 +144,17 @@ EXAMPLES = r"""
   ansible.windows.win_updates:
     category_names: '*'
     reboot: true
+
+- name: Set a server alive interval during update stage for the ssh connection plugin
+  ansible.windows.win_updates:
+    category_names: '*'
+    reboot: true
+  vars:
+    # This can be set in a few ways, see the ssh connection plugin for more
+    # information. ControlMaster should be disabled to ensure the new timeout
+    # value is applied for this connection instead of through the cached
+    # connection.
+    ansible_ssh_args: -o ControlMaster=no -o ServerAliveInterval=30
 
 - name: Install all security, critical, and rollup updates without a scheduled task
   ansible.windows.win_updates:
