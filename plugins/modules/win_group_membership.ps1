@@ -193,7 +193,7 @@ else {
 }
 
 if ($check_mode) {
-    if ($result.removed.added -gt 0) {
+    if ($result.added.count -gt 0) {
         $result.members += $result.added
     }
     if ($result.removed.count -gt 0) {
