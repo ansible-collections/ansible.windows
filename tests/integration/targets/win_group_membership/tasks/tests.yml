@@ -129,7 +129,7 @@
     state: present
   register: group_content
 
-  - name: Variable group_content
+- name: Variable group_content
   debug:
     var: group_content
     
