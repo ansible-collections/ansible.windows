@@ -143,6 +143,10 @@
     - add_another_user_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM", "NT AUTHORITY\\NETWORK SERVICE"]
   when: not in_check_mode
 
+- name: Test add_another_user_to_group_1_again results
+  debug:
+    var: add_another_user_to_group_again
+    
 #- name: Test add_another_user_to_group_1_again (check mode)
 #  assert:
 #    that:
@@ -255,14 +259,22 @@
     members:
       - "{{ admin_account_name }}"
       - NT AUTHORITY\NETWORK SERVICE
+  register: base_user_as_pure
 
-
+- name: Base pure users
+  debug:
+    var: base_user_as_pure
+    
 - name: Define users as pure
   win_group_membership: &wgm_pure
     <<: *wgm_present
     state: pure
   register: define_users_as_pure
 
+- name: After define users as pure
+  debug:
+    var: define_users_as_pure
+    
 - name: Test define_users_as_pure (normal mode)
   assert:
     that:
