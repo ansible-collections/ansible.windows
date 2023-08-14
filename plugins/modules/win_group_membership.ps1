@@ -194,7 +194,9 @@ else {
 
 if ($check_mode) {
     $result.members += $result.added
-    $result.members = $result.members | Where-Object { $_ -notin $result.removed }
+    if ($result.removed.count -gt 0) {
+        $result.members = $result.members | Where-Object { $_ -notin $result.removed }
+    }
 }
 
 Exit-Json -obj $result
