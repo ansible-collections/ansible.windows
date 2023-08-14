@@ -1909,17 +1909,57 @@ namespace Ansible.Windows.WinUpdates
     $installResult = Invoke-AsyncMethod 'Installing updates' $api.InstallAsync($installer, ${function:Receive-CallbackProgress}, $CancelToken)
     $exitResult.changed = $true
 
+    # https://www.microsoft.com/en-us/wdsi/defenderupdates
+    $defenderExe = [System.IO.Path]::Combine($env:ProgramFiles, 'Windows Defender', 'MpCmdRun.exe')
+    $runDefenderCommand = {
+        $defenderArgs = $args
+        $api.WriteLog("Running defender command $defenderExe $($defenderArgs -join " ")")
+        $stdoutLines = $null
+        $stderrLines = . { &$defenderExe @defenderArgs | Set-Variable stdoutLines } 2>&1 | ForEach-Object ToString
+
+        $stdout = @($stdoutLines) -join "`n"
+        $stderr = @($stderrLines) -join "`n"
+        $api.WriteLog("Defender command result - RC: $LASTEXITCODE`nSTDOUT:`n$stdout`nSTDERR:`n$stderr")
+
+        $LASTEXITCODE
+    }
+
     $failed = $false
     $progressResult = [System.Collections.Generic.List[Object]]@()
     for ($i = 0; $i -lt $updateCollection.Count; $i++) {
         $update = $updateCollection.Item($i)
         $res = $installResult.GetUpdateResult($i)
         $updateId = $update.Identity.UpdateId
+        $updateKBs = @($Update.KBArticleIDs | ForEach-Object { "$_" })
         $resultCode = [Ansible.Windows.WinUpdates.OperationResultCode]$res.ResultCode
         $hresult = $res.HResult
         $rebootRequired = $res.RebootRequired
 
         $api.WriteLog("Install result for $updateId - ResultCode: $resultCode, HResult: $hresult, RebootRequired: $rebootRequired")
+
+        # KB2267602 is a massive pain. Sometimes it may not install properly
+        # until a new definition has been released by Microsoft. Unfortunately
+        # after the first attempt which fails subsequent attempts will look
+        # like they've suceeded but have not in reality. This attempts to
+        # recover from that bad state to ensure it stays failed rather than the
+        # false positive causing an infinite loop. The MpCmdRun command can be
+        # used to install the update outside of WUA which seems to work when
+        # WUA does not.
+        if (
+            $resultCode -ne 'Succeeded' -and
+            '2267602' -in $updateKBs -and
+            (Test-Path -LiteralPath $defenderExe)
+        ) {
+            $null = & $runDefenderCommand '-RemoveDefinitions' '-DynamicSignatures'
+            $rc = & $runDefenderCommand '-SignatureUpdate'
+
+            if ($rc -eq 0) {
+                # If it was successful, override the WUA result.
+                $resultCode = [Ansible.Windows.WinUpdates.OperationResultCode]::Succeeded
+                $hresult = 0
+            }
+        }
+
         $progressResult.Add(@{
                 id = $updateId
                 result_code = [int]$resultCode
@@ -1933,6 +1973,7 @@ namespace Ansible.Windows.WinUpdates
             $exitResult.reboot_required = $true
         }
     }
+
     $api.WriteProgress('install_result', @{
             info = $progressResult
         })
