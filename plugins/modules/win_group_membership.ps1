@@ -193,7 +193,9 @@ else {
 }
 
 if ($check_mode) {
-    $result.members += $result.added
+    if ($result.removed.added -gt 0) {
+        $result.members += $result.added
+    }
     if ($result.removed.count -gt 0) {
         $result.members = $result.members | Where-Object { $_ -notin $result.removed }
     }
