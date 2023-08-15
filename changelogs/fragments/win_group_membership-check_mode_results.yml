@@ -1,0 +1,2 @@
+bugfixes:
+- win_group_membership - Return accurate results when using check_mode - https://github.com/ansible-collections/ansible.windows/issues/532
