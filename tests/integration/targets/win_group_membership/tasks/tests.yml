@@ -317,7 +317,7 @@
 - name: Variable group_content after pure
   debug:
     var: group_content_pure
-	
+
 - name: Test define_users_as_pure (normal mode)
   assert:
     that:
