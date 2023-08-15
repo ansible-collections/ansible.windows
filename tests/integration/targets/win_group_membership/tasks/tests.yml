@@ -140,13 +140,13 @@
   debug:
     var: group_content
     
-#- name: Test add_another_user_to_group (check-mode)
-#  assert:
-#    that:
-#    - add_another_user_to_group.changed == true
-#    - add_another_user_to_group.added == ["NT AUTHORITY\\NETWORK SERVICE"]
-#    - add_another_user_to_group.members == ["NT AUTHORITY\\NETWORK SERVICE"]
-#  when: in_check_mode
+- name: Test add_another_user_to_group (check-mode)
+  assert:
+    that:
+    - add_another_user_to_group.changed == true
+    - add_another_user_to_group.added == ["NT AUTHORITY\\NETWORK SERVICE"]
+    - add_another_user_to_group.members == ["NT AUTHORITY\\NETWORK SERVICE"]
+  when: in_check_mode
 
 
 - name: Add another user to group (again)
@@ -166,13 +166,13 @@
     var: add_another_user_to_group_again
 
     
-#- name: Test add_another_user_to_group_1_again (check mode)
-#  assert:
-#    that:
-#    - add_another_user_to_group_again.changed == true
-#    - add_another_user_to_group_again.added == ["NT AUTHORITY\\NETWORK SERVICE"]
-#    - add_another_user_to_group_again.members == ["NT AUTHORITY\\NETWORK SERVICE"]
-#  when: in_check_mode
+- name: Test add_another_user_to_group_1_again (check mode)
+  assert:
+    that:
+    - add_another_user_to_group_again.changed == true
+    - add_another_user_to_group_again.added == ["NT AUTHORITY\\NETWORK SERVICE"]
+    - add_another_user_to_group_again.members == ["NT AUTHORITY\\NETWORK SERVICE"]
+  when: in_check_mode
 
 - name: Remove users from group
   win_group_membership: &wgm_absent
@@ -280,10 +280,6 @@
       - NT AUTHORITY\NETWORK SERVICE
   register: base_user_as_pure
   check_mode: false
-
-- name: Variable wgm_present
-  debug:
-    var: wgm_present
     
 - name: Base pure users
   debug:
@@ -295,14 +291,6 @@
     state: pure
   register: define_users_as_pure
 
-- name: Variable wgm_pure
-  debug:
-    var: wgm_pure
-
-- name: Variable wgm_present
-  debug:
-    var: wgm_present
-    
 - name: After define users as pure
   debug:
     var: define_users_as_pure
@@ -380,7 +368,7 @@
   assert:
     that:
     - define_different_syntax_users_as_pure.changed == true
-    - define_different_syntax_users_as_pure.added == []
+    - define_different_syntax_users_as_pure.added == ["{{ ansible_hostname }}\\{{ win_local_user }}"]
     - define_different_syntax_users_as_pure.removed == ["NT AUTHORITY\\NETWORK SERVICE"]
     - define_different_syntax_users_as_pure.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}"]
   when: in_check_mode
