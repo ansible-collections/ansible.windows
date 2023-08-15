@@ -283,7 +283,7 @@
 
 - name: Variable wgm_present
   debug:
-    var: *wgm_present
+    var: wgm_present
     
 - name: Base pure users
   debug:
@@ -297,11 +297,11 @@
 
 - name: Variable wgm_pure
   debug:
-    var: *wgm_pure
+    var: wgm_pure
 
 - name: Variable wgm_present
   debug:
-    var: *wgm_present
+    var: wgm_present
     
 - name: After define users as pure
   debug:
