@@ -81,6 +81,13 @@
     - add_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
   when: not in_check_mode
 
+- name: Test add_users_to_group_again (check mode)
+  assert:
+    that:
+    - add_users_to_group_again.changed == true
+    - add_users_to_group_again.added == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+    - add_users_to_group_again.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM"]
+  when: in_check_mode
 
 - name: Add different syntax users to group (again)
   win_group_membership:
@@ -121,7 +128,7 @@
     - add_another_user_to_group.added == ["NT AUTHORITY\\NETWORK SERVICE"]
     - add_another_user_to_group.members == ["{{ ansible_hostname }}\\{{ admin_account_name }}", "{{ ansible_hostname }}\\{{ win_local_user }}", "NT AUTHORITY\\SYSTEM", "NT AUTHORITY\\NETWORK SERVICE"]
   when: not in_check_mode
-
+  
 - name: Retrieve group content
   win_group_membership:
     name: "{{ win_local_group }}"
@@ -272,10 +279,11 @@
       - "{{ admin_account_name }}"
       - NT AUTHORITY\NETWORK SERVICE
   register: base_user_as_pure
+  check_mode: false
 
 - name: Variable wgm_present
   debug:
-    var: wgm_present
+    var: *wgm_present
     
 - name: Base pure users
   debug:
@@ -289,16 +297,27 @@
 
 - name: Variable wgm_pure
   debug:
-    var: wgm_pure
+    var: *wgm_pure
 
 - name: Variable wgm_present
   debug:
-    var: wgm_present
+    var: *wgm_present
     
 - name: After define users as pure
   debug:
     var: define_users_as_pure
-    
+
+- name: Retrieve group content after pure
+  win_group_membership:
+    name: "{{ win_local_group }}"
+    members:
+    state: present
+  register: group_content_pure
+
+- name: Variable group_content after pure
+  debug:
+    var: group_content_pure
+	
 - name: Test define_users_as_pure (normal mode)
   assert:
     that:
