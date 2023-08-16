@@ -760,16 +760,11 @@ class ActionModule(ActionBase):
             # Check that at least 1 update has not already been installed. This
             # is to detect an update that may have been rolled back in the last
             # reboot or whether WUA failed to report that the update failed.
-            same_updates = len(update_result.install_results) > 0
-            current_updates = set()
-            for update_id in update_result.install_results.keys():
-                if update_id in installed_updates:
-                    current_updates.add(update_id)
-                else:
-                    same_updates = False
-                    installed_updates.add(update_id)
+            current_updates = set(update_result.install_results)
+            new_updates = current_updates.difference(installed_updates)
+            installed_updates.update(current_updates)
 
-            if same_updates:
+            if current_updates and not new_updates:
                 for update_id in current_updates:
                     self._install_results[update_id]['result_code'] = 4
                     self._install_results[update_id]['hresult'] = -1
