@@ -603,7 +603,7 @@ def _get_hresult_error(hresult):  # type: (int) -> str
         0x8024B9FF: ('WU_E_EVALUATOR_UNEXPECTED', 'An unexpected error occurred while processing an evaluation request'),
     }.get(hresult, ('UNKNOWN', 'Unknown WUA HRESULT %s' % hresult))
 
-    return '%s (%s %08X)' % (error_msg, error_id, hresult)
+    return '%s (%s 0x%08X)' % (error_msg, error_id, hresult & 0xFFFFFFFF)
 
 
 class _ReturnResultException(Exception):
@@ -742,6 +742,7 @@ class ActionModule(ActionBase):
             'reboot_required': False,
             'rebooted': False,
         }
+        installed_updates = set()
         has_rebooted_on_failure = False
         round = 0
         while True:
@@ -755,6 +756,27 @@ class ActionModule(ActionBase):
             self._selected_updates.update(update_result.selected_updates)
             self._download_results.update(update_result.download_results)
             self._install_results.update(update_result.install_results)
+
+            # Check that at least 1 update has not already been installed. This
+            # is to detect an update that may have been rolled back in the last
+            # reboot or whether WUA failed to report that the update failed.
+            current_updates = set(update_result.install_results)
+            new_updates = current_updates.difference(installed_updates)
+            installed_updates.update(current_updates)
+
+            if current_updates and not new_updates:
+                for update_id in current_updates:
+                    self._install_results[update_id]['result_code'] = 4
+                    self._install_results[update_id]['hresult'] = -1
+
+                result['failed'] = True
+                result['msg'] = (
+                    'An update loop was detected, this could be caused by an update being rolled back during a '
+                    'reboot or the Windows Update API incorrectly reporting a failed update as being successful.'
+                    'Check the Windows Updates logs on the host to gather more information. Updates in the reboot '
+                    f'loop are: {", ".join(current_updates)}'
+                )
+                break
 
             reboot_required = result['reboot_required'] = update_result.reboot_required
             if update_result.changed:

@@ -10,6 +10,7 @@ __metaclass__ = type
 import ntpath
 import json
 import os
+import re
 from unittest.mock import MagicMock
 
 from ansible.errors import AnsibleConnectionFailure
@@ -452,7 +453,7 @@ def test_install_reboot_with_two_failures(monkeypatch):
     assert actual['rebooted'] is True
     assert actual['failed']
     assert actual['msg'] == 'Searching for updates: Exception from HRESULT: 0x80240032 - The search criteria string was invalid ' \
-        '(WU_E_INVALID_CRITERIA 80240032)'
+        '(WU_E_INVALID_CRITERIA 0x80240032)'
     assert 'exception' in actual
     assert actual['found_update_count'] == 0
     assert actual['failed_update_count'] == 0
@@ -579,7 +580,7 @@ def test_fail_install(monkeypatch):
         if u_info['kb'] == '2267602':
             assert not u['installed']
             assert u['failure_hresult_code'] == 2147944003
-            assert u['failure_msg'] == 'Unknown WUA HRESULT 2147944003 (UNKNOWN 80070643)'
+            assert u['failure_msg'] == 'Unknown WUA HRESULT 2147944003 (UNKNOWN 0x80070643)'
 
         else:
             assert u['installed']
@@ -647,3 +648,25 @@ def test_multiple_connection_failures_during_poll(monkeypatch):
     assert mock_warning.mock_calls[0][1] == ('Connection failure when polling update result - attempting to retry: connection error',)
     assert mock_warning.mock_calls[1][1] == ('Unknown failure when polling update result - attempting to cancel task: connection error',)
     assert mock_warning.mock_calls[2][1] == ('Unknown failure when cancelling update task: connection error',)
+
+
+def test_repeated_update(monkeypatch):
+    reboot_mock = MagicMock()
+    reboot_mock.return_value = {'failed': False}
+    monkeypatch.setattr(win_updates, 'reboot_host', reboot_mock)
+
+    actual = run_action(monkeypatch, 'repeated_update.txt', {
+        'category_names': ['*'],
+        'reboot': True,
+    })
+
+    assert actual['failed']
+    assert re.match(r'An update loop was detected,.*\. Updates in the reboot loop are: 501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a', actual['msg'])
+    assert actual['failed_update_count'] == 1
+    assert actual['installed_update_count'] == 2
+    assert actual['found_update_count'] == 3
+    assert actual['updates']['85604fae-a5c5-4f6d-9012-3d86be1bccce']['installed']
+    assert actual['updates']['5e406f0e-59fa-432d-bb9a-77d2db6f74ec']['installed']
+    assert not actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['installed']
+    assert actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['failure_hresult_code'] == -1
+    assert actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['failure_msg'] == 'Unknown WUA HRESULT -1 (UNKNOWN 0xFFFFFFFF)'
