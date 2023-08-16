@@ -136,15 +136,15 @@ foreach ($member in $members) {
         if ($state -in @("present", "pure") -and !$user_in_group) {
             if (!$check_mode) {
                 $group.Add($member_sid)
-                $result.added += $group_member.account_name
             }
+            $result.added += $group_member.account_name
             $result.changed = $true
         }
         elseif ($state -eq "absent" -and $user_in_group) {
             if (!$check_mode) {
                 $group.Remove($member_sid)
-                $result.removed += $group_member.account_name
             }
+            $result.removed += $group_member.account_name
             $result.changed = $true
         }
     }
@@ -172,8 +172,8 @@ if ($state -eq "pure") {
             if ($user_to_remove) {
                 if (!$check_mode) {
                     $group.Remove($member_sid)
-                    $result.removed += $current_member.account_name
                 }
+                $result.removed += $current_member.account_name
                 $result.changed = $true
             }
         }
@@ -190,6 +190,15 @@ if ($final_members) {
 }
 else {
     $result.members = @()
+}
+
+if ($check_mode) {
+    if ($result.added.count -gt 0) {
+        $result.members += $result.added
+    }
+    if ($result.removed.count -gt 0) {
+        $result.members = $result.members | Where-Object { $_ -notin $result.removed }
+    }
 }
 
 Exit-Json -obj $result
