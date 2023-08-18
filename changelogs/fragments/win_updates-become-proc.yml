@@ -1,0 +1,4 @@
+minor_changes:
+- >-
+  win_updates - Avoid using a scheduled task to spawn the updates background job when running as become. This provides
+  an alternative method available to users in case the task scheduler does not work on their system - https://github.com/ansible-collections/ansible.windows/issues/543

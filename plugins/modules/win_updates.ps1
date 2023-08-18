@@ -295,7 +295,7 @@ Function Start-EphemeralTask {
                         }
                         else {
                             # If event logs are disabled for tasks we can only use the last run result for information.
-                            $errMessage = "Unknown failure trying to start win_updates tasks '0x{0:X8}'- enable task event logs to see more info" -f (
+                            $errMessage = "Unknown failure trying to start win_updates tasks '0x{0:X8}' - enable task event logs to see more info" -f (
                                 $createdTask.LastTaskResult
                             )
                         }
@@ -325,7 +325,7 @@ Function Start-EphemeralTask {
     }
 }
 
-Function Invoke-AsBatchLogon {
+Function Invoke-InProcess {
     <#
     .SYNOPSIS
     Invoke the scriptblock as a batch logon through the task scheduler.
@@ -368,11 +368,15 @@ Function Invoke-AsBatchLogon {
 
         [Parameter()]
         [Hashtable]
-        $Commands = @{}
+        $Commands = @{},
+
+        [Parameter()]
+        [int]
+        $ParentProcessId
     )
 
     # FUTURE: Use NamedPipeConnectionInfo once PowerShell 5.1 is the baseline
-    # to avoid the parent proc and stdio smuggling mess.
+    # to avoid the stdio smuggling mess.
 
     $runner = {
         param ([Parameter(Mandatory)][string]$RunInfo)
@@ -416,8 +420,8 @@ try {
     $execWrapper = $input | Out-String
     $splitParts = $execWrapper.Split(@(\"`0`0`0`0\"), 2, [StringSplitOptions]::RemoveEmptyEntries)
 
-    Invoke-Expression ('Function Invoke-AsBatchLogonStub { ' + $splitParts[0] + '}')
-    Invoke-AsBatchLogonStub $splitParts[1]
+    Invoke-Expression ('Function Invoke-InProcessStub { ' + $splitParts[0] + '}')
+    Invoke-InProcessStub $splitParts[1]
 }
 catch {
     $result = @{
@@ -430,8 +434,7 @@ catch {
 }
 '@
 
-    $pi = $stdout = $stdin = $null
-    $taskPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path "$env:SystemRoot\System32\cmd.exe"
+    $pi = $stdout = $stdin = $procWaitHandle = $null
     try {
         $stdout = New-AnonPipe -Direction In
         $stderr = New-AnonPipe -Direction In
@@ -477,12 +480,9 @@ catch {
             }
         }
 
-        # By setting the ParentProcess, the new one will inherit the same
-        # environment/job as the ephemeral task created allowing it to live
-        # outside the Network logon scope the current process is in.
         $si = [Ansible.Windows.Process.StartupInfo]@{
             WindowStyle = 'Hidden'  # Useful when debugging locally, doesn't really matter in normal Ansible.
-            ParentProcess = $taskPid
+            ParentProcess = $ParentProcessId
             StandardInput = $stdin.BaseStream.ClientSafePipeHandle
             StandardOutput = $stdout.BaseStream.ClientSafePipeHandle
             StandardError = $stderr.BaseStream.ClientSafePipeHandle
@@ -559,15 +559,12 @@ catch {
 
         $pi.ProcessId
     }
-    catch {
-        $Module.FailJson("Failed to invoke batch job: $($_.Exception.Message)", $_)
-    }
     finally {
-        Stop-Process -Id $taskPid -Force -ErrorAction SilentlyContinue
         if ($pi) { $pi.Dispose() }
         if ($stdout) { $stdout.Dispose() }
         if ($stderr) { $stderr.Dispose() }
         if ($stdin) { $stdin.Dispose() }
+        if ($procWaitHandle) { $procWaitHandle.Dispose() }
     }
 }
 
@@ -2017,11 +2014,21 @@ $categoryNames = $module.Params.category_names | ForEach-Object -Process {
 
 <#
 Most of the Windows Update Agent API will not run under a remote token which is typically what a WinRM process is.
-We can use a scheduled task to change the logon to a batch/service logon allowing us to bypass that restriction. The
-other benefit of a scheduled task is that it is not tied to the lifetime of the WinRM process. This allows it to
-outlive any network drops. In the case of async we need to tie the lifetime of this process to the scheduled task, in
-other situations we poll the status in a separate process.
+We can use a scheduled task to change the logon to a batch/service logon allowing us to bypass that restriction if
+it is needed (not running under become). The other benefit of a scheduled task is that it is not tied to the lifetime
+of the WinRM process. This allows it to outlive any network drops. In the case of async we need to tie the lifetime of
+this process to the scheduled task, in other situations we poll the status in a separate process.
 #>
+try {
+    $null = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
+    # If we get here WUA will work with the current rights and we don't need
+    # to spawn as a scheduled task.
+    $spawnWithScheduledTask = $false
+}
+catch {
+    $spawnWithScheduledTask = $true
+}
+
 $taskId = [Guid]::NewGuid().Guid
 $pipeName = "Ansible.Windows.WinUpdates-$taskId"
 $cancelId = "Global\Ansible.Windows.WinUpdates-$taskId"
@@ -2152,7 +2159,42 @@ try {
         $null = &$invokeSplat.ScriptBlock @params
     }
     else {
-        $taskPid = Invoke-AsBatchLogon @invokeSplat
+        # The parent pid can be anything, use cmd as it's quicker to start over
+        # PowerShell.
+        $cmdPath = "$env:SystemRoot\System32\cmd.exe"
+
+        $parentPid = $null
+        try {
+            if ($spawnWithScheduledTask) {
+                $parentPid = Start-EphemeralTask -Name "ansible-$($Module.ModuleName)" -Path $cmdPath
+            }
+            else {
+                # The WMI Win32_Process.Create method will spawn a process that
+                # lives outside of any job and thus will outlive this process.
+                $wmiRes = Invoke-CimMethod -ClassName Win32_Process -Name Create -Arguments @{ CommandLine = $cmdPath }
+                if ($wmiRes.ReturnValue -ne 0) {
+                    $msg = ([System.ComponentModel.Win32Exception][int]$wmiRes.ReturnValue).Message
+                    throw "WMI Win32_Process.Create failed: {0} (0x{1:X8})" -f ($msg, $wmiRes.ReturnValue)
+                }
+                $parentPid = $wmiRes.ProcessId
+            }
+
+            $taskPid = Invoke-InProcess @invokeSplat -ParentProcessId $parentPid
+        }
+        catch {
+            $bootstrapMethod = if ($spawnWithScheduledTask) {
+                'Task Scheduler'
+            }
+            else {
+                'Ansible Become'
+            }
+            $Module.FailJson("Failed to start new win_updates task with $($bootstrapMethod): $($_.Exception.Message)", $_)
+        }
+        finally {
+            if ($parentPid) {
+                Stop-Process -Id $parentPid -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 }
 finally {

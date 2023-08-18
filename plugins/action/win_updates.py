@@ -945,6 +945,9 @@ class ActionModule(ActionBase):
                 extra_result['stderr'] = result['stderr']
             raise _ReturnResultException(msg, exception=result.get('exception', None), **extra_result)
 
+        for w in result.get('warnings', []):
+            display.warning(w)
+
         return result
 
     def _get_update_info(self, update_id):  # type: (str) -> Dict

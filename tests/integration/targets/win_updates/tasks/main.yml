@@ -66,26 +66,42 @@
   become_method: runas
   become_user: SYSTEM
 
+- name: search for all updates with async and become
+  win_updates:
+    category_names: '*'
+    state: searched
+  register: search_async_and_become
+  async: 60
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+
 - assert:
     that:
     - not search_sync is changed
     - not search_async is changed
     - not search_become is changed
+    - not search_async_and_become is changed
     - not search_sync.reboot_required
     - not search_async.reboot_required
     - not search_become.reboot_required
+    - not search_async_and_become.reboot_required
     - search_sync.failed_update_count == 0
     - search_async.failed_update_count == 0
     - search_become.failed_update_count == 0
+    - search_async_and_become.failed_update_count == 0
     - search_sync.installed_update_count == 0
     - search_async.installed_update_count == 0
     - search_become.installed_update_count == 0
+    - search_async_and_become.installed_update_count == 0
     - search_sync.found_update_count == search_sync.updates|length
     - search_async.found_update_count == search_async.updates|length
     - search_become.found_update_count == search_become.updates|length
+    - search_async_and_become.found_update_count == search_async_and_become.updates|length
     - search_sync.filtered_updates == {}
     - search_async.filtered_updates == {}
     - search_become.filtered_updates == {}
+    - search_async_and_become.filtered_updates == {}
 
 - name: search updates - check mode
   win_updates:
