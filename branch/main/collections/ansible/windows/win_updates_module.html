@@ -306,6 +306,7 @@
 <li><p>More information about PowerShell and how it handles RegEx strings can be found at <a class="reference external" href="https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx">https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx</a>.</p></li>
 <li><p>The current module doesn’t support Systems Center Configuration Manager (SCCM). See <a class="reference external" href="https://github.com/ansible-collections/ansible.windows/issues/194">https://github.com/ansible-collections/ansible.windows/issues/194</a></p></li>
 <li><p>By default the <code class="docutils literal notranslate"><span class="pre">ansible.builtin.ssh</span></code> connection plugin is configured to have no server timeout. As Windows Updates can restart the network adapter it is recommended to set <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">ServerAliveInterval=30</span></code> and disable control master in <em>ansible_ssh_args</em> to ensure the client can handle a network reset. See the examples showing one way this can be set.</p></li>
+<li><p>By default the module will start a background process using the Task Scheduler on Windows. If the Task Scheduler is unavailable, unreliable, or does not work, run the task with become.</p></li>
 </ul>
 </div>
 </section>
@@ -349,6 +350,9 @@
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CriticalUpdates</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UpdateRollups</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">  </span><span class="nt">become_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Search-only, return list of found updates (if any), log to C:\ansible_wu.txt</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
