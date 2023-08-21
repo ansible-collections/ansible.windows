@@ -130,6 +130,9 @@ notes:
   recommended to set C(-o ServerAliveInterval=30) and disable control master
   in I(ansible_ssh_args) to ensure the client can handle a network reset.
   See the examples showing one way this can be set.
+- By default the module will start a background process using the Task
+  Scheduler on Windows. If the Task Scheduler is unavailable, unreliable, or
+  does not work, run the task with become.
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: ansible.windows.win_feature
@@ -162,6 +165,9 @@ EXAMPLES = r"""
       - SecurityUpdates
       - CriticalUpdates
       - UpdateRollups
+  become: true
+  become_method: runas
+  become_user: SYSTEM
 
 - name: Search-only, return list of found updates (if any), log to C:\ansible_wu.txt
   ansible.windows.win_updates:
