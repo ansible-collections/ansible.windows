@@ -14,11 +14,11 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Index of all Filter Plugins" href="../../index_filter.html" />
@@ -131,10 +131,10 @@
            <div itemprop="articleBody">
              
   <span class="target" id="ansible-collections-ansible-windows-quote-filter"></span><section id="ansible-windows-quote-filter-quotes-argument-s-for-various-windows-shells">
-<h1>ansible.windows.quote filter – Quotes argument(s) for various Windows shells<a class="headerlink" href="#ansible-windows-quote-filter-quotes-argument-s-for-various-windows-shells" title="Permalink to this heading"></a></h1>
+<h1>ansible.windows.quote filter – Quotes argument(s) for various Windows shells<a class="headerlink" href="#ansible-windows-quote-filter-quotes-argument-s-for-various-windows-shells" title="Link to this heading"></a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This filter plugin is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 2.0.0).</p>
+<p>This filter plugin is part of the <a class="reference external" href="https://galaxy.ansible.com/ansible/windows">ansible.windows collection</a> (version 2.1.0).</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
 <p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.quote</span></code>.</p>
 </div>
@@ -149,7 +149,7 @@
 </ul>
 </nav>
 <section id="synopsis">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Quotes argument(s) for the various Windows command line shells.</p></li>
 <li><p>Defaults to escaping arguments based on the Win32 C argv parsing rules that <a class="reference internal" href="win_command_module.html#ansible-collections-ansible-windows-win-command-module"><span class="std std-ref">ansible.windows.win_command</span></a> uses.</p></li>
@@ -158,7 +158,7 @@
 </ul>
 </section>
 <section id="input">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Input</a><a class="headerlink" href="#input" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Input</a><a class="headerlink" href="#input" title="Link to this heading"></a></h2>
 <p>This describes the input of the filter, the value before <code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">ansible.windows.quote</span></code>.</p>
 <table class="ansible-option-table docutils align-default" style="width: 100%">
 <thead>
@@ -180,7 +180,7 @@
 </table>
 </section>
 <section id="keyword-parameters">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Keyword parameters</a><a class="headerlink" href="#keyword-parameters" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Keyword parameters</a><a class="headerlink" href="#keyword-parameters" title="Link to this heading"></a></h2>
 <p>This describes keyword parameters of the filter. These are the values <code class="docutils literal notranslate"><span class="pre">key1=value1</span></code>, <code class="docutils literal notranslate"><span class="pre">key2=value2</span></code> and so on in the following
 example: <code class="docutils literal notranslate"><span class="pre">input</span> <span class="pre">|</span> <span class="pre">ansible.windows.quote(key1=value1,</span> <span class="pre">key2=value2,</span> <span class="pre">...)</span></code></p>
 <table class="ansible-option-table docutils align-default" style="width: 100%">
@@ -208,7 +208,7 @@ example: <code class="docutils literal notranslate"><span class="pre">input</spa
 </table>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
@@ -220,7 +220,7 @@ example: <code class="docutils literal notranslate"><span class="pre">input</spa
 </div>
 </section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Escape an argument for win_command</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my.exe</span><span class="w"> </span><span class="cp">{{</span> <span class="nv">argument1</span> <span class="o">|</span> <span class="nf">ansible</span><span class="nv">.windows.quote</span> <span class="cp">}}</span>
@@ -233,7 +233,7 @@ example: <code class="docutils literal notranslate"><span class="pre">input</spa
 </div>
 </section>
 <section id="return-value">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Value</a><a class="headerlink" href="#return-value" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Value</a><a class="headerlink" href="#return-value" title="Link to this heading"></a></h2>
 <table class="ansible-option-table docutils align-default" style="width: 100%">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
@@ -252,7 +252,7 @@ example: <code class="docutils literal notranslate"><span class="pre">input</spa
 </tbody>
 </table>
 <section id="authors">
-<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Jordan Borean (&#64;jborean93)</p></li>
 </ul>
@@ -262,7 +262,7 @@ example: <code class="docutils literal notranslate"><span class="pre">input</spa
 </div>
 </section>
 <section id="collection-links">
-<h3>Collection links<a class="headerlink" href="#collection-links" title="Permalink to this heading"></a></h3>
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
 <p class="ansible-links">
   <a href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" aria-role="button" target="_blank" rel="noopener external">Issue Tracker</a>
   <a href="https://github.com/ansible-collections/ansible.windows" aria-role="button" target="_blank" rel="noopener external">Repository (Sources)</a>
