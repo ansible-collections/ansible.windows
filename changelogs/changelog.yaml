@@ -646,3 +646,26 @@ releases:
     - win_updates-removed-features.yml
     - win_uri-removed-features.yml
     release_date: '2023-06-14'
+  2.1.0:
+    changes:
+      bugfixes:
+      - Remove some code which is no longer valid for dotnet 5+
+      - win_async - Set maximum data size allowed when deserializing async output
+        - https://github.com/ansible-collections/ansible.windows/pull/520
+      - win_group_membership - Return accurate results when using check_mode - https://github.com/ansible-collections/ansible.windows/issues/532
+      - win_updates - Add special handling for KB2267602 in case it fails - https://github.com/ansible-collections/ansible.windows/issues/530
+      - win_updates - Fix up endless retries when an update failed to install more
+        than once - https://github.com/ansible-collections/ansible.windows/issues/343
+      minor_changes:
+      - win_updates - Avoid using a scheduled task to spawn the updates background
+        job when running as become. This provides an alternative method available
+        to users in case the task scheduler does not work on their system - https://github.com/ansible-collections/ansible.windows/issues/543
+      release_summary: Release summary for v2.1.0
+    fragments:
+    - dotnet-preparation.yml
+    - release.yml
+    - win_async-large-data-output.yml
+    - win_group_membership-check_mode_results.yml
+    - win_updates-become-proc.yml
+    - win_updates-loop.yml
+    release_date: '2023-08-22'

@@ -1,3 +1,0 @@
-bugfixes:
-- win_updates - Fix up endless retries when an update failed to install more than once - https://github.com/ansible-collections/ansible.windows/issues/343
-- win_updates - Add special handling for KB2267602 in case it fails - https://github.com/ansible-collections/ansible.windows/issues/530
