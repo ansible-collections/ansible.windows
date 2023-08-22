@@ -1,2 +1,0 @@
-bugfixes:
-- win_async - Set maximum data size allowed when deserializing async output - https://github.com/ansible-collections/ansible.windows/pull/520

@@ -5,6 +5,28 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v2.1.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.1.0
+
+Minor Changes
+-------------
+
+- win_updates - Avoid using a scheduled task to spawn the updates background job when running as become. This provides an alternative method available to users in case the task scheduler does not work on their system - https://github.com/ansible-collections/ansible.windows/issues/543
+
+Bugfixes
+--------
+
+- Remove some code which is no longer valid for dotnet 5+
+- win_async - Set maximum data size allowed when deserializing async output - https://github.com/ansible-collections/ansible.windows/pull/520
+- win_group_membership - Return accurate results when using check_mode - https://github.com/ansible-collections/ansible.windows/issues/532
+- win_updates - Add special handling for KB2267602 in case it fails - https://github.com/ansible-collections/ansible.windows/issues/530
+- win_updates - Fix up endless retries when an update failed to install more than once - https://github.com/ansible-collections/ansible.windows/issues/343
+
 v2.0.0
 ======
 
