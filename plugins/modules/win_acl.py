@@ -4,12 +4,13 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
+# Copyright: (c) 2023, Jordan Pitlor <jordan@pitlor.dev>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 DOCUMENTATION = r'''
 ---
 module: win_acl
-short_description: Set file/directory/registry permissions for a system user or group
+short_description: Set file/directory/registry/certificate permissions for a system user or group
 description:
 - Add or remove rights/permissions for a given user or group for the specified
   file, folder, registry key or AppPool identifies.
@@ -45,6 +46,7 @@ options:
       FileSystemRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx).
     - If C(path) is a registry key, rights can be any right under MSDN
       RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
+    - If I(path) is a certificate key, rights can be C(Read) and/or C(FullControl). (Added in 1.15.0)
     type: str
     required: yes
   inherit:
@@ -129,4 +131,12 @@ EXAMPLES = r'''
     rights: Read,Write,Modify,FullControl,Delete
     type: deny
     state: present
+
+- name: Set certificate private key FullControl to IIS_IUSRS
+  ansible.windows.win_acl:
+    path: Cert:\LocalMachine\My\168ba8c488463f88c6648466a22484b6189e165f
+    user: IIS_IUSRS
+    type: allow
+    state: present
+    rights: FullControl
 '''
