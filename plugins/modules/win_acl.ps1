@@ -3,6 +3,7 @@
 # Copyright: (c) 2015, Phil Schwartz <schwartzmx@gmail.com>
 # Copyright: (c) 2015, Trond Hindenes
 # Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
+# Copyright: (c) 2020, Håkon Heggernes Lerring <hakon@lerring.no>
 # Copyright: (c) 2023, Jordan Pitlor <jordan@pitlor.dev>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -229,7 +230,8 @@ Try {
             $objACL.AddAccessRule($objACE)
             if ($path_item.PSProvider.Name -eq "Certificate") {
                 $certSecurityHandle.Acl = $objACL
-            } else {
+            }
+            else {
                 Try {
                     Set-ACL -LiteralPath $path -AclObject $objACL
                 }
@@ -251,7 +253,8 @@ Try {
             }
             elseif ($path_item.PSProvider.Name -eq "Certificate") {
                 $certSecurityHandle.Acl = $objACL
-            } else {
+            }
+            else {
                 (Get-Item -LiteralPath $path).SetAccessControl($objACL)
             }
             $result.changed = $true
