@@ -165,27 +165,29 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                 uint securityDescriptorSize = 0;
                 if (ncrypt)
                 {
-                    if (NCryptGetProperty(
+                    int securityDescriptorResult = NCryptGetProperty(
                         handle,
                         "Security Descr",
                         new SafeSecurityDescriptorPtr(),
                         0,
                         ref securityDescriptorSize,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION) != 0)
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                    if (securityDescriptorResult != 0)
                     {
-                        throw new Exception("Could not get security descriptor");
+                        throw new Win32Exception(securityDescriptorResult);
                     }
                     securityDescriptorBuffer = new SafeSecurityDescriptorPtr(securityDescriptorSize);
 
-                    if (NCryptGetProperty(
+                    securityDescriptorResult = NCryptGetProperty(
                         handle,
                         "Security Descr",
                         securityDescriptorBuffer,
                         securityDescriptorSize,
                         ref securityDescriptorSize,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION) != 0)
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                    if (securityDescriptorResult != 0)
                     {
-                        throw new Exception("Could not get security descriptor");
+                        throw new Win32Exception(securityDescriptorResult);
                     }
 
                 }
@@ -225,14 +227,15 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                 if (ncrypt)
                 {
                     byte[] sd = value.GetSecurityDescriptorBinaryForm();
-                    if (NCryptSetProperty(
+                    int setPropertyResult = NCryptSetProperty(
                         handle,
                         "Security Descr",
                         sd,
                         (uint)sd.Length,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION) != 0)
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                    if (setPropertyResult != 0)
                     {
-                        throw new Exception("Could not set security descriptor");
+                        throw new Win32Exception(setPropertyResult);
                     }
                 }
                 else
