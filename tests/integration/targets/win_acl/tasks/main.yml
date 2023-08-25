@@ -15,6 +15,30 @@
   with_items:
   - absent
   - present
+  
+- name: ensure we start with a clean certificate dir
+  win_file:
+    path: '{{ test_acl_certificate_path }}'
+    state: '{{ item }}'
+  with_items:
+  - absent
+  - directory
+
+- name: create certificate for testing
+  win_shell: |
+    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout acl-test.key -out acl-test.crt -batch *>$null
+    openssl pkcs12 -export -out acl-test.pfx -inkey acl-test.key -in acl-test.crt -passout pass:
+    echo (Get-PfxCertificate .\acl-test.pfx).Thumbprint
+  args:
+    chdir: '{{ test_acl_certificate_path }}'
+  register: test_acl_certificate_thumbprint
+  
+- name: install testing certificate
+  win_certificate_store:
+    path: '{{ test_acl_certificate_path }}\acl-test.pfx'
+    state: present
+    store_location: CurrentUser
+    store_name: My
 
 - block:
   - name: create test dir for link target
@@ -47,4 +71,16 @@
     win_regedit:
       path: '{{ test_acl_reg_path }}'
       delete_key: yes
+      state: absent
+
+  - name: uninstall testing certificate
+    win_certificate_store:
+      thumbprint: '{{ test_acl_certificate_thumbprint }}'
+      state: absent
+      store_location: CurrentUser
+      store_name: My
+
+  - name: cleanup testing certificate path
+    win_file:
+      path: '{{ test_acl_certificate_path }}'
       state: absent
