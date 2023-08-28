@@ -157,7 +157,7 @@ Try {
     $path_item = Get-Item -LiteralPath $path -Force
     If ($path_item.PSProvider.Name -eq "Registry") {
         $colRights = [System.Security.AccessControl.RegistryRights]$rights
-    }   
+    }
     ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
         $colRights = [Ansible.Windows.CertAclHelper.CertAccessRights]$rights
     }
@@ -278,7 +278,7 @@ Catch {
     Fail-Json -obj $result -message "an error occurred when attempting to $state $rights permission(s) on $path for $user - $($_.Exception.Message)"
 }
 Finally {
-    # Make sure we revert the location stack to the original path just for cleanups sake    
+    # Make sure we revert the location stack to the original path just for cleanups sake
     if (($null -ne $path_qualifier) -and ($path_qualifier -ne "Cert:")) {
         Pop-Location
     }
