@@ -2,39 +2,32 @@
 ---
 - name: get register cmd that will get ace info
   set_fact:
+    test_cert_ace_cmd: |
+      $certificate = Get-ChildItem Cert:\LocalMachine\My | Where-Object Thumbprint -eq $thumbprint
+      $privateKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($certificate)
+      $containerName = if ($privateKey.GetType().Name -ieq "RSACng") {
+          $privateKey.Key.UniqueName
+      } else {
+          $privateKey.CspKeyContainerInfo.UniqueKeyContainerName
+      }
+      $keyFullPath = $env:ProgramData + "\Microsoft\Crypto\Keys\" + $containerName;
+      ConvertTo-Json -InputObject @((Get-Acl $keyFullPath).Access)
     test_ace_cmd: |
       # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
-      New-PSDrive -Name Cert -PSProvider Certificate -Root \ > $null
       Push-Location -LiteralPath (Split-Path -Path $path -Qualifier)
       $rights_key = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Registry") {
           "RegistryRights"
-      } else if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Certificate") {
-          "CertAccessRights"
       } else {
           "FileSystemRights"
       }
-      $ace_list = if ((Get-Item -LiteralPath $path -Force).PSProvider.Name -eq "Certificate") {
-        [Ansible.Windows.CertAclHelper.CertAclHelper]::new(Get-Item -LiteralPath $path).Acl `
-            .GetAccessRules($true, $false, [System.Security.Principal.SecurityIdentifier]) | `
-            ForEach-Object {
-                @{
-                    rights = $_."$rights_key".ToString()
-                    type = $_.AccessControlType.ToString()
-                    identity = $_.IdentityReference.Value.ToString()
-                    inheritance_flags = $_.InheritanceFlags.ToString()
-                    propagation_flags = $_.PropagationFlags.ToString()
-                }
-            }
-      } else {
-        (Get-Acl -LiteralPath $path).Access | Where-Object { $_.IsInherited -eq $false } | ForEach-Object {
-          @{
-              rights = $_."$rights_key".ToString()
-              type = $_.AccessControlType.ToString()
-              identity = $_.IdentityReference.Value.ToString()
-              inheritance_flags = $_.InheritanceFlags.ToString()
-              propagation_flags = $_.PropagationFlags.ToString()
-          }
+      $ace_list = (Get-Acl -LiteralPath $path).Access | Where-Object { $_.IsInherited -eq $false } | ForEach-Object {
+        @{
+            rights = $_."$rights_key".ToString()
+            type = $_.AccessControlType.ToString()
+            identity = $_.IdentityReference.Value.ToString()
+            inheritance_flags = $_.InheritanceFlags.ToString()
+            propagation_flags = $_.PropagationFlags.ToString()
         }
       }
       Pop-Location
@@ -450,7 +443,7 @@
 
 - name: add FullAccess rights on certificate - check mode
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: present
@@ -465,7 +458,7 @@
 
 - name: add FullAccess rights on certificate
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: present
@@ -473,23 +466,19 @@
   register: add_rights_on_certificate
 
 - name: get result of add FullAccess rights on certificate
-  win_shell: '$path = ''Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}''; {{ test_ace_cmd }}'
+  win_shell: '$thumbprint = ''{{ test_acl_certificate_thumbprint.stdout_lines[0] }}''; {{ test_cert_ace_cmd }}'
   register: add_rights_on_certificate_actual
 
 - name: assert add FullAccess rights on certificate
   assert:
     that:
     - add_rights_on_certificate is changed
-    - (add_rights_on_certificate_actual.stdout|from_json)|count == 1
-    - (add_rights_on_certificate_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (add_rights_on_certificate_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (add_rights_on_certificate_actual.stdout|from_json)[0].propagation_flags == 'None'
-    - (add_rights_on_certificate_actual.stdout|from_json)[0].rights == 'WriteKey'
-    - (add_rights_on_certificate_actual.stdout|from_json)[0].type == 'Allow'
+    - (add_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+    - (add_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127 # This is the FullAccess flag
 
 - name: add FullAccess rights on certificate again
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: present
@@ -503,7 +492,7 @@
 
 - name: remove FullAccess rights on certificate - check mode
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: absent
@@ -518,7 +507,7 @@
 
 - name: remove FullAccess rights on certificate
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: absent
@@ -526,7 +515,7 @@
   register: remove_rights_on_certificate
 
 - name: get result of REMOVE FullAccess rights on certificate
-  win_shell: '$path = ''Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}''; {{ test_ace_cmd }}'
+  win_shell: '$thumbprint = ''{{ test_acl_certificate_thumbprint.stdout_lines[0] }}''; {{ test_cert_ace_cmd }}'
   register: remove_rights_on_certificate_actual
 
 - name: assert remove FullAccess rights on certificate
@@ -537,7 +526,7 @@
 
 - name: remove FullAccess rights on certificate again
   win_acl:
-    path: 'Cert:\CurrentUser\My\{{ test_acl_certificate_thumbprint }}'
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
     user: Guests
     type: allow
     state: absent

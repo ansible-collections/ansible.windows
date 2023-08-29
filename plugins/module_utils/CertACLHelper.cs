@@ -8,11 +8,12 @@ using System.Security.Principal;
 
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CryptHandle -TypeName CryptHandle
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.SafeSecurityDescriptorPtr -TypeName SafeSecurityDescriptorPtr
+//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRights -TypeName CertAccessRights
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
 
 namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
 {
-    private class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
+    class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public CryptHandle()
             : base(true)
@@ -35,7 +36,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         }
     }
 
-    private class SafeSecurityDescriptorPtr : SafeHandleZeroOrMinusOneIsInvalid
+    class SafeSecurityDescriptorPtr : SafeHandleZeroOrMinusOneIsInvalid
     {
         private int size = -1;
 
@@ -73,6 +74,13 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         }
     }
 
+    [Flags]
+    public enum CertAccessRights : uint
+    {
+        Read = 0x80000000,
+        FullControl = 0x10000000
+    }
+
     public class CertAclHelper
     {
         [Flags]
@@ -86,7 +94,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
             CRYPT_ACQUIRE_SILENT_FLAG = 0x00000040,
         }
         [Flags]
-        private enum CryptAcquireKeyFlagControl : uint
+        public enum CryptAcquireKeyFlagControl : uint
         {
             CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG = 0x00010000,
             CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG = 0x00020000,
@@ -156,7 +164,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
         }
-
         public FileSecurity Acl
         {
             get

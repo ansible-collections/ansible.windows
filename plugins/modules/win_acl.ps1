@@ -210,6 +210,9 @@ Try {
                 Break
             }
         }
+        ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
+            # TODO - this is where idempotency is detected
+        }
         else {
             If (
                 ($rule.FileSystemRights -eq $objACE.FileSystemRights) -And
