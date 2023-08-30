@@ -158,9 +158,6 @@ Try {
     If ($path_item.PSProvider.Name -eq "Registry") {
         $colRights = [System.Security.AccessControl.RegistryRights]$rights
     }
-    ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
-        $colRights = [Ansible.Windows.CertAclHelper.CertAccessRights]$rights
-    }
     Else {
         $colRights = [System.Security.AccessControl.FileSystemRights]$rights
     }
@@ -176,19 +173,19 @@ Try {
     }
 
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
+    If ($path_item.PSProvider.Name -eq "Registry") {
+        $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+    }
+    Else {
+        $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
+    }
+
     If ($path_item.PSProvider.Name -eq "Certificate") {
         $cert = Get-Item -LiteralPath $path
         $certSecurityHandle = [Ansible.Windows.CertAclHelper.CertAclHelper]::new($cert)
         $objACL = $certSecurityHandle.Acl
-        $objACE = $objACL.AccessRuleFactory($objUser, [int]$colRights, $False, $InheritanceFlag, $PropagationFlag, $objType)
     }
     Else {
-        If ($path_item.PSProvider.Name -eq "Registry") {
-            $objACE = New-Object System.Security.AccessControl.RegistryAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-        }
-        Else {
-            $objACE = New-Object System.Security.AccessControl.FileSystemAccessRule ($objUser, $colRights, $InheritanceFlag, $PropagationFlag, $objType)
-        }
         $objACL = Get-ACL -LiteralPath $path
     }
 
@@ -211,7 +208,17 @@ Try {
             }
         }
         ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
-            # TODO - this is where idempotency is detected
+            If (
+                ($rule.AccessMask -eq $objACE.AccessMask) -And
+                ($rule.AccessControlType -eq $objACE.AccessControlType) -And
+                ($rule.IdentityReference -eq $objACE.IdentityReference) -And
+                ($rule.IsInherited -eq $objACE.IsInherited) -And
+                ($rule.InheritanceFlags -eq $objACE.InheritanceFlags) -And
+                ($rule.PropagationFlags -eq $objACE.PropagationFlags)
+            ) {
+                $match = $true
+                Break
+            }
         }
         else {
             If (

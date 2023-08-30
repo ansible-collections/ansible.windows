@@ -522,7 +522,8 @@
   assert:
     that:
     - remove_rights_on_certificate is changed
-    - remove_rights_on_certificate_actual.stdout_lines == ["[", "", "]"]
+    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 2032127 # This is the FullAccess flag
+  with_items: '{{ remove_rights_on_certificate_actual.stdout|from_json }}'
 
 - name: remove FullAccess rights on certificate again
   win_acl:

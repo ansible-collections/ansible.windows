@@ -8,7 +8,6 @@ using System.Security.Principal;
 
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CryptHandle -TypeName CryptHandle
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.SafeSecurityDescriptorPtr -TypeName SafeSecurityDescriptorPtr
-//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRights -TypeName CertAccessRights
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
 
 namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
@@ -72,13 +71,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                 return false;
             }
         }
-    }
-
-    [Flags]
-    public enum CertAccessRights : uint
-    {
-        Read = 0x80000000,
-        FullControl = 0x10000000
     }
 
     public class CertAclHelper
