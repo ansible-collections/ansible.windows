@@ -17,9 +17,7 @@
   - present
 
 - name: add PKI module to Powershell to create testing certificate
-  community.windows.win_psmodule:
-    name: PKI
-    state: present
+  win_shell: Install-Module pki
 
 - name: create certificate for testing
   win_shell: '(New-SelfSignedCertificate -Subject "ACL Test" -KeyExportPolicy Exportable).Thumbprint'
