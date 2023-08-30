@@ -17,7 +17,7 @@
   - present
 
 - name: add PKI module to Powershell to create testing certificate
-  win_psmodule:
+  community.windows.win_psmodule:
     name: PKI
     state: present
 
