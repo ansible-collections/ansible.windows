@@ -1,0 +1,2 @@
+bugfixes:
+- setup - Fix up typo ``collection -> collect`` when a timeout occurred during a fact subset

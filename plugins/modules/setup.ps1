@@ -1230,7 +1230,7 @@ $ansibleFacts.measure_info.$subset = $end.TotalSeconds
     else {
         # Give a best effort chance to stop it, we can't call .Stop() in case it blocks.
         $null = $ps.BeginStop($null, $null)
-        $module.Warn("Failed to collection $($name) due to timeout")
+        $module.Warn("Failed to collect $($name) due to timeout")
     }
 }
 
