@@ -6,14 +6,12 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Win32.SafeHandles;
 using System.Security.Principal;
 
-//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CryptHandle -TypeName CryptHandle
-//TypeAccelerator -Name Ansible.Windows.CertAclHelper.SafeSecurityDescriptorPtr -TypeName SafeSecurityDescriptorPtr
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRights -TypeName CertAccessRights
 //TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
 
 namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
 {
-    class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
+    internal class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public CryptHandle()
             : base(true)
@@ -36,8 +34,8 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         }
     }
 
-    class SafeSecurityDescriptorPtr : SafeHandleZeroOrMinusOneIsInvalid
-    {
+    internal class SafeSecurityDescriptorPtr : SafeHandleZeroOrMinusOneIsInvalid
+    {        
         private int size = -1;
 
         public SafeSecurityDescriptorPtr()
@@ -50,12 +48,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         {
             this.size = (int)size;
             this.SetHandle(Marshal.AllocHGlobal(this.size));
-        }
-
-        public SafeSecurityDescriptorPtr(IntPtr handle)
-            : base(true)
-        {
-            this.SetHandle(handle);
         }
 
         protected override bool ReleaseHandle()
@@ -84,23 +76,26 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
     public class CertAclHelper
     {
         [Flags]
-        public enum SecurityInformationFlags : uint
+        private enum SecurityInformationFlags : uint
         {
             DACL_SECURITY_INFORMATION = 0x00000004,
         }
+
         [Flags]
-        public enum CryptAcquireKeyFlags : uint
+        private enum CryptAcquireKeyFlags : uint
         {
             CRYPT_ACQUIRE_SILENT_FLAG = 0x00000040,
         }
+
         [Flags]
-        public enum CryptAcquireKeyFlagControl : uint
+        private enum CryptAcquireKeyFlagControl : uint
         {
             CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG = 0x00010000,
             CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG = 0x00020000,
             CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG = 0x00040000,
         }
-        public enum KeySpec : uint
+
+        private enum KeySpec : uint
         {
             NONE = 0x0,
             AT_KEYEXCHANGE = 0x1,
@@ -117,7 +112,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int NCryptSetProperty(CryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, [MarshalAs(UnmanagedType.LPArray)] byte[] pbInput, uint cbInput, SecurityInformationFlags dwFlags);
 
-        public enum CryptProvParam : uint
+        private enum CryptProvParam : uint
         {
             PP_KEYSET_SEC_DESCR = 8
         }
@@ -161,9 +156,10 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
             }
             else
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+                throw new Win32Exception();
             }
         }
+
         public FileSecurity Acl
         {
             get
@@ -207,7 +203,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                             ref securityDescriptorSize,
                             SecurityInformationFlags.DACL_SECURITY_INFORMATION))
                     {
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
+                        throw new Win32Exception();
                     }
 
                     securityDescriptorBuffer = new SafeSecurityDescriptorPtr(securityDescriptorSize);
@@ -218,7 +214,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                             ref securityDescriptorSize,
                             SecurityInformationFlags.DACL_SECURITY_INFORMATION))
                     {
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
+                        throw new Win32Exception();
                     }
 
                 }
@@ -253,7 +249,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
                         value.GetSecurityDescriptorBinaryForm(), 
                         SecurityInformationFlags.DACL_SECURITY_INFORMATION))
                     {
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
+                        throw new Win32Exception();
                     }
                 }
             }

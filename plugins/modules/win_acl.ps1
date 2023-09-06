@@ -107,9 +107,6 @@ if ($path_qualifier -eq "HKU:" -and (-not (Test-Path -LiteralPath HKU:\))) {
 if ($path_qualifier -eq "HKCC:" -and (-not (Test-Path -LiteralPath HKCC:\))) {
     New-PSDrive -Name HKCC -PSProvider Registry -Root HKEY_CURRENT_CONFIG > $null
 }
-if ($path_qualifier -eq "Cert:" -and (-not (Test-Path -LiteralPath Cert:\))) {
-    New-PSDrive -Name Cert -PSProvider Certificate -Root \ > $null
-}
 
 Load-LinkUtils
 while ($follow) {
