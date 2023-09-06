@@ -47,7 +47,7 @@ options:
       FileSystemRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights.aspx).
     - If C(path) is a registry key, rights can be any right under MSDN
       RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
-    - If I(path) is a certificate key, rights can be C(Read) and/or C(FullControl). (Added in 1.15.0)
+    - If I(path) is a certificate key, rights can be C(Read) and/or C(FullControl). (Added in 2.2.0)
     type: str
     required: yes
   inherit:
