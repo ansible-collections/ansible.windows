@@ -22,13 +22,13 @@
           "FileSystemRights"
       }
       $ace_list = (Get-Acl -LiteralPath $path).Access | Where-Object { $_.IsInherited -eq $false } | ForEach-Object {
-        @{
-            rights = $_."$rights_key".ToString()
-            type = $_.AccessControlType.ToString()
-            identity = $_.IdentityReference.Value.ToString()
-            inheritance_flags = $_.InheritanceFlags.ToString()
-            propagation_flags = $_.PropagationFlags.ToString()
-        }
+          @{
+              rights = $_."$rights_key".ToString()
+              type = $_.AccessControlType.ToString()
+              identity = $_.IdentityReference.Value.ToString()
+              inheritance_flags = $_.InheritanceFlags.ToString()
+              propagation_flags = $_.PropagationFlags.ToString()
+          }
       }
       Pop-Location
       ConvertTo-Json -InputObject @($ace_list)

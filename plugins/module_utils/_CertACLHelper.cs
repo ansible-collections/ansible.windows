@@ -1,3 +1,7 @@
+// Note: The contents of this file are for internal use only! Do not depend on these classes
+//       or their methods and properties. The API can change without any warning or respect to
+//       semantic versioning.
+
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -16,12 +20,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
         public CryptHandle()
             : base(true)
         {
-        }
-
-        public CryptHandle(IntPtr handle)
-            : base(true)
-        {
-            this.SetHandle(handle);
         }
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

@@ -95,7 +95,7 @@ $inherit = Get-AnsibleParam -obj $params -name "inherit" -type "str"
 $propagation = Get-AnsibleParam -obj $params -name "propagation" -type "str" -default "None" -validateset "InheritOnly", "None", "NoPropagateInherit"
 $follow = Get-AnsibleParam -obj $params -name "follow" -type "bool" -default "false"
 
-# We mount the HKCR, HKU, and HKCC registry hives and the certificate stores so PS can access them.
+# We mount the HKCR, HKU, and HKCC registry hives so PS can access them.
 # Network paths have no qualifiers so we use -EA SilentlyContinue to ignore that
 $path_qualifier = Split-Path -Path $path -Qualifier -ErrorAction SilentlyContinue
 if ($path_qualifier -eq "HKCR:" -and (-not (Test-Path -LiteralPath HKCR:\))) {
