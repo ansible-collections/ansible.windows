@@ -11,7 +11,7 @@
 #Requires -Module Ansible.ModuleUtils.PrivilegeUtil
 #Requires -Module Ansible.ModuleUtils.SID
 #Requires -Module Ansible.ModuleUtils.LinkUtil
-#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
+#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils._CertACLHelper
 
 $ErrorActionPreference = "Stop"
 
@@ -156,7 +156,7 @@ Try {
         $colRights = [System.Security.AccessControl.RegistryRights]$rights
     }
     ElseIf ($path_item.PSProvider.Name -eq "Certificate") {
-        $colRights = [Ansible.Windows.CertAclHelper.CertAccessRights]$rights
+        $colRights = [Ansible.Windows._CertAclHelper.CertAccessRights]$rights
     }
     Else {
         $colRights = [System.Security.AccessControl.FileSystemRights]$rights
@@ -175,7 +175,7 @@ Try {
     $objUser = New-Object System.Security.Principal.SecurityIdentifier($sid)
     If ($path_item.PSProvider.Name -eq "Certificate") {
         $cert = Get-Item -LiteralPath $path
-        $certSecurityHandle = [Ansible.Windows.CertAclHelper.CertAclHelper]::new($cert)
+        $certSecurityHandle = [Ansible.Windows._CertAclHelper.CertAclHelper]::new($cert)
         $objACL = $certSecurityHandle.Acl
         $objACE = $objACL.AccessRuleFactory($objUser, [int]$colRights, $False, $InheritanceFlag, $PropagationFlag, $objType)
     }

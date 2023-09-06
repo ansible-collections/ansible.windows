@@ -10,10 +10,10 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Win32.SafeHandles;
 using System.Security.Principal;
 
-//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAccessRights -TypeName CertAccessRights
-//TypeAccelerator -Name Ansible.Windows.CertAclHelper.CertAclHelper -TypeName CertAclHelper
+//TypeAccelerator -Name Ansible.Windows._CertAclHelper.CertAccessRights -TypeName CertAccessRights
+//TypeAccelerator -Name Ansible.Windows._CertAclHelper.CertAclHelper -TypeName CertAclHelper
 
-namespace ansible_collections.ansible.windows.plugins.module_utils.CertACLHelper
+namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelper
 {
     internal class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
