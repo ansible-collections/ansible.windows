@@ -15,9 +15,9 @@ using System.Security.Principal;
 
 namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelper
 {
-    internal class CryptHandle : SafeHandleZeroOrMinusOneIsInvalid
+    internal class SafeCryptHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        public CryptHandle()
+        public SafeCryptHandle()
             : base(true)
         {
         }
@@ -102,13 +102,13 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         }
 
         [DllImport("crypt32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert, uint dwFlags, IntPtr pvParameters, out CryptHandle phCryptProvOrNCryptKey, out KeySpec pdwKeySpec, out bool pfCallerFreeProvOrNCryptKey);
+        private static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert, uint dwFlags, IntPtr pvParameters, out SafeCryptHandle phCryptProvOrNCryptKey, out KeySpec pdwKeySpec, out bool pfCallerFreeProvOrNCryptKey);
 
         [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int NCryptGetProperty(CryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, SafeSecurityDescriptorPtr pbOutput, uint cbOutput, ref uint pcbResult, SecurityInformationFlags dwFlags);
+        private static extern int NCryptGetProperty(SafeCryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, SafeSecurityDescriptorPtr pbOutput, uint cbOutput, ref uint pcbResult, SecurityInformationFlags dwFlags);
 
         [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int NCryptSetProperty(CryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, [MarshalAs(UnmanagedType.LPArray)] byte[] pbInput, uint cbInput, SecurityInformationFlags dwFlags);
+        private static extern int NCryptSetProperty(SafeCryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, [MarshalAs(UnmanagedType.LPArray)] byte[] pbInput, uint cbInput, SecurityInformationFlags dwFlags);
 
         private enum CryptProvParam : uint
         {
@@ -117,18 +117,18 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CryptGetProvParam(CryptHandle safeProvHandle, CryptProvParam dwParam, SafeSecurityDescriptorPtr pbData, ref uint dwDataLen, SecurityInformationFlags dwFlags);
+        private static extern bool CryptGetProvParam(SafeCryptHandle safeProvHandle, CryptProvParam dwParam, SafeSecurityDescriptorPtr pbData, ref uint dwDataLen, SecurityInformationFlags dwFlags);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CryptSetProvParam(CryptHandle safeProvHandle, CryptProvParam dwParam, [MarshalAs(UnmanagedType.LPArray)] byte[] pbData, SecurityInformationFlags dwFlags);
+        private static extern bool CryptSetProvParam(SafeCryptHandle safeProvHandle, CryptProvParam dwParam, [MarshalAs(UnmanagedType.LPArray)] byte[] pbData, SecurityInformationFlags dwFlags);
 
-        CryptHandle handle;
+        SafeCryptHandle handle;
         bool ncrypt = false;
 
         public CertAclHelper(X509Certificate2 certificate)
         {
-            CryptHandle certPkeyHandle;
+            SafeCryptHandle certPkeyHandle;
             KeySpec keySpec;
 
             bool ownHandle;
