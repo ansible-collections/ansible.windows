@@ -17,6 +17,14 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
 {
     internal class SafeCryptHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
+        private enum SecurityStatus : int
+        {
+            ERROR_SUCCESS = 0
+        }
+
+        public bool ShouldFree { get; set; }
+        public bool NCrypt { get; set; }
+
         public SafeCryptHandle()
             : base(true)
         {
@@ -26,9 +34,19 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CryptReleaseContext(IntPtr safeProvHandle, uint dwFlags);
 
+        [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int NCryptFreeObject(IntPtr safeProvHandle);
+
         protected override bool ReleaseHandle()
         {
-            return CryptReleaseContext(this.handle, 0);
+            if (!ShouldFree)
+            {
+                return true;
+            }
+
+            return NCrypt
+                ? NCryptFreeObject(this.handle) == (int)SecurityStatus.ERROR_SUCCESS
+                : CryptReleaseContext(this.handle, 0);
         }
     }
 
@@ -64,6 +82,11 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         }
     }
 
+    internal class KeyStorageProperty
+    {
+        public const string NCRYPT_SECURITY_DESCR_PROPERTY = "Security Descr";
+    }
+
     [Flags]
     public enum CertAccessRights : int
     {
@@ -77,6 +100,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         private enum SecurityInformationFlags : uint
         {
             DACL_SECURITY_INFORMATION = 0x00000004,
+            NCRYPT_SILENT_FLAG = 0x00000040,
         }
 
         [Flags]
@@ -101,6 +125,11 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
             CERT_NCRYPT_KEY_SPEC = 0xFFFFFFFF
         }
 
+        private enum CryptProvParam : uint
+        {
+            PP_KEYSET_SEC_DESCR = 8
+        }
+
         [DllImport("crypt32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert, uint dwFlags, IntPtr pvParameters, out SafeCryptHandle phCryptProvOrNCryptKey, out KeySpec pdwKeySpec, out bool pfCallerFreeProvOrNCryptKey);
 
@@ -109,11 +138,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
 
         [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int NCryptSetProperty(SafeCryptHandle hObject, [MarshalAs(UnmanagedType.LPWStr)] string pszProperty, [MarshalAs(UnmanagedType.LPArray)] byte[] pbInput, uint cbInput, SecurityInformationFlags dwFlags);
-
-        private enum CryptProvParam : uint
-        {
-            PP_KEYSET_SEC_DESCR = 8
-        }
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -124,37 +148,24 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         private static extern bool CryptSetProvParam(SafeCryptHandle safeProvHandle, CryptProvParam dwParam, [MarshalAs(UnmanagedType.LPArray)] byte[] pbData, SecurityInformationFlags dwFlags);
 
         private SafeCryptHandle handle;
-        private bool ncrypt = false;
 
         public CertAclHelper(X509Certificate2 certificate)
         {
-            SafeCryptHandle certPkeyHandle;
             KeySpec keySpec;
-            bool ownHandle;
-            if (CryptAcquireCertificatePrivateKey(
+            bool shouldFreeKey;
+            if (!CryptAcquireCertificatePrivateKey(
                     certificate.Handle,
                     (uint)CryptAcquireKeyFlags.CRYPT_ACQUIRE_SILENT_FLAG | (uint)CryptAcquireKeyFlagControl.CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG,
                     IntPtr.Zero,
-                    out certPkeyHandle,
+                    out handle,
                     out keySpec,
-                    out ownHandle))
-            {
-                if (!ownHandle)
-                {
-                    throw new NotSupportedException("Could not take ownership of certificate private key handle");
-                }
-
-                if (keySpec == KeySpec.CERT_NCRYPT_KEY_SPEC)
-                {
-                    ncrypt = true;
-                }
-
-                handle = certPkeyHandle;
-            }
-            else
+                    out shouldFreeKey))
             {
                 throw new Win32Exception();
             }
+
+            handle.ShouldFree = shouldFreeKey;
+            handle.NCrypt = keySpec == KeySpec.CERT_NCRYPT_KEY_SPEC;
         }
 
         public FileSecurity Acl
@@ -162,47 +173,56 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
             get
             {
                 SafeSecurityDescriptorPtr securityDescriptorBuffer;
-                uint securityDescriptorSize = 0;
-                if (ncrypt)
+                var securityDescriptorSize = 0U;
+                if (handle.NCrypt)
                 {
+                    // We first have to find out how large of a buffer to reserve, so the docs say that
+                    // we should pass NULL for the buffer address, then the penultimate parameter will
+                    // get assigned the required size.
                     var securityDescriptorResult = NCryptGetProperty(
                         handle,
-                        "Security Descr",
-                        new SafeSecurityDescriptorPtr(),
+                        KeyStorageProperty.NCRYPT_SECURITY_DESCR_PROPERTY,
+                        null,
                         0,
                         ref securityDescriptorSize,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION | SecurityInformationFlags.NCRYPT_SILENT_FLAG);
                     if (securityDescriptorResult != 0)
                     {
                         throw new Win32Exception(securityDescriptorResult);
                     }
-                    securityDescriptorBuffer = new SafeSecurityDescriptorPtr(securityDescriptorSize);
 
+                    // Now that we know the required size, we can allocate a buffer and actually ask NCrypt
+                    // to copy the security description into it.
+                    securityDescriptorBuffer = new SafeSecurityDescriptorPtr(securityDescriptorSize);
                     securityDescriptorResult = NCryptGetProperty(
                         handle,
-                        "Security Descr",
+                        KeyStorageProperty.NCRYPT_SECURITY_DESCR_PROPERTY,
                         securityDescriptorBuffer,
                         securityDescriptorSize,
                         ref securityDescriptorSize,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION | SecurityInformationFlags.NCRYPT_SILENT_FLAG);
                     if (securityDescriptorResult != 0)
                     {
                         throw new Win32Exception(securityDescriptorResult);
                     }
-
                 }
                 else
                 {
+                    // We first have to find out how large of a buffer to reserve, so the docs say that
+                    // we should pass NULL for the buffer address, then the penultimate parameter will
+                    // get assigned the required size.
                     if (!CryptGetProvParam(
                             handle,
                             CryptProvParam.PP_KEYSET_SEC_DESCR,
-                            new SafeSecurityDescriptorPtr(),
+                            null,
                             ref securityDescriptorSize,
                             SecurityInformationFlags.DACL_SECURITY_INFORMATION))
                     {
                         throw new Win32Exception();
                     }
 
+                    // Now that we know the required size, we can allocate a buffer and actually ask NCrypt
+                    // to copy the security description into it.
                     securityDescriptorBuffer = new SafeSecurityDescriptorPtr(securityDescriptorSize);
                     if (!CryptGetProvParam(
                             handle,
@@ -224,15 +244,15 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
             }
             set
             {
-                if (ncrypt)
+                if (handle.NCrypt)
                 {
-                    var sd = value.GetSecurityDescriptorBinaryForm();
+                    var securityDescriptor = value.GetSecurityDescriptorBinaryForm();
                     var setPropertyResult = NCryptSetProperty(
                         handle,
-                        "Security Descr",
-                        sd,
-                        (uint)sd.Length,
-                        SecurityInformationFlags.DACL_SECURITY_INFORMATION);
+                        KeyStorageProperty.NCRYPT_SECURITY_DESCR_PROPERTY,
+                        securityDescriptor,
+                        (uint)securityDescriptor.Length,
+                        SecurityInformationFlags.DACL_SECURITY_INFORMATION | SecurityInformationFlags.NCRYPT_SILENT_FLAG);
                     if (setPropertyResult != 0)
                     {
                         throw new Win32Exception(setPropertyResult);
