@@ -16,9 +16,21 @@
   - absent
   - present
 
-- name: create certificate for testing
-  win_shell: '(New-SelfSignedCertificate -Subject "ACL Test" -KeyExportPolicy Exportable).Thumbprint'
-  register: test_acl_certificate_thumbprint
+- name: create certificates for testing
+  win_shell: |
+    $certParams = @{
+        KeyAlgorithm = 'RSA'
+        KeyExportPolicy = 'Exportable'
+        KeyLength = 2048
+    }
+    (New-SelfSignedCertificate @certParams -Subject "ACL Test CNG" -Provider "Microsoft Software Key Storage Provider").Thumbprint
+    (New-SelfSignedCertificate @certParams -Subject "ACL Test CryptoAPI" -Provider "Microsoft Base Cryptographic Provider v1.0" -KeySpec Signature).Thumbprint
+  register: test_acl_cert_info
+
+- name: set variables of certificate thumbprints
+  set_fact:
+    test_acl_certificiate_cng_thumbprint: '{{ test_acl_cert_info.stdout_lines[0] }}'
+    test_acl_certificiate_cryptoapi_thumbprint: '{{ test_acl_cert_info.stdout_lines[1] }}'
 
 - block:
   - name: create test dir for link target
@@ -53,9 +65,12 @@
       delete_key: yes
       state: absent
 
-  - name: uninstall testing certificate
+  - name: uninstall testing certificates
     win_certificate_store:
-      thumbprint: '{{ test_acl_certificate_thumbprint.stdout_lines[0] }}'
+      thumbprint: '{{ item }}'
       state: absent
       store_location: LocalMachine
       store_name: My
+    with_items:
+      - test_acl_certificiate_cng_thumbprint
+      - test_acl_certificiate_cryptoapi_thumbprint

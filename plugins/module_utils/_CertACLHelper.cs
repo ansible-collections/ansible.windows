@@ -123,14 +123,13 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CryptSetProvParam(SafeCryptHandle safeProvHandle, CryptProvParam dwParam, [MarshalAs(UnmanagedType.LPArray)] byte[] pbData, SecurityInformationFlags dwFlags);
 
-        SafeCryptHandle handle;
-        bool ncrypt = false;
+        private SafeCryptHandle handle;
+        private bool ncrypt = false;
 
         public CertAclHelper(X509Certificate2 certificate)
         {
             SafeCryptHandle certPkeyHandle;
             KeySpec keySpec;
-
             bool ownHandle;
             if (CryptAcquireCertificatePrivateKey(
                     certificate.Handle,
@@ -166,7 +165,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
                 uint securityDescriptorSize = 0;
                 if (ncrypt)
                 {
-                    int securityDescriptorResult = NCryptGetProperty(
+                    var securityDescriptorResult = NCryptGetProperty(
                         handle,
                         "Security Descr",
                         new SafeSecurityDescriptorPtr(),
@@ -216,9 +215,9 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
                     }
 
                 }
-                byte[] buffer = new byte[securityDescriptorSize];
+                var buffer = new byte[securityDescriptorSize];
                 Marshal.Copy(securityDescriptorBuffer.DangerousGetHandle(), buffer, 0, buffer.Length);
-                FileSecurity acl = new FileSecurity();
+                var acl = new FileSecurity();
                 acl.SetSecurityDescriptorBinaryForm(buffer);
 
                 return acl;
@@ -227,8 +226,8 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
             {
                 if (ncrypt)
                 {
-                    byte[] sd = value.GetSecurityDescriptorBinaryForm();
-                    int setPropertyResult = NCryptSetProperty(
+                    var sd = value.GetSecurityDescriptorBinaryForm();
+                    var setPropertyResult = NCryptSetProperty(
                         handle,
                         "Security Descr",
                         sd,
