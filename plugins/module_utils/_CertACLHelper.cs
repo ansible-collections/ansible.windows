@@ -112,6 +112,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
         [Flags]
         private enum CryptAcquireKeyFlagControl : uint
         {
+            CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG = 0x00010000,
             CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG = 0x00020000,
         }
 
@@ -153,7 +154,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
             bool shouldFreeKey;
             if (!CryptAcquireCertificatePrivateKey(
                     certificate.Handle,
-                    (uint)CryptAcquireKeyFlags.CRYPT_ACQUIRE_SILENT_FLAG | (uint)CryptAcquireKeyFlagControl.CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG,
+                    (uint)CryptAcquireKeyFlags.CRYPT_ACQUIRE_SILENT_FLAG | (uint)CryptAcquireKeyFlagControl.CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG,
                     IntPtr.Zero,
                     out handle,
                     out keySpec,
