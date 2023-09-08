@@ -179,10 +179,15 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
                     // We first have to find out how large of a buffer to reserve, so the docs say that
                     // we should pass NULL for the buffer address, then the penultimate parameter will
                     // get assigned the required size.
+                    //
+                    // Note: Despite the documentation saying we should pass NULL for the buffer address,
+                    //       the marshalling between C# and C misbehaves when this happens. When I tried
+                    //       this, the entire getter mysteriously returned null (instead of throwing).
+                    //       Instead, we must pass a non-null empty buffer (`new SafeSecurityDescriptorPtr`)
                     var securityDescriptorResult = NCryptGetProperty(
                         handle,
                         KeyStorageProperty.NCRYPT_SECURITY_DESCR_PROPERTY,
-                        null,
+                        new SafeSecurityDescriptorPtr(),
                         0,
                         ref securityDescriptorSize,
                         SecurityInformationFlags.DACL_SECURITY_INFORMATION | SecurityInformationFlags.NCRYPT_SILENT_FLAG);
@@ -211,10 +216,15 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
                     // We first have to find out how large of a buffer to reserve, so the docs say that
                     // we should pass NULL for the buffer address, then the penultimate parameter will
                     // get assigned the required size.
+                    //
+                    // Note: Despite the documentation saying we should pass NULL for the buffer address,
+                    //       the marshalling between C# and C misbehaves when this happens. When I tried
+                    //       this, the entire getter mysteriously returned null (instead of throwing).
+                    //       Instead, we must pass a non-null empty buffer (`new SafeSecurityDescriptorPtr`)
                     if (!CryptGetProvParam(
                             handle,
                             CryptProvParam.PP_KEYSET_SEC_DESCR,
-                            null,
+                            new SafeSecurityDescriptorPtr(),
                             ref securityDescriptorSize,
                             SecurityInformationFlags.DACL_SECURITY_INFORMATION))
                     {
@@ -233,7 +243,6 @@ namespace ansible_collections.ansible.windows.plugins.module_utils._CertACLHelpe
                     {
                         throw new Win32Exception();
                     }
-
                 }
                 var buffer = new byte[securityDescriptorSize];
                 Marshal.Copy(securityDescriptorBuffer.DangerousGetHandle(), buffer, 0, buffer.Length);
