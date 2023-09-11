@@ -116,6 +116,9 @@ while ($follow) {
 
     if ($link_info -and $link_info.Type -in @("SymbolicLink", "JunctionPoint")) {
         $path = $link_info.AbsolutePath
+        if ($link_info.SubstituteName -like "\??\*") {
+            $path = "\\?\" + $path
+        }
     }
     else {
         break

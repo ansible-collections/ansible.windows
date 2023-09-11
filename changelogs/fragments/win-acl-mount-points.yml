@@ -1,0 +1,2 @@
+bugfixes:
+- win_acl - Fix broken path in case of volume junction
