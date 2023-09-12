@@ -362,7 +362,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
         AboveNormalPriorityClass = 0x00008000,
         InheritParentAffinity = 0x00010000,
         InheritCallerPriority = 0x00020000,
-        CreateProctectedProcess = 0x00040000,
+        CreateProtectedProcess = 0x00040000,
         ExtendedStartupInfoPresent = 0x00080000,
         ProcessModeBackgroundBegin = 0x00100000,
         ProcessModeBackgroundEnd = 0x00200000,
