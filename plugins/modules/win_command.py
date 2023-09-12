@@ -163,5 +163,10 @@ stdout_lines:
     description: The command standard output split in lines
     returned: always
     type: list
-    sample: [u'Clustering node rabbit@slave1 with rabbit@main ...']
+    sample: ['Clustering node rabbit@slave1 with rabbit@main ...']
+stderr_lines:
+    description: The command standard error split in lines
+    returned: always
+    type: list
+    sample: "['ls: cannot access foo: No such file or directory']"
 '''
