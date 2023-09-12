@@ -168,5 +168,5 @@ stderr_lines:
     description: The command standard error split in lines
     returned: always
     type: list
-    sample: [u'ls: cannot access foo: No such file or directory']
+    sample: "['ls: cannot access foo: No such file or directory']"
 '''
