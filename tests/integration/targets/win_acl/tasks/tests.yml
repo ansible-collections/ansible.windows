@@ -2,6 +2,26 @@
 ---
 - name: get register cmd that will get ace info
   set_fact:
+    test_cert_ace_cmd: |
+      $certificate = Get-ChildItem Cert:\LocalMachine\My | Where-Object Thumbprint -eq $thumbprint
+      $privateKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($certificate)
+      $containerName = if ($privateKey.GetType().Name -ieq "RSACng") {
+          $privateKey.Key.UniqueName
+      } else {
+          $privateKey.CspKeyContainerInfo.UniqueKeyContainerName
+      }
+      $keyFullPath = $env:ProgramData + "\Microsoft\Crypto\Keys\" + $containerName;
+      ConvertTo-Json -InputObject @((Get-Acl $keyFullPath).Access)
+    test_crypto_cert_ace_cmd: |
+      $certificate = Get-ChildItem Cert:\LocalMachine\My | Where-Object Thumbprint -eq $thumbprint
+      $privateKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($certificate)
+      $containerName = if ($privateKey.GetType().Name -ieq "RSACng") {
+          $privateKey.Key.UniqueName
+      } else {
+          $privateKey.CspKeyContainerInfo.UniqueKeyContainerName
+      }
+      $keyFullPath = $env:ProgramData + "\Microsoft\Crypto\RSA\MachineKeys\" + $containerName;
+      ConvertTo-Json -InputObject @((Get-Acl $keyFullPath).Access)
     test_ace_cmd: |
       # Overcome bug in Set-Acl/Get-Acl for registry paths and -LiteralPath
       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS > $null
@@ -430,3 +450,167 @@
   assert:
     that:
     - not remove_deny_right_reg_again is changed
+
+# As a note: in this test you'll see checks for access masks using different numbers than the ACL helper. This is
+# intentional. In our test scenario, we know where the private key file is and are getting the ACL of that file. Files
+# have very different access masks than private keys in the crypt API
+- name: add FullControl rights on certificate - check mode
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: present
+    rights: FullControl
+  check_mode: true
+  register: add_fullcontrol_rights_on_certificate_check_mode
+
+- name: assert add FullControl rights on certificate - check mode
+  assert:
+    that:
+    - not add_fullcontrol_rights_on_certificate_check_mode is changed
+
+- name: add FullControl rights on certificate
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: present
+    rights: FullControl
+  register: add_fullcontrol_rights_on_certificate
+
+- name: get result of add FullControl rights on certificate
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+  register: add_fullcontrol_rights_on_certificate_actual
+
+- name: assert add FullControl rights on certificate
+  assert:
+    that:
+    - add_fullcontrol_rights_on_certificate is changed
+    - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+    - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127
+
+- name: add FullControl rights on certificate again
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: present
+    rights: FullControl
+  register: add_fullcontrol_rights_on_certificate_again
+
+- name: assert add FullControl rights on certificate again
+  assert:
+    that:
+    - not add_fullcontrol_rights_on_certificate_again is changed
+
+- name: remove FullControl rights on certificate - check mode
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: absent
+    rights: FullControl
+  register: remove_fullcontrol_rights_on_certificate_check_mode
+  check_mode: true
+
+- name: assert remove FullControl rights on certificate - check mode
+  assert:
+    that:
+    - not remove_fullcontrol_rights_on_certificate_check_mode is changed
+
+- name: remove FullControl rights on certificate
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: absent
+    rights: FullControl
+  register: remove_fullcontrol_rights_on_certificate
+
+- name: get result of remove FullControl rights on certificate
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+  register: remove_fullcontrol_rights_on_certificate_actual
+
+- name: assert remove FullControl rights on certificate
+  assert:
+    that:
+    - remove_fullcontrol_rights_on_certificate is changed
+    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 2032127
+  with_items: '{{ remove_fullcontrol_rights_on_certificate_actual.stdout|from_json }}'
+
+- name: remove FullControl rights on certificate again
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: absent
+    rights: FullControl
+  register: remove_fullcontrol_rights_on_certificate_again
+
+- name: assert remove FullControl rights on certificate again
+  assert:
+    that:
+    - not remove_fullcontrol_rights_on_certificate_again is changed
+
+# These tests are not strictly neccessary, but discovering the actual enum values for the access mask was a gnarly
+# process, so let's just be exhaustive and test that they're still correct
+
+- name: add Read rights on certificate
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: present
+    rights: Read
+  register: add_read_rights_on_certificate
+
+- name: get result of add Read rights on certificate
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+  register: add_read_rights_on_certificate_actual
+
+- name: assert add Read rights on certificate
+  assert:
+    that:
+    - add_read_rights_on_certificate is changed
+    - (add_read_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+    - (add_read_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 1179785
+
+- name: remove Read rights on certificate
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
+    user: Guests
+    type: allow
+    state: absent
+    rights: Read
+  register: remove_read_rights_on_certificate
+
+- name: get result of remove Read rights on certificate
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+  register: remove_read_rights_on_certificate_actual
+
+- name: assert remove Read rights on certificate
+  assert:
+    that:
+    - remove_read_rights_on_certificate is changed
+    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 1179785
+  with_items: '{{ remove_read_rights_on_certificate_actual.stdout|from_json }}'
+
+- name: add FullControl rights on Crypto certificate
+  win_acl:
+    path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cryptoapi_thumbprint }}'
+    user: Guests
+    type: allow
+    state: present
+    rights: FullControl
+  register: add_fullcontrol_rights_on_crypto_certificate
+
+- name: get result of add FullControl rights on Crypto certificate
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cryptoapi_thumbprint }}''; {{ test_crypto_cert_ace_cmd }}'
+  register: add_fullcontrol_rights_on_crypto_certificate_actual
+
+- name: assert add FullControl rights on Crypto certificate
+  assert:
+    that:
+    - add_fullcontrol_rights_on_crypto_certificate is changed
+    - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+    - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127
