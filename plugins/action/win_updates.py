@@ -1032,7 +1032,7 @@ class UpdateResult:
                 3: 'Verifying',
             }.get(current_phase, current_phase)
 
-            msg = "Downlad progress - Total: {0}/{1} {2}%, Update ({3}): {4}/{5} {6}%, Phase: {7}".format(
+            msg = "Download progress - Total: {0}/{1} {2}%, Update ({3}): {4}/{5} {6}%, Phase: {7}".format(
                 result['progress']['TotalBytesDownloaded'],
                 result['progress']['TotalBytesToDownload'],
                 total_percentage,
