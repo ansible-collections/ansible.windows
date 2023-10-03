@@ -33,9 +33,12 @@ $module.Result.services = @(
             )
         }
         catch [Ansible.Windows.SCManager.ServiceManagerException] {
-            # ERROR_ACCESS_DENIED, ignore the service and continue on.
-            if ($_.Exception.InnerException -and $_.Exception.InnerException.NativeErrorCode -eq 5) {
-                $msg = "Failed to access service '$($rawService.Name) to get more info, ignoring: $($_.Exception.Message)"
+            # ERROR_FILE_NOT_FOUND (2) - Unsure why this happens but probably
+            # the description or some other text field refers to a shared
+            # resource string.
+            # ERROR_ACCESS_DENIED (5)
+            if ($_.Exception.InnerException -and $_.Exception.InnerException.NativeErrorCode -in @(2, 5)) {
+                $msg = "Failed to open service '$($rawService.Name) to get more info, ignoring: $($_.Exception.Message)"
                 $module.Warn($msg)
                 continue
             }
