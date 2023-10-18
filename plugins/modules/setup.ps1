@@ -560,16 +560,18 @@ $factMeta = @(
         Subsets = 'all_ipv4_addresses', 'all_ipv6_addresses'
         Code = {
             $NetIPAddress = Get-CimInstance -Namespace ROOT/StandardCimv2 -ClassName MSFT_NetIPAddress
-        
+
             $ips = @()
             $ipv6s = @()
             Foreach ($ip in $NetIPAddress) {
-                If ($ip.IPAddress -and ( $ip.AddressFamily -eq 'IPv4' -or  $ip.AddressFamily -eq 2) -and ($ip.PrefixOrigin -ne 'WellKnown' -and $ip.PrefixOrigin -ne 2))  {
+                if ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv4' -or  $ip.AddressFamily -eq 2) -and 
+                   ($ip.PrefixOrigin -ne 'WellKnown' -and $ip.PrefixOrigin -ne 2)) {
                     $ips += $ip.IPAddress
-                }elseif($ip.IPAddress -and ( $ip.AddressFamily -eq 'IPv6' -or  $ip.AddressFamily -eq 23) -and ($ip.AddressState -eq 'Preferred' -or $ip.AddressState -eq '4') -and $ip.IPAddress -ne '::1'){
-                    if($ip.PrefixOrigin -eq 'WellKnown' -or $ip.PrefixOrigin -eq '2'){
+                } elseif ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv6' -or  $ip.AddressFamily -eq 23) -and 
+                         ($ip.AddressState -eq 'Preferred' -or $ip.AddressState -eq '4') -and $ip.IPAddress -ne '::1') {
+                    if ($ip.PrefixOrigin -eq 'WellKnown' -or $ip.PrefixOrigin -eq '2') {
                         $ipv6s += $ip.IPAddress.Replace('%'+$ip.InterfaceIndex,'')
-                    }else{
+                    } else {
                         $ipv6s += $ip.IPAddress
                     }
                 }
@@ -577,7 +579,7 @@ $factMeta = @(
 
             $ansibleFacts.ansible_all_ipv4_addresses = $ips
             $ansibleFacts.ansible_all_ipv6_addresses = $ipv6s
-            $ansibleFacts.ansible_ip_addresses = $ips,$ipv6s
+            $ansibleFacts.ansible_ip_addresses = $ips, $ipv6s
         }
     },
     @{
