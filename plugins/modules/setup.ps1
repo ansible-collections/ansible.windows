@@ -564,11 +564,11 @@ $factMeta = @(
             $ips = @()
             $ipv6s = @()
             Foreach ($ip in $NetIPAddress) {
-                if ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv4' -or $ip.AddressFamily -eq 2) -and 
+                if ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv4' -or $ip.AddressFamily -eq 2) -and
                    ($ip.PrefixOrigin -ne 'WellKnown' -and $ip.PrefixOrigin -ne 2)) {
                     $ips += $ip.IPAddress
                 }
-                elseif ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv6' -or $ip.AddressFamily -eq 23) -and 
+                elseif ($ip.IPAddress -and ($ip.AddressFamily -eq 'IPv6' -or $ip.AddressFamily -eq 23) -and
                          ($ip.AddressState -eq 'Preferred' -or $ip.AddressState -eq '4') -and $ip.IPAddress -ne '::1') {
                     if ($ip.PrefixOrigin -eq 'WellKnown' -or $ip.PrefixOrigin -eq '2') {
                         $ipv6s += $ip.IPAddress.Replace('%' + $ip.InterfaceIndex, '')
