@@ -12,7 +12,7 @@ version_added: 1.5.0
 short_description: Run PowerShell scripts
 description:
 - Runs a PowerShell script and outputs the data in a structured format.
-- Use M(ansible.windows.win_command) or M(ansible.windows.win_shell) to run a tranditional PowerShell process with
+- Use M(ansible.windows.win_command) or M(ansible.windows.win_shell) to run a traditional PowerShell process with
   stdout, stderr, and rc results.
 options:
   arguments:
