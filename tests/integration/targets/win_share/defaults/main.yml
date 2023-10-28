@@ -5,9 +5,10 @@ test_win_share_name: test share
 
 # Cluster Test Params
 # Note: Disabled by default, set test_win_share_cluster to true
-# and add cluster_path / cluster_name vars 
+# and add cluster_path / cluster_name vars (in your integration_config.yml
+# for example). The test instance must be a properly configured failover
+# cluster with at least one role and one cluster shared disk.
 test_win_share_cluster: false
 test_win_share_cluster_name: testcluster
 test_win_share_cluster_path: "{{ cluster_path }}"
 test_win_share_cluster_scope: "{{ cluster_name }}"
-
