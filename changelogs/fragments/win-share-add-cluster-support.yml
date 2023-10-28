@@ -1,0 +1,4 @@
+minor_changes:
+- >-
+  win_share - Added a new param called ``scope_name`` that allows file shares
+  to be scoped for Windows Server failover cluster roles.

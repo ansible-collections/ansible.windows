@@ -69,6 +69,7 @@ If ($state -eq "absent") {
 Else {
     $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true
     $description = Get-AnsibleParam -obj $params -name "description" -type "str" -default ""
+    $scope_name = Get-AnsibleParam -obj $params -name "scope_name" -type "str"
 
     $permissionList = Get-AnsibleParam -obj $params -name "list" -type "bool" -default $false
     $folderEnum = if ($permissionList) { "Unrestricted" } else { "AccessBased" }
@@ -144,6 +145,13 @@ Else {
         }
         $result.changed = $true
         $result.actions += "Set-SmbShare -Force -Name $name -EncryptData $encrypt"
+    }
+    if ($scope_name -and ($share.ScopeName -ne $scope_name)) {
+        if (-not $check_mode) {
+            Set-SmbShare -Force -Name $name -ScopeName $scope_name | Out-Null
+        }
+        $result.changed = $true
+        $result.actions += "Set-SmbShare -Force -Name $name -ScopeName $scope_name"
     }
 
     # clean permissions that imply others

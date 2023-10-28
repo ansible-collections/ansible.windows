@@ -64,6 +64,11 @@ options:
     type: str
     choices: [ BranchCache, Documents, Manual, None, Programs, Unknown ]
     default: Manual
+  scope_name:
+    description:
+      - Specifies the scope name of the share. For use with Windows Server failover cluster file server resources.
+      - When defined, I(path) must be located on a cluster shared volume/disk.
+    type: str
   encrypt:
     description: Sets whether to encrypt the traffic to the share or not.
     type: bool
@@ -77,6 +82,7 @@ author:
   - Hans-Joachim Kliemeck (@h0nIg)
   - David Baumann (@daBONDi)
   - Shachaf Goldstein (@Shachaf92)
+  - Joe Zollo (@zollo)
 '''
 
 EXAMPLES = r'''
@@ -97,6 +103,16 @@ EXAMPLES = r'''
     path: C:\shares\company
     list: yes
     full: Administrators,CEO
+    read: Global
+
+- name: Add failover cluster role share
+  ansible.windows.win_share:
+    name: backups
+    scope_name: FCMSSQL01
+    description: SQL Backups
+    path: E:\sqlbackup
+    list: yes
+    full: svc.mssql
     read: Global
 
 - name: Remove previously added share

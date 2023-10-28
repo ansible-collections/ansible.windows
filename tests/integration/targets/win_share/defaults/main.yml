@@ -1,2 +1,13 @@
+test_win_share: true
+test_win_share_description: description
 test_win_share_path: C:\ansible\win_share
 test_win_share_name: test share
+
+# Cluster Test Params
+# Note: Disabled by default, set test_win_share_cluster to true
+# and add cluster_path / cluster_name vars 
+test_win_share_cluster: false
+test_win_share_cluster_name: testcluster
+test_win_share_cluster_path: "{{ cluster_path }}"
+test_win_share_cluster_scope: "{{ cluster_name }}"
+
