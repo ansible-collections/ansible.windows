@@ -424,6 +424,8 @@ Function Format-Exception {
 
 Function Test-AnsiblePath {
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSCustomUseLiteralPath', '',
+        Justification = 'We want to support wildcard matching')]
     param (
         [Parameter(Mandatory = $true)]
         [String]

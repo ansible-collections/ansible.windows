@@ -6,6 +6,10 @@
 #Requires -Module Ansible.ModuleUtils.AddType
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSCustomUseLiteralPath', '',
+    Justification = 'We want to support wildcard matching')]
+param()
+
 $spec = @{
     options = @{
         # This is not meant to be publicly used, only for debugging how long it takes to capture a subset.

@@ -7,6 +7,10 @@
 #Requires -Module Ansible.ModuleUtils.ArgvParser
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidLongLines', '',
+    Justification = 'XML literal values exceed this line')]
+param()
+
 $spec = @{
     options = @{
         packages = @{
@@ -145,7 +149,7 @@ foreach ($info in $packages) {
         $module.FailJson("Failed to make package for $($info.filename): see stdout and stderr for more info")
     }
 
-    Remove-Item -Literalpath $tempDir -Force -Recurse
+    Remove-Item -LiteralPath $tempDir -Force -Recurse
 
     $signArguments = @($signtoolPath, 'sign', '/a', '/v', '/fd', 'SHA256', '/f', $certPath, '/p', $certPassword,
         $outPath)
