@@ -277,6 +277,15 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-scope_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-share-module-parameter-scope-name"><strong>scope_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-scope_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.2.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies the scope name of the share. For use with Windows Server failover cluster file server resources.</p>
+<p>When defined, <em>path</em> must be located on a cluster shared volume/disk.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-share-module-parameter-state"><strong>state</strong></p>
 <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -310,6 +319,16 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\shares\company</span>
 <span class="w">    </span><span class="nt">list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
 <span class="w">    </span><span class="nt">full</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Administrators,CEO</span>
+<span class="w">    </span><span class="nt">read</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Global</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add failover cluster role share</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_share</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backups</span>
+<span class="w">    </span><span class="nt">scope_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FCMSSQL01</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SQL Backups</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">E:\sqlbackup</span>
+<span class="w">    </span><span class="nt">list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">    </span><span class="nt">full</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">svc.mssql</span>
 <span class="w">    </span><span class="nt">read</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Global</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove previously added share</span>
@@ -346,6 +365,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <li><p>Hans-Joachim Kliemeck (&#64;h0nIg)</p></li>
 <li><p>David Baumann (&#64;daBONDi)</p></li>
 <li><p>Shachaf Goldstein (&#64;Shachaf92)</p></li>
+<li><p>Joe Zollo (&#64;zollo)</p></li>
 </ul>
 </section>
 <section id="collection-links">
