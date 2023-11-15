@@ -69,6 +69,7 @@ options:
       - Specifies the scope name of the share. For use with Windows Server failover cluster file server resources.
       - When defined, I(path) must be located on a cluster shared volume/disk.
     type: str
+    version_added: '2.2.0'
   encrypt:
     description: Sets whether to encrypt the traffic to the share or not.
     type: bool
