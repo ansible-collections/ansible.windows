@@ -1,503 +1,469 @@
 ---
-- name: create share check
+- name: Create share | Check Mode
   win_share:
-    name: "{{test_win_share_name}}"
-    path: "{{test_win_share_path}}"
-    state: present
   register: create_share_check
-  check_mode: yes
+  check_mode: true
 
-- name: check if share exists check
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{test_win_share_name}}' }
+- name: Check if share exists check
+  ansible.windows.win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{ _share_name }}' }
   register: create_share_actual_check
 
-- name: assert create share check
-  assert:
+- name: Assert Create share check
+  ansible.builtin.assert:
     that:
-    - create_share_check is changed
-    - create_share_actual_check.stdout_lines == []
+      - create_share_check is changed
+      - create_share_actual_check.stdout_lines == []
 
-- name: create root share
+- name: Run only for standard
+  when: test_win_share
+  module_defaults:
+    win_share: {}
+  block:
+    - name: Create root share
+      win_share:
+        name: "ROOT_TEST"
+        path: 'C:\'
+        state: present
+      register: create_share_root
+
+    - name: Check if root share exists
+      ansible.windows.win_shell: Get-SmbShare | Where-Object { $_.Name -eq  'ROOT_TEST' }
+      register: create_share_root_actual
+
+    - name: Assert create root share
+      ansible.builtin.assert:
+        that:
+          - create_share_root is changed
+          - create_share_root_actual.stdout_lines != []
+
+- name: Create share
   win_share:
-    name: "ROOT_TEST"
-    path: 'C:\'
-    state: present
-  register: create_share_root
-
-- name: check if root share exists
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq  'ROOT_TEST' }
-  register: create_share_root_actual
-
-- name: assert create root share
-  assert:
-    that:
-    - create_share_root is changed
-    - create_share_root_actual.stdout_lines != []
-
-- name: create share
-  win_share:
-    name: "{{test_win_share_name}}"
-    path: "{{test_win_share_path}}"
-    state: present
   register: create_share
 
-- name: check if share exists
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{test_win_share_name}}' }
+- name: Check if share exists
+  ansible.windows.win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{ _share_name }}' }
   register: create_share_actual
 
-- name: assert create share
-  assert:
+- name: Assert Create share
+  ansible.builtin.assert:
     that:
-    - create_share is changed
-    - create_share_actual.stdout_lines != []
+      - create_share is changed
+      - create_share_actual.stdout_lines != []
 
-- name: create share again
+- name: Create share again
   win_share:
-    name: "{{test_win_share_name}}"
-    path: "{{test_win_share_path}}"
-    state: present
   register: create_share_again
 
-- name: check if share exists again
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{test_win_share_name}}' }
+- name: Check if share exists again
+  ansible.windows.win_shell: Get-SmbShare | Where-Object { $_.Name -eq  '{{ _share_name }}' }
   register: create_share_actual_again
 
-- name: assert create share again
-  assert:
+- name: Assert Create share again
+  ansible.builtin.assert:
     that:
-    - create_share_again is not changed
-    - create_share_actual_again.stdout_lines == create_share_actual.stdout_lines
+      - create_share_again is not changed
+      - create_share_actual_again.stdout_lines == create_share_actual.stdout_lines
 
-- name: set caching mode to Programs check
+- name: Set caching mode to Programs | Check Mode
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     caching_mode: Programs
   register: caching_mode_programs_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual caching mode check
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').CachingMode"
+- name: Get actual caching mode check
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').CachingMode"
   register: caching_mode_programs_actual_check
 
-- name: assert caching mode to Programs check
-  assert:
+- name: Assert caching mode to Programs check
+  ansible.builtin.assert:
     that:
-    - caching_mode_programs_check is changed
-    - caching_mode_programs_actual_check.stdout == "Manual\r\n"
+      - caching_mode_programs_check is changed
+      - caching_mode_programs_actual_check.stdout == "Manual\r\n"
 
-- name: set caching mode to Programs
+- name: Set caching mode to Programs
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     caching_mode: Programs
   register: caching_mode_programs
 
-- name: get actual caching mode
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').CachingMode"
+- name: Get actual caching mode
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').CachingMode"
   register: caching_mode_programs_actual
 
-- name: assert caching mode to Programs
-  assert:
+- name: Assert caching mode to Programs
+  ansible.builtin.assert:
     that:
     - caching_mode_programs is changed
     - caching_mode_programs_actual.stdout == "Programs\r\n"
 
-- name: set caching mode to Programs again
+- name: Set caching mode to Programs again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     caching_mode: Programs
   register: caching_mode_programs_again
 
-- name: get actual caching mode again
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').CachingMode"
+- name: Get actual caching mode again
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').CachingMode"
   register: caching_mode_programs_actual_again
 
-- name: assert caching mode to Programs again
-  assert:
+- name: Assert caching mode to Programs again
+  ansible.builtin.assert:
     that:
-    - caching_mode_programs_again is not changed
-    - caching_mode_programs_actual_again.stdout == "Programs\r\n"
+      - caching_mode_programs_again is not changed
+      - caching_mode_programs_actual_again.stdout == "Programs\r\n"
 
-- name: set encryption on share check
+- name: Set encryption on share check
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    encrypt: True
+    encrypt: true
   register: encrypt_on_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual encrypt mode check
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').EncryptData"
+- name: Get actual encrypt mode check
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').EncryptData"
   register: encrypt_on_actual_check
 
-- name: assert set encryption on check
-  assert:
+- name: Assert set encryption on check
+  ansible.builtin.assert:
     that:
-    - encrypt_on_check is changed
-    - encrypt_on_actual_check.stdout == "False\r\n"
+      - encrypt_on_check is changed
+      - encrypt_on_actual_check.stdout == "False\r\n"
 
-- name: set encryption on share
+- name: Set encryption on share
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    encrypt: True
+    encrypt: true
   register: encrypt_on
 
-- name: get actual encrypt mode
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').EncryptData"
+- name: Get actual encrypt mode
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').EncryptData"
   register: encrypt_on_actual
 
-- name: assert set encryption on
-  assert:
+- name: Assert set encryption on
+  ansible.builtin.assert:
     that:
-    - encrypt_on is changed
-    - encrypt_on_actual.stdout == "True\r\n"
+      - encrypt_on is changed
+      - encrypt_on_actual.stdout == "True\r\n"
 
-- name: set encryption on share again
+- name: Set encryption on share again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    encrypt: True
+    encrypt: true
   register: encrypt_on_again
 
-- name: get actual encrypt mode again
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').EncryptData"
+- name: Get actual encrypt mode again
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').EncryptData"
   register: encrypt_on_actual
 
-- name: assert set encryption on again
-  assert:
+- name: Assert set encryption on again
+  ansible.builtin.assert:
     that:
-    - encrypt_on_again is not changed
-    - encrypt_on_actual.stdout == "True\r\n"
+      - encrypt_on_again is not changed
+      - encrypt_on_actual.stdout == "True\r\n"
 
-- name: set description check
+- name: Set Description | Check Mode
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    description: description
+    description: "{{ test_win_share_description }}"
   register: change_decription_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual description check
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').Description"
+- name: Get actual description check
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').Description"
   register: change_description_actual_check
 
-- name: assert change description check
-  assert:
+- name: Assert change description check
+  ansible.builtin.assert:
     that:
-    - change_decription_check is changed
-    - change_description_actual_check.stdout == "\r\n"
+      - change_decription_check is changed
+      - change_description_actual_check.stdout == "\r\n"
 
-- name: set description
+- name: Set Description
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    description: description
+    description: "{{ test_win_share_description }}"
   register: change_decription
 
-- name: get actual description
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').Description"
+- name: Get actual description
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').Description"
   register: change_description_actual
 
-- name: assert change description
-  assert:
+- name: Assert Change Description
+  ansible.builtin.assert:
     that:
-    - change_decription is changed
-    - change_description_actual.stdout == "description\r\n"
+      - change_decription is changed
+      - change_description_actual.stdout == "{{ test_win_share_description }}\r\n"
 
-- name: set description again
+- name: Set Description again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     description: description
   register: change_decription_again
 
-- name: get actual description again
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').Description"
+- name: Get Description again
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').Description"
   register: change_description_actual_again
 
-- name: assert change description again
-  assert:
+- name: Assert change description again
+  ansible.builtin.assert:
     that:
-    - change_decription_again is not changed
-    - change_description_actual_again.stdout == "description\r\n"
+      - change_decription_again is not changed
+      - change_description_actual_again.stdout == "description\r\n"
 
-- name: set allow list check
+- name: Set allow list check
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: True
+    list: true
   register: allow_list_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual allow listing check
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual allow listing check
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: allow_list_actual_check
 
-- name: assert allow list check
-  assert:
+- name: Assert allow list check
+  ansible.builtin.assert:
     that:
-    - allow_list_check is changed
-    - allow_list_actual_check.stdout == "AccessBased\r\n"
+      - allow_list_check is changed
+      - allow_list_actual_check.stdout == "AccessBased\r\n"
 
-- name: set allow list
+- name: Set allow list
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: True
+    list: true
   register: allow_list
 
-- name: get actual allow listing
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual allow listing
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: allow_list_actual
 
-- name: assert allow list
-  assert:
+- name: Assert allow list
+  ansible.builtin.assert:
     that:
-    - allow_list is changed
-    - allow_list_actual.stdout == "Unrestricted\r\n"
+      - allow_list is changed
+      - allow_list_actual.stdout == "Unrestricted\r\n"
 
-- name: set allow list again
+- name: Set allow list again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: True
+    list: true
   register: allow_list_again
 
-- name: get actual allow listing again
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual allow listing again
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: allow_list_actual_again
 
-- name: assert allow list check again
-  assert:
+- name: Assert allow list check again
+  ansible.builtin.assert:
     that:
-    - allow_list_again is not changed
-    - allow_list_actual_again.stdout == "Unrestricted\r\n"
+      - allow_list_again is not changed
+      - allow_list_actual_again.stdout == "Unrestricted\r\n"
 
-- name: set deny list check
+- name: Set deny list check
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: False
+    list: false
   register: deny_list_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual deny listing check
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual deny listing check
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: deny_list_actual_check
 
-- name: assert deny list check
-  assert:
+- name: Assert deny list check
+  ansible.builtin.assert:
     that:
-    - deny_list_check is changed
-    - deny_list_actual_check.stdout == "Unrestricted\r\n"
+      - deny_list_check is changed
+      - deny_list_actual_check.stdout == "Unrestricted\r\n"
 
-- name: set deny list
+- name: Set deny list
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: False
+    list: false
   register: deny_list
 
-- name: get actual deny listing
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual deny listing
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: deny_list_actual
 
-- name: assert deny list
-  assert:
+- name: Assert deny list
+  ansible.builtin.assert:
     that:
-    - deny_list is changed
-    - deny_list_actual.stdout == "AccessBased\r\n"
+      - deny_list is changed
+      - deny_list_actual.stdout == "AccessBased\r\n"
 
-- name: set deny list again
+- name: Set deny list again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
-    list: False
+    list: false
   register: deny_list_again
 
-- name: get actual deny listing again
-  win_command: powershell.exe "(Get-SmbShare -Name '{{test_win_share_name}}').FolderEnumerationMode"
+- name: Get actual deny listing again
+  ansible.windows.win_command: |-
+    powershell.exe "(Get-SmbShare -Name '{{ _share_name }}').FolderEnumerationMode"
   register: deny_list_actual_again
 
-- name: assert deny list again
-  assert:
+- name: Assert deny list again
+  ansible.builtin.assert:
     that:
-    - deny_list_again is not changed
-    - deny_list_actual_again.stdout == "AccessBased\r\n"
+      - deny_list_again is not changed
+      - deny_list_actual_again.stdout == "AccessBased\r\n"
 
-- name: set ACLs on share check
+- name: Set ACLs on share check
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     full: Administrators
     change: Users
     read: Guests
     deny: Remote Desktop Users
   register: set_acl_check
-  check_mode: yes
+  check_mode: true
 
-- name: get actual share ACLs check
-  win_shell: foreach ($acl in Get-SmbShareAccess -Name '{{test_win_share_name}}') { Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)" }
+- name: Get actual share ACLs check
+  ansible.windows.win_shell: >-
+    foreach ($acl in Get-SmbShareAccess -Name '{{ _share_name }}') {
+      Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)"
+    }
   register: set_acl_actual_check
 
-- name: assert set ACLs on share check
-  assert:
+- name: Assert set ACLs on share check
+  ansible.builtin.assert:
     that:
-    - set_acl_check is changed
-    - set_acl_actual_check.stdout == "Full|Deny|Everyone\n"
+      - set_acl_check is changed
+      - set_acl_actual_check.stdout == "Full|Deny|Everyone\n"
 
-- name: set ACLs on share
+- name: Set ACLs on share
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     full: Administrators
     change: Users
     read: Guests
     deny: Remote Desktop Users
   register: set_acl
 
-- name: get actual share ACLs
-  win_shell: foreach ($acl in Get-SmbShareAccess -Name '{{test_win_share_name}}') { Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)" }
+- name: Get actual share ACLs
+  ansible.windows.win_shell: >-
+    foreach ($acl in Get-SmbShareAccess -Name '{{ _share_name }}') {
+      Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)"
+    }
   register: set_acl_actual
 
-- name: assert set ACLs on share
-  assert:
+- name: Assert set ACLs on share
+  ansible.builtin.assert:
     that:
-    - set_acl is changed
-    - set_acl_actual.stdout_lines|length == 4
-    - set_acl_actual.stdout_lines[0] == 'Full|Deny|BUILTIN\\Remote Desktop Users'
-    - set_acl_actual.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
-    - set_acl_actual.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
-    - set_acl_actual.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
+      - set_acl is changed
+      - set_acl_actual.stdout_lines|length == 4
+      - set_acl_actual.stdout_lines[0] == 'Full|Deny|BUILTIN\\Remote Desktop Users'
+      - set_acl_actual.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
+      - set_acl_actual.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
+      - set_acl_actual.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
 
-- name: set ACLs on share again
+- name: Set ACLs on share again
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     full: Administrators
     change: Users
     read: Guests
     deny: Remote Desktop Users
   register: set_acl_again
 
-- name: get actual share ACLs again
-  win_shell: foreach ($acl in Get-SmbShareAccess -Name '{{test_win_share_name}}') { Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)" }
+- name: Get actual share ACLs again
+  ansible.windows.win_shell: |-
+    foreach ($acl in Get-SmbShareAccess -Name '{{ _share_name }}') {
+      Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)"
+    }
   register: set_acl_actual_again
 
-- name: assert set ACLs on share again
-  assert:
+- name: Assert set ACLs on share again
+  ansible.builtin.assert:
     that:
-    - set_acl_again is not changed
-    - set_acl_actual_again.stdout_lines|length == 4
-    - set_acl_actual_again.stdout_lines[0] == 'Full|Deny|BUILTIN\\Remote Desktop Users'
-    - set_acl_actual_again.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
-    - set_acl_actual_again.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
-    - set_acl_actual_again.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
+      - set_acl_again is not changed
+      - set_acl_actual_again.stdout_lines|length == 4
+      - set_acl_actual_again.stdout_lines[0] == 'Full|Deny|BUILTIN\\Remote Desktop Users'
+      - set_acl_actual_again.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
+      - set_acl_actual_again.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
+      - set_acl_actual_again.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
 
 - name: Append ACLs on share
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     change: Remote Desktop Users
     rule_action: add
   register: append_acl
 
-- name: get actual share ACLs
-  win_shell: foreach ($acl in Get-SmbShareAccess -Name '{{test_win_share_name}}') { Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)" }
+- name: Get actual share ACLs
+  ansible.windows.win_shell: |-
+    foreach ($acl in Get-SmbShareAccess -Name '{{ _share_name }}') {
+      Write-Host "$($acl.AccessRight)|$($acl.AccessControlType)|$($acl.AccountName)"
+    }
   register: append_acl_actual
 
-- name: assert Append ACLs on share
-  assert:
+- name: Assert Append ACLs on share
+  ansible.builtin.assert:
     that:
-    - append_acl is changed
-    - append_acl_actual.stdout_lines|length == 5
-    - append_acl_actual.stdout_lines[0] == 'Full|Deny|BUILTIN\Remote Desktop Users'
-    - append_acl_actual.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
-    - append_acl_actual.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
-    - append_acl_actual.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
-    - append_acl_actual.stdout_lines[4] == 'Change|Allow|BUILTIN\\Remote Desktop Users'
+      - append_acl is changed
+      - append_acl_actual.stdout_lines|length == 5
+      - append_acl_actual.stdout_lines[0] == 'Full|Deny|BUILTIN\Remote Desktop Users'
+      - append_acl_actual.stdout_lines[1] == 'Read|Allow|BUILTIN\\Guests'
+      - append_acl_actual.stdout_lines[2] == 'Change|Allow|BUILTIN\\Users'
+      - append_acl_actual.stdout_lines[3] == 'Full|Allow|BUILTIN\\Administrators'
+      - append_acl_actual.stdout_lines[4] == 'Change|Allow|BUILTIN\\Remote Desktop Users'
 
 - name: Append ACLs on share (idempotent)
   win_share:
-    name: "{{test_win_share_name}}"
-    state: present
-    path: "{{test_win_share_path}}"
     change: Remote Desktop Users
     rule_action: add
   register: append_acl_again
 
-- name: assert Append ACLs on share (idempotent)
-  assert:
+- name: Assert Append ACLs on share (idempotent)
+  ansible.builtin.assert:
     that:
-    - not append_acl_again is changed
+      - not append_acl_again is changed
 
-- name: remove share check
+- name: Remove share check
   win_share:
-    name: "{{test_win_share_name}}"
+    name: "{{ _share_name }}"
     state: absent
   register: remove_share_check
-  check_mode: yes
+  check_mode: true
 
-- name: check if share is removed check
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq '{{test_win_share_name}}' }
+- name: Check if share is removed check
+  ansible.windows.win_shell: |-
+    Get-SmbShare | Where-Object { $_.Name -eq '{{ _share_name }}' }
   register: remove_share_actual_check
 
-- name: assert remove share check
-  assert:
+- name: Assert remove share check
+  ansible.builtin.assert:
     that:
-    - remove_share_check is changed
-    - remove_share_actual_check.stdout_lines != []
+      - remove_share_check is changed
+      - remove_share_actual_check.stdout_lines != []
 
-- name: remove share
+- name: Remove share
   win_share:
-    name: "{{test_win_share_name}}"
+    name: "{{ _share_name }}"
     state: absent
   register: remove_share
 
-- name: check if share is removed
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq '{{test_win_share_name}}' }
+- name: Check if share is removed
+  ansible.windows.win_shell: |-
+    Get-SmbShare | Where-Object { $_.Name -eq '{{ _share_name }}' }
   register: remove_share_actual
 
-- name: assert remove share
-  assert:
+- name: Assert remove share
+  ansible.builtin.assert:
     that:
-    - remove_share is changed
-    - remove_share_actual.stdout_lines == []
+      - remove_share is changed
+      - remove_share_actual.stdout_lines == []
 
-- name: remove share again
+- name: Remove share again
   win_share:
-    name: "{{test_win_share_name}}"
+    name: "{{ _share_name }}"
     state: absent
   register: remove_share_again
 
-- name: check if share is removed again
-  win_shell: Get-SmbShare | Where-Object { $_.Name -eq '{{test_win_share_name}}' }
+- name: Check if share is removed again
+  ansible.windows.win_shell: |-
+    Get-SmbShare | Where-Object { $_.Name -eq '{{ _share_name }}' }
   register: remove_share_actual_again
 
-- name: assert remove share again
-  assert:
+- name: Assert remove share again
+  ansible.builtin.assert:
     that:
-    - remove_share_again is not changed
-    - remove_share_actual_again.stdout_lines == []
+      - remove_share_again is not changed
+      - remove_share_actual_again.stdout_lines == []
