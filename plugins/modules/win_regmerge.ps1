@@ -7,6 +7,10 @@
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 #Requires -Module Ansible.ModuleUtils.Legacy
 
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSCustomUseLiteralPath', '',
+    Justification = 'This module has supported wildcard comparison since it was created')]
+param()
+
 Function Convert-RegistryPath {
     Param (
         [parameter(Mandatory = $True)]
@@ -34,7 +38,7 @@ $do_comparison = $False
 
 If ($compare_to) {
     $compare_to_key = $params.compare_to.ToString()
-    If (Test-Path $compare_to_key -pathType container ) {
+    If (Test-Path $compare_to_key -PathType container ) {
         $do_comparison = $True
     }
     Else {
