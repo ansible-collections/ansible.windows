@@ -6,6 +6,10 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.SID
 
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSCustomUseLiteralPath', '',
+    Justification = 'LiteralPath with Get-Acl is problematic')]
+param()
+
 $params = Parse-Args -arguments $args -supports_check_mode $true
 
 # these are your module parameters
