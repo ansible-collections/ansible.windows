@@ -186,7 +186,11 @@ Function Get-UserLocaleName {
     return $user_locale
 }
 
-Function Get-ValidGeoId($cultures) {
+Function Get-ValidGeoId {
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '',
+        Justification = 'We dont care about the error here')]
+    param($cultures)
+
     $geo_ids = @()
     foreach ($culture in $cultures) {
         try {
