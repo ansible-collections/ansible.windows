@@ -1,2 +1,0 @@
-bugfixes:
-- Process.cs - Fix up the ``ProcessCreationFlags.CreateProtectedProcess`` typo in the enum name

@@ -5,6 +5,29 @@ Ansible Windows Release Notes
 .. contents:: Topics
 
 
+v2.2.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.2.0
+
+Minor Changes
+-------------
+
+- Set minimum supported Ansible version to 2.14 to align with the versions still supported by Ansible.
+- win_share - Added a new param called ``scope_name`` that allows file shares to be scoped for Windows Server failover cluster roles.
+
+Bugfixes
+--------
+
+- Process.cs - Fix up the ``ProcessCreationFlags.CreateProtectedProcess`` typo in the enum name
+- setup - Fix up typo ``collection -> collect`` when a timeout occurred during a fact subset
+- win_acl - Fix broken path in case of volume junction
+- win_service_info - Warn and not fail if ERROR_FILE_NOT_FOUND when trying to query a service - https://github.com/ansible-collections/ansible.windows/issues/556
+- win_updates - Fix up typo for Download progress event messages - https://github.com/ansible-collections/ansible.windows/issues/554
+
 v2.1.0
 ======
 
