@@ -1,2 +1,0 @@
-bugfixes:
-- win_updates - Fix up typo for Download progress event messages - https://github.com/ansible-collections/ansible.windows/issues/554
