@@ -100,7 +100,12 @@ if ($null -ne $disk_number -and $null -ne $partition_number) {
 # Check if drive_letter is either auto-assigned or a character from A-Z
 elseif ($drive_letter -and $drive_letter -ne "auto" -and -not ($disk_number -and $partition_number)) {
     if ($drive_letter -match "^[a-zA-Z]$") {
-        $ansible_partition = Get-Partition -DriveLetter $drive_letter -ErrorAction SilentlyContinue
+        # This step need to be a bit more complex so that we can support Windows failover cluster disks.
+        # With Windows failover cluster disks every node sees every disk participating in that cluster.
+        # For example a clustered disk in a three node cluster will show up three times.
+        # Fortunatly we can differentiate local from remote disk as only local disk will ever have a disk number.
+        # So with that we just ignore all disk without a number which will result in a local disk being picked.
+        $ansible_partition = Get-Partition -DriveLetter $drive_letter -ErrorAction SilentlyContinue | Where-Object { $null -ne $_.DiskNumber }
     }
     else {
         $module.FailJson("Incorrect usage of drive_letter: specify a drive letter from A-Z or use 'auto' to automatically assign a drive letter")
