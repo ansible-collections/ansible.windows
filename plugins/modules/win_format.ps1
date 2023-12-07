@@ -74,7 +74,13 @@ function Get-AnsibleVolume {
 
     if ($null -ne $DriveLetter) {
         try {
-            $volume = Get-Volume -DriveLetter $DriveLetter
+            # This needs to be a two step process so that we can support Windows failover cluster disks.
+            # With Windows failover cluster disks every node sees every disk participating in that cluster.
+            # For example a clustered disk in a three node cluster will show up three times.
+            # Fortunatly we can differentiate local from remote disk as only local disk will ever have a disk number.
+            # So with that we just ignore all disk without a number which will result in a local disk being picked.
+            $partition = Get-Partition -DriveLetter $DriveLetter | Where-Object { $null -ne $_.DiskNumber }
+            $volume = Get-Volume -Partition $partition
         }
         catch {
             $module.FailJson("There was an error retrieving the volume using drive_letter $($DriveLetter): $($_.Exception.Message)", $_)
