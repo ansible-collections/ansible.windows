@@ -206,6 +206,9 @@ Function Get-AnsibleWindowsWebRequest {
     if ([System.Net.SecurityProtocolType].GetMember("Tls12").Count -gt 0) {
         $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls12
     }
+    if ([System.Net.SecurityProtocolType].GetMember("Tls13").Count -gt 0) {
+        $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls13
+    }
     [System.Net.ServicePointManager]::SecurityProtocol = $security_protocols
 
     $web_request = [System.Net.WebRequest]::Create($Uri)
