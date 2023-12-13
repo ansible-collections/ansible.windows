@@ -1,0 +1,203 @@
+# test code for the assemble module
+# (c) 2014, James Cammarata <jcammarata@ansible.com>
+
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+
+- name: copy the files to a new directory
+  win_copy: src="./" dest="{{remote_tmp_dir}}\\src"
+  register: result
+
+- name: create unicode file for test
+  win_shell: echo "π" > {{remote_tmp_dir}}\\src\\ßΩ.txt
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - "result.changed == True"
+
+- name: test assemble with all fragments
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled1"
+  register: result
+
+- name: assert the fragments were assembled
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '3d7adf8f3a3c1506fbf0b6328d775191565e9e63'"
+
+- name: test assemble with all fragments
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled1"
+  register: result
+
+- name: assert that the same assemble made no changes
+  assert:
+    that:
+    - "result.changed == False"
+    - "result.checksum == '3d7adf8f3a3c1506fbf0b6328d775191565e9e63'"
+
+- name: test assemble with all fragments and backup=True
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled2" backup=yes
+  register: result
+
+- name: assert the fragments were assembled with backup=True
+  assert:
+    that:
+    - "result.backup_file is defined"
+    - "result.changed == True"
+    - "result.checksum == '3d7adf8f3a3c1506fbf0b6328d775191565e9e63'"
+
+- name: test assemble with fragments matching a regex
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled3" regexp="^fragment[1-3]$"
+  register: result
+
+- name: assert the fragments were assembled with a regex
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'c250a155a37473d660aab69feb45b803d4c0bf1f'"
+
+- name: test assemble with a delimiter
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled4" delimiter="#--- delimiter ---#"
+  register: result
+
+- name: assert the fragments were assembled with a delimiter
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'e524780178d7dac08368c348bb90991922aa9d3d'"
+
+- name: test assemble with a header
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled5" header="#--- header ---#"
+  register: result
+
+- name: assert the fragments were assembled with a header
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '26b255c8ceea2b5c91ab9840b51d064240eb881f'"
+
+- name: test assemble with a footer
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled6" footer="#--- footer ---#"
+  register: result
+
+- name: assert the fragments were assembled with a footer
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'ec62ba81cd4b0b09a7a5fa50aae9fbf9e6d3a2f3'"
+
+- name: test assemble with escaped delimiter
+  win_assemble: src="{{remote_tmp_dir}}\\src" dest="{{remote_tmp_dir}}\\assembled7" delimiter="#--- delimiter --#\\n#--- newline ---#"
+  register: result
+
+- name: assert the fragments were assembled with a decoded delimiter
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'f9792ad5cd4680262cfbe42e08484235d4a3b255'"
+
+- name: test assemble without remote
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled8" remote_src=no
+  register: result
+
+- name: assert the fragments were assembled without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '1948b7247e9eb682f1f440d88fc400c579ea622c'"
+
+- name: test assemble without remote
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled8" remote_src=no
+  register: result
+
+- name: assert the same assemble made no changes without remote
+  assert:
+    that:
+    - "result.changed == False"
+    - "result.checksum == '1948b7247e9eb682f1f440d88fc400c579ea622c'"
+
+- name: test assemble with remote_src=False and backup=True
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled8" remote_src=no backup=yes delimiter="#"
+  register: result
+
+- name: assert the fragments were assembled with backup without remote
+  assert:
+    that:
+    - "result.backup_file is defined"
+    - "result.changed == True"
+    - "result.checksum == 'd1425ee0c81d5caf01ad346e51e9fe03aac5b891'"
+
+- name: test assemble with remote_src=False and decrypt=True
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled9" remote_src=no decrypt=yes
+  register: result
+
+- name: assert the fragments were assembled without remote and decrypt=True
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '1948b7247e9eb682f1f440d88fc400c579ea622c'"
+
+- name: test assemble with remote_src=False and a delimiter
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled10" remote_src=no delimiter="#--- delimiter ---#"
+  register: result
+
+- name: assert the fragments were assembled without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'a17aa14bafa9bae1bba0ae9364c8d6230486a558'"
+
+- name: test assemble with remote_src=False and a delimiter and decrypt=True
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled11" remote_src=no delimiter="#--- delimiter ---#" decrypt=yes
+  register: result
+
+- name: assert the fragments were assembled without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == 'a17aa14bafa9bae1bba0ae9364c8d6230486a558'"
+
+- name: test assemble with a header without remote
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled12" remote_src="no" header="#--- header ---#"
+  register: result
+
+- name: assert the fragments were assembled with a header without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '61b1b680ae21beec79c12236ac9908713e20b18b'"
+
+- name: test assemble with a footer without remote
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled13" remote_src="no" footer="#--- footer ---#"
+  register: result
+
+- name: assert the fragments were assembled with a footer without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '1cab2b9552a582051af829d9d0487be9e775856d'"
+
+- name: test assemble with escaped delimiter without remote
+  win_assemble: src="./" dest="{{remote_tmp_dir}}\\assembled14" remote_src="no" delimiter="#--- delimiter --#\\n#--- newline ---#"
+  register: result
+
+- name: assert the fragments were assembled with a decoded delimiter without remote
+  assert:
+    that:
+    - "result.changed == True"
+    - "result.checksum == '8defca0dce177fa00b4c70932d96221503447a00'"
+
