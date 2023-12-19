@@ -199,7 +199,7 @@ Function Get-AnsibleWindowsWebRequest {
     }
     
     # Enable TLS1.1/TLS1.2 if they're available but disabled (eg. .NET 4.5)
-    $NetFrameworkVersion = (Get-ItemProperty -LiteralPath "HKLM:SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full").Release
+		$NetFrameworkVersion = (Get-ItemProperty -LiteralPath "HKLM:SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full").Release
     if ($NetFrameworkVersion -lt "528449") {
         $security_protocols = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::SystemDefault
         if ([System.Net.SecurityProtocolType].GetMember("Tls11").Count -gt 0) {
@@ -210,7 +210,7 @@ Function Get-AnsibleWindowsWebRequest {
         }
         [System.Net.ServicePointManager]::SecurityProtocol = $security_protocols
     }
-    
+		
     $web_request = [System.Net.WebRequest]::Create($Uri)
     if ($UrlMethod) {
         $web_request.Method = $UrlMethod
