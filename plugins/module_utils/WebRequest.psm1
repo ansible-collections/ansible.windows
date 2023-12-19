@@ -197,20 +197,20 @@ Function Get-AnsibleWindowsWebRequest {
     if (-not $ValidateCerts) {
         [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
     }
-
+    
     # Enable TLS1.1/TLS1.2 if they're available but disabled (eg. .NET 4.5)
-    $security_protocols = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::SystemDefault
-    if ([System.Net.SecurityProtocolType].GetMember("Tls11").Count -gt 0) {
-        $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls11
+    $NetFrameworkVersion = (Get-ItemProperty "HKLM:SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full").Release
+    if($NetFrameworkVersion -lt "528449"){
+        $security_protocols = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::SystemDefault
+        if ([System.Net.SecurityProtocolType].GetMember("Tls11").Count -gt 0) {
+            $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls11
+        }
+        if ([System.Net.SecurityProtocolType].GetMember("Tls12").Count -gt 0) {
+            $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls12
+        }
+    [System.Net.ServicePointManager]::SecurityProtocol = $security_protocols  
     }
-    if ([System.Net.SecurityProtocolType].GetMember("Tls12").Count -gt 0) {
-        $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls12
-    }
-    if ([System.Net.SecurityProtocolType].GetMember("Tls13").Count -gt 0) {
-        $security_protocols = $security_protocols -bor [System.Net.SecurityProtocolType]::Tls13
-    }
-    [System.Net.ServicePointManager]::SecurityProtocol = $security_protocols
-
+    
     $web_request = [System.Net.WebRequest]::Create($Uri)
     if ($UrlMethod) {
         $web_request.Method = $UrlMethod
