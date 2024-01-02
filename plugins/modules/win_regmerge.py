@@ -21,8 +21,12 @@ options:
     description:
       - The full path including file name to the registry file on the remote machine to be merged
     type: path
-    required: yes
-  compare_key:
+  content:
+    description:
+      - When used instead of O(path), merges the value specified into the Windows registry. It must not include the Byte Order Mark.
+    type: str
+    version_added: 2.2.0
+  compare_to:
     description:
       - The parent key to use when comparing the contents of the registry to the contents of the file.  Needs to be in HKLM or HKCU part of registry.
         Use a PS-Drive style path for example HKLM:\SOFTWARE not HKEY_LOCAL_MACHINE\SOFTWARE
@@ -52,6 +56,23 @@ EXAMPLES = r'''
 - name: Compare and merge registry file
   community.windows.win_regmerge:
     path: C:\autodeploy\myCompany-settings.reg
+    compare_to: HKLM:\SOFTWARE\myCompany
+
+- name: Merge in a registry file specified as content without comparing to current registry
+  community.windows.win_regmerge:
+    content: |
+      Windows Registry Editor Version 5.00
+
+      [HKEY_LOCAL_MACHINE\SOFTWARE\myCompany]
+      "ExampleKey"=dword:00000001
+
+- name: Compare and merge registry file specified as content
+  community.windows.win_regmerge:
+    content: |
+      Windows Registry Editor Version 5.00
+
+      [HKEY_LOCAL_MACHINE\SOFTWARE\myCompany]
+      "ExampleKey"=dword:00000001
     compare_to: HKLM:\SOFTWARE\myCompany
 '''
 
