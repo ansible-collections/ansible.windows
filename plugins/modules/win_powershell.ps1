@@ -35,7 +35,6 @@ $module.Result.debug = @()
 $module.Result.information = @()
 
 $stdPinvoke = @'
-using Microsoft.Win32.SafeHandles;
 using System;
 using System.Runtime.InteropServices;
 
