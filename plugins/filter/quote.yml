@@ -4,34 +4,34 @@
 DOCUMENTATION:
   name: quote
   author:
-  - Jordan Borean (@jborean93)
+    - Jordan Borean (@jborean93)
   short_description: Quotes argument(s) for various Windows shells
   seealso:
-  - module: ansible.windows.win_command
-  - module: ansible.windows.win_shell
+    - module: ansible.windows.win_command
+    - module: ansible.windows.win_shell
   description:
-  - Quotes argument(s) for the various Windows command line shells.
-  - Defaults to escaping arguments based on the Win32 C argv parsing rules that M(ansible.windows.win_command) uses.
-  - Using I(shell='cmd') or I(shell='powershell') can be set to escape arguments for those respective shells.
-  - Each value is escaped in a way to ensure the process gets the literal argument passed in and meta chars escaped.
+    - Quotes argument(s) for the various Windows command line shells.
+    - Defaults to escaping arguments based on the Win32 C argv parsing rules that M(ansible.windows.win_command) uses.
+    - Using I(shell='cmd') or I(shell='powershell') can be set to escape arguments for those respective shells.
+    - Each value is escaped in a way to ensure the process gets the literal argument passed in and meta chars escaped.
   positional: _input
   options:
     _input:
       description:
-      - The string, list, or dict of values to quote.
-      - A string or list of strings will be quoted.
-      - When using a dict as the input, the final form will be in C(KEY="value") to match the MSI parameter format.
+        - The string, list, or dict of values to quote.
+        - A string or list of strings will be quoted.
+        - When using a dict as the input, the final form will be in C(KEY="value") to match the MSI parameter format.
       type: raw
       required: true
     shell:
       description:
-      - The shell to quote the arguments for.
-      - By default no shell is used and the arguments are quoted with the Win32 C quoting rules.
+        - The shell to quote the arguments for.
+        - By default no shell is used and the arguments are quoted with the Win32 C quoting rules.
       type: string
       choices:
-      - None
-      - cmd
-      - powershell
+        - None
+        - cmd
+        - powershell
       default: None
 
 EXAMPLES: |
@@ -47,5 +47,5 @@ EXAMPLES: |
 RETURN:
   _value:
     description:
-    - The quoted input value(s) as a single space delimited string.
+      - The quoted input value(s) as a single space delimited string.
     type: string

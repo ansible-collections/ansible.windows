@@ -5,23 +5,23 @@ DOCUMENTATION:
   module: slurp
   short_description: Slurps a file from remote nodes
   description:
-  - This module works like M(ansible.builtin.fetch). It is used for fetching a base64-
-    encoded blob containing the data in a remote file.
+    - This module works like M(ansible.builtin.fetch). It is used for fetching a base64-
+      encoded blob containing the data in a remote file.
   options:
     src:
       description:
-      - The file on the remote system to fetch. This I(must) be a file, not a directory.
+        - The file on the remote system to fetch. This I(must) be a file, not a directory.
       type: path
       required: true
-      aliases: [ path ]
+      aliases: [path]
   notes:
-  - This module returns an 'in memory' base64 encoded version of the file, take
-    into account that this will require at least twice the RAM as the original file size.
+    - This module returns an 'in memory' base64 encoded version of the file, take
+      into account that this will require at least twice the RAM as the original file size.
   seealso:
-  - module: ansible.builtin.fetch
-  - module: ansible.builtin.slurp
+    - module: ansible.builtin.fetch
+    - module: ansible.builtin.slurp
   author:
-  - Ansible Core Team
+    - Ansible Core Team
 
 EXAMPLES: |
   - name: Retrieve remote ini file on a Windows host
@@ -35,17 +35,17 @@ EXAMPLES: |
 
 RETURN:
   content:
-      description: Encoded file content
-      returned: success
-      type: str
-      sample: "MjE3OQo="
+    description: Encoded file content
+    returned: success
+    type: str
+    sample: "MjE3OQo="
   encoding:
-      description: Type of encoding used for file
-      returned: success
-      type: str
-      sample: "base64"
+    description: Type of encoding used for file
+    returned: success
+    type: str
+    sample: "base64"
   source:
-      description: Actual path of file slurped
-      returned: success
-      type: str
-      sample: C:\Program Files\Program\program.ini
+    description: Actual path of file slurped
+    returned: success
+    type: str
+    sample: C:\Program Files\Program\program.ini

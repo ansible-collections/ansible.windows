@@ -2,14 +2,14 @@ name: Collection Docs
 concurrency:
   group: docs-push-${{ github.sha }}
   cancel-in-progress: true
-on:
+"on":
   push:
     branches:
       - main
     tags:
-      - '*'
+      - "*"
   schedule:
-    - cron: '0 13 * * *'
+    - cron: "0 13 * * *"
 
 jobs:
   build-docs:
