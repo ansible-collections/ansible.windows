@@ -39,15 +39,35 @@
   - '{{root_thumbprint}}'
 
 # these files are created on the fly so we don't store binary in the git repo
+- name: check if we can use default AES encryption
+  win_powershell:
+    script: |
+      $osVersion = [Version](Get-Item -LiteralPath "$env:SystemRoot\System32\kernel32.dll").VersionInfo.ProductVersion
+      $osVersion -ge [Version]"10.0.17763"
+  changed_when: false
+  register: aes256_support
+
 - name: create PKCS12 without password
-  command: 'openssl pkcs12 -export -out subj-cert-without-pass.pfx -inkey subj-key.pem -in subj-cert.pem -passout pass:'
+  command: >-
+    openssl pkcs12 -export
+    -out subj-cert-without-pass.pfx
+    -inkey subj-key.pem
+    -in subj-cert.pem
+    -passout pass:
+    {{ '' if aes256_support.output[0] else '-certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg SHA1' }}
   args:
     chdir: '{{role_path}}/files'
   delegate_to: localhost
   run_once: yes
 
 - name: create PKCS12 with password
-  command: 'openssl pkcs12 -export -out subj-cert-with-pass.pfx -inkey subj-key.pem -in subj-cert.pem -passout pass:{{key_password}}'
+  command: >-
+    openssl pkcs12 -export
+    -out subj-cert-with-pass.pfx
+    -inkey subj-key.pem
+    -in subj-cert.pem
+    -passout pass:{{key_password}}
+    {{ '' if aes256_support.output[0] else '-certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg SHA1' }}
   args:
     chdir: '{{role_path}}/files'
   delegate_to: localhost
