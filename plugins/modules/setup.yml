@@ -5,51 +5,51 @@ DOCUMENTATION:
   module: setup
   short_description: Gathers facts about remote hosts
   seealso:
-  - module: ansible.builtin.setup
+    - module: ansible.builtin.setup
   options:
     gather_subset:
       description:
-      - If supplied, restrict the additional facts collected to the given subset.
-      - Can specify a list of values to specify a larger subset.
-      - Values can also be used with an initial C(!) to specify that that specific subset should not be collected.
-      - To avoid collecting even the min subset, specify C(!all,!min).
-      - To collect only specific facts, use C(!all,!min), and specify the particular fact subsets.
+        - If supplied, restrict the additional facts collected to the given subset.
+        - Can specify a list of values to specify a larger subset.
+        - Values can also be used with an initial C(!) to specify that that specific subset should not be collected.
+        - To avoid collecting even the min subset, specify C(!all,!min).
+        - To collect only specific facts, use C(!all,!min), and specify the particular fact subsets.
       type: list
       elements: str
       default: all
     gather_timeout:
       description:
-      - Set the default timeout in seconds for individual fact gathering.
+        - Set the default timeout in seconds for individual fact gathering.
       type: int
       default: 10
     fact_path:
       description:
-      - Path used for local ansible facts (C(*.ps1) or C(*.json)) - files in this dir
-        will be run (if a ps1) or read (if a json) and their results be added to the return facts.
-      - The returned fact will be named after the local file (without the extension suffix), e.g. C(ansible_my_fact).
+        - Path used for local ansible facts (C(*.ps1) or C(*.json)) - files in this dir
+          will be run (if a ps1) or read (if a json) and their results be added to the return facts.
+        - The returned fact will be named after the local file (without the extension suffix), e.g. C(ansible_my_fact).
       type: path
     _measure_subset:
       description:
-      - For internal use
+        - For internal use
       type: bool
-      default: False
+      default: false
   description:
-  - This module is automatically called by playbooks to gather useful
-    variables about remote hosts that can be used in playbooks. It can also be
-    executed directly by C(/usr/bin/ansible) to check what variables are
-    available to a host. Ansible provides many I(facts) about the system,
-    automatically.
+    - This module is automatically called by playbooks to gather useful
+      variables about remote hosts that can be used in playbooks. It can also be
+      executed directly by C(/usr/bin/ansible) to check what variables are
+      available to a host. Ansible provides many I(facts) about the system,
+      automatically.
   notes:
-  - More ansible facts will be added with successive releases. If I(facter) is
-    installed, variables from these programs will also be snapshotted
-    into the JSON file for usage in templating. These variables are prefixed
-    with C(facter_) so it's easy to tell their source. All variables are
-    bubbled up to the caller.
-  - Some facts may be unavailable if running under a limited account.
-  - For more information about delegated facts,
-    please check U(https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#delegating-facts).
+    - More ansible facts will be added with successive releases. If I(facter) is
+      installed, variables from these programs will also be snapshotted
+      into the JSON file for usage in templating. These variables are prefixed
+      with C(facter_) so it's easy to tell their source. All variables are
+      bubbled up to the caller.
+    - Some facts may be unavailable if running under a limited account.
+    - For more information about delegated facts,
+      please check U(https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#delegating-facts).
   author:
-  - Ansible Core Team
+    - Ansible Core Team
 
 EXAMPLES: |
   - name: run the setup facts

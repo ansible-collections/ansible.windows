@@ -2,7 +2,7 @@ name: Collection Docs
 concurrency:
   group: docs-pr-${{ github.head_ref }}
   cancel-in-progress: true
-on:
+"on":
   pull_request_target:
     types: [opened, synchronize, reopened, closed]
 
@@ -44,7 +44,7 @@ jobs:
       - name: PR comment
         uses: ansible-community/github-docs-build/actions/ansible-docs-build-comment@main
         with:
-          body-includes: '## Docs Build'
+          body-includes: "## Docs Build"
           reactions: heart
           action: ${{ needs.build-docs.outputs.changed != 'true' && 'remove' || '' }}
           on-closed-action: remove

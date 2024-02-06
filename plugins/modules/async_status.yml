@@ -4,25 +4,25 @@
 DOCUMENTATION:
   module: async_status
   short_description: Obtain status of asynchronous task
-  seealso: 
-  - module: ansible.builtin.async_status
+  seealso:
+    - module: ansible.builtin.async_status
   description:
-  - This module gets the status of an asynchronous task.
+    - This module gets the status of an asynchronous task.
   options:
     jid:
       description:
-      - Job or task identifier
+        - Job or task identifier
       type: str
       required: true
     mode:
       description:
-      - If C(status), obtain the status.
-      - If C(cleanup), clean up the async job cache (by default in C(~/.ansible_async/)) for the specified job I(jid).
+        - If C(status), obtain the status.
+        - If C(cleanup), clean up the async job cache (by default in C(~/.ansible_async/)) for the specified job I(jid).
       type: str
-      choices: [ cleanup, status ]
+      choices: [cleanup, status]
       default: status
   author:
-  - Ansible Core Team
+    - Ansible Core Team
 
 EXAMPLES: |
   - name: Asynchronous yum task
@@ -44,7 +44,7 @@ RETURN:
     description: The asynchronous job id
     returned: success
     type: str
-    sample: '360874038559.4169'
+    sample: "360874038559.4169"
   finished:
     description: Whether the asynchronous job has finished (C(1)) or not (C(0))
     returned: always
