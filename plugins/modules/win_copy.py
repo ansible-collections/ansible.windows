@@ -5,7 +5,7 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: win_copy
 short_description: Copies files to remote locations on windows hosts
@@ -90,6 +90,10 @@ notes:
 - Because win_copy runs over WinRM, it is not a very efficient transfer
   mechanism. If sending large files consider hosting them on a web service and
   using M(ansible.windows.win_get_url) instead.
+- When using become with a user that is not an Administrator, the remote temp
+  directory must be set to a one that is accessible to both the become and
+  connection user with C(ansible_remote_tmp). See the examples for more
+  more information.
 seealso:
 - module: ansible.builtin.assemble
 - module: ansible.builtin.copy
@@ -98,9 +102,9 @@ seealso:
 author:
 - Jon Hawkesworth (@jhawkesworth)
 - Jordan Borean (@jborean93)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Copy a single file
   ansible.windows.win_copy:
     src: /srv/myfiles/foo.conf
@@ -155,9 +159,9 @@ EXAMPLES = r'''
     # This ensures the become user will have permissions for the operation
     # Make sure to specify a folder both the ansible_user and the become_user have access to (i.e not %TEMP% which is user specific and requires Admin)
     ansible_remote_tmp: 'c:\tmp'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 backup_file:
     description: Name of the backup file that was created.
     returned: if backup=yes
@@ -193,4 +197,4 @@ original_basename:
     returned: changed, src is a file
     type: str
     sample: foo.txt
-'''
+"""
