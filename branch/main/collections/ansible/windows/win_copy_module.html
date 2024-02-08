@@ -278,6 +278,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <li><p>Currently win_copy does not support copying symbolic links from both local to remote and remote to remote.</p></li>
 <li><p>It is recommended that backslashes <code class="docutils literal notranslate"><span class="pre">\</span></code> are used instead of <code class="docutils literal notranslate"><span class="pre">/</span></code> when dealing with remote paths.</p></li>
 <li><p>Because win_copy runs over WinRM, it is not a very efficient transfer mechanism. If sending large files consider hosting them on a web service and using <a class="reference internal" href="win_get_url_module.html#ansible-collections-ansible-windows-win-get-url-module"><span class="std std-ref">ansible.windows.win_get_url</span></a> instead.</p></li>
+<li><p>When using become with a user that is not an Administrator, the remote temp directory must be set to one that is accessible to both the become and connection user with <code class="docutils literal notranslate"><span class="pre">ansible_remote_tmp</span></code>. See the examples for more information.</p></li>
 </ul>
 </div>
 </section>
