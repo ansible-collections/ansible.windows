@@ -91,9 +91,9 @@ notes:
   mechanism. If sending large files consider hosting them on a web service and
   using M(ansible.windows.win_get_url) instead.
 - When using become with a user that is not an Administrator, the remote temp
-  directory must be set to a one that is accessible to both the become and
+  directory must be set to one that is accessible to both the become and
   connection user with C(ansible_remote_tmp). See the examples for more
-  more information.
+  information.
 seealso:
 - module: ansible.builtin.assemble
 - module: ansible.builtin.copy
