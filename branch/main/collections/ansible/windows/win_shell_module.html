@@ -302,6 +302,11 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$string</span><span class="nv"> </span><span class="s">=</span><span class="nv"> </span><span class="s">[Console]::In.ReadToEnd();</span><span class="nv"> </span><span class="s">Write-Output</span><span class="nv"> </span><span class="s">$string.Trim()&#39;</span>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">stdin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Input message</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run a PowerShell script with -NoProfile</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\somescript.ps1</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">no_profile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
 </section>
