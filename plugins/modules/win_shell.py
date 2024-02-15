@@ -111,8 +111,8 @@ EXAMPLES = r'''
   args:
     stdin: Input message
 
-- name: Run a command with "no_profile"
-  ansible.windows.win_shel: C:\somescript.ps1
+- name: Run a PowerShell script with -NoProfile
+  ansible.windows.win_shell: C:\somescript.ps1
   args:
     no_profile: true
 '''
