@@ -110,6 +110,11 @@ EXAMPLES = r'''
   ansible.windows.win_shell: '$string = [Console]::In.ReadToEnd(); Write-Output $string.Trim()'
   args:
     stdin: Input message
+
+- name: Run a command with "no_profile"
+  ansible.windows.win_shel: C:\somescript.ps1
+  args:
+    no_profile: true
 '''
 
 RETURN = r'''
