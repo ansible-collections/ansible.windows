@@ -183,7 +183,7 @@ $response_script = {
 $body_st = $null
 if ($null -ne $body) {
     if ($body -is [System.Collections.IDictionary] -or $body -is [System.Collections.IList]) {
-        $body_string = ConvertTo-Json -InputObject $body -Compress
+        $body_string = ConvertTo-Json -InputObject $body -Compress -Depth 20
     }
     elseif ($body -isnot [String]) {
         $body_string = $body.ToString()
