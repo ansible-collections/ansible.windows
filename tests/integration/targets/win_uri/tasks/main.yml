@@ -325,7 +325,7 @@
     - not status_code_check.changed
     - status_code_check.status_code == 202
 
-  - name: send JSON body with dict type
+- name: send JSON body with dict type
   win_uri:
     url: https://{{httpbin_host}}/post
     method: POST
@@ -342,7 +342,7 @@
   register: json_as_dict
 
 
-  - name: send JSON body with multiple levels of nesting
+- name: send JSON body with multiple levels of nesting
   win_uri:
     url: https://{{httpbin_host}}/post
     method: POST
