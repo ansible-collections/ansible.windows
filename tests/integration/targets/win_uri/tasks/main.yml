@@ -341,7 +341,23 @@
     return_content: yes
   register: json_as_dict
 
+- name: set fact of expected json dict
+  set_fact:
+    json_as_dict_value:
+      foo: bar
+      list:
+      - 1
+      - 2
+      dict:
+        foo: bar
 
+- name: assert send JSON body with dict type
+  assert:
+    that:
+    - not json_as_dict.changed
+    - json_as_dict.json.json == json_as_dict_value
+    - json_as_dict.status_code == 200
+    
 - name: send JSON body with multiple levels of nesting
   win_uri:
     url: https://{{httpbin_host}}/post
@@ -362,24 +378,25 @@
     headers:
       'Content-Type': 'text/json'
     return_content: yes
-  register: json_as_dict
+  register: nested_json_as_dict
 
 - name: set fact of expected json dict
   set_fact:
-    json_as_dict_value:
+    nested_json_as_dict_value:
       foo: bar
       list:
       - 1
       - 2
       dict:
         foo: bar
-
-- name: assert send JSON body with dict type
+        
+- name: assert send JSON body with multiple levels of nesting
   assert:
     that:
-    - not json_as_dict.changed
-    - json_as_dict.json.json == json_as_dict_value
-    - json_as_dict.status_code == 200
+    - not nested_json_as_dict.changed
+    - nested_json_as_dict.json.json == nested_json_as_dict_value
+    - nested_json_as_dict.status_code == 200
+    
 
 - name: send JSON body with 1 item in list
   win_uri:
