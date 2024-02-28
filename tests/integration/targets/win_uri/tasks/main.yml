@@ -341,6 +341,45 @@
     return_content: yes
   register: json_as_dict
 
+  - name: send JSON body with dict type
+  win_uri:
+    url: https://{{httpbin_host}}/post
+    method: POST
+    body:
+      foo: bar
+      list:
+      - 1
+      - 2
+      dict:
+        foo: bar
+    headers:
+      'Content-Type': 'text/json'
+    return_content: yes
+  register: json_as_dict
+
+
+  - name: send JSON body with multiple levels of nesting
+  win_uri:
+    url: https://{{httpbin_host}}/post
+    method: POST
+    body:
+      foo: bar
+      list:
+      - 1
+      - 2
+      dict:
+        foo: bar
+        dict:
+          foo: bar
+          dict:
+            foo: bar
+            dict:
+              foo: bar
+    headers:
+      'Content-Type': 'text/json'
+    return_content: yes
+  register: json_as_dict
+
 - name: set fact of expected json dict
   set_fact:
     json_as_dict_value:
