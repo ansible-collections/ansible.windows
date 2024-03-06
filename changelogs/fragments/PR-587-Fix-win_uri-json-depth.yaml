@@ -1,0 +1,2 @@
+minor_changes:
+  - win_uri - Max depth for json object conversion used to be 2. Can now send json objects with up to 20 levels of nesting
