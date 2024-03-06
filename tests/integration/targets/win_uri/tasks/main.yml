@@ -389,6 +389,12 @@
       - 2
       dict:
         foo: bar
+        dict:
+          foo: bar
+          dict:
+            foo: bar
+            dict:
+              foo: bar
         
 - name: assert send JSON body with multiple levels of nesting
   assert:
