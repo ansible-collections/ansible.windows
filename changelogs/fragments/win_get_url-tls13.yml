@@ -1,2 +1,0 @@
-bugfixes:
-  - win_get_url - Fix Tls1.3 getting removed from the list of security protocols
