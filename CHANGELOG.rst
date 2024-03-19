@@ -4,6 +4,24 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.3.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.3.0
+
+Minor Changes
+-------------
+
+- win_uri - Max depth for json object conversion used to be 2. Can now send json objects with up to 20 levels of nesting
+
+Bugfixes
+--------
+
+- win_get_url - Fix Tls1.3 getting removed from the list of security protocols
+- win_powershell - Remove unecessary using in code causing stray error records in output - https://github.com/ansible-collections/ansible.windows/issues/571
 
 v2.2.0
 ======
@@ -480,7 +498,6 @@ Release Summary
 
 This is the first proper release of the ``ansible.windows`` collection on 2020-07-18.
 The changelog describes all changes made to the modules and plugins included in this collection since Ansible 2.9.0.
-
 
 Minor Changes
 -------------

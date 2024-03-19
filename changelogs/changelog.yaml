@@ -696,3 +696,19 @@ releases:
     - win_service_info-not-found.yml
     - win_updates-typo.yml
     release_date: '2023-11-16'
+  2.3.0:
+    changes:
+      bugfixes:
+      - win_get_url - Fix Tls1.3 getting removed from the list of security protocols
+      - win_powershell - Remove unecessary using in code causing stray error records
+        in output - https://github.com/ansible-collections/ansible.windows/issues/571
+      minor_changes:
+      - win_uri - Max depth for json object conversion used to be 2. Can now send
+        json objects with up to 20 levels of nesting
+      release_summary: Release summary for v2.3.0
+    fragments:
+    - PR-587-Fix-win_uri-json-depth.yaml
+    - release-summary.yml
+    - win_get_url-tls13.yml
+    - win_powershell-fix-using.yml
+    release_date: '2024-03-20'
