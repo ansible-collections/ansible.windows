@@ -1,0 +1,29 @@
+- name: run async task
+  win_ping:
+  async: 30
+  poll: 2
+  register: async_res
+
+- name: assert run async task
+  assert:
+    that:
+    - async_res is finished
+    - async_res is successful
+    - async_res.ping == 'pong'
+
+- name: check mode support was added in ansible 2.18
+  when: ansible_version.full is version('2.18', '>=')
+  block:
+  - name: run async task - check mode
+    win_ping:
+    async: 30
+    poll: 2
+    register: async_res_check
+    check_mode: true
+
+  - name: assert run async task - check mode
+    assert:
+      that:
+      - async_res_check is finished
+      - async_res_check is successful
+      - async_res_check.ping == 'pong'

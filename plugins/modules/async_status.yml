@@ -21,6 +21,24 @@ DOCUMENTATION:
       type: str
       choices: [cleanup, status]
       default: status
+  extends_documentation_fragment:
+    - action_common_attributes
+    - action_common_attributes.flow
+  attributes:
+    action:
+      support: full
+    async:
+      support: none
+    check_mode:
+      support: full
+      version_added: '2.4.0'
+    diff_mode:
+      support: none
+    bypass_host_loop:
+      support: none
+    platform:
+      support: full
+      platforms: windows
   author:
     - Ansible Core Team
 
