@@ -56,6 +56,19 @@ stages:
               test: units
             - name: Lint
               test: lint
+  - stage: Ansible_2_17
+    displayName: Ansible 2.17
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: '{0}'
+          testFormat: '2.17/{0}'
+          targets:
+            - name: Sanity
+              test: sanity
+            - name: Units
+              test: units
   - stage: Ansible_2_16
     displayName: Ansible 2.16
     dependsOn: []
@@ -115,6 +128,7 @@ stages:
     condition: succeededOrFailed()
     dependsOn:
       - Ansible_devel
+      - Ansible_2_17
       - Ansible_2_16
       - Ansible_2_15
       - Ansible_2_14
