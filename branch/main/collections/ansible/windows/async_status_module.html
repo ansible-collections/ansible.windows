@@ -145,9 +145,10 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
 <li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id3">See Also</a></p></li>
-<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
-<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+<li><p><a class="reference internal" href="#attributes" id="id3">Attributes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id6">Return Values</a></p></li>
 </ul>
 </nav>
 <section id="synopsis">
@@ -188,8 +189,72 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </tbody>
 </table>
 </section>
+<section id="attributes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Attributes</a><a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Support</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-action"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-action"><strong>action</strong></p>
+<a class="ansibleOptionLink" href="#attribute-action" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-label">Support: </strong><strong class="ansible-attribute-support-full">full</strong></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Indicates this has a corresponding action plugin so some parts of the options can be executed on the controller</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-async"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-async"><strong>async</strong></p>
+<a class="ansibleOptionLink" href="#attribute-async" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-label">Support: </strong><strong class="ansible-attribute-support-none">none</strong></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Supports being used with the <code class="docutils literal notranslate"><span class="pre">async</span></code> keyword</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-bypass_host_loop"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-bypass-host-loop"><strong>bypass_host_loop</strong></p>
+<a class="ansibleOptionLink" href="#attribute-bypass_host_loop" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-label">Support: </strong><strong class="ansible-attribute-support-none">none</strong></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Forces a ‘global’ task that does not execute per host, this bypasses per host templating and serial, throttle and other loop considerations</p>
+<p>Conditionals will work as if <code class="docutils literal notranslate"><span class="pre">run_once</span></code> is being used, variables used will be from the first available host</p>
+<p>This action will not work normally outside of lockstep strategies</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-check_mode"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-check-mode"><strong>check_mode</strong></p>
+<a class="ansibleOptionLink" href="#attribute-check_mode" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-label">Support: </strong><strong class="ansible-attribute-support-full">full</strong></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Can run in check_mode and return changed status prediction without modifying target</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-diff_mode"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-diff-mode"><strong>diff_mode</strong></p>
+<a class="ansibleOptionLink" href="#attribute-diff_mode" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-label">Support: </strong><strong class="ansible-attribute-support-none">none</strong></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Will return details on what has changed (or possibly needs changing in check_mode), when in diff mode</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="attribute-platform"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-async-status-module-attribute-platform"><strong>platform</strong></p>
+<a class="ansibleOptionLink" href="#attribute-platform" title="Permalink to this attribute"></a></div></td>
+<td><div class="ansible-option-cell"><p><strong class="ansible-attribute-support-property">Platform:</strong> <strong class="ansible-attribute-support-full">windows</strong></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Target OS/families that can be operated against</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
@@ -199,7 +264,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div>
 </section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Asynchronous yum task</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my.exe</span>
 <span class="w">  </span><span class="nt">async</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
@@ -217,7 +282,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
 <p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
 <table class="longtable ansible-option-table docutils align-default" style="width: 100%">
 <thead>
