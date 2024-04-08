@@ -6,7 +6,7 @@
 
 $results = @{ changed = $false }
 
-$parsed_args = Parse-Args $args
+$parsed_args = Parse-Args $args -supports_check_mode $true
 $jid = Get-AnsibleParam $parsed_args "jid" -failifempty $true -resultobj $results
 $mode = Get-AnsibleParam $parsed_args "mode" -Default "status" -ValidateSet "status", "cleanup"
 
