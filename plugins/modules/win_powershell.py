@@ -64,6 +64,39 @@ options:
     - Parameters to pass into the script as key value pairs.
     - The key corresponds to the parameter name and the value is the value for that parameter.
     type: dict
+  parameters_secure_string:
+    description:
+    - Parameters to pass into the script as a SecureString or PSCredential.
+    - Each sensitive value will be marked with C(no_log) to ensure they are
+      not exposed in any logs.
+    - The I(value) suboption can be used to create a SecureString value while
+      I(username) and I(password) can be used to create a PSCredential value.
+    type: list
+    elements: dict
+    suboptions:
+      name:
+        description:
+        - The name of the parameter to pass this value to.
+        required: true
+        type: str
+      value:
+        description:
+        - The string to pass as a SecureString of the parameter specified by
+          I(name).
+        - This is mutually exclusive with I(username) and I(password).
+        type: str
+      username:
+        description:
+        - The C(UserName) for the PSCredential value.
+        - This is mutually exclusive with I(value).
+        - This value is B(NOT) added to the C(no_log) list.
+        type: str
+      password:
+        description:
+        - The C(Password) for the PSCredential value.
+        - This is mutually exclusive with I(value) and must be set when
+          I(username) is provided.
+        type: str
   removes:
     description:
     - A path or path filter pattern; when the referenced path B(does not) exist on the target host, the task will be
@@ -208,6 +241,36 @@ EXAMPLES = r'''
       Write-Verbose "Hello World!"
       Write-Debug "Hello World!"
 
+- name: Set sensitive parameter value as SecureString parameter
+  ansible.windows.win_powershell:
+    script: |
+      param(
+          [string]$Uri,
+          [SecureString]$Token
+      )
+
+      Invoke-WebRequest -Uri $Uri -Token $Token
+    parameters:
+      Uri: foo
+    parameters_secure_string:
+    - name: Token
+      value: '{{ sensitive_value }}'
+
+- name: Set credential parameter
+  ansible.windows.win_powershell:
+    script: |
+      param(
+          [string]$Uri,
+          [PSCredential]$Credential
+      )
+
+      Invoke-WebRequest -Uri $Uri -Credential $Credential
+    parameters:
+      Uri: foo
+    parameters_secure_string:
+    - name: Credential
+      username: CredUserName
+      password: '{{ sensitive_value }}'
 '''
 
 RETURN = r'''

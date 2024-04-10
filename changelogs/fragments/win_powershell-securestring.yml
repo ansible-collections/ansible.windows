@@ -1,0 +1,4 @@
+minor_changes:
+  - >-
+    win_powershell - Added the ``parameters_secure_string`` option that can be used to pass in a SecureString or
+    PSCredential parameter value.

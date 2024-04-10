@@ -17,6 +17,22 @@ $spec = @{
         error_action = @{ type = 'str'; choices = 'silently_continue', 'continue', 'stop'; default = 'continue' }
         executable = @{ type = 'str' }
         parameters = @{ type = 'dict' }
+        parameters_secure_string = @{
+            type = 'list'
+            elements = 'dict'
+            options = @{
+                name = @{ type = 'str'; required = $true }
+                username = @{ type = 'str' }
+                password = @{ type = 'str'; no_log = $true }
+                value = @{ type = 'str'; no_log = $true }
+            }
+            mutually_exclusive = @(
+                , @('value', 'username')
+                , @('value', 'password')
+            )
+            required_one_of = @(, @('username', 'value'))
+            required_together = @(, @('username', 'password'))
+        }
         removes = @{ type = 'str' }
         script = @{ type = 'str'; required = $true }
     }
@@ -715,6 +731,27 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     if ($module.Params.parameters) {
         foreach ($kvp in $module.Params.parameters.GetEnumerator()) {
             $parameters[$kvp.Key] = $kvp.Value
+        }
+    }
+    if ($module.Params.parameters_secure_string) {
+        foreach ($paramDetails in $module.Params.parameters_secure_string) {
+            $value = if ($paramDetails.username) {
+                $credPass = if ($paramDetails.password) {
+                    $paramDetails.password | ConvertTo-SecureString -AsPlainText -Force
+                }
+                else {
+                    [securestring]::new()
+                }
+                [pscredential]::new($paramDetails.username, $credPass)
+            }
+            elseif ($paramDetails.value) {
+                $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
+            }
+            else {
+                [securestring]::new()
+            }
+
+            $parameters[$paramDetails.name] = $value
         }
     }
     if ($supportsShouldProcess) {
