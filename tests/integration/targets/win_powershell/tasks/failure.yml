@@ -1,0 +1,51 @@
+- name: expect failure when secure string value or username not provided
+  win_powershell:
+    script: '"test"'
+    sensitive_parameters:
+    - name: Param
+  register: fail_no_ss_value
+  failed_when: >-
+    fail_no_ss_value.msg != 'one of the following is required: username, value found in sensitive_parameters'
+
+- name: expect failure when secure string password is not provided with username
+
+  win_powershell:
+    script: '"test"'
+    sensitive_parameters:
+    - name: Param
+      username: user
+  register: fail_no_ss_password
+  failed_when: >-
+    fail_no_ss_password.msg != 'parameters are required together: username, password found in sensitive_parameters'
+
+- name: expect failure when secure string username is not provided with password
+  win_powershell:
+    script: '"test"'
+    sensitive_parameters:
+    - name: Param
+      password: secret
+  register: fail_no_ss_username
+  failed_when: >-
+    fail_no_ss_username.msg != 'parameters are required together: username, password found in sensitive_parameters'
+
+- name: expect failure when value and username are provided
+  win_powershell:
+    script: '"test"'
+    sensitive_parameters:
+    - name: Param
+      value: secret1
+      username: user
+  register: fail_ss_value_and_username
+  failed_when: >-
+    fail_ss_value_and_username.msg != 'parameters are mutually exclusive: value, username found in sensitive_parameters'
+
+- name: expect failure when value and password are provided
+  win_powershell:
+    script: '"test"'
+    sensitive_parameters:
+    - name: Param
+      value: secret1
+      password: secret2
+  register: fail_ss_value_and_password
+  failed_when: >-
+    fail_ss_value_and_password.msg != 'parameters are mutually exclusive: value, password found in sensitive_parameters'
