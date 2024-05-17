@@ -58,6 +58,7 @@
   assert:
     that:
       - "setup_result.ansible_facts.ansible_win_rm_certificate_expires"
+      - "setup_result.ansible_facts.ansible_win_rm_certificate_thumbprint"
   when: ansible_ssh_port|default(5986) != 5985
 
 - name: test gather_subset "!all"
