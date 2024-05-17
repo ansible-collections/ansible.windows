@@ -1057,6 +1057,7 @@ $factMeta = @(
             $certs | Sort-Object -Property NotAfter | Select-Object -First 1 | ForEach-Object -Process {
                 # this fact was renamed from ansible_winrm_certificate_expires due to collision with ansible_winrm_X connection var pattern
                 $ansibleFacts.ansible_win_rm_certificate_expires = $_.NotAfter.ToString('yyyy-MM-dd HH:mm:ss')
+                $ansibleFacts.ansible_win_rm_certificate_thumbprint = $_.Thumbprint
             }
         }
     },
