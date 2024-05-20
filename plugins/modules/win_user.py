@@ -145,7 +145,7 @@ EXAMPLES = r'''
 
 - name: Set an account expiration 30 days in the future
   ansible.windows.win_user:
-    name; bob
+    name: bob
     state: present
     account_expires: '{{ "%Y-%m-%dT%H:%M:%S%z" | ansible.builtin.strftime(now().timestamp() + (60 * 60 * 24 * 30)) }}'
 
