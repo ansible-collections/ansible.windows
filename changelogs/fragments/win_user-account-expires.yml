@@ -1,0 +1,4 @@
+minor_changes:
+  - >-
+    win_user - Added the ability to set an account expiration date using the ``account_expires`` option
+    - https://github.com/ansible-collections/ansible.windows/issues/610

@@ -17,6 +17,15 @@ options:
     - C(true) will disable the user account.
     - C(false) will clear the disabled flag.
     type: bool
+  account_expires:
+    description:
+    - Set the account expiration date for the user.
+    - This value should be in the format C(%Y-%m-%d) or C(%Y-%m-%dT%H:%M:%S%z).
+      The timezone can be omitted in the long format and will default to UTC.
+      The format of C(%z) is C(±HHMM), C(±HH:MM), or C(Z) for UTC.
+    - Set the value to C(never) to remove the account expiration date.
+    type: str
+    version_added: 2.4.0
   account_locked:
     description:
     - Only C(false) can be set and it will unlock the user account if locked.
@@ -127,6 +136,24 @@ EXAMPLES = r'''
   ansible.windows.win_user:
     name: bob
     state: absent
+
+- name: Set an account expiration date to the 27th of October 2024 at 2:30PM UTC
+  ansible.windows.win_user:
+    name: bob
+    state: present
+    account_expires: '2024-10-27T14:30:00Z'
+
+- name: Set an account expiration 30 days in the future
+  ansible.windows.win_user:
+    name; bob
+    state: present
+    account_expires: '{{ "%Y-%m-%dT%H:%M:%S%z" | ansible.builtin.strftime(now().timestamp() + (60 * 60 * 24 * 30)) }}'
+
+- name: Remove account expiration date
+  ansible.windows.win_user:
+    name: bob
+    state: present
+    account_expires: never
 '''
 
 RETURN = r'''

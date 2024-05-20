@@ -424,6 +424,176 @@
       - "win_user_invalid_group_result.msg"
       - win_user_invalid_group_result.msg is match("group 'Userz' not found")
 
+- name: get expected dates based on remote timezone
+  win_powershell:
+    script: |
+      [DateTime]::new(2040, 10, 27, 0, 0, 0, [DateTimeKind]::Utc).ToLocalTime()
+      [DateTime]::new(2040, 10, 27, 14, 30, 0, [DateTimeKind]::Utc).ToLocalTime()
+      [DateTime]::new(2040, 10, 27, 13, 30, 0, [DateTimeKind]::Utc).ToLocalTime()
+      [DateTimeOffset]::new(
+        [DateTime]::new(2040, 10, 27, 14, 30, 0, [DateTimeKind]::Unspecified),
+        (New-TimeSpan -Hours 2)).UtcDateTime.ToLocalTime()
+  register: expected_dates
+
+- name: expect failure when account_expires is invalid
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: invalid
+  register: account_expires_invalid
+  failed_when:
+  - >-
+    account_expires_invalid.msg != "Failed to parse account_expires as datetime string. Expecting datetime in yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss.FFFFFFFK format."
+
+- name: set account expiration date - short form
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27'
+  register: account_expires_short_result
+
+- name: get result of set account expiration date - short form
+  win_powershell:
+    script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
+    parameters:
+      Name: '{{ test_win_user_name }}'
+  register: account_expires_short_result_actual
+
+- name: assert set account expiration date - short form
+  assert:
+    that:
+    - account_expires_short_result is changed
+    - account_expires_short_result_actual.output == [expected_dates.output[0]]
+
+- name: set account expiration date - short form - idempotent
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27'
+  register: account_expires_short_result_again
+
+- name: assert set account expiration date - short form - idempotent
+  assert:
+    that:
+    - not account_expires_short_result_again is changed
+
+- name: set account expiration date - long form
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T14:30:00'
+  register: account_expires_long_result
+
+- name: get result of set account expiration date - long form
+  win_powershell:
+    script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
+    parameters:
+      Name: '{{ test_win_user_name }}'
+  register: account_expires_long_result_actual
+
+- name: assert set account expiration date - long form
+  assert:
+    that:
+    - account_expires_long_result is changed
+    - account_expires_long_result_actual.output == [expected_dates.output[1]]
+
+- name: set account expiration date - long form - idempotent
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T14:30:00'
+  register: account_expires_long_result_again
+
+- name: assert set account expiration date - long form - idempotent
+  assert:
+    that:
+    - not account_expires_long_result_again is changed
+
+- name: set account expiration date - long form with Z
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T13:30:00Z'
+  register: account_expires_long_z_result
+
+- name: get result of set account expiration date - long form with Z
+  win_powershell:
+    script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
+    parameters:
+      Name: '{{ test_win_user_name }}'
+  register: account_expires_long_z_result_actual
+
+- name: assert set account expiration date - long form with Z
+  assert:
+    that:
+    - account_expires_long_z_result is changed
+    - account_expires_long_z_result_actual.output == [expected_dates.output[2]]
+
+- name: set account expiration date - long form with Z - idempotent
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T13:30:00Z'
+  register: account_expires_long_z_result_again
+
+- name: assert set account expiration date - long form - idempotent
+  assert:
+    that:
+    - not account_expires_long_result_again is changed
+
+- name: set account expiration date - long form with tz
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T14:30:00+0200'
+  register: account_expires_long_tz_result
+
+- name: get result of set account expiration date - long form with tz
+  win_powershell:
+    script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
+    parameters:
+      Name: '{{ test_win_user_name }}'
+  register: account_expires_long_tz_result_actual
+
+- name: assert set account expiration date - long form with tz
+  assert:
+    that:
+    - account_expires_long_tz_result is changed
+    - account_expires_long_tz_result_actual.output == [expected_dates.output[3]]
+
+- name: set account expiration date - long form with tz - idempotent
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: '2040-10-27T14:30:00+02:00'
+  register: account_expires_long_tz_result_again
+
+- name: assert set account expiration date - long form with tz - idempotent
+  assert:
+    that:
+    - not account_expires_long_tz_result_again is changed
+
+- name: remove account expiration date
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: never
+  register: account_expires_remove_result
+
+- name: get result of remove account expiration date
+  win_powershell:
+    script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
+    parameters:
+      Name: '{{ test_win_user_name }}'
+  register: account_expires_remove_result_actual
+
+- name: assert remove account expiration date
+  assert:
+    that:
+    - account_expires_remove_result is changed
+    - account_expires_remove_result_actual.output == []
+
+- name: remove account expiration date - idempotent
+  win_user:
+    name: '{{ test_win_user_name }}'
+    account_expires: never
+  register: account_expires_remove_result_again
+
+- name: assert remove account expiration date - idempotent
+  assert:
+    that:
+    - not account_expires_remove_result_again is changed
+
 - name: remove existing test user if present (check mode)
   win_user:
     name: '{{ test_win_user_name }}'

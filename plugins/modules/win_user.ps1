@@ -9,6 +9,7 @@
 $spec = @{
     options = @{
         account_disabled = @{ type = 'bool' }
+        account_expires = @{ type = 'str' }
         account_locked = @{ type = 'bool' }
         description = @{ type = 'str' }
         fullname = @{ type = 'str' }
@@ -31,6 +32,7 @@ $spec = @{
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 $accountDisabled = $module.Params.account_disabled
+$accountExpiresRaw = $module.Params.account_expires
 $accountLocked = $module.Params.account_locked
 $description = $module.Params.description
 $fullname = $module.Params.fullname
@@ -50,12 +52,45 @@ $userCannotChangePassword = $module.Params.user_cannot_change_password
 $module.Diff.before = ""
 $module.Diff.after = ""
 
+$ADS_UF_PASSWD_CANT_CHANGE = 64
+$ADS_UF_DONT_EXPIRE_PASSWD = 65536
+$DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK"
+
 if ($accountLocked -eq $true) {
     $module.FailJson("account_locked must be set to 'no' if provided")
 }
 
-$ADS_UF_PASSWD_CANT_CHANGE = 64
-$ADS_UF_DONT_EXPIRE_PASSWD = 65536
+$accountExpires = if ($accountExpiresRaw) {
+    [DateTime]$dtValue = 0
+
+    # Python strftime doesn't provide a native way to create a TZ in the
+    # ±HH:MM. We need to manually convert ±HHMM into the format needed by
+    # .NET.
+    if ($accountExpiresRaw -match '[+-](\d{2})(\d{2})$') {
+        $dtLength = $accountExpiresRaw.Length - 4
+        $accountExpiresRaw = "$($accountExpiresRaw.Substring(0, $dtLength))$($Matches[1]):$($Matches[2])"
+    }
+
+    if ($accountExpiresRaw -eq 'never') {
+        $accountExpiresRaw
+    }
+    elseif ([DateTime]::TryParseExact(
+            $accountExpiresRaw,
+            [string[]]@("yyyy-MM-dd", $DATE_FORMAT),
+            [System.Globalization.CultureInfo]::InvariantCulture,
+            [System.Globalization.DateTimeStyles]::AssumeUniversal,
+            [ref]$dtValue)) {
+        $dtValue
+    }
+    else {
+        $msg = -join @(
+            "Failed to parse account_expires as datetime string. "
+            "Expecting datetime in yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss.FFFFFFFK format."
+        )
+        $module.FailJson($msg)
+    }
+}
+
 $ADSI = [ADSI]"WinNT://$env:COMPUTERNAME"
 
 Function Get-AnsibleLocalGroup {
@@ -100,6 +135,13 @@ Function Get-AnsibleLocalUser {
         $sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList $_.ObjectSid.Value, 0
         $flags = $_.UserFlags.Value
 
+        $accountExpirationDate = if ($_.PSObject.Properties.Name.Contains('AccountExpirationDate')) {
+            $_.AccountExpirationDate.Value
+        }
+        else {
+            'never'
+        }
+
         [PSCustomObject]@{
             Name = $_.Name.Value
             FullName = $_.FullName.Value
@@ -107,6 +149,7 @@ Function Get-AnsibleLocalUser {
             Description = $_.Description.Value
             HomeDirectory = $_.HomeDirectory.Value
             LoginScript = $_.LoginScript.Value
+            AccountExpires = $accountExpirationDate
             PasswordExpired = [bool]$_.PasswordExpired.Value
             PasswordNeverExpires = [bool]($flags -band $ADS_UF_DONT_EXPIRE_PASSWD)
             Profile = $_.Profile.Value
@@ -154,8 +197,16 @@ Function Get-UserDiff {
             $groups.Add($name)
         }
 
+        $accountExpirationString = if ($User.AccountExpires -and $User.AccountExpires -ne 'never') {
+            $User.AccountExpires.ToString($DATE_FORMAT)
+        }
+        else {
+            'never'
+        }
+
         @{
             account_disabled = $User.AccountDisabled
+            account_expires = $accountExpirationString
             account_locked = $User.IsAccountLocked
             description = $User.Description
             fullname = $User.FullName
@@ -268,6 +319,18 @@ if ($state -eq 'present') {
             $user.BaseObject.AccountDisabled = $accountDisabled
             $module.Result.changed = $true
             $module.Diff.after.account_disabled = $accountDisabled
+        }
+
+        if ($null -ne $accountExpires -and $accountExpires -ne $user.AccountExpires) {
+            if ($accountExpires -eq 'never') {
+                $user.BaseObject.Put("AccountExpirationDate", ([DateTime]::new(1970, 1, 1)))
+                $module.Diff.after.account_expires = 'never'
+            }
+            else {
+                $user.BaseObject.Put("AccountExpirationDate", $accountExpires)
+                $module.Diff.after.account_expires = $accountExpires.ToString($DATE_FORMAT)
+            }
+            $module.Result.changed = $true
         }
 
         if ($null -ne $accountLocked -and $accountLocked -ne $user.IsAccountLocked) {
