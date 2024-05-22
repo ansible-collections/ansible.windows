@@ -181,6 +181,16 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-account_expires"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-account-expires"><strong>account_expires</strong></p>
+<a class="ansibleOptionLink" href="#parameter-account_expires" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the account expiration date for the user.</p>
+<p>This value should be in the format <code class="docutils literal notranslate"><span class="pre">%Y-%m-%d</span></code> or <code class="docutils literal notranslate"><span class="pre">%Y-%m-%dT%H:%M:%S%z</span></code>. The timezone can be omitted in the long format and will default to UTC. The format of <code class="docutils literal notranslate"><span class="pre">%z</span></code> is <code class="docutils literal notranslate"><span class="pre">±HHMM</span></code>, <code class="docutils literal notranslate"><span class="pre">±HH:MM</span></code>, or <code class="docutils literal notranslate"><span class="pre">Z</span></code> for UTC.</p>
+<p>Set the value to <code class="docutils literal notranslate"><span class="pre">never</span></code> to remove the account expiration date.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-account_locked"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-account-locked"><strong>account_locked</strong></p>
 <a class="ansibleOptionLink" href="#parameter-account_locked" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -192,21 +202,21 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-description"><strong>description</strong></p>
 <a class="ansibleOptionLink" href="#parameter-description" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Description of the user.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-fullname"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-fullname"><strong>fullname</strong></p>
 <a class="ansibleOptionLink" href="#parameter-fullname" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Full name of the user.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-groups"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-groups"><strong>groups</strong></p>
 <a class="ansibleOptionLink" href="#parameter-groups" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -215,7 +225,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>Since <code class="docutils literal notranslate"><span class="pre">ansible.windows</span> <span class="pre">v1.5.0</span></code> it is possible to specify a group using it’s security identifier.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-groups_action"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-groups-action"><strong>groups_action</strong></p>
 <a class="ansibleOptionLink" href="#parameter-groups_action" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -230,7 +240,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-home_directory"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-home-directory"><strong>home_directory</strong></p>
 <a class="ansibleOptionLink" href="#parameter-home_directory" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.0.0</em></p>
@@ -238,7 +248,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>The designated home directory of the user.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-login_script"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-login-script"><strong>login_script</strong></p>
 <a class="ansibleOptionLink" href="#parameter-login_script" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.0.0</em></p>
@@ -246,21 +256,21 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>The login script of the user.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-name"><strong>name</strong></p>
 <a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Name of the user to create, remove or modify.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-password"><strong>password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Optionally set the user’s password to this (plain text) value.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-password_expired"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-password-expired"><strong>password_expired</strong></p>
 <a class="ansibleOptionLink" href="#parameter-password_expired" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -273,7 +283,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-password_never_expires"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-password-never-expires"><strong>password_never_expires</strong></p>
 <a class="ansibleOptionLink" href="#parameter-password_never_expires" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -286,7 +296,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-profile"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-profile"><strong>profile</strong></p>
 <a class="ansibleOptionLink" href="#parameter-profile" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.0.0</em></p>
@@ -294,7 +304,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>The profile path of the user.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-state"><strong>state</strong></p>
 <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -309,7 +319,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-update_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-update-password"><strong>update_password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-update_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -322,7 +332,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-user_cannot_change_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-user-module-parameter-user-cannot-change-password"><strong>user_cannot_change_password</strong></p>
 <a class="ansibleOptionLink" href="#parameter-user_cannot_change_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -381,6 +391,24 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_user</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bob</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set an account expiration date to the 27th of October 2024 at 2:30PM UTC</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_user</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bob</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">account_expires</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2024-10-27T14:30:00Z&#39;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set an account expiration 30 days in the future</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_user</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bob</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">account_expires</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="s2">&quot;%Y-%m-%dT%H:%M:%S%z&quot;</span> <span class="o">|</span> <span class="nf">ansible</span><span class="nv">.builtin.strftime</span><span class="o">(</span><span class="nv">now</span><span class="o">()</span><span class="nv">.timestamp</span><span class="o">()</span> <span class="o">+</span> <span class="o">(</span><span class="m">60</span> <span class="o">*</span> <span class="m">60</span> <span class="o">*</span> <span class="m">24</span> <span class="o">*</span> <span class="m">30</span><span class="o">))</span> <span class="cp">}}</span><span class="s">&#39;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove account expiration date</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_user</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bob</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">account_expires</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">never</span>
 </pre></div>
 </div>
 </section>
