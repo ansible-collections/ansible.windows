@@ -67,7 +67,7 @@ EXAMPLES = '''
 - name: Forcefully initiallize a disk
   community.windows.win_initialize_disk:
     disk_number: 2
-    force: yes
+    force: true
 '''
 
 RETURN = '''
