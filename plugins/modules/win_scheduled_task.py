@@ -430,26 +430,26 @@ EXAMPLES = r'''
     name: TaskName
     description: open command prompt
     actions:
-    - path: cmd.exe
-      arguments: /c hostname
-    - path: cmd.exe
-      arguments: /c whoami
+      - path: cmd.exe
+        arguments: /c hostname
+      - path: cmd.exe
+        arguments: /c whoami
     triggers:
-    - type: daily
-      start_boundary: '2017-10-09T09:00:00'
+      - type: daily
+        start_boundary: '2017-10-09T09:00:00'
     username: SYSTEM
     state: present
-    enabled: yes
+    enabled: true
 
 - name: Create task to run a PS script as NETWORK service on boot
   community.windows.win_scheduled_task:
     name: TaskName2
     description: Run a PowerShell script
     actions:
-    - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-      arguments: -ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1
+      - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+        arguments: -ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1
     triggers:
-    - type: boot
+      - type: boot
     username: NETWORK SERVICE
     run_level: highest
     state: present
@@ -458,8 +458,8 @@ EXAMPLES = r'''
   ansible.windows.win_user_right:
     name: SeBatchLogonRight
     users:
-    - LocalUser
-    - DOMAIN\NetworkUser
+      - LocalUser
+      - DOMAIN\NetworkUser
     action: add
 
 - name: Change above task to run under a domain user account, storing the passwords
@@ -486,10 +486,10 @@ EXAMPLES = r'''
     name: TriggerTask
     path: \Custom
     actions:
-    - path: cmd.exe
+      - path: cmd.exe
     triggers:
-    - type: daily
-    - type: monthlydow
+      - type: daily
+      - type: monthlydow
     username: SYSTEM
 
 - name: Set logon type to password but don't force update the password
@@ -497,40 +497,40 @@ EXAMPLES = r'''
     name: TriggerTask
     path: \Custom
     actions:
-    - path: cmd.exe
+      - path: cmd.exe
     username: Administrator
     password: password
-    update_password: no
+    update_password: false
 
 - name: Disable a task that already exists
   community.windows.win_scheduled_task:
     name: TaskToDisable
-    enabled: no
+    enabled: false
 
 - name: Create a task that will be repeated every minute for five minutes
   community.windows.win_scheduled_task:
     name: RepeatedTask
     description: open command prompt
     actions:
-    - path: cmd.exe
-      arguments: /c hostname
+      - path: cmd.exe
+        arguments: /c hostname
     triggers:
-    - type: registration
-      repetition:
-        interval: PT1M
-        duration: PT5M
-        stop_at_duration_end: yes
+      - type: registration
+        repetition:
+          interval: PT1M
+          duration: PT5M
+          stop_at_duration_end: true
 
 - name: Create task to run a PS script in Windows 10 compatibility on boot with a delay of 1min
   community.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
-    - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-      arguments: -ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1
+      - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+        arguments: -ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1
     triggers:
-    - type: boot
-      delay: PT1M
+      - type: boot
+        delay: PT1M
     username: SYSTEM
     compatibility: 4
 '''
