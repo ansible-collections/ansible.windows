@@ -96,7 +96,7 @@ EXAMPLES = r'''
   community.windows.win_user_profile:
     name: ansible
     state: absent
-    remove_multiple: yes
+    remove_multiple: true
 '''
 
 RETURN = r'''
