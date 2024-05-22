@@ -238,8 +238,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure that system32 and Powershell are present on the global system path, and in the specified order</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_path</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">elements</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;%SystemRoot%\system32&#39;</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;%SystemRoot%\system32\WindowsPowerShell\v1.0&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;%SystemRoot%\system32&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;%SystemRoot%\system32\WindowsPowerShell\v1.0&#39;</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure that C:\Program Files\MyJavaThing is not on the current user&#39;s CLASSPATH</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_path</span><span class="p">:</span>

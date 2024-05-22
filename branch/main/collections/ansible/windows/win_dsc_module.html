@@ -249,8 +249,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">Key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKEY_CURRENT_USER\ExampleKey</span>
 <span class="w">    </span><span class="nt">ValueName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestValue</span>
 <span class="w">    </span><span class="nt">ValueData</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestData</span>
-<span class="w">    </span><span class="nt">PsDscRunAsCredential_username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span><span class="nv">ansible_user</span><span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">    </span><span class="nt">PsDscRunAsCredential_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span><span class="nv">ansible_password</span><span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">  </span><span class="nt">no_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create file with multiple attributes</span>
@@ -258,8 +258,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span>
 <span class="w">    </span><span class="nt">DestinationPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\ansible\dsc</span>
 <span class="w">    </span><span class="nt">Attributes</span><span class="p">:</span><span class="w"> </span><span class="c1"># can also be a comma separated string, e.g. &#39;Hidden, System&#39;</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hidden</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">System</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hidden</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">System</span>
 <span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
 <span class="w">    </span><span class="nt">Type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Directory</span>
 
@@ -282,21 +282,21 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">State</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Started</span>
 <span class="w">    </span><span class="nt">PhysicalPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\inetpub\wwwroot</span>
 <span class="w">    </span><span class="nt">BindingInfo</span><span class="p">:</span><span class="w"> </span><span class="c1"># Example of a CimInstance[] DSC parameter (list of dicts)</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
-<span class="w">      </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1234</span>
-<span class="w">      </span><span class="nt">CertificateStoreName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MY</span>
-<span class="w">      </span><span class="nt">CertificateThumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C676A89018C4D5902353545343634F35E6B3A659</span>
-<span class="w">      </span><span class="nt">HostName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DSCTest</span>
-<span class="w">      </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
-<span class="w">      </span><span class="nt">SSLFlags</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
-<span class="w">      </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4321</span>
-<span class="w">      </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
+<span class="w">        </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1234</span>
+<span class="w">        </span><span class="nt">CertificateStoreName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MY</span>
+<span class="w">        </span><span class="nt">CertificateThumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C676A89018C4D5902353545343634F35E6B3A659</span>
+<span class="w">        </span><span class="nt">HostName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DSCTest</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">        </span><span class="nt">SSLFlags</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
+<span class="w">        </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4321</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
 <span class="w">    </span><span class="nt">AuthenticationInfo</span><span class="p">:</span><span class="w"> </span><span class="c1"># Example of a CimInstance DSC parameter (dict)</span>
-<span class="w">      </span><span class="nt">Anonymous</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">      </span><span class="nt">Anonymous</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">      </span><span class="nt">Basic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">      </span><span class="nt">Digest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">      </span><span class="nt">Windows</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">      </span><span class="nt">Windows</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
 </section>

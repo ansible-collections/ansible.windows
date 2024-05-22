@@ -328,11 +328,11 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="no">$PSVersionTable.PSVersion.Major</span>
 <span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh.exe</span>
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ByPass</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ByPass</span>
 <span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output</span>
 <span class="w">  </span><span class="nt">failed_when</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output.output[0] != 7</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pwsh_output.output[0] != 7</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run code in check mode</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
@@ -355,7 +355,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="no">else {</span>
 <span class="w">          </span><span class="no">echo &#39;also running in check mode&#39;</span>
 <span class="w">      </span><span class="no">}</span>
-<span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Return a failure back to Ansible</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>

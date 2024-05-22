@@ -270,34 +270,37 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="c1"># and will use the passed credentials to join domain if necessary.</span>
 <span class="c1"># Ansible connection should use local credentials if possible.</span>
 <span class="c1"># If a reboot is required, the second task will trigger one and wait until the host is available.</span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winclient</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Play to join the hsots to a domain</span>
+<span class="w">  </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winclient</span>
 <span class="w">  </span><span class="nt">gather_facts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">  </span><span class="nt">tasks</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ansible.windows.win_domain_membership</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">dns_domain_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ansible.vagrant</span>
-<span class="w">      </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mydomainclient</span>
-<span class="w">      </span><span class="nt">domain_admin_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">testguy@ansible.vagrant</span>
-<span class="w">      </span><span class="nt">domain_admin_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password123!</span>
-<span class="w">      </span><span class="nt">domain_ou_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;OU=Windows,OU=Servers,DC=ansible,DC=vagrant&quot;</span>
-<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain</span>
-<span class="w">    </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain_state</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Join host to the ansible.vagrant domain</span>
+<span class="w">      </span><span class="nt">ansible.windows.win_domain_membership</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">dns_domain_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ansible.vagrant</span>
+<span class="w">        </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mydomainclient</span>
+<span class="w">        </span><span class="nt">domain_admin_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">testguy@ansible.vagrant</span>
+<span class="w">        </span><span class="nt">domain_admin_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password123!</span>
+<span class="w">        </span><span class="nt">domain_ou_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;OU=Windows,OU=Servers,DC=ansible,DC=vagrant&quot;</span>
+<span class="w">        </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain</span>
+<span class="w">      </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain_state</span>
 
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain_state.reboot_required</span>
-
-
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reboot host after domain join</span>
+<span class="w">      </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">domain_state.reboot_required</span>
 
 <span class="c1"># Host should be in workgroup mywg- module will use the passed credentials to clean-unjoin domain if possible.</span>
 <span class="c1"># Ansible connection should use local credentials if possible.</span>
 <span class="c1"># The domain admin credentials can be sourced from a vault-encrypted variable</span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winclient</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Play to set the hosts workgroup</span>
+<span class="w">  </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winclient</span>
 <span class="w">  </span><span class="nt">gather_facts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">  </span><span class="nt">tasks</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ansible.windows.win_domain_membership</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">workgroup_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mywg</span>
-<span class="w">      </span><span class="nt">domain_admin_user</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">win_domain_admin_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">      </span><span class="nt">domain_admin_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">win_domain_admin_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workgroup</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set workgroup to mywg</span>
+<span class="w">      </span><span class="nt">ansible.windows.win_domain_membership</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">workgroup_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mywg</span>
+<span class="w">        </span><span class="nt">domain_admin_user</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">win_domain_admin_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">        </span><span class="nt">domain_admin_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">win_domain_admin_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">        </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workgroup</span>
 </pre></div>
 </div>
 </section>
