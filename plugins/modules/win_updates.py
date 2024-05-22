@@ -178,25 +178,25 @@ EXAMPLES = r"""
 - name: Install all security updates with automatic reboots
   ansible.windows.win_updates:
     category_names:
-    - SecurityUpdates
+      - SecurityUpdates
     reboot: true
 
 - name: Install only particular updates based on the KB numbers
   ansible.windows.win_updates:
     category_names:
-    - SecurityUpdates
+      - SecurityUpdates
     accept_list:
-    - KB4056892
-    - KB4073117
+      - KB4056892
+      - KB4073117
 
 - name: Exclude updates based on the update title
   ansible.windows.win_updates:
     category_names:
-    - SecurityUpdates
-    - CriticalUpdates
+      - SecurityUpdates
+      - CriticalUpdates
     reject_list:
-    - Windows Malicious Software Removal Tool for Windows
-    - \d{4}-\d{2} Cumulative Update for Windows Server 2016
+      - Windows Malicious Software Removal Tool for Windows
+      - \d{4}-\d{2} Cumulative Update for Windows Server 2016
 
 # Optionally, you can increase the reboot_timeout to survive long updates during reboot
 - name: Ensure we wait long enough for the updates to be applied during reboot

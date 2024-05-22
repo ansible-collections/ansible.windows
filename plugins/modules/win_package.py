@@ -206,22 +206,22 @@ EXAMPLES = r'''
     path: http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe
     product_id: '{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'
     arguments:
-    - /install
-    - /passive
-    - /norestart
+      - /install
+      - /passive
+      - /norestart
 
 - name: Install MSBuild thingy with arguments split to prevent quotes
   ansible.windows.win_package:
     path: https://download.visualstudio.microsoft.com/download/pr/9665567e-f580-4acd-85f2-bc94a1db745f/vs_BuildTools.exe
     product_id: '{D1437F51-786A-4F57-A99C-F8E94FBA1BD8}'
     arguments:
-    - --norestart
-    - --passive
-    - --wait
-    - --add
-    - Microsoft.Net.Component.4.6.1.TargetingPack
-    - --add
-    - Microsoft.Net.Component.4.6.TargetingPack
+      - --norestart
+      - --passive
+      - --wait
+      - --add
+      - Microsoft.Net.Component.4.6.1.TargetingPack
+      - --add
+      - Microsoft.Net.Component.4.6.TargetingPack
 
 - name: Install Remote Desktop Connection Manager from msi with a permanent log
   ansible.windows.win_package:

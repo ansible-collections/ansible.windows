@@ -110,8 +110,8 @@ EXAMPLES = r'''
     Key: HKEY_CURRENT_USER\ExampleKey
     ValueName: TestValue
     ValueData: TestData
-    PsDscRunAsCredential_username: '{{ansible_user}}'
-    PsDscRunAsCredential_password: '{{ansible_password}}'
+    PsDscRunAsCredential_username: '{{ ansible_user }}'
+    PsDscRunAsCredential_password: '{{ ansible_password }}'
   no_log: true
 
 - name: Create file with multiple attributes
@@ -119,8 +119,8 @@ EXAMPLES = r'''
     resource_name: File
     DestinationPath: C:\ansible\dsc
     Attributes: # can also be a comma separated string, e.g. 'Hidden, System'
-    - Hidden
-    - System
+      - Hidden
+      - System
     Ensure: Present
     Type: Directory
 
@@ -143,21 +143,21 @@ EXAMPLES = r'''
     State: Started
     PhysicalPath: C:\inetpub\wwwroot
     BindingInfo: # Example of a CimInstance[] DSC parameter (list of dicts)
-    - Protocol: https
-      Port: 1234
-      CertificateStoreName: MY
-      CertificateThumbprint: C676A89018C4D5902353545343634F35E6B3A659
-      HostName: DSCTest
-      IPAddress: '*'
-      SSLFlags: '1'
-    - Protocol: http
-      Port: 4321
-      IPAddress: '*'
+      - Protocol: https
+        Port: 1234
+        CertificateStoreName: MY
+        CertificateThumbprint: C676A89018C4D5902353545343634F35E6B3A659
+        HostName: DSCTest
+        IPAddress: '*'
+        SSLFlags: '1'
+      - Protocol: http
+        Port: 4321
+        IPAddress: '*'
     AuthenticationInfo: # Example of a CimInstance DSC parameter (dict)
-      Anonymous: no
+      Anonymous: false
       Basic: true
       Digest: false
-      Windows: yes
+      Windows: true
 '''
 
 RETURN = r'''

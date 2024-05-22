@@ -60,26 +60,26 @@ EXAMPLES = r'''
   ansible.windows.win_user_right:
     name: SeDenyInteractiveLogonRight
     users:
-    - Guest
-    - Users
+      - Guest
+      - Users
     action: set
 
 - name: Add account to Log on as a service
   ansible.windows.win_user_right:
     name: SeServiceLogonRight
     users:
-    - .\Administrator
-    - '{{ansible_hostname}}\local-user'
+      - .\Administrator
+      - '{{ansible_hostname}}\local-user'
     action: add
 
 - name: Remove accounts who can create Symbolic links
   ansible.windows.win_user_right:
     name: SeCreateSymbolicLinkPrivilege
     users:
-    - SYSTEM
-    - Administrators
-    - DOMAIN\User
-    - group@DOMAIN.COM
+      - SYSTEM
+      - Administrators
+      - DOMAIN\User
+      - group@DOMAIN.COM
     action: remove
 
 - name: Remove all accounts who cannot log on remote interactively

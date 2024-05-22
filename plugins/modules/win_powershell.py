@@ -149,11 +149,11 @@ EXAMPLES = r'''
       $PSVersionTable.PSVersion.Major
     executable: pwsh.exe
     arguments:
-    - -ExecutionPolicy
-    - ByPass
+      - -ExecutionPolicy
+      - ByPass
   register: pwsh_output
   failed_when:
-  - pwsh_output.output[0] != 7
+    - pwsh_output.output[0] != 7
 
 - name: Run code in check mode
   ansible.windows.win_powershell:
@@ -176,7 +176,7 @@ EXAMPLES = r'''
       else {
           echo 'also running in check mode'
       }
-  check_mode: yes
+  check_mode: true
 
 - name: Return a failure back to Ansible
   ansible.windows.win_powershell:
@@ -207,7 +207,6 @@ EXAMPLES = r'''
       Write-Output "Hello World!"
       Write-Verbose "Hello World!"
       Write-Debug "Hello World!"
-
 '''
 
 RETURN = r'''

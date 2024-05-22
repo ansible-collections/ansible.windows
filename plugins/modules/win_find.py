@@ -119,8 +119,8 @@ EXAMPLES = r'''
 - name: Find files in multiple paths
   ansible.windows.win_find:
     paths:
-    - C:\Temp
-    - D:\Temp
+      - C:\Temp
+      - D:\Temp
 
 - name: Find files in directory while searching recursively
   ansible.windows.win_find:
@@ -136,7 +136,7 @@ EXAMPLES = r'''
 - name: Find files with .log and .out extension using powershell wildcards
   ansible.windows.win_find:
     paths: D:\Temp
-    patterns: [ '*.log', '*.out' ]
+    patterns: ['*.log', '*.out']
 
 - name: Find files in path based on regex pattern
   ansible.windows.win_find:
@@ -192,8 +192,8 @@ EXAMPLES = r'''
 - name: Find folders/symlinks in multiple paths
   ansible.windows.win_find:
     paths:
-    - C:\Temp
-    - D:\Temp
+      - C:\Temp
+      - D:\Temp
     file_type: directory
 
 - name: Find files and return SHA256 checksum of files found

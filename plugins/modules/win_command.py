@@ -113,9 +113,9 @@ EXAMPLES = r'''
   ansible.windows.win_command:
     # When using argv, each entry is quoted in the module
     argv:
-    - C:\Program Files\My Application\run.exe
-    - argument 1
-    - -force
+      - C:\Program Files\My Application\run.exe
+      - argument 1
+      - -force
 '''
 
 RETURN = r'''

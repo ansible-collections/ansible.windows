@@ -316,7 +316,7 @@ EXAMPLES = r'''
   ansible.windows.win_user_right:
     name: SeServiceLogonRight
     users:
-    - DOMAIN\User
+      - DOMAIN\User
     action: add
 
 - name: Set the log on user to a domain account
@@ -371,20 +371,20 @@ EXAMPLES = r'''
 - name: Set dependencies to ones only in the list
   ansible.windows.win_service:
     name: service name
-    dependencies: [ service1, service2 ]
+    dependencies: [service1, service2]
 
 - name: Add dependencies to existing dependencies
   ansible.windows.win_service:
     name: service name
-    dependencies: [ service1, service2 ]
+    dependencies: [service1, service2]
     dependency_action: add
 
 - name: Remove dependencies from existing dependencies
   ansible.windows.win_service:
     name: service name
     dependencies:
-    - service1
-    - service2
+      - service1
+      - service2
     dependency_action: remove
 
 - name: Set required privileges for a service
@@ -392,8 +392,8 @@ EXAMPLES = r'''
     name: service name
     username: NT SERVICE\LocalService
     required_privileges:
-    - SeBackupPrivilege
-    - SeRestorePrivilege
+      - SeBackupPrivilege
+      - SeRestorePrivilege
 
 - name: Remove all required privileges for a service
   ansible.windows.win_service:
@@ -405,12 +405,12 @@ EXAMPLES = r'''
   ansible.windows.win_service:
     name: service name
     failure_actions:
-    - type: restart
-    - type: run_command
-      delay_ms: 1000
-    - type: restart
-      delay_ms: 5000
-    - type: reboot
+      - type: restart
+      - type: run_command
+        delay_ms: 1000
+      - type: restart
+        delay_ms: 5000
+      - type: reboot
     failure_command: C:\Windows\System32\cmd.exe /c mkdir C:\temp
     failure_reboot_msg: Restarting host because service name has failed
     failure_reset_period_sec: '0xFFFFFFFF'
@@ -419,9 +419,9 @@ EXAMPLES = r'''
   ansible.windows.win_service:
     name: service name
     failure_actions:
-    - type: restart
-      delay_ms: 5000
-    - type: none
+      - type: restart
+        delay_ms: 5000
+      - type: none
 
 - name: Remove failure action information
   ansible.windows.win_service:

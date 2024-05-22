@@ -69,8 +69,8 @@ EXAMPLES = r'''
 - name: Install multiple features in one task
   ansible.windows.win_optional_feature:
     name:
-    - NetFx3
-    - Microsoft-Windows-Subsystem-Linux
+      - NetFx3
+      - Microsoft-Windows-Subsystem-Linux
     state: present
 '''
 
