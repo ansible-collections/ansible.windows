@@ -107,21 +107,21 @@ EXAMPLES = r'''
 
 - name: Configure IE proxy to use auto detected settings without an explicit proxy
   win_inet_proxy:
-    auto_detect: yes
+    auto_detect: true
 
 - name: Configure IE proxy to use auto detected settings with a configuration script
   win_inet_proxy:
-    auto_detect: yes
+    auto_detect: true
     auto_config_url: http://proxy.ansible.com/proxy.pac
 
 - name: Configure IE to use explicit proxy host
   win_inet_proxy:
-    auto_detect: yes
+    auto_detect: true
     proxy: ansible.proxy
 
 - name: Configure IE to use explicit proxy host with port and without auto detection
   win_inet_proxy:
-    auto_detect: no
+    auto_detect: false
     proxy: ansible.proxy:8080
 
 - name: Configure IE to use a specific proxy per protocol
@@ -138,10 +138,10 @@ EXAMPLES = r'''
   win_inet_proxy:
     proxy: ansible.proxy
     bypass:
-    - server1
-    - server2
-    - <-loopback>
-    - <local>
+      - server1
+      - server2
+      - <-loopback>
+      - <local>
 
 - name: Remove any explicit proxies that are set
   win_inet_proxy:
@@ -161,7 +161,7 @@ EXAMPLES = r'''
     username: proxyuser
     secret: proxypass
     state: present
-  become: yes
+  become: true
   become_user: '{{ ansible_user }}'
   become_method: runas
 '''
