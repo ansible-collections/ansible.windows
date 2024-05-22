@@ -100,7 +100,7 @@ EXAMPLES = r'''
 
 - name: Create new Windows domain in a new forest with specific parameters
   ansible.windows.win_domain:
-    create_dns_delegation: no
+    create_dns_delegation: false
     database_path: C:\Windows\NTDS
     dns_domain_name: ansible.vagrant
     domain_mode: Win2012R2

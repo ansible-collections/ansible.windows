@@ -114,7 +114,7 @@ EXAMPLES = r"""
   ansible.windows.win_copy:
     src: /srv/myfiles/foo.conf
     dest: C:\Temp\renamed-foo.conf
-    backup: yes
+    backup: true
 
 - name: Copy a single file keeping the filename
   ansible.windows.win_copy:

@@ -68,37 +68,39 @@ reboot_required:
 '''
 
 EXAMPLES = r'''
-
 # host should be a member of domain ansible.vagrant; module will ensure the hostname is mydomainclient
 # and will use the passed credentials to join domain if necessary.
 # Ansible connection should use local credentials if possible.
 # If a reboot is required, the second task will trigger one and wait until the host is available.
-- hosts: winclient
+- name: Play to join the hsots to a domain
+  hosts: winclient
   gather_facts: false
   tasks:
-  - ansible.windows.win_domain_membership:
-      dns_domain_name: ansible.vagrant
-      hostname: mydomainclient
-      domain_admin_user: testguy@ansible.vagrant
-      domain_admin_password: password123!
-      domain_ou_path: "OU=Windows,OU=Servers,DC=ansible,DC=vagrant"
-      state: domain
-    register: domain_state
+    - name: Join host to the ansible.vagrant domain
+      ansible.windows.win_domain_membership:
+        dns_domain_name: ansible.vagrant
+        hostname: mydomainclient
+        domain_admin_user: testguy@ansible.vagrant
+        domain_admin_password: password123!
+        domain_ou_path: "OU=Windows,OU=Servers,DC=ansible,DC=vagrant"
+        state: domain
+      register: domain_state
 
-  - ansible.windows.win_reboot:
-    when: domain_state.reboot_required
-
-
+    - name: Reboot host after domain join
+      ansible.windows.win_reboot:
+      when: domain_state.reboot_required
 
 # Host should be in workgroup mywg- module will use the passed credentials to clean-unjoin domain if possible.
 # Ansible connection should use local credentials if possible.
 # The domain admin credentials can be sourced from a vault-encrypted variable
-- hosts: winclient
+- name: Play to set the hosts workgroup
+  hosts: winclient
   gather_facts: false
   tasks:
-  - ansible.windows.win_domain_membership:
-      workgroup_name: mywg
-      domain_admin_user: '{{ win_domain_admin_user }}'
-      domain_admin_password: '{{ win_domain_admin_password }}'
-      state: workgroup
+    - name: Set workgroup to mywg
+      ansible.windows.win_domain_membership:
+        workgroup_name: mywg
+        domain_admin_user: '{{ win_domain_admin_user }}'
+        domain_admin_password: '{{ win_domain_admin_password }}'
+        state: workgroup
 '''

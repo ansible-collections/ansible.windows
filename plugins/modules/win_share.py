@@ -102,7 +102,7 @@ EXAMPLES = r'''
     name: company
     description: top secret share
     path: C:\shares\company
-    list: yes
+    list: true
     full: Administrators,CEO
     read: Global
 
@@ -112,7 +112,7 @@ EXAMPLES = r'''
     scope_name: FCMSSQL01
     description: SQL Backups
     path: E:\sqlbackup
-    list: yes
+    list: true
     full: svc.mssql
     read: Global
 

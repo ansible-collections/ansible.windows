@@ -116,7 +116,7 @@ EXAMPLES = r'''
     dest: C:\temp\earthrise.jpg
     checksum_url: http://www.example.com/sha256sum.txt
     checksum_algorithm: sha256
-    force: True
+    force: true
 
 - name: Download src with sha256 checksum url
   ansible.windows.win_get_url:
@@ -124,7 +124,7 @@ EXAMPLES = r'''
     dest: C:\temp\earthrise.jpg
     checksum: a97e6837f60cec6da4491bab387296bbcd72bdba
     checksum_algorithm: sha1
-    force: True
+    force: true
 '''
 
 RETURN = r'''

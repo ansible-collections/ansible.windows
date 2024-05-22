@@ -61,8 +61,8 @@ EXAMPLES = r'''
 - name: Install IIS (Web-Server and Web-Common-Http)
   ansible.windows.win_feature:
     name:
-    - Web-Server
-    - Web-Common-Http
+      - Web-Server
+      - Web-Common-Http
     state: present
 
 - name: Install NET-Framework-Core from file

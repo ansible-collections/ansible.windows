@@ -61,8 +61,8 @@ EXAMPLES = r'''
 - name: Ensure that system32 and Powershell are present on the global system path, and in the specified order
   ansible.windows.win_path:
     elements:
-    - '%SystemRoot%\system32'
-    - '%SystemRoot%\system32\WindowsPowerShell\v1.0'
+      - '%SystemRoot%\system32'
+      - '%SystemRoot%\system32\WindowsPowerShell\v1.0'
 
 - name: Ensure that C:\Program Files\MyJavaThing is not on the current user's CLASSPATH
   ansible.windows.win_path:
