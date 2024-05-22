@@ -97,22 +97,22 @@ EXAMPLES = r'''
 
 - name: Create mapped drive with credentials and save the username and password
   block:
-  - name: Save the network credentials required for the mapped drive
-    community.windows.win_credential:
-      name: server
-      type: domain_password
-      username: username@DOMAIN
-      secret: Password01
-      state: present
+    - name: Save the network credentials required for the mapped drive
+      community.windows.win_credential:
+        name: server
+        type: domain_password
+        username: username@DOMAIN
+        secret: Password01
+        state: present
 
-  - name: Create a mapped drive that requires authentication
-    community.windows.win_mapped_drive:
-      letter: M
-      path: \\SERVER\C$
-      state: present
+    - name: Create a mapped drive that requires authentication
+      community.windows.win_mapped_drive:
+        letter: M
+        path: \\SERVER\C$
+        state: present
   vars:
     # become is required to save and retrieve the credentials in the tasks
-    ansible_become: yes
+    ansible_become: true
     ansible_become_method: runas
     ansible_become_user: '{{ ansible_user }}'
     ansible_become_pass: '{{ ansible_password }}'
