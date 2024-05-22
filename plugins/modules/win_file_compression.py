@@ -68,7 +68,7 @@ EXAMPLES = r'''
   community.windows.win_file_compression:
     path: C:\business\reports
     state: present
-    recurse: yes
+    recurse: true
 
 # This will only check C:\business\reports for the compressed state
 # If C:\business\reports is compressed, it will not make a change
@@ -77,9 +77,9 @@ EXAMPLES = r'''
 - name: Compress reports directory and all subdirectories (quick)
   community.windows.win_file_compression:
     path: C:\business\reports
-    compressed: yes
-    recurse: yes
-    force: no
+    compressed: true
+    recurse: true
+    force: false
 '''
 
 RETURN = r'''
