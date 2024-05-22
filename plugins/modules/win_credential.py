@@ -173,11 +173,11 @@ EXAMPLES = r'''
     comment: Credential for server.domain.com
     persistence: enterprise
     attributes:
-    - name: Source
-      data: Ansible
-    - name: Unique Identifier
-      data: Y3VzdG9tIGF0dHJpYnV0ZQ==
-      data_format: base64
+      - name: Source
+        data: Ansible
+      - name: Unique Identifier
+        data: Y3VzdG9tIGF0dHJpYnV0ZQ==
+        data_format: base64
 
 - name: Create a certificate credential
   community.windows.win_credential:
