@@ -77,7 +77,7 @@ EXAMPLES = r'''
     drive: C
     initial_size: 1024
     maximum_size: 1024
-    override: no
+    override: false
     state: present
 
 - name: Set C pagefile, override if exists
@@ -94,16 +94,16 @@ EXAMPLES = r'''
 
 - name: Remove all current pagefiles, enable AutomaticManagedPagefile and query at the end
   community.windows.win_pagefile:
-    remove_all: yes
-    automatic: yes
+    remove_all: true
+    automatic: true
 
 - name: Remove all pagefiles disable AutomaticManagedPagefile and set C pagefile
   community.windows.win_pagefile:
     drive: C
     initial_size: 2048
     maximum_size: 2048
-    remove_all: yes
-    automatic: no
+    remove_all: true
+    automatic: false
     state: present
 
 - name: Set D pagefile, override if exists
