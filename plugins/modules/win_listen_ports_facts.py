@@ -51,8 +51,8 @@ EXAMPLES = r'''
 - name: Retrieve only ports with Closing and Established states
   community.windows.win_listen_ports_facts:
     tcp_filter:
-        - Closing
-        - Established
+      - Closing
+      - Established
 
 - name: Get ports facts with only the year within the date field
   community.windows.win_listen_ports_facts:
