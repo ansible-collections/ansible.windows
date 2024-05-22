@@ -39,15 +39,15 @@ EXAMPLES = r'''
 - name: Replace SNMP communities and managers
   community.windows.win_snmp:
     community_strings:
-    - public
+      - public
     permitted_managers:
-    - 192.168.1.2
+      - 192.168.1.2
     action: set
 
 - name: Replace SNMP communities and clear managers
   community.windows.win_snmp:
     community_strings:
-    - public
+      - public
     permitted_managers: []
     action: set
 '''
