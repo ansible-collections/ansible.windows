@@ -70,9 +70,9 @@ EXAMPLES = r'''
   community.windows.win_http_proxy:
     proxy: hostname:8080
     bypass:
-    - server1
-    - server2
-    - <local>
+      - server1
+      - server2
+      - <local>
 
 - name: Set the proxy based on the IE proxy settings
   community.windows.win_http_proxy:
