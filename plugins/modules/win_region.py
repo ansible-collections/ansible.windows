@@ -59,7 +59,7 @@ EXAMPLES = r'''
 - name: Set the region format to English Australia and copy settings to new profiles
   community.windows.win_region:
     format: en-AU
-    copy_settings: yes
+    copy_settings: true
 
 - name: Set the location to United States
   community.windows.win_region:
