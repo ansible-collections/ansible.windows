@@ -90,7 +90,7 @@ EXAMPLES = r'''
     drive_letter: D
     file_system: NTFS
     new_label: Formatted
-    full: True
+    full: true
 '''
 
 RETURN = r'''
