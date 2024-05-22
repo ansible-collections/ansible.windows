@@ -50,16 +50,16 @@ EXAMPLES = r'''
   community.windows.win_firewall:
     state: enabled
     profiles:
-    - Domain
-    - Private
-    - Public
+      - Domain
+      - Private
+      - Public
   tags: enable_firewall
 
 - name: Disable Domain firewall
   community.windows.win_firewall:
     state: disabled
     profiles:
-    - Domain
+      - Domain
   tags: disable_firewall
 
 - name: Enable firewall for Domain profile and block outbound connections
