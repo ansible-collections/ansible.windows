@@ -4,6 +4,26 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.4.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.4.0
+
+Minor Changes
+-------------
+
+- win_powershell - Added the ``sensitive_parameters`` option that can be used to pass in a SecureString or PSCredential parameter value.
+- win_setup - Added the ``ansible_win_rm_certificate_thumbprint`` fact to display the thumbprint of the certificate in use
+- win_user - Added the ability to set an account expiration date using the ``account_expires`` option - https://github.com/ansible-collections/ansible.windows/issues/610
+
+Bugfixes
+--------
+
+- setup - Provide WMI/CIM fallback for facts that rely on SMBIOS when that is unavailable
+
 v2.3.0
 ======
 
