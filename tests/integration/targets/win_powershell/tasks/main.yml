@@ -25,6 +25,9 @@
   register: dt_values
   changed_when: False
 
+- name: run failure tests
+  import_tasks: failure.yml
+
 - name: run tests using current interpreter
   import_tasks: tests.yml
 
