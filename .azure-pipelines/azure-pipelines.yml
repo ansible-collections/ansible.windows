@@ -118,7 +118,6 @@ stages:
       - Ansible_2_17
       - Ansible_2_16
       - Ansible_2_15
-      - Ansible_2_14
       - Windows
     jobs:
       - template: templates/coverage.yml
