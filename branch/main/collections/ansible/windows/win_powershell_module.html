@@ -250,6 +250,47 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <td><div class="ansible-option-cell"><p>The PowerShell script to run.</p>
 </div></td>
 </tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sensitive_parameters"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-sensitive-parameters"><strong>sensitive_parameters</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sensitive_parameters" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Parameters to pass into the script as a SecureString or PSCredential.</p>
+<p>Each sensitive value will be marked with <code class="docutils literal notranslate"><span class="pre">no_log</span></code> to ensure they are not exposed in the module invocation args logs.</p>
+<p>The <em>value</em> suboption can be used to create a SecureString value while <em>username</em> and <em>password</em> can be used to create a PSCredential value.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sensitive_parameters/name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-sensitive-parameters-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sensitive_parameters/name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The name of the parameter to pass this value to.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sensitive_parameters/password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-sensitive-parameters-password"><strong>password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sensitive_parameters/password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The <code class="docutils literal notranslate"><span class="pre">Password</span></code> for the PSCredential value.</p>
+<p>This is mutually exclusive with <em>value</em> and must be set when <em>username</em> is provided.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sensitive_parameters/username"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-sensitive-parameters-username"><strong>username</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sensitive_parameters/username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The <code class="docutils literal notranslate"><span class="pre">UserName</span></code> for the PSCredential value.</p>
+<p>This is mutually exclusive with <em>value</em>.</p>
+<p>This value is <strong>NOT</strong> added to the <code class="docutils literal notranslate"><span class="pre">no_log</span></code> list.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-sensitive_parameters/value"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-sensitive-parameters-value"><strong>value</strong></p>
+<a class="ansibleOptionLink" href="#parameter-sensitive_parameters/value" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The string to pass as a SecureString of the parameter specified by <em>name</em>.</p>
+<p>This is mutually exclusive with <em>username</em> and <em>password</em>.</p>
+</div></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -386,6 +427,37 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="no">Write-Output &quot;Hello World!&quot;</span>
 <span class="w">      </span><span class="no">Write-Verbose &quot;Hello World!&quot;</span>
 <span class="w">      </span><span class="no">Write-Debug &quot;Hello World!&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set sensitive parameter value as SecureString parameter</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">param(</span>
+<span class="w">          </span><span class="no">[string]$Uri,</span>
+<span class="w">          </span><span class="no">[SecureString]$Token</span>
+<span class="w">      </span><span class="no">)</span>
+
+<span class="w">      </span><span class="no">Invoke-WebRequest -Uri $Uri -Token $Token</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">Uri</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">foo</span>
+<span class="w">    </span><span class="nt">sensitive_parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Token</span>
+<span class="w">        </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">&#39;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set credential parameter</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">param(</span>
+<span class="w">          </span><span class="no">[string]$Uri,</span>
+<span class="w">          </span><span class="no">[PSCredential]$Credential</span>
+<span class="w">      </span><span class="no">)</span>
+
+<span class="w">      </span><span class="no">Invoke-WebRequest -Uri $Uri -Credential $Credential</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">Uri</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">foo</span>
+<span class="w">    </span><span class="nt">sensitive_parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Credential</span>
+<span class="w">        </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CredUserName</span>
+<span class="w">        </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">&#39;</span>
 </pre></div>
 </div>
 </section>
