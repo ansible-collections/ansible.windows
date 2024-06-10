@@ -712,3 +712,23 @@ releases:
     - win_get_url-tls13.yml
     - win_powershell-fix-using.yml
     release_date: '2024-03-20'
+  2.4.0:
+    changes:
+      bugfixes:
+      - setup - Provide WMI/CIM fallback for facts that rely on SMBIOS when that is
+        unavailable
+      minor_changes:
+      - win_powershell - Added the ``sensitive_parameters`` option that can be used
+        to pass in a SecureString or PSCredential parameter value.
+      - win_setup - Added the ``ansible_win_rm_certificate_thumbprint`` fact to display
+        the thumbprint of the certificate in use
+      - win_user - Added the ability to set an account expiration date using the ``account_expires``
+        option - https://github.com/ansible-collections/ansible.windows/issues/610
+      release_summary: Release summary for v2.4.0
+    fragments:
+    - release-2.4.0.yml
+    - setup-smbios.yml
+    - win_powershell-securestring.yml
+    - win_setup-fact.yml
+    - win_user-account-expires.yml
+    release_date: '2024-06-10'

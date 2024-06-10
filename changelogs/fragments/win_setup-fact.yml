@@ -1,4 +1,0 @@
-minor_changes:
-  - >-
-    win_setup - Added the ``ansible_win_rm_certificate_thumbprint`` fact to display the thumbprint
-    of the certificate in use
