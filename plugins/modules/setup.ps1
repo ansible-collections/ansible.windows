@@ -579,7 +579,21 @@ $factMeta = @(
     @{
         Subsets = 'bios'
         Code = {
-            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            try {
+                $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            }
+            catch [System.ComponentModel.Win32Exception] {
+                # Fallback to CIM which may not work for non-admins but better
+                # than nothing
+                $win32CS = Get-CimInstance -ClassName Win32_ComputerSystem -Property Model
+                $win32Bios = Get-CimInstance -ClassName Win32_Bios -Property ReleaseDate, SMBIOSBIOSVersion, SerialNumber
+                $bios = [PSCustomObject]@{
+                    ReleaseDate = $win32Bios.ReleaseDate
+                    SMBIOSBIOSVersion = $win32Bios.SMBIOSBIOSVersion
+                    Model = $win32CS.Model.Trim()
+                    SerialNumber = $win32Bios.SerialNumber
+                }
+            }
 
             $releaseDate = if ($bios.ReleaseDate) {
                 $bios.ReleaseDate.ToUniversalTime().ToString('MM/dd/yyyy')
@@ -834,7 +848,13 @@ $factMeta = @(
     @{
         Subsets = 'platform'
         Code = {
-            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            try {
+                $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            }
+            catch [System.ComponentModel.Win32Exception] {
+                $bios = Get-CimInstance -ClassName Win32_ComputerSystem -Property Manufacturer
+            }
+
             $domainInfo = New-Object -TypeName Ansible.Windows.Setup.DomainInfo
             $systemInfo = New-Object -TypeName Ansible.Windows.Setup.SystemInfo
             $osVersion = [Environment]::OSVersion
@@ -959,7 +979,15 @@ $factMeta = @(
     @{
         Subsets = 'processor'
         Code = {
-            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            try {
+                $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            }
+            catch [System.ComponentModel.Win32Exception] {
+                $procCount = Get-CimInstance -ClassName Win32_ComputerSystem -Property NumberOfProcessors
+                $bios = [PSCustomObject]@{
+                    ProcessorInfo = [object[]]::new($procCount.NumberOfProcessors)
+                }
+            }
             $systemInfo = New-Object -TypeName Ansible.Windows.Setup.SystemInfo
 
             $getParams = @{
@@ -1064,7 +1092,12 @@ $factMeta = @(
     @{
         Subsets = 'virtual'
         Code = {
-            $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            try {
+                $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+            }
+            catch [System.ComponentModel.Win32Exception] {
+                $bios = Get-CimInstance -ClassName Win32_ComputerSystem -Property Model, Manufacturer
+            }
 
             $modelMap = @{
                 kvm = @('KVM', 'KVM Server', 'Bochs', 'AHV')

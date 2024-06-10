@@ -1,0 +1,2 @@
+bugfixes:
+  - setup - Provide WMI/CIM fallback for facts that rely on SMBIOS when that is unavailable
