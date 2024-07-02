@@ -50,7 +50,7 @@ EXAMPLES: |
     register: long_cmd
 
   - name: Wait for asynchronous job to end
-    ansible.builtin.async_status:
+    ansible.windows.async_status:
       jid: '{{ long_cmd.ansible_job_id }}'
     register: job_result
     until: job_result.finished
