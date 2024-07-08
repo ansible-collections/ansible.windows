@@ -25,7 +25,7 @@ DOCUMENTATION:
 
 EXAMPLES: |
   - name: Retrieve remote ini file on a Windows host
-    ansible.builtin.slurp:
+    ansible.windows.slurp:
       src: C:\Program Files\Program\program.ini
     register: program_conf
 
