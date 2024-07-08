@@ -5,7 +5,7 @@ DOCUMENTATION:
   module: setup
   short_description: Gathers facts about remote hosts
   seealso:
-    - module: ansible.builtin.setup
+    - module: ansible.windows.setup
   options:
     gather_subset:
       description:
@@ -53,4 +53,4 @@ DOCUMENTATION:
 
 EXAMPLES: |
   - name: run the setup facts
-    ansible.builtin.setup:
+    ansible.windows.setup:
