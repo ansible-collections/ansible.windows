@@ -740,15 +740,15 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
                     $paramDetails.password | ConvertTo-SecureString -AsPlainText -Force
                 }
                 else {
-                    [securestring]::new()
+                    New-Object -TypeName System.Security.SecureString
                 }
-                [pscredential]::new($paramDetails.username, $credPass)
+                New-Object System.Management.Automation.PSCredential ($paramDetails.Username, $credPass)
             }
             elseif ($paramDetails.value) {
                 $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
             }
             else {
-                [securestring]::new()
+                New-Object -TypeName System.Security.SecureString
             }
 
             $parameters[$paramDetails.name] = $value
