@@ -742,7 +742,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
                 else {
                     New-Object -TypeName System.Security.SecureString
                 }
-                New-Object System.Management.Automation.PSCredential ($paramDetails.Username, $credPass)
+                New-Object System.Management.Automation.PSCredential ($paramDetails.username, $credPass)
             }
             elseif ($paramDetails.value) {
                 $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
