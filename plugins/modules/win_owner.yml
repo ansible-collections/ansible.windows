@@ -1,0 +1,48 @@
+# Copyright: (c) 2015, Hans-Joachim Kliemeck <git@kliemeck.de>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_owner
+  short_description: Set owner
+  description:
+    - Set owner of files or directories.
+  options:
+    path:
+      description:
+        - Path to be used for changing owner.
+      type: path
+      required: true
+    user:
+      description:
+        - Name to be used for changing owner.
+        - This value can be in the form of a SecurityIdentifier string, a user
+          or group in the Netlogon C(DOMAIN\User) or UPN format
+          (user@DOMAIN.COM).
+      type: str
+      required: true
+    recurse:
+      description:
+        - Indicates if the owner should be changed recursively.
+      type: bool
+      default: false
+  seealso:
+    - module: ansible.windows.win_acl
+    - module: ansible.windows.win_file
+    - module: ansible.windows.win_stat
+  author:
+    - Hans-Joachim Kliemeck (@h0nIg)
+
+EXAMPLES: |
+  - name: Change owner of path
+    ansible.windows.win_owner:
+      path: C:\apache
+      user: apache
+      recurse: true
+
+  - name: Set the owner of root directory
+    ansible.windows.win_owner:
+      path: C:\apache
+      user: SYSTEM
+      recurse: false
+
+RETURN: {}

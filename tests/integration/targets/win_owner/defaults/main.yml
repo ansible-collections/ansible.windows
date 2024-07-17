@@ -1,1 +1,2 @@
-test_win_owner_path: C:\ansible\win_owner .ÅÑŚÌβŁÈ [$!@^&test(;)]
+test_win_owner_path: '{{ remote_tmp_dir }}\win_owner .ÅÑŚÌβŁÈ [$!@^&test(;)]'
+test_win_owner_user: test win owner
