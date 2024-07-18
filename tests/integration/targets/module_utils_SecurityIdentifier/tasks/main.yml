@@ -1,0 +1,37 @@
+- block:
+  - name: create test user
+    win_user:
+      name: test sid user
+      password: ea4260e5-04b2-49a3-ac1b-a1c32c104ab2
+    register: test_user
+
+  - name: create test group
+    win_group:
+      name: test sid group
+      state: present
+
+  - name: get test group SID
+    win_powershell:
+      error_action: stop
+      script: |
+        $group = Get-LocalGroup -Name 'test sid group'
+        $group.SID.Value
+    register: test_group
+
+  - name: test SecurityIdentifier
+    security_identifier_test:
+      user: test sid user
+      user_sid: '{{ test_user.sid }}'
+      group: test sid group
+      group_sid: '{{ test_group.output[0] }}'
+
+  always:
+  - name: remove test user
+    win_user:
+      name: test sid user
+      state: absent
+
+  - name: remove test group
+    win_group:
+      name: test sid group
+      state: absent

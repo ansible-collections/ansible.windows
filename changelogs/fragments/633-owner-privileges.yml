@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+      win_owner - Try to enable extra privileges if available to set the owner even when the caller may not have
+      explicit rights to do so normally - https://github.com/ansible-collections/ansible.windows/issues/633
