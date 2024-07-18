@@ -121,7 +121,7 @@
       <li class="breadcrumb-item active">ansible.windows.win_owner module – Set owner</li>
       <li class="wy-breadcrumbs-aside">
               <!-- User defined GitHub URL -->
-              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_owner.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_owner.yml?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -188,6 +188,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <a class="ansibleOptionLink" href="#parameter-user" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Name to be used for changing owner.</p>
+<p>This value can be in the form of a SecurityIdentifier string, a user or group in the Netlogon <code class="docutils literal notranslate"><span class="pre">DOMAIN\User</span></code> or UPN format (<a class="reference external" href="mailto:user&#37;&#52;&#48;DOMAIN&#46;COM">user<span>&#64;</span>DOMAIN<span>&#46;</span>COM</a>).</p>
 </div></td>
 </tr>
 </tbody>
