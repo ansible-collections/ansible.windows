@@ -1,0 +1,3 @@
+bugfixes:
+  - >-
+      win_updates - Base64 encode the update wrapper and payload to prevent locale-specific encoding issues.
