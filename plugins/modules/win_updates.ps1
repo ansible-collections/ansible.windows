@@ -420,8 +420,11 @@ try {
     $execWrapper = $input | Out-String
     $splitParts = $execWrapper.Split(@(\"`0`0`0`0\"), 2, [StringSplitOptions]::RemoveEmptyEntries)
 
-    Invoke-Expression ('Function Invoke-InProcessStub { ' + $splitParts[0] + '}')
-    Invoke-InProcessStub $splitParts[1]
+    $runner = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($splitParts[0]))
+    $payload = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($splitParts[1]))
+
+    Invoke-Expression ('Function Invoke-InProcessStub { ' + $runner + '}')
+    Invoke-InProcessStub $payload
 }
 catch {
     $result = @{
@@ -520,7 +523,10 @@ catch {
             })
 
         try {
-            $stdin.WriteLine("$runner`0`0`0`0$runPayload")
+            $runnerEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($runner))
+            $runPayloadEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($runPayload))
+
+            $stdin.WriteLine("$runnerEncoded`0`0`0`0$runPayloadEncoded")
             $stdin.Flush()
             $stdin.Dispose()
         }
