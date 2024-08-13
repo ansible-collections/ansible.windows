@@ -137,7 +137,7 @@ EXAMPLES = r'''
     url: http://www.example.com/earthrise.jpg
     dest: C:\temp\earthrise.jpg
     force: true
-    set_zone: yes
+    set_zone: true
 '''
 
 RETURN = r'''
