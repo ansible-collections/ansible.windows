@@ -242,3 +242,20 @@
     that:
     - no_redirection is changed
     - no_redirection.status_code == 302
+
+- name: download single file with zone insert
+  win_get_url:
+    url: https://{{ httpbin_host }}/base64/SG93IG5vdyBicm93biBjb3c=
+    dest: '{{ testing_dir }}\output_zone.txt'
+  check_mode: yes
+  register: http_download_check
+
+- name: check if zone file data written
+  win_shell: Get-Content {{ testing_dir }}\output_zone.txt:Zone.Identifier
+  register: zone_information
+
+- name: assert 
+  assert:
+    that:
+    - zone_infomation.stderr is null
+    - zone_information.stdout == "[ZoneTransfer]\nZoneId=3\nReferrerUrl=https://{{ httpbin_host }}/base64/SG93IG5vdyBicm93biBjb3c=\nHostUrl=https://{{ httpbin_host }}/base64/SG93IG5vdyBicm93biBjb3c="
