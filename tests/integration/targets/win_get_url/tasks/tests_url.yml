@@ -251,7 +251,7 @@
   register: http_download_check
 
 - name: check if zone file data written
-  win_shell: Get-Content {{ testing_dir }}\output_zone.txt:Zone.Identifier
+  win_shell: 'Get-Content -Path {{ testing_dir }}\output_zone.txt:Zone.Identifier'
   register: zone_information
 
 - name: assert writing up zones was sucsess
