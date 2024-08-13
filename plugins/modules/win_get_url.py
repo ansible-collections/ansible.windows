@@ -67,7 +67,7 @@ options:
   url_timeout:
     aliases:
     - timeout
-    set_zone:
+  set_zone:
     description:
     - Markes the file as a file downloaded from internet zone for security purpose
       using Zone.Identifier stream.
