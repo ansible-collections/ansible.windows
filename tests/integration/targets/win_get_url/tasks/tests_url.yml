@@ -251,8 +251,8 @@
 
 - name: check if zone file data written
   win_shell: |
-    $path = '{{ testing_dir }}\output'
-    Get-Content -Path $path:Zone.Identifier
+    $path = '{{ testing_dir }}\output:Zone.Identifier'
+    Get-Content -Path $path
   register: zone_information
 
 - name: assert writing up zones was sucsess
