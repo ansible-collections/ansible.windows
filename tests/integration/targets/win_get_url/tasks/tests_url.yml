@@ -246,12 +246,13 @@
 - name: download single file with zone insert
   win_get_url:
     url: https://{{ httpbin_host }}/base64/SG93IG5vdyBicm93biBjb3c=
-    dest: '{{ testing_dir }}\output_zone.txt'
-  check_mode: yes
+    dest: '{{ testing_dir }}\output'
   register: http_download_check
 
 - name: check if zone file data written
-  win_shell: 'Get-Content -Path {{ testing_dir }}\output_zone.txt:Zone.Identifier'
+  win_shell: |
+    $path = '{{ testing_dir }}\output'
+    Get-Content -Path $path -Stream Zone.Identifier
   register: zone_information
 
 - name: assert writing up zones was sucsess
