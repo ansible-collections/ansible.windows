@@ -254,7 +254,7 @@
   win_shell: Get-Content {{ testing_dir }}\output_zone.txt:Zone.Identifier
   register: zone_information
 
-- name: assert 
+- name: assert writing up zones was sucsess
   assert:
     that:
     - zone_infomation.stderr is null
