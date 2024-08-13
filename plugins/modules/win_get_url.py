@@ -67,6 +67,12 @@ options:
   url_timeout:
     aliases:
     - timeout
+    set_zone:
+    description:
+    - Markes the file as a file downloaded from internet zone for security purpose
+      using Zone.Identifier stream.
+    type: bool
+    default: no
 notes:
 - If your URL includes an escaped slash character (%2F) this module will convert it to a real slash.
   This is a result of the behaviour of the System.Uri class as described in
@@ -125,6 +131,13 @@ EXAMPLES = r'''
     checksum: a97e6837f60cec6da4491bab387296bbcd72bdba
     checksum_algorithm: sha1
     force: true
+
+- name: Download src with set_zone on
+  ansible.windows.win_get_url:
+    url: http://www.example.com/earthrise.jpg
+    dest: C:\temp\earthrise.jpg
+    force: true
+    set_zone: yes
 '''
 
 RETURN = r'''

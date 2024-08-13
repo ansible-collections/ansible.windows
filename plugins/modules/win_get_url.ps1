@@ -19,6 +19,7 @@ $spec = @{
         checksum = @{ type = 'str' }
         checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
         checksum_url = @{ type = 'str' }
+        set_zone = @{ type = 'bool'; default = $false }
 
         # Defined for ease of use and backwards compatibility
         url_method = @{
@@ -41,6 +42,7 @@ $force = $module.Params.force
 $checksum = $module.Params.checksum
 $checksum_algorithm = $module.Params.checksum_algorithm
 $checksum_url = $module.Params.checksum_url
+$set_zone = $module.Params.set_zone
 
 $module.Result.elapsed = 0
 $module.Result.url = $url
@@ -144,14 +146,29 @@ Function Get-Checksum {
     }
     return $hash
 }
+Function Set-FileZoneStream {
+    <#
+    .SYNOPSIS
+    Set the input file with Zone.Identifier stream as downloaded from a browser.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][Uri]$Url,
+        [Parameter(Mandatory = $true)][String]$Dest
+    )
+    if (-not (Test-Path -LiteralPath $Dest)) {
+        $module.FailJson("Cannt find '$Dest' for setting stream.")
+    }
+    Set-Content -Path $Dest -Stream Zone.Identifier -Value '[ZoneTransfer]', 'ZoneId=3', "ReferrerUrl=$Url", "HostUrl=$Url"
 
+}
 Function Invoke-DownloadFile {
     param(
         [Parameter(Mandatory = $true)][Ansible.Basic.AnsibleModule]$Module,
         [Parameter(Mandatory = $true)][Uri]$Uri,
         [Parameter(Mandatory = $true)][String]$Dest,
         [String]$Checksum,
-        [String]$ChecksumAlgorithm
+        [String]$ChecksumAlgorithm,
+        [bool]$SetZone = $false
     )
 
     # Check $dest parent folder exists before attempting download, which avoids unhelpful generic error message.
@@ -201,6 +218,9 @@ Function Invoke-DownloadFile {
 
         if ($download) {
             Copy-Item -LiteralPath $tmp_dest -Destination $Dest -Force -WhatIf:$Module.CheckMode > $null
+            if ($SetZone) {
+                Set-FileZoneStream -Url $Uri -Dest $Dest
+            }
             $Module.Result.changed = $true
         }
     }
@@ -264,14 +284,14 @@ if ($force -or -not (Test-Path -LiteralPath $dest)) {
     # force=yes or dest does not exist, download the file
     # Note: Invoke-DownloadFile will compare the checksums internally if dest exists
     Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
-        -ChecksumAlgorithm $checksum_algorithm
+        -ChecksumAlgorithm $checksum_algorithm -SetZone $set_zone
 }
 else {
     # force=no, we want to check the last modified dates and only download if they don't match
     $is_modified = Compare-ModifiedFile -Module $module -Uri $url -Dest $dest
     if ($is_modified) {
         Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
-            -ChecksumAlgorithm $checksum_algorithm
+            -ChecksumAlgorithm $checksum_algorithm -SetZone $set_zone
     }
 }
 
