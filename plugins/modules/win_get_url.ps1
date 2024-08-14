@@ -158,7 +158,8 @@ Function Set-FileZoneStream {
     if (-not (Test-Path -LiteralPath $Dest)) {
         $module.FailJson("Cannt find '$Dest' for setting stream.")
     }
-    Set-Content -Path $Dest -Stream Zone.Identifier -Value '[ZoneTransfer]', 'ZoneId=3', "ReferrerUrl=$Url", "HostUrl=$Url"
+    $stream_dest = $Dest + ":Zone.Identifier"
+    Set-Content -Path $stream_dest -Value '[ZoneTransfer]', 'ZoneId=3', "ReferrerUrl=$Url", "HostUrl=$Url"
 
 }
 Function Invoke-DownloadFile {
