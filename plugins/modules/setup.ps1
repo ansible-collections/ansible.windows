@@ -876,12 +876,27 @@ $factMeta = @(
                 $searcher = New-Object -TypeName "$namespace.PrincipalSearcher" -ArgumentList $principal
                 $groups = $searcher.FindOne()
 
-                foreach ($user in $groups.Members) {
-                    if ($user.Sid.Value.EndsWith("-500")) {
-                        $machineSid = $user.Sid.AccountDomainSid.Value
-                        break
+                # We manually enumerate the enumerable in case an entry fails to resolve
+                # the SID.
+                # https://github.com/ansible-collections/ansible.windows/issues/606
+                $groupMembers = $groups.Members.GetEnumerator()
+                while ($true) {
+                    try {
+                        if (-not $groupMembers.MoveNext()) {
+                            break
+                        }
+                        $user = $groupMembers.Current
+                        if ($user.Sid.Value.EndsWith("-500")) {
+                            $machineSid = $user.Sid.AccountDomainSid.Value
+                            break
+                        }
+                    }
+                    catch {
+                        # Satisfy the pslint sanity test.
+                        $null = $_
                     }
                 }
+                $groupMembers.Dispose()
             }
             catch {
                 $module.Warn("Error during machine sid retrieval: $($_.Exception.Message)")
