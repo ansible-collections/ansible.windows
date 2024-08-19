@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    setup - Better handle orphaned users when attempting to retrieve ``ansible_machine_id`` -
+    https://github.com/ansible-collections/ansible.windows/issues/606
