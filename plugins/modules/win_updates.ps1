@@ -35,6 +35,9 @@ $spec = @{
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 Function Set-CancelEvent {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        "PSAvoidUsingEmptyCatchBlock", "",
+        Justification = "Wait-Process could fail in a rare race conditiona, we ignore that scenario.")]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -53,7 +56,14 @@ Function Set-CancelEvent {
     }
 
     # We don't want to wait around forever, try out best to wait until the task has ended.
-    Wait-Process -Id $TaskPid -ErrorAction SilentlyContinue -Timeout 10
+    # We wrap in try/catch because there is a race condition where if the process ended
+    # between the process and end block of Wait-Process it'll fail with a terminating
+    # error which we don't want to expose to the end user.
+    # https://github.com/ansible-collections/ansible.windows/issues/623
+    try {
+        Wait-Process -Id $TaskPid -ErrorAction Stop -Timeout 10
+    }
+    catch {}
 }
 
 Function Receive-ProgressOutput {

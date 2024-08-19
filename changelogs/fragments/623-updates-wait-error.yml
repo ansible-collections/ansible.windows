@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    win_updates - Handle race condition when ``Wait-Process`` did not handle when the process had ended -
+    https://github.com/ansible-collections/ansible.windows/issues/623
