@@ -613,7 +613,7 @@ try {
 
         # In case a user specified an executable that does not support the PSHost named pipe that PowerShell uses we
         # specify a timeout so the module does not hang.
-        $connInfo.OpenTimeout = 5000
+        $connInfo.OpenTimeout = 60000
         $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
     }
     else {
