@@ -796,7 +796,12 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     }
 
     # Get the internal Ansible variable that can contain code specific information.
-    $result = $runspace.SessionStateProxy.GetVariable('Ansible')
+    # We use a new pipeline as $runspace.SessionStateProxy.GetVariable() will
+    # truncate the values if they exceed the default serialization depth.
+    # https://github.com/ansible-collections/ansible.windows/issues/642
+    $resultPipeline = [PowerShell]::Create()
+    $resultPipeline.Runspace = $runspace
+    $result = $resultPipeline.AddScript('$Ansible').Invoke()
 }
 finally {
     if (-not $processId) {
