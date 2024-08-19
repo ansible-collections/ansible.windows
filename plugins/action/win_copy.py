@@ -188,6 +188,8 @@ def _walk_dirs(topdir, loader, decrypt=True, base_path=None, local_follow=False,
         base_path = os.path.dirname(base_path)
     if topdir.startswith(base_path):
         offset = len(base_path)
+    else:
+        offset = 0
 
     # Make sure we're making the new paths relative
     if trailing_slash_detector and not trailing_slash_detector(base_path):

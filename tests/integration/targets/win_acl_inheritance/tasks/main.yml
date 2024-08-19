@@ -2,125 +2,134 @@
 # Test setup
 # Use single task to save in CI runtime
 - name: create test folders
-  ansible.windows.win_shell: |
-    $ErrorActionPreference = 'Stop'
-    $tmp_dir = '{{ test_win_acl_inheritance_path }}'
-    if (Test-Path -LiteralPath $tmp_dir) {
-        Remove-Item -LiteralPath $tmp_dir -Force -Recurse
-    }
-    $null = New-Item -Path $tmp_dir -ItemType Directory
+  ansible.windows.win_powershell:
+    parameters:
+      Path: '{{ test_win_acl_inheritance_path }}'
+    script: |
+      param([string]$Path)
 
-    Add-Type -AssemblyName System.DirectoryServices.AccountManagement
-    $current_sid = ([System.DirectoryServices.AccountManagement.UserPrincipal]::Current).Sid
-    $system_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::LocalSystemSid, $null)
-    $everyone_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::WorldSid, $null)
+      $ErrorActionPreference = 'Stop'
+      $tmp_dir = $Path
+      if (Test-Path -LiteralPath $tmp_dir) {
+          Remove-Item -LiteralPath $tmp_dir -Force -Recurse
+      }
+      $null = New-Item -Path $tmp_dir -ItemType Directory
 
-    $sd = New-Object -TypeName System.Security.AccessControl.DirectorySecurity
-    $sd.SetAccessRuleProtection($true, $false)
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
-            $system_sid,
-            [System.Security.AccessControl.FileSystemRights]::FullControl,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
-            $current_sid,
-            [System.Security.AccessControl.FileSystemRights]::FullControl,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
-            $everyone_sid,
-            [System.Security.AccessControl.FileSystemRights]::Read,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
+      Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+      $current_sid = ([System.Security.Principal.WindowsIdentity]::GetCurrent()).User
+      $system_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::LocalSystemSid, $null)
+      $everyone_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::WorldSid, $null)
 
-    Set-Acl -LiteralPath $tmp_dir -AclObject $sd
+      $sd = New-Object -TypeName System.Security.AccessControl.DirectorySecurity
+      $sd.SetAccessRuleProtection($true, $false)
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
+              $system_sid,
+              [System.Security.AccessControl.FileSystemRights]::FullControl,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
+              $current_sid,
+              [System.Security.AccessControl.FileSystemRights]::FullControl,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
+              $everyone_sid,
+              [System.Security.AccessControl.FileSystemRights]::Read,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
 
-    $null = New-Item -Path "$tmp_dir\folder" -ItemType Directory
-    Set-Content -LiteralPath "$tmp_dir\folder\file.txt" -Value 'a'
+      Set-Acl -LiteralPath $tmp_dir -AclObject $sd
 
-    $system_sid.Value
-    $current_sid.Value
-    $everyone_sid.Value
+      $null = New-Item -Path "$tmp_dir\folder" -ItemType Directory
+      Set-Content -LiteralPath "$tmp_dir\folder\file.txt" -Value 'a'
+
+      $system_sid.Value
+      $current_sid.Value
+      $everyone_sid.Value
   register: test_sids  # register the output SID values used for comparison tests below
 
 - name: create test registry key
-  ansible.windows.win_shell: |
-    $ErrorActionPreference = 'Stop'
-    $tmp_dir = '{{ test_win_acl_inheritance_registry_path }}'
-    $regeditHives = @{
-        "HKCR" = "HKEY_CLASSES_ROOT"
-        "HKU" = "HKEY_USERS"
-        "HKCC" = "HKEY_CURRENT_CONFIG"
-    }
+  ansible.windows.win_powershell:
+    parameters:
+      Path: '{{ test_win_acl_inheritance_registry_path }}'
+    script: |
+      param ([string]$Path)
 
-    $pathQualifier = Split-Path -Path $tmp_dir -Qualifier -ErrorAction SilentlyContinue
-    $pathQualifier = $pathQualifier.Replace(':','')
+      $ErrorActionPreference = 'Stop'
+      $tmp_dir = $Path
+      $regeditHives = @{
+          "HKCR" = "HKEY_CLASSES_ROOT"
+          "HKU" = "HKEY_USERS"
+          "HKCC" = "HKEY_CURRENT_CONFIG"
+      }
 
-    if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
-        $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
-    }
+      $pathQualifier = Split-Path -Path $tmp_dir -Qualifier -ErrorAction SilentlyContinue
+      $pathQualifier = $pathQualifier.Replace(':','')
 
-    Push-Location -Path "${pathQualifier}:\"
-    if (Test-Path -LiteralPath $tmp_dir) {
-        Remove-Item -LiteralPath $tmp_dir -Force -Recurse
-    }
-    $null = New-Item -Path $tmp_dir
+      if ($pathQualifier -in $regeditHives.Keys -and (-not (Test-Path -LiteralPath "${pathQualifier}:\"))) {
+          $null = New-PSDrive -Name $pathQualifier -PSProvider 'Registry' -Root $regeditHives.$pathQualifier
+      }
 
-    Add-Type -AssemblyName System.DirectoryServices.AccountManagement
-    $current_sid = ([System.DirectoryServices.AccountManagement.UserPrincipal]::Current).Sid
-    $system_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::LocalSystemSid, $null)
-    $everyone_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::WorldSid, $null)
+      Push-Location -Path "${pathQualifier}:\"
+      if (Test-Path -LiteralPath $tmp_dir) {
+          Remove-Item -LiteralPath $tmp_dir -Force -Recurse
+      }
+      $null = New-Item -Path $tmp_dir
 
-    $sd = New-Object -TypeName System.Security.AccessControl.RegistrySecurity
-    $sd.SetAccessRuleProtection($true, $false)
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
-            $system_sid,
-            [System.Security.AccessControl.RegistryRights]::FullControl,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
-            $current_sid,
-            [System.Security.AccessControl.RegistryRights]::FullControl,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
-    $sd.AddAccessRule(
-        (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
-            $everyone_sid,
-            [System.Security.AccessControl.RegistryRights]::ReadKey,
-            [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
-            [System.Security.AccessControl.PropagationFlags]::None,
-            [System.Security.AccessControl.AccessControlType]::Allow
-        ))
-    )
+      Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+      $current_sid = ([System.Security.Principal.WindowsIdentity]::GetCurrent()).User
+      $system_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::LocalSystemSid, $null)
+      $everyone_sid = New-Object -TypeName System.Security.Principal.SecurityIdentifier -ArgumentList @([System.Security.Principal.WellKnownSidType]::WorldSid, $null)
 
-    Set-Acl -LiteralPath $tmp_dir -AclObject $sd
+      $sd = New-Object -TypeName System.Security.AccessControl.RegistrySecurity
+      $sd.SetAccessRuleProtection($true, $false)
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+              $system_sid,
+              [System.Security.AccessControl.RegistryRights]::FullControl,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+              $current_sid,
+              [System.Security.AccessControl.RegistryRights]::FullControl,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
+      $sd.AddAccessRule(
+          (New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList @(
+              $everyone_sid,
+              [System.Security.AccessControl.RegistryRights]::ReadKey,
+              [System.Security.AccessControl.InheritanceFlags]"ContainerInherit, ObjectInherit",
+              [System.Security.AccessControl.PropagationFlags]::None,
+              [System.Security.AccessControl.AccessControlType]::Allow
+          ))
+      )
 
-    $null = New-Item -Path "$tmp_dir\folder"
+      Set-Acl -LiteralPath $tmp_dir -AclObject $sd
 
-    $system_sid.Value
-    $current_sid.Value
-    $everyone_sid.Value
-  register: test_registry_sids  # register the output SID values used for comparison tests below
+      $null = New-Item -Path "$tmp_dir\folder"
+
+      $system_sid.Value
+      $current_sid.Value
+      $everyone_sid.Value
 
 # Run tests
 - name: (folder) remove inheritance check
@@ -141,9 +150,9 @@
     that:
     - remove_check is changed
     - actual_remove_check.inherited == True
-    - actual_remove_check.user_details[test_sids.stdout_lines[0]].isinherited == True
-    - actual_remove_check.user_details[test_sids.stdout_lines[1]].isinherited == True
-    - actual_remove_check.user_details[test_sids.stdout_lines[2]].isinherited == True
+    - actual_remove_check.user_details[test_sids.output[0]].isinherited == True
+    - actual_remove_check.user_details[test_sids.output[1]].isinherited == True
+    - actual_remove_check.user_details[test_sids.output[2]].isinherited == True
 
 - name: (folder) remove inheritance
   ansible.windows.win_acl_inheritance:
@@ -162,9 +171,9 @@
     that:
     - remove is changed
     - actual_remove.inherited == False
-    - actual_remove.user_details[test_sids.stdout_lines[0]].isinherited == False
-    - actual_remove.user_details[test_sids.stdout_lines[1]].isinherited == False
-    - actual_remove.user_details[test_sids.stdout_lines[2]].isinherited == False
+    - actual_remove.user_details[test_sids.output[0]].isinherited == False
+    - actual_remove.user_details[test_sids.output[1]].isinherited == False
+    - actual_remove.user_details[test_sids.output[2]].isinherited == False
 
 - name: (folder) remove inheritance again
   ansible.windows.win_acl_inheritance:
@@ -196,9 +205,9 @@
     that:
     - add_check is changed
     - actual_add_check.inherited == False
-    - actual_add_check.user_details[test_sids.stdout_lines[0]].isinherited == False
-    - actual_add_check.user_details[test_sids.stdout_lines[1]].isinherited == False
-    - actual_add_check.user_details[test_sids.stdout_lines[2]].isinherited == False
+    - actual_add_check.user_details[test_sids.output[0]].isinherited == False
+    - actual_add_check.user_details[test_sids.output[1]].isinherited == False
+    - actual_add_check.user_details[test_sids.output[2]].isinherited == False
 
 - name: (folder) add inheritance
   ansible.windows.win_acl_inheritance:
@@ -217,9 +226,9 @@
     that:
     - add is changed
     - actual_add.inherited == True
-    - actual_add.user_details[test_sids.stdout_lines[0]].isinherited == True
-    - actual_add.user_details[test_sids.stdout_lines[1]].isinherited == True
-    - actual_add.user_details[test_sids.stdout_lines[2]].isinherited == True
+    - actual_add.user_details[test_sids.output[0]].isinherited == True
+    - actual_add.user_details[test_sids.output[1]].isinherited == True
+    - actual_add.user_details[test_sids.output[2]].isinherited == True
 
 - name: (folder) add inheritance again
   ansible.windows.win_acl_inheritance:
@@ -253,9 +262,9 @@
     that:
     - registry_remove_check is changed
     - actual_registry_remove_check.inherited == True
-    - actual_registry_remove_check.user_details[test_sids.stdout_lines[0]].isinherited == True
-    - actual_registry_remove_check.user_details[test_sids.stdout_lines[1]].isinherited == True
-    - actual_registry_remove_check.user_details[test_sids.stdout_lines[2]].isinherited == True
+    - actual_registry_remove_check.user_details[test_sids.output[0]].isinherited == True
+    - actual_registry_remove_check.user_details[test_sids.output[1]].isinherited == True
+    - actual_registry_remove_check.user_details[test_sids.output[2]].isinherited == True
 
 - name: (registry) remove inheritance
   ansible.windows.win_acl_inheritance:
@@ -274,9 +283,9 @@
     that:
     - registry_remove is changed
     - actual_registry_remove.inherited == False
-    - actual_registry_remove.user_details[test_sids.stdout_lines[0]].isinherited == False
-    - actual_registry_remove.user_details[test_sids.stdout_lines[1]].isinherited == False
-    - actual_registry_remove.user_details[test_sids.stdout_lines[2]].isinherited == False
+    - actual_registry_remove.user_details[test_sids.output[0]].isinherited == False
+    - actual_registry_remove.user_details[test_sids.output[1]].isinherited == False
+    - actual_registry_remove.user_details[test_sids.output[2]].isinherited == False
 
 - name: (registry) remove inheritance again
   ansible.windows.win_acl_inheritance:
@@ -308,9 +317,9 @@
     that:
     - registry_add_check is changed
     - actual_registry_add_check.inherited == False
-    - actual_registry_add_check.user_details[test_sids.stdout_lines[0]].isinherited == False
-    - actual_registry_add_check.user_details[test_sids.stdout_lines[1]].isinherited == False
-    - actual_registry_add_check.user_details[test_sids.stdout_lines[2]].isinherited == False
+    - actual_registry_add_check.user_details[test_sids.output[0]].isinherited == False
+    - actual_registry_add_check.user_details[test_sids.output[1]].isinherited == False
+    - actual_registry_add_check.user_details[test_sids.output[2]].isinherited == False
 
 - name: (registry) add inheritance
   ansible.windows.win_acl_inheritance:
@@ -329,9 +338,9 @@
     that:
     - registry_add is changed
     - actual_registry_add.inherited == True
-    - actual_registry_add.user_details[test_sids.stdout_lines[0]].isinherited == True
-    - actual_registry_add.user_details[test_sids.stdout_lines[1]].isinherited == True
-    - actual_registry_add.user_details[test_sids.stdout_lines[2]].isinherited == True
+    - actual_registry_add.user_details[test_sids.output[0]].isinherited == True
+    - actual_registry_add.user_details[test_sids.output[1]].isinherited == True
+    - actual_registry_add.user_details[test_sids.output[2]].isinherited == True
 
 - name: (registry) add inheritance again
   ansible.windows.win_acl_inheritance:
