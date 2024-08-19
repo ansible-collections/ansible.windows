@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    win_powershell - Fix up depth handling on ``$Ansible.Result`` when using a custom ``executable`` -
+    https://github.com/ansible-collections/ansible.windows/issues/642
