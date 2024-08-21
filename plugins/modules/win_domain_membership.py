@@ -72,7 +72,7 @@ EXAMPLES = r'''
 # and will use the passed credentials to join domain if necessary.
 # Ansible connection should use local credentials if possible.
 # If a reboot is required, the second task will trigger one and wait until the host is available.
-- name: Play to join the hsots to a domain
+- name: Play to join the hosts to a domain
   hosts: winclient
   gather_facts: false
   tasks:
