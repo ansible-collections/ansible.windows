@@ -1,18 +1,5 @@
 ---
-- name: get powershell version
-  win_shell: $PSVersionTable.PSVersion.Major
-  register: powershell_version
-
-- name: expect failure when running on old PS hosts
-  win_dsc:
-    resource_name: File
-  register: fail_dsc_old
-  failed_when: '"This module cannot run as it requires a minimum PowerShell version of 5.0" not in fail_dsc_old.msg'
-  when: powershell_version.stdout_lines[0]|int < 5
-
-- name: run tests when PSv5+
-  when: powershell_version.stdout_lines[0]|int >= 5
-  block:
+- block:
   - name: add remote temp dir to PSModulePath
     win_path:
       name: PSModulePath
@@ -20,6 +7,15 @@
       scope: machine
       elements:
       - '{{ remote_tmp_dir }}'
+
+  # Needed so subsequent SSH session see the new PSModulePath env var
+  - name: restart sshd service
+    win_service:
+      name: sshd
+      state: restarted
+    when: ansible_connection == 'ssh'
+
+  - meta: reset_connection
 
   - name: copy custom DSC resources to remote temp dir
     win_copy:

@@ -2,7 +2,7 @@
     varname: WINPATH_TEST
 
 - name: Remove {{ varname }} vars from user and machine scope
-  raw: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
+  win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
 
 - name: Set a var at the machine and user levels
   win_path:
@@ -15,7 +15,7 @@
   register: pathout
 
 - name: Get path value from machine and user levels
-  raw: '[Environment]::GetEnvironmentVariable("{{ varname }}","{{ item.item }}")'
+  win_shell: '[Environment]::GetEnvironmentVariable("{{ varname }}","{{ item.item }}")'
   with_items: "{{ pathout.results }}"
   register: varout
 
@@ -30,7 +30,7 @@
   - "{{ varout.results }}"
 
 - name: Remove {{ varname }} vars from user and machine scope
-  raw: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
+  win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
 
 - name: Create multi-element path
   win_path:
@@ -41,7 +41,7 @@
   register: multiout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: varout
 
 - name: Ensure output
@@ -63,7 +63,7 @@
   register: addout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: varout
 
 - name: Test idempotence- retry values to middle and end, test case-insensitive comparison, backslash canonicalization
@@ -78,7 +78,7 @@
   register: idemout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: idemvarout
 
 - name: Ensure output
@@ -99,7 +99,7 @@
   register: removeout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: varout
 
 - name: Test idempotence- retry remove single element
@@ -110,7 +110,7 @@
   register: idemremoveout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: idemvarout
 
 - name: Ensure output
@@ -135,7 +135,7 @@
   register: removeout
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: varout
 
 - name: Ensure output
@@ -154,7 +154,7 @@
   register: checkadd
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: checkaddvarout
 
 - name: Test check mode remove
@@ -166,7 +166,7 @@
   register: checkremove
 
 - name: Get path value
-  raw: $env:{{ varname }}
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
   register: checkremovevarout
 
 - name: Ensure output
@@ -180,4 +180,4 @@
     - checkremovevarout.stdout_lines[0] == "C:\\PathA" # shouldn't have actually changed the value
 
 - name: Remove {{ varname }} vars from user and machine scope
-  raw: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
+  win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'

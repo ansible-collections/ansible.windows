@@ -73,7 +73,7 @@
   become_method: runas
   vars:
     ansible_become_user: '{{ ansible_user }}'
-    ansible_become_pass: '{{ ansible_password }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
   register: test_win_package_msix_packages
   notify: remove trusted root cert
 

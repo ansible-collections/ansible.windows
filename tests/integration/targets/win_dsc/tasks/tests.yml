@@ -225,7 +225,7 @@
       Set-Content -Path "{{ remote_tmp_dir }}\runas.txt" -Value $sid
     TestScript: $false
     PsDscRunAsCredential_username: '{{ ansible_user }}'
-    PsDscRunAsCredential_password: '{{ ansible_password }}'
+    PsDscRunAsCredential_password: '{{ ansible_password | default(ansible_test_connection_password) }}'
   register: runas_user
 
 - name: get result of run DSC process as another user

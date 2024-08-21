@@ -174,7 +174,7 @@
   become_method: runas
   vars:
     ansible_become_user: '{{ ansible_user }}'
-    ansible_become_password: '{{ ansible_password }}'
+    ansible_become_password: '{{ ansible_password | default(ansible_test_connection_password) }}'
 
 - name: get result of set owner recursively on limited access dir
   win_powershell:
