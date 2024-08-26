@@ -116,7 +116,7 @@ namespace Ansible.MappedDrive
 
         [DllImport("Mpr.dll", CharSet = CharSet.Unicode)]
         public static extern UInt32 WNetAddConnection2W(
-            NativeHelpers.NETRESOURCEW lpNetResource,
+            ref NativeHelpers.NETRESOURCEW lpNetResource,
             [MarshalAs(UnmanagedType.LPWStr)] string lpPassword,
             [MarshalAs(UnmanagedType.LPWStr)] string lpUserName,
             NativeHelpers.AddFlags dwFlags);
@@ -224,7 +224,7 @@ namespace Ansible.MappedDrive
             // the implicit credential cache used in Windows
             using (Impersonation imp = new Impersonation(iToken))
             {
-                UInt32 res = NativeMethods.WNetAddConnection2W(resource, password, username, dwFlags);
+                UInt32 res = NativeMethods.WNetAddConnection2W(ref resource, password, username, dwFlags);
                 if (res != ERROR_SUCCESS)
                     throw new Win32Exception((int)res, String.Format("Failed to map {0} to '{1}' with WNetAddConnection2W()", drive, path));
             }
