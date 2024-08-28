@@ -104,9 +104,11 @@ stages:
           nameFormat: Server {0}
           testFormat: devel/windows/{0}
           targets:
-            - test: 2016
-            - test: 2019
-            - test: 2022
+            - test: 2016/winrm/http
+            - test: 2019/winrm/https
+            - test: 2022/winrm/https
+            - test: 2022/psrp/https
+            - test: 2022/ssh/key
           groups:
             - 1
             - 2

@@ -488,7 +488,7 @@
   win_service:
     name: "{{test_win_service_name}}"
     username: "{{ansible_user}}"
-    password: "{{ansible_password}}"
+    password: "{{ansible_password | default(ansible_test_connection_password)}}"
   register: win_service_change_password_current_user
 
 - name: check that the service user has been set to current user
@@ -502,7 +502,7 @@
   win_service:
     name: "{{test_win_service_name}}"
     username: "{{ansible_user}}"
-    password: "{{ansible_password}}"
+    password: "{{ansible_password | default(ansible_test_connection_password)}}"
   register: win_service_change_password_current_user_again
 
 - name: check that the service user has been set to current user and nothing changed
@@ -528,7 +528,7 @@
   win_service:
     name: '{{ test_win_service_name }}'
     username: '{{ ansible_user }}'
-    password: '{{ ansible_password }}'
+    password: '{{ ansible_password | default(ansible_test_connection_password) }}'
     update_password: always
   register: update_password_always
 
