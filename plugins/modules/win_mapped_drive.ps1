@@ -390,11 +390,6 @@ try {
         }
     }
     else {
-        $physical_drives = Get-PSDrive -PSProvider "FileSystem"
-        if ($letter -in $physical_drives.Name) {
-            $module.FailJson("failed to create mapped drive $letter, this letter is in use and is pointing to a non UNC path")
-        }
-
         # PowerShell converts a $null value to "" when crossing the .NET marshaler, we need to convert the input
         # to a missing value so it uses the defaults. We also need to Invoke it with MethodInfo.Invoke so the defaults
         # are still used
@@ -418,6 +413,11 @@ try {
             }
         }
         else {
+            $physical_drives = Get-PSDrive -PSProvider "FileSystem"
+            if ($letter -in $physical_drives.Name) {
+                $module.FailJson("failed to create mapped drive $letter, this letter is in use and is pointing to a non UNC path")
+            }
+
             if (-not $module.CheckMode) {
                 $add_method.Invoke($null, [Object[]]@($letter_root, $path, $i_token_ptr, $input_username, $input_password))
             }

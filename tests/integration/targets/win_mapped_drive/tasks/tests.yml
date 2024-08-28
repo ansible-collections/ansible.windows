@@ -283,7 +283,7 @@
     ansible_become: yes
     ansible_become_method: runas
     ansible_become_user: '{{ ansible_user }}'
-    ansible_become_pass: '{{ ansible_password }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
 
 - name: map drive with stored cred (check mode)
   win_mapped_drive:
