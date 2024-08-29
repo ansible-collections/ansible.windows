@@ -95,24 +95,63 @@ stages:
               test: sanity
             - name: Units
               test: units
-  - stage: Windows
-    displayName: Windows
+  - stage: Windows_1
+    displayName: Windows 1
     dependsOn: []
     jobs:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: devel/windows/{0}
+          testFormat: devel/windows/{0}/1
           targets:
-            - test: 2016/winrm/http
-            - test: 2019/winrm/https
-            - test: 2022/winrm/https
-            - test: 2022/psrp/https
-            - test: 2022/ssh/key
-          groups:
-            - 1
-            - 2
-            - 3
+            - name: 2016 WinRM HTTP
+              test: 2016/winrm/http
+            - name: 2019 WinRM HTTPS
+              test: 2019/winrm/https
+            - name: 2022 WinRM HTTPS
+              test: 2022/winrm/https
+            - name: 2022 PSRP HTTPS
+              test: 2022/psrp/https
+            - name: 2022 SSH Key
+              test: 2022/ssh/key
+  - stage: Windows_2
+    displayName: Windows 2
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/2
+          targets:
+            - name: 2016 WinRM HTTP
+              test: 2016/winrm/http
+            - name: 2019 WinRM HTTPS
+              test: 2019/winrm/https
+            - name: 2022 WinRM HTTPS
+              test: 2022/winrm/https
+            - name: 2022 PSRP HTTPS
+              test: 2022/psrp/https
+            - name: 2022 SSH Key
+              test: 2022/ssh/key
+  - stage: Windows_3
+    displayName: Windows 3
+    dependsOn: []
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/3
+          targets:
+            - name: 2016 WinRM HTTP
+              test: 2016/winrm/http
+            - name: 2019 WinRM HTTPS
+              test: 2019/winrm/https
+            - name: 2022 WinRM HTTPS
+              test: 2022/winrm/https
+            - name: 2022 PSRP HTTPS
+              test: 2022/psrp/https
+            - name: 2022 SSH Key
+              test: 2022/ssh/key
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:
@@ -120,6 +159,8 @@ stages:
       - Ansible_2_17
       - Ansible_2_16
       - Ansible_2_15
-      - Windows
+      - Windows_1
+      - Windows_2
+      - Windows_3
     jobs:
       - template: templates/coverage.yml
