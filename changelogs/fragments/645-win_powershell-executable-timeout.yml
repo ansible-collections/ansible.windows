@@ -1,3 +1,0 @@
-bugfixes:
-  - win_powershell - increase open timeout for ``executable`` parameter to prevent exceptions on first-run or slower targets.
-    (https://github.com/ansible-collections/ansible.windows/issues/644).
