@@ -4,6 +4,31 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.5.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.5.0. This is the first release that provides official support for using the ``ssh`` connection plugin.
+
+Minor Changes
+-------------
+
+- Set minimum supported Ansible version to 2.15 to align with the versions still supported by Ansible.
+- owner - Migrated to ``Ansible.Basic`` format to add basic checks like invocation args checking
+- win_powershell - Changed `sensitive_parameters` to use `New-Object`, rather than `::new()`
+
+Bugfixes
+--------
+
+- setup - Better handle orphaned users when attempting to retrieve ``ansible_machine_id`` - https://github.com/ansible-collections/ansible.windows/issues/606
+- win_owner - Try to enable extra privileges if available to set the owner even when the caller may not have explicit rights to do so normally - https://github.com/ansible-collections/ansible.windows/issues/633
+- win_powershell - Fix up depth handling on ``$Ansible.Result`` when using a custom ``executable`` - https://github.com/ansible-collections/ansible.windows/issues/642
+- win_powershell - increase open timeout for ``executable`` parameter to prevent exceptions on first-run or slower targets. (https://github.com/ansible-collections/ansible.windows/issues/644).
+- win_updates - Base64 encode the update wrapper and payload to prevent locale-specific encoding issues.
+- win_updates - Handle race condition when ``Wait-Process`` did not handle when the process had ended - https://github.com/ansible-collections/ansible.windows/issues/623
+
 v2.4.0
 ======
 

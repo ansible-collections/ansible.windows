@@ -1,3 +1,0 @@
-minor_changes:
-  - >-
-    win_powershell - Changed `sensitive_parameters` to use `New-Object`, rather than `::new()`
