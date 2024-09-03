@@ -56,7 +56,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 See [Developing modules for Windows](https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_general_windows.html#developing-modules-general-windows) for specifics on Windows modules.
 
-You can also join us on the ``#ansible-windows`` [libera.chat](https://libera.chat/) IRC channel.
+You can also join us on the [#windows:ansible.com](https://matrix.to/#/#windows:ansible.com) Matrix channel.
 
 See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
 
