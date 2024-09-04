@@ -32,10 +32,6 @@ edit_on_github:
 # Specify communication channels for your collection. We suggest to not specify more
 # than one place for communication per communication tool to avoid confusion.
 communication:
-  matrix_rooms:
-    - topic: General usage and support questions
-      room: '#windows:ansible.im'
-  irc_channels:
-    - topic: General usage and support questions
-      network: Libera
-      channel: '#ansible-windows'
+  forum:
+    - topic: Windows automation usage and support questions
+      url: https://forum.ansible.com/tag/windows
