@@ -115,6 +115,11 @@ EXAMPLES = r'''
   ansible.windows.win_shell: C:\somescript.ps1
   args:
     no_profile: true
+
+- name: Run a PowerShell script with big5 encoding (fixing garbled text issue)
+  ansible.windows.win_shell: C:\somescript.ps1
+  args:
+    output_encoding_override: big5
 '''
 
 RETURN = r'''
