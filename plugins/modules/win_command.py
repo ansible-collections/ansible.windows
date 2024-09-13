@@ -116,6 +116,11 @@ EXAMPLES = r'''
       - C:\Program Files\My Application\run.exe
       - argument 1
       - -force
+
+- name: Run a batch script with big5 encoding (fixing garbled text issue)
+  ansible.windows.win_command: C:\somescript.bat
+  args:
+    output_encoding_override: big5
 '''
 
 RETURN = r'''
