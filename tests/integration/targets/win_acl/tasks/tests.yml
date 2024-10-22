@@ -1,7 +1,7 @@
 # these are very basic tests, they should be expanded greatly as this is a core module
 ---
-- name: get register cmd that will get ace info
-  set_fact:
+- name: Get register cmd that will get ace info
+  ansible.builtin.set_fact:
     test_cert_ace_cmd: |
       $certificate = Get-ChildItem Cert:\LocalMachine\My | Where-Object Thumbprint -eq $thumbprint
       $privateKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($certificate)
@@ -43,44 +43,44 @@
       Pop-Location
       ConvertTo-Json -InputObject @($ace_list)
 
-- name: add write rights to Guest
-  win_acl:
+- name: Add write rights to Guest
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: allow
     user: Guests
     rights: Write
   register: allow_right
 
-- name: get result of add write rights to Guest
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of add write rights to Guest
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: allow_right_actual
 
-- name: assert add write rights to Guest
-  assert:
+- name: Assert add write rights to Guest
+  ansible.builtin.assert:
     that:
-    - allow_right is changed
-    - (allow_right_actual.stdout|from_json)|count == 1
-    - (allow_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (allow_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (allow_right_actual.stdout|from_json)[0].propagation_flags == 'None'
-    - (allow_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
-    - (allow_right_actual.stdout|from_json)[0].type == 'Allow'
+      - allow_right is changed
+      - (allow_right_actual.stdout|from_json)|count == 1
+      - (allow_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (allow_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+      - (allow_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+      - (allow_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
+      - (allow_right_actual.stdout|from_json)[0].type == 'Allow'
 
-- name: add write rights to Guest (idempotent)
-  win_acl:
+- name: Add write rights to Guest (idempotent)
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: allow
     user: Guests
     rights: Write
   register: allow_right_again
 
-- name: assert add write rights to Guest (idempotent)
-  assert:
+- name: Assert add write rights to Guest (idempotent)
+  ansible.builtin.assert:
     that:
-    - not allow_right_again is changed
+      - not allow_right_again is changed
 
-- name: remove write rights from Guest
-  win_acl:
+- name: Remove write rights from Guest
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: allow
     user: Guests
@@ -88,18 +88,18 @@
     state: absent
   register: remove_right
 
-- name: get result of remove write rights from Guest
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of remove write rights from Guest
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: remove_right_actual
 
-- name: assert remove write rights from Guest
-  assert:
+- name: Assert remove write rights from Guest
+  ansible.builtin.assert:
     that:
-    - remove_right is changed
-    - remove_right_actual.stdout_lines == ["[", "", "]"]
+      - remove_right is changed
+      - remove_right_actual.stdout_lines == ["[", "", "]"]
 
-- name: remove write rights from Guest (idempotent)
-  win_acl:
+- name: Remove write rights from Guest (idempotent)
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: allow
     user: Guests
@@ -107,13 +107,13 @@
     state: absent
   register: remove_right_again
 
-- name: assert remote write rights from Guest (idempotent)
-  assert:
+- name: Assert remote write rights from Guest (idempotent)
+  ansible.builtin.assert:
     that:
-    - not remove_right_again is changed
+      - not remove_right_again is changed
 
-- name: add deny write rights to Guest
-  win_acl:
+- name: Add deny write rights to Guest
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: deny
     user: Guests
@@ -123,23 +123,23 @@
     state: present
   register: add_deny_right
 
-- name: get result of add deny write rights to Guest
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of add deny write rights to Guest
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: add_deny_right_actual
 
-- name: assert add deny write rights to Guest
-  assert:
+- name: Assert add deny write rights to Guest
+  ansible.builtin.assert:
     that:
-    - add_deny_right is changed
-    - (add_deny_right_actual.stdout|from_json)|count == 1
-    - (add_deny_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (add_deny_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit'
-    - (add_deny_right_actual.stdout|from_json)[0].propagation_flags == 'NoPropagateInherit'
-    - (add_deny_right_actual.stdout|from_json)[0].rights == 'Write'
-    - (add_deny_right_actual.stdout|from_json)[0].type == 'Deny'
+      - add_deny_right is changed
+      - (add_deny_right_actual.stdout|from_json)|count == 1
+      - (add_deny_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (add_deny_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit'
+      - (add_deny_right_actual.stdout|from_json)[0].propagation_flags == 'NoPropagateInherit'
+      - (add_deny_right_actual.stdout|from_json)[0].rights == 'Write'
+      - (add_deny_right_actual.stdout|from_json)[0].type == 'Deny'
 
-- name: add deny write rights to Guest (idempotent)
-  win_acl:
+- name: Add deny write rights to Guest (idempotent)
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: deny
     user: Guests
@@ -149,13 +149,13 @@
     state: present
   register: add_deny_right_again
 
-- name: assert add deny write rights to Guest (idempotent)
-  assert:
+- name: Assert add deny write rights to Guest (idempotent)
+  ansible.builtin.assert:
     that:
-    - not add_deny_right_again is changed
+      - not add_deny_right_again is changed
 
-- name: remove deny write rights from Guest
-  win_acl:
+- name: Remove deny write rights from Guest
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: deny
     user: Guests
@@ -165,18 +165,18 @@
     state: absent
   register: remove_deny_right
 
-- name: get result of remove deny write rights from Guest
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of remove deny write rights from Guest
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: remove_deny_right_actual
 
-- name: assert remove deny write rights from Guest
-  assert:
+- name: Assert remove deny write rights from Guest
+  ansible.builtin.assert:
     that:
-    - remove_deny_right is changed
-    - remove_deny_right_actual.stdout_lines == ["[", "", "]"]
+      - remove_deny_right is changed
+      - remove_deny_right_actual.stdout_lines == ["[", "", "]"]
 
-- name: remove deny write rights from Guest (idempotent)
-  win_acl:
+- name: Remove deny write rights from Guest (idempotent)
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}'
     type: deny
     user: Guests
@@ -186,36 +186,36 @@
     state: absent
   register: remove_deny_right_again
 
-- name: assert remove deny write rights from Guest (idempotent)
-  assert:
+- name: Assert remove deny write rights from Guest (idempotent)
+  ansible.builtin.assert:
     that:
-    - not remove_deny_right_again is changed
+      - not remove_deny_right_again is changed
 
-- name: add write rights to Guest - network
-  win_acl:
+- name: Add write rights to Guest - network
+  ansible.windows.win_acl:
     path: '{{ test_acl_network_path }}'
     type: allow
     user: Guests
     rights: Write
   register: allow_right
 
-- name: get result of add write rights to Guest - network
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of add write rights to Guest - network
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: allow_right_actual
 
-- name: assert add write rights to Guest - network
-  assert:
+- name: Assert add write rights to Guest - network
+  ansible.builtin.assert:
     that:
-    - allow_right is changed
-    - (allow_right_actual.stdout|from_json)|count == 1
-    - (allow_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (allow_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (allow_right_actual.stdout|from_json)[0].propagation_flags == 'None'
-    - (allow_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
-    - (allow_right_actual.stdout|from_json)[0].type == 'Allow'
+      - allow_right is changed
+      - (allow_right_actual.stdout|from_json)|count == 1
+      - (allow_right_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (allow_right_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+      - (allow_right_actual.stdout|from_json)[0].propagation_flags == 'None'
+      - (allow_right_actual.stdout|from_json)[0].rights == 'Write, Synchronize'
+      - (allow_right_actual.stdout|from_json)[0].type == 'Allow'
 
-- name: remove write rights from Guest - network
-  win_acl:
+- name: Remove write rights from Guest - network
+  ansible.windows.win_acl:
     path: '{{ test_acl_network_path }}'
     type: allow
     user: Guests
@@ -223,54 +223,54 @@
     state: absent
   register: remove_right
 
-- name: get result of remove write rights from Guest - network
-  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+- name: Get result of remove write rights from Guest - network
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
   register: remove_right_actual
 
-- name: assert remove write rights from Guest
-  assert:
+- name: Assert remove write rights from Guest
+  ansible.builtin.assert:
     that:
-    - remove_right is changed
-    - remove_right_actual.stdout_lines == ["[", "", "]"]
+      - remove_right is changed
+      - remove_right_actual.stdout_lines == ["[", "", "]"]
 
-- name: add right to symlink without follow
-  win_acl:
+- name: Add right to symlink without follow
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}\symlink'
     type: allow
     user: Guests
     rights: Write
   register: allow_not_follow
 
-- name: get result of add right to symlink without follow on symlink
-  win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
+- name: Get result of add right to symlink without follow on symlink
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
   register: allow_not_follow_symlink
 
-- name: get result of add right to symlink without follow on symlink
-  win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
+- name: Get result of add right to symlink without follow on symlink
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
   register: allow_not_follow_target
 
-- name: assert add write rights to Guest - network
-  assert:
+- name: Assert add write rights to Guest - network
+  ansible.builtin.assert:
     that:
-    - allow_not_follow is changed
-    - (allow_not_follow_symlink.stdout|from_json)|count == 1
-    - (allow_not_follow_symlink.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (allow_not_follow_symlink.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (allow_not_follow_symlink.stdout|from_json)[0].propagation_flags == 'None'
-    - (allow_not_follow_symlink.stdout|from_json)[0].rights == 'Write, Synchronize'
-    - (allow_not_follow_symlink.stdout|from_json)[0].type == 'Allow'
-    - (allow_not_follow_target.stdout|from_json)|count == 0
+      - allow_not_follow is changed
+      - (allow_not_follow_symlink.stdout|from_json)|count == 1
+      - (allow_not_follow_symlink.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (allow_not_follow_symlink.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+      - (allow_not_follow_symlink.stdout|from_json)[0].propagation_flags == 'None'
+      - (allow_not_follow_symlink.stdout|from_json)[0].rights == 'Write, Synchronize'
+      - (allow_not_follow_symlink.stdout|from_json)[0].type == 'Allow'
+      - (allow_not_follow_target.stdout|from_json)|count == 0
 
-- name: remove write rights on symlink
-  win_acl:
+- name: Remove write rights on symlink
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}\symlink'
     type: allow
     user: Guests
     rights: Write
     state: absent
 
-- name: add right to symlink with follow
-  win_acl:
+- name: Add right to symlink with follow
+  ansible.windows.win_acl:
     path: '{{ test_acl_path }}\symlink'
     type: allow
     user: Guests
@@ -278,69 +278,69 @@
     follow: true
   register: allow_follow
 
-- name: get result of add right to symlink without follow on symlink
-  win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
+- name: Get result of add right to symlink without follow on symlink
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}\symlink''; {{ test_ace_cmd }}'
   register: allow_follow_symlink
 
-- name: get result of add right to junction without follow on symlink
-  win_shell: '$path = ''{{ test_acl_path }}\junction''; {{ test_ace_cmd }}'
+- name: Get result of add right to junction without follow on symlink
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}\junction''; {{ test_ace_cmd }}'
   register: allow_follow_junction
 
-- name: get result of add right to symlink without follow on symlink
-  win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
+- name: Get result of add right to symlink without follow on symlink
+  ansible.windows.win_shell: '$path = ''{{ test_acl_path }}\target''; {{ test_ace_cmd }}'
   register: allow_follow_target
 
-- name: assert add write rights to Guest - network
-  assert:
+- name: Assert add write rights to Guest - network
+  ansible.builtin.assert:
     that:
-    - allow_not_follow is changed
-    - (allow_follow_symlink.stdout|from_json)|count == 0
-    - (allow_follow_junction.stdout|from_json)|count == 0
-    - (allow_follow_target.stdout|from_json)|count == 1
-    - (allow_follow_target.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (allow_follow_target.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (allow_follow_target.stdout|from_json)[0].propagation_flags == 'None'
-    - (allow_follow_target.stdout|from_json)[0].rights == 'Write, Synchronize'
-    - (allow_follow_target.stdout|from_json)[0].type == 'Allow'
+      - allow_not_follow is changed
+      - (allow_follow_symlink.stdout|from_json)|count == 0
+      - (allow_follow_junction.stdout|from_json)|count == 0
+      - (allow_follow_target.stdout|from_json)|count == 1
+      - (allow_follow_target.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (allow_follow_target.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+      - (allow_follow_target.stdout|from_json)[0].propagation_flags == 'None'
+      - (allow_follow_target.stdout|from_json)[0].rights == 'Write, Synchronize'
+      - (allow_follow_target.stdout|from_json)[0].type == 'Allow'
 
-- name: add write rights to Guest - registry
-  win_acl:
+- name: Add write rights to Guest - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: allow
     user: Guests
     rights: WriteKey
   register: allow_right_reg
 
-- name: get result of add write rights to Guest - registry
-  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+- name: Get result of add write rights to Guest - registry
+  ansible.windows.win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
   register: allow_right_reg_actual
 
-- name: assert add write rights to Guest - registry
-  assert:
+- name: Assert add write rights to Guest - registry
+  ansible.builtin.assert:
     that:
-    - allow_right_reg is changed
-    - (allow_right_reg_actual.stdout|from_json)|count == 1
-    - (allow_right_reg_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (allow_right_reg_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
-    - (allow_right_reg_actual.stdout|from_json)[0].propagation_flags == 'None'
-    - (allow_right_reg_actual.stdout|from_json)[0].rights == 'WriteKey'
-    - (allow_right_reg_actual.stdout|from_json)[0].type == 'Allow'
+      - allow_right_reg is changed
+      - (allow_right_reg_actual.stdout|from_json)|count == 1
+      - (allow_right_reg_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (allow_right_reg_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit, ObjectInherit'
+      - (allow_right_reg_actual.stdout|from_json)[0].propagation_flags == 'None'
+      - (allow_right_reg_actual.stdout|from_json)[0].rights == 'WriteKey'
+      - (allow_right_reg_actual.stdout|from_json)[0].type == 'Allow'
 
-- name: add write rights to Guest (idempotent) - registry
-  win_acl:
+- name: Add write rights to Guest (idempotent) - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: allow
     user: Guests
     rights: WriteKey
   register: allow_right_reg_again
 
-- name: assert add write rights to Guest (idempotent) - registry
-  assert:
+- name: Assert add write rights to Guest (idempotent) - registry
+  ansible.builtin.assert:
     that:
-    - not allow_right_reg_again is changed
+      - not allow_right_reg_again is changed
 
-- name: remove write rights from Guest - registry
-  win_acl:
+- name: Remove write rights from Guest - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: allow
     user: Guests
@@ -348,18 +348,18 @@
     state: absent
   register: remove_right_reg
 
-- name: get result of remove write rights from Guest - registry
-  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+- name: Get result of remove write rights from Guest - registry
+  ansible.windows.win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
   register: remove_right_reg_actual
 
-- name: assert remove write rights from Guest - registry
-  assert:
+- name: Assert remove write rights from Guest - registry
+  ansible.builtin.assert:
     that:
-    - remove_right_reg is changed
-    - remove_right_reg_actual.stdout_lines == ["[", "", "]"]
+      - remove_right_reg is changed
+      - remove_right_reg_actual.stdout_lines == ["[", "", "]"]
 
-- name: remove write rights from Guest (idempotent) - registry
-  win_acl:
+- name: Remove write rights from Guest (idempotent) - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: allow
     user: Guests
@@ -367,13 +367,13 @@
     state: absent
   register: remove_right_reg_again
 
-- name: assert remote write rights from Guest (idempotent) - registry
-  assert:
+- name: Assert remote write rights from Guest (idempotent) - registry
+  ansible.builtin.assert:
     that:
-    - not remove_right_reg_again is changed
+      - not remove_right_reg_again is changed
 
-- name: add deny write rights to Guest - registry
-  win_acl:
+- name: Add deny write rights to Guest - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: deny
     user: Guests
@@ -383,23 +383,23 @@
     state: present
   register: add_deny_right_reg
 
-- name: get result of add deny write rights to Guest - registry
-  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+- name: Get result of add deny write rights to Guest - registry
+  ansible.windows.win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
   register: add_deny_right_reg_actual
 
-- name: assert add deny write rights to Guest - registry
-  assert:
+- name: Assert add deny write rights to Guest - registry
+  ansible.builtin.assert:
     that:
-    - add_deny_right_reg is changed
-    - (add_deny_right_reg_actual.stdout|from_json)|count == 1
-    - (add_deny_right_reg_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
-    - (add_deny_right_reg_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit'
-    - (add_deny_right_reg_actual.stdout|from_json)[0].propagation_flags == 'NoPropagateInherit'
-    - (add_deny_right_reg_actual.stdout|from_json)[0].rights == 'WriteKey'
-    - (add_deny_right_reg_actual.stdout|from_json)[0].type == 'Deny'
+      - add_deny_right_reg is changed
+      - (add_deny_right_reg_actual.stdout|from_json)|count == 1
+      - (add_deny_right_reg_actual.stdout|from_json)[0].identity == 'BUILTIN\Guests'
+      - (add_deny_right_reg_actual.stdout|from_json)[0].inheritance_flags == 'ContainerInherit'
+      - (add_deny_right_reg_actual.stdout|from_json)[0].propagation_flags == 'NoPropagateInherit'
+      - (add_deny_right_reg_actual.stdout|from_json)[0].rights == 'WriteKey'
+      - (add_deny_right_reg_actual.stdout|from_json)[0].type == 'Deny'
 
-- name: add deny write rights to Guest (idempotent) - registry
-  win_acl:
+- name: Add deny write rights to Guest (idempotent) - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: deny
     user: Guests
@@ -409,13 +409,13 @@
     state: present
   register: add_deny_right_reg_again
 
-- name: assert add deny write rights to Guest (idempotent) - registry
-  assert:
+- name: Assert add deny write rights to Guest (idempotent) - registry
+  ansible.builtin.assert:
     that:
-    - not add_deny_right_reg_again is changed
+      - not add_deny_right_reg_again is changed
 
-- name: remove deny write rights from Guest - registry
-  win_acl:
+- name: Remove deny write rights from Guest - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: deny
     user: Guests
@@ -425,18 +425,18 @@
     state: absent
   register: remove_deny_right_reg
 
-- name: get result of remove deny write rights from Guest - registry
-  win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
+- name: Get result of remove deny write rights from Guest - registry
+  ansible.windows.win_shell: '$path = ''{{ test_acl_reg_path }}''; {{ test_ace_cmd }}'
   register: remove_deny_right_reg_actual
 
-- name: assert remove deny write rights from Guest - registry
-  assert:
+- name: Assert remove deny write rights from Guest - registry
+  ansible.builtin.assert:
     that:
-    - remove_deny_right_reg is changed
-    - remove_deny_right_reg_actual.stdout_lines == ["[", "", "]"]
+      - remove_deny_right_reg is changed
+      - remove_deny_right_reg_actual.stdout_lines == ["[", "", "]"]
 
-- name: remove deny write rights from Guest (idempotent) - registry
-  win_acl:
+- name: Remove deny write rights from Guest (idempotent) - registry
+  ansible.windows.win_acl:
     path: '{{ test_acl_reg_path }}'
     type: deny
     user: Guests
@@ -446,16 +446,16 @@
     state: absent
   register: remove_deny_right_reg_again
 
-- name: assert remove deny write rights from Guest (idempotent) - registry
-  assert:
+- name: Assert remove deny write rights from Guest (idempotent) - registry
+  ansible.builtin.assert:
     that:
-    - not remove_deny_right_reg_again is changed
+      - not remove_deny_right_reg_again is changed
 
 # As a note: in this test you'll see checks for access masks using different numbers than the ACL helper. This is
 # intentional. In our test scenario, we know where the private key file is and are getting the ACL of that file. Files
 # have very different access masks than private keys in the crypt API
-- name: add FullControl rights on certificate - check mode
-  win_acl:
+- name: Add FullControl rights on certificate - check mode
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -464,13 +464,13 @@
   check_mode: true
   register: add_fullcontrol_rights_on_certificate_check_mode
 
-- name: assert add FullControl rights on certificate - check mode
-  assert:
+- name: Assert add FullControl rights on certificate - check mode
+  ansible.builtin.assert:
     that:
-    - not add_fullcontrol_rights_on_certificate_check_mode is changed
+      - not add_fullcontrol_rights_on_certificate_check_mode is changed
 
-- name: add FullControl rights on certificate
-  win_acl:
+- name: Add FullControl rights on certificate
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -478,19 +478,19 @@
     rights: FullControl
   register: add_fullcontrol_rights_on_certificate
 
-- name: get result of add FullControl rights on certificate
-  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+- name: Get result of add FullControl rights on certificate
+  ansible.windows.win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
   register: add_fullcontrol_rights_on_certificate_actual
 
-- name: assert add FullControl rights on certificate
-  assert:
+- name: Assert add FullControl rights on certificate
+  ansible.builtin.assert:
     that:
-    - add_fullcontrol_rights_on_certificate is changed
-    - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
-    - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127
+      - add_fullcontrol_rights_on_certificate is changed
+      - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+      - (add_fullcontrol_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127
 
-- name: add FullControl rights on certificate again
-  win_acl:
+- name: Add FullControl rights on certificate again
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -498,13 +498,13 @@
     rights: FullControl
   register: add_fullcontrol_rights_on_certificate_again
 
-- name: assert add FullControl rights on certificate again
-  assert:
+- name: Assert add FullControl rights on certificate again
+  ansible.builtin.assert:
     that:
-    - not add_fullcontrol_rights_on_certificate_again is changed
+      - not add_fullcontrol_rights_on_certificate_again is changed
 
-- name: remove FullControl rights on certificate - check mode
-  win_acl:
+- name: Remove FullControl rights on certificate - check mode
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -513,13 +513,13 @@
   register: remove_fullcontrol_rights_on_certificate_check_mode
   check_mode: true
 
-- name: assert remove FullControl rights on certificate - check mode
-  assert:
+- name: Assert remove FullControl rights on certificate - check mode
+  ansible.builtin.assert:
     that:
-    - not remove_fullcontrol_rights_on_certificate_check_mode is changed
+      - not remove_fullcontrol_rights_on_certificate_check_mode is changed
 
-- name: remove FullControl rights on certificate
-  win_acl:
+- name: Remove FullControl rights on certificate
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -527,19 +527,19 @@
     rights: FullControl
   register: remove_fullcontrol_rights_on_certificate
 
-- name: get result of remove FullControl rights on certificate
-  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+- name: Get result of remove FullControl rights on certificate
+  ansible.windows.win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
   register: remove_fullcontrol_rights_on_certificate_actual
 
-- name: assert remove FullControl rights on certificate
-  assert:
+- name: Assert remove FullControl rights on certificate
+  ansible.builtin.assert:
     that:
-    - remove_fullcontrol_rights_on_certificate is changed
-    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 2032127
-  with_items: '{{ remove_fullcontrol_rights_on_certificate_actual.stdout|from_json }}'
+      - remove_fullcontrol_rights_on_certificate is changed
+      - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 2032127
+  with_items: '{{ remove_fullcontrol_rights_on_certificate_actual.stdout | from_json }}'
 
-- name: remove FullControl rights on certificate again
-  win_acl:
+- name: Remove FullControl rights on certificate again
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -547,16 +547,16 @@
     rights: FullControl
   register: remove_fullcontrol_rights_on_certificate_again
 
-- name: assert remove FullControl rights on certificate again
-  assert:
+- name: Assert remove FullControl rights on certificate again
+  ansible.builtin.assert:
     that:
-    - not remove_fullcontrol_rights_on_certificate_again is changed
+      - not remove_fullcontrol_rights_on_certificate_again is changed
 
 # These tests are not strictly neccessary, but discovering the actual enum values for the access mask was a gnarly
 # process, so let's just be exhaustive and test that they're still correct
 
-- name: add Read rights on certificate
-  win_acl:
+- name: Add Read rights on certificate
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -564,19 +564,19 @@
     rights: Read
   register: add_read_rights_on_certificate
 
-- name: get result of add Read rights on certificate
-  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+- name: Get result of add Read rights on certificate
+  ansible.windows.win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
   register: add_read_rights_on_certificate_actual
 
-- name: assert add Read rights on certificate
-  assert:
+- name: Assert add Read rights on certificate
+  ansible.builtin.assert:
     that:
-    - add_read_rights_on_certificate is changed
-    - (add_read_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
-    - (add_read_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 1179785
+      - add_read_rights_on_certificate is changed
+      - (add_read_rights_on_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+      - (add_read_rights_on_certificate_actual.stdout|from_json|last).FileSystemRights == 1179785
 
-- name: remove Read rights on certificate
-  win_acl:
+- name: Remove Read rights on certificate
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cng_thumbprint }}'
     user: Guests
     type: allow
@@ -584,19 +584,19 @@
     rights: Read
   register: remove_read_rights_on_certificate
 
-- name: get result of remove Read rights on certificate
-  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+- name: Get result of remove Read rights on certificate
+  ansible.windows.win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
   register: remove_read_rights_on_certificate_actual
 
-- name: assert remove Read rights on certificate
-  assert:
+- name: Assert remove Read rights on certificate
+  ansible.builtin.assert:
     that:
-    - remove_read_rights_on_certificate is changed
-    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 1179785
-  with_items: '{{ remove_read_rights_on_certificate_actual.stdout|from_json }}'
+      - remove_read_rights_on_certificate is changed
+      - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 1179785
+  with_items: '{{ remove_read_rights_on_certificate_actual.stdout | from_json }}'
 
-- name: add FullControl rights on Crypto certificate
-  win_acl:
+- name: Add FullControl rights on Crypto certificate
+  ansible.windows.win_acl:
     path: 'Cert:\LocalMachine\My\{{ test_acl_certificiate_cryptoapi_thumbprint }}'
     user: Guests
     type: allow
@@ -604,13 +604,13 @@
     rights: FullControl
   register: add_fullcontrol_rights_on_crypto_certificate
 
-- name: get result of add FullControl rights on Crypto certificate
-  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cryptoapi_thumbprint }}''; {{ test_crypto_cert_ace_cmd }}'
+- name: Get result of add FullControl rights on Crypto certificate
+  ansible.windows.win_shell: '$thumbprint = ''{{ test_acl_certificiate_cryptoapi_thumbprint }}''; {{ test_crypto_cert_ace_cmd }}'
   register: add_fullcontrol_rights_on_crypto_certificate_actual
 
-- name: assert add FullControl rights on Crypto certificate
-  assert:
+- name: Assert add FullControl rights on Crypto certificate
+  ansible.builtin.assert:
     that:
-    - add_fullcontrol_rights_on_crypto_certificate is changed
-    - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
-    - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127
+      - add_fullcontrol_rights_on_crypto_certificate is changed
+      - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).IdentityReference.Value == 'BUILTIN\Guests'
+      - (add_fullcontrol_rights_on_crypto_certificate_actual.stdout|from_json|last).FileSystemRights == 2032127

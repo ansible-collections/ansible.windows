@@ -1,23 +1,23 @@
 ---
-- name: ensure we start with a clean dir
-  win_file:
+- name: Ensure we start with a clean dir
+  ansible.windows.win_file:
     path: '{{ test_acl_path }}'
     state: '{{ item }}'
   with_items:
-  - absent
-  - directory
+    - absent
+    - directory
 
-- name: ensure we start with a clean reg path
-  win_regedit:
+- name: Ensure we start with a clean reg path
+  ansible.windows.win_regedit:
     path: '{{ test_acl_reg_path }}'
-    delete_key: yes
+    delete_key: true
     state: '{{ item }}'
   with_items:
-  - absent
-  - present
+    - absent
+    - present
 
-- name: create certificates for testing
-  win_shell: |
+- name: Create certificates for testing
+  ansible.windows.win_shell: |
     $certParams = @{
         KeyAlgorithm = 'RSA'
         KeyExportPolicy = 'Exportable'
@@ -27,50 +27,51 @@
     (New-SelfSignedCertificate @certParams -Subject "ACL Test CryptoAPI" -Provider "Microsoft Base Cryptographic Provider v1.0" -KeySpec Signature).Thumbprint
   register: test_acl_cert_info
 
-- name: set variables of certificate thumbprints
-  set_fact:
+- name: Set variables of certificate thumbprints
+  ansible.builtin.set_fact:
     test_acl_certificiate_cng_thumbprint: '{{ test_acl_cert_info.stdout_lines[0] }}'
     test_acl_certificiate_cryptoapi_thumbprint: '{{ test_acl_cert_info.stdout_lines[1] }}'
 
-- block:
-  - name: create test dir for link target
-    win_file:
-      path: '{{ test_acl_path }}\target'
-      state: directory
+- name: Run tests for win_acl module
+  block:
+    - name: Create test dir for link target
+      ansible.windows.win_file:
+        path: '{{ test_acl_path }}\target'
+        state: directory
 
-  - name: create symlinks in test dir
-    win_powershell:
-      script: |
-        param (
-            [string]$Path
-        )
+    - name: Create symlinks in test dir
+      ansible.windows.win_powershell:
+        script: |
+          param (
+              [string]$Path
+          )
 
-        cmd.exe /c mklink /J "$Path\junction" "$Path\target"
-        cmd.exe /c mklink /D "$Path\symlink" "$Path\junction"
-      parameters:
-        Path: '{{ test_acl_path }}'
+          cmd.exe /c mklink /J "$Path\junction" "$Path\target"
+          cmd.exe /c mklink /D "$Path\symlink" "$Path\junction"
+        parameters:
+          Path: '{{ test_acl_path }}'
 
-  - name: run tests
-    include_tasks: tests.yml
+    - name: Run tests
+      ansible.builtin.include_tasks: tests.yml
 
   always:
-  - name: cleanup testing dir
-    win_file:
-      path: '{{ test_acl_path }}'
-      state: absent
+    - name: Cleanup testing dir
+      ansible.windows.win_file:
+        path: '{{ test_acl_path }}'
+        state: absent
 
-  - name: cleanup testing reg path
-    win_regedit:
-      path: '{{ test_acl_reg_path }}'
-      delete_key: yes
-      state: absent
+    - name: Cleanup testing reg path
+      ansible.windows.win_regedit:
+        path: '{{ test_acl_reg_path }}'
+        delete_key: true
+        state: absent
 
-  - name: uninstall testing certificates
-    win_certificate_store:
-      thumbprint: '{{ item }}'
-      state: absent
-      store_location: LocalMachine
-      store_name: My
-    with_items:
-      - test_acl_certificiate_cng_thumbprint
-      - test_acl_certificiate_cryptoapi_thumbprint
+    - name: Uninstall testing certificates
+      ansible.windows.win_certificate_store:
+        thumbprint: '{{ item }}'
+        state: absent
+        store_location: LocalMachine
+        store_name: My
+      with_items:
+        - test_acl_certificiate_cng_thumbprint
+        - test_acl_certificiate_cryptoapi_thumbprint
