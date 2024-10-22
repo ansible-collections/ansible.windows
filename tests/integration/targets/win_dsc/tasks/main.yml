@@ -1,35 +1,37 @@
 ---
-- block:
-  - name: add remote temp dir to PSModulePath
-    win_path:
-      name: PSModulePath
-      state: present
-      scope: machine
-      elements:
-      - '{{ remote_tmp_dir }}'
+- name: Win_dsc test flow
+  block:
+    - name: Add remote temp dir to PSModulePath
+      ansible.windows.win_path:
+        name: PSModulePath
+        state: present
+        scope: machine
+        elements:
+          - '{{ remote_tmp_dir }}'
 
-  # Needed so subsequent SSH session see the new PSModulePath env var
-  - name: restart sshd service
-    win_service:
-      name: sshd
-      state: restarted
-    when: ansible_connection == 'ssh'
+    # Needed so subsequent SSH session see the new PSModulePath env var
+    - name: Restart sshd service
+      ansible.windows.win_service:
+        name: sshd
+        state: restarted
+      when: ansible_connection == 'ssh'
 
-  - meta: reset_connection
+    - name: Reset connection meta
+      ansible.builtin.meta: reset_connection
 
-  - name: copy custom DSC resources to remote temp dir
-    win_copy:
-      src: files/
-      dest: '{{ remote_tmp_dir }}'
+    - name: Copy custom DSC resources to remote temp dir
+      ansible.windows.win_copy:
+        src: files/
+        dest: '{{ remote_tmp_dir }}'
 
-  - name: run tests
-    include_tasks: tests.yml
+    - name: Run tests
+      ansible.builtin.include_tasks: tests.yml
 
   always:
-  - name: remove remote tmp dir from PSModulePath
-    win_path:
-      name: PSModulePath
-      state: absent
-      scope: machine
-      elements:
-      - '{{ remote_tmp_dir }}'
+    - name: Remove remote tmp dir from PSModulePath
+      ansible.windows.win_path:
+        name: PSModulePath
+        state: absent
+        scope: machine
+        elements:
+          - '{{ remote_tmp_dir }}'
