@@ -1,754 +1,777 @@
 ---
-- name: fail with invalid store location
-  win_certificate_store:
+- name: Fail with invalid store location
+  ansible.windows.win_certificate_store:
     state: present
-    path: '{{win_cert_dir}}\subj-cert.pem'
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     store_location: FakeLocation
   register: fail_fake_location
-  failed_when: "fail_fake_location.msg != 'value of store_location must be one of: CurrentUser, LocalMachine. Got no match for: FakeLocation'"
+  failed_when: >
+    fail_fake_location.msg != 'value of store_location must be one of: CurrentUser, LocalMachine.
+    Got no match for: FakeLocation'
 
-- name: fail to open non-existing store without the creates flag
-  win_certificate_store:
+- name: Fail to open non-existing store without the creates flag
+  ansible.windows.win_certificate_store:
     state: present
-    path: '{{win_cert_dir}}\subj-cert.pem'
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     store_name: FakeName
   register: fail_fake_name
   failed_when: '"unable to find store ''FakeName''" not in fail_fake_name.msg'
 
-- name: fail when state=present and no path is set
-  win_certificate_store:
+- name: Fail when state=present and no path is set
+  ansible.windows.win_certificate_store:
     state: present
   register: fail_present_no_path
   failed_when: "fail_present_no_path.msg != 'state is present but all of the following are missing: path'"
 
-- name: fail when state=exported and no path is set
-  win_certificate_store:
+- name: Fail when state=exported and no path is set
+  ansible.windows.win_certificate_store:
     state: exported
     thumbprint: ABC
   register: fail_export_no_path
   failed_when: "fail_export_no_path.msg != 'state is exported but all of the following are missing: path'"
 
-- name: fail when state=exported and no thumbprint is set
-  win_certificate_store:
+- name: Fail when state=exported and no thumbprint is set
+  ansible.windows.win_certificate_store:
     state: exported
-    path: '{{win_cert_dir}}'
+    path: '{{ win_cert_dir }}'
   register: fail_export_no_thumbprint
   failed_when: "fail_export_no_thumbprint.msg != 'state is exported but all of the following are missing: thumbprint'"
 
-- name: fail to export thumbprint when path is a dir
-  win_certificate_store:
+- name: Fail to export thumbprint when path is a dir
+  ansible.windows.win_certificate_store:
     state: exported
-    thumbprint: '{{subj_thumbprint}}'
-    path: '{{win_cert_dir}}'
+    thumbprint: '{{ subj_thumbprint }}'
+    path: '{{ win_cert_dir }}'
   register: fail_export_path_is_dir
   failed_when: fail_export_path_is_dir.msg != "Cannot export cert to path '" + win_cert_dir + "' as it is a directory"
 
-- name: import pem certificate (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.pem'
+- name: Import pem certificate (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     state: present
   register: import_pem_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of import pem certificate (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of import pem certificate (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_result_check
 
-- name: assert results of import pem certificate (check)
-  assert:
+- name: Assert results of import pem certificate (check)
+  ansible.builtin.assert:
     that:
-    - import_pem_check is changed
-    - import_pem_check.thumbprints == [subj_thumbprint]
-    - import_pem_result_check.stdout_lines[0] == "False"
+      - import_pem_check is changed
+      - import_pem_check.thumbprints == [subj_thumbprint]
+      - import_pem_result_check.stdout_lines[0] == "False"
 
-- name: import pem certificate
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.pem'
+- name: Import pem certificate
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     state: present
   register: import_pem
 
-- name: get result of import pem certificate
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of import pem certificate
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_result
 
-- name: assert results of import pem certificate
-  assert:
+- name: Assert results of import pem certificate
+  ansible.builtin.assert:
     that:
-    - import_pem is changed
-    - import_pem.thumbprints == [subj_thumbprint]
-    - import_pem_result.stdout_lines[0] == "True"
+      - import_pem is changed
+      - import_pem.thumbprints == [subj_thumbprint]
+      - import_pem_result.stdout_lines[0] == "True"
 
-- name: import pem certificate (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.pem'
+- name: Import pem certificate (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     state: present
   register: import_pem_again
 
-- name: assert results of import pem certificate (idempotent)
-  assert:
+- name: Assert results of import pem certificate (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_pem_again is changed
+      - not import_pem_again is changed
 
-- name: remove certificate based on thumbprint (check)
-  win_certificate_store:
-    thumbprint: '{{subj_thumbprint}}'
+- name: Remove certificate based on thumbprint (check)
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ subj_thumbprint }}'
     state: absent
   register: remove_thumbprint_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of remove certificate based on thumbprint (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of remove certificate based on thumbprint (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: remove_thumbprint_result_check
 
-- name: assert results of remove certificate based on thumbprint (check)
-  assert:
+- name: Assert results of remove certificate based on thumbprint (check)
+  ansible.builtin.assert:
     that:
-    - remove_thumbprint_check is changed
-    - remove_thumbprint_check.thumbprints == [subj_thumbprint]
-    - remove_thumbprint_result_check.stdout_lines[0] == "True"
+      - remove_thumbprint_check is changed
+      - remove_thumbprint_check.thumbprints == [subj_thumbprint]
+      - remove_thumbprint_result_check.stdout_lines[0] == "True"
 
-- name: remove certificate based on thumbprint
-  win_certificate_store:
-    thumbprint: '{{subj_thumbprint}}'
+- name: Remove certificate based on thumbprint
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ subj_thumbprint }}'
     state: absent
   register: remove_thumbprint
 
-- name: get result of remove certificate based on thumbprint
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of remove certificate based on thumbprint
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: remove_thumbprint_result
 
-- name: assert results of remove certificate based on thumbprint
-  assert:
+- name: Assert results of remove certificate based on thumbprint
+  ansible.builtin.assert:
     that:
-    - remove_thumbprint is changed
-    - remove_thumbprint.thumbprints == [subj_thumbprint]
-    - remove_thumbprint_result.stdout_lines[0] == "False"
+      - remove_thumbprint is changed
+      - remove_thumbprint.thumbprints == [subj_thumbprint]
+      - remove_thumbprint_result.stdout_lines[0] == "False"
 
-- name: remove certificate based on thumbprint (idempotent)
-  win_certificate_store:
-    thumbprint: '{{subj_thumbprint}}'
+- name: Remove certificate based on thumbprint (idempotent)
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ subj_thumbprint }}'
     state: absent
   register: remove_thumbprint_again
 
-- name: assert results of remove certificate based on thumbprint (idempotent)
-  assert:
+- name: Assert results of remove certificate based on thumbprint (idempotent)
+  ansible.builtin.assert:
     that:
-    - not remove_thumbprint_again is changed
+      - not remove_thumbprint_again is changed
 
-- name: import der certificate (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Import der certificate (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: present
   register: import_der_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of import der certificate (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of import der certificate (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_result_check
 
-- name: assert results of import der certificate (check)
-  assert:
+- name: Assert results of import der certificate (check)
+  ansible.builtin.assert:
     that:
-    - import_der_check is changed
-    - import_der_check.thumbprints == [subj_thumbprint]
-    - import_der_result_check.stdout_lines[0] == "False"
+      - import_der_check is changed
+      - import_der_check.thumbprints == [subj_thumbprint]
+      - import_der_result_check.stdout_lines[0] == "False"
 
-- name: import der certificate
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Import der certificate
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: present
   register: import_der
 
-- name: get result of import der certificate
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of import der certificate
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_result
 
-- name: assert results of import der certificate
-  assert:
+- name: Assert results of import der certificate
+  ansible.builtin.assert:
     that:
-    - import_der is changed
-    - import_der.thumbprints == [subj_thumbprint]
-    - import_der_result.stdout_lines[0] == "True"
+      - import_der is changed
+      - import_der.thumbprints == [subj_thumbprint]
+      - import_der_result.stdout_lines[0] == "True"
 
-- name: import der certificate (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Import der certificate (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: present
   register: import_der_again
 
-- name: assert results of import der certificate (idempotent)
-  assert:
+- name: Assert results of import der certificate (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_der_again is changed
+      - not import_der_again is changed
 
-- name: remove certificate based on path (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Remove certificate based on path (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: absent
   register: remove_path_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of remove certificate based on path (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of remove certificate based on path (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: remove_path_result_check
 
-- name: assert results of remove certificate based on path (check)
-  assert:
+- name: Assert results of remove certificate based on path (check)
+  ansible.builtin.assert:
     that:
-    - remove_path_check is changed
-    - remove_path_check.thumbprints == [subj_thumbprint]
-    - remove_path_result_check.stdout_lines[0] == "True"
+      - remove_path_check is changed
+      - remove_path_check.thumbprints == [subj_thumbprint]
+      - remove_path_result_check.stdout_lines[0] == "True"
 
-- name: remove certificate based on path
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Remove certificate based on path
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: absent
   register: remove_path
 
-- name: get result of remove certificate based on path
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of remove certificate based on path
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: remove_path_result
 
-- name: assert results of remove certificate based on path
-  assert:
+- name: Assert results of remove certificate based on path
+  ansible.builtin.assert:
     that:
-    - remove_path is changed
-    - remove_path.thumbprints == [subj_thumbprint]
-    - remove_path_result.stdout_lines[0] == "False"
+      - remove_path is changed
+      - remove_path.thumbprints == [subj_thumbprint]
+      - remove_path_result.stdout_lines[0] == "False"
 
-- name: remove certificate based on path (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.cer'
+- name: Remove certificate based on path (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.cer'
     state: absent
   register: remove_path_again
 
-- name: assert results of remove certificate based on path (idempotent)
-  assert:
+- name: Assert results of remove certificate based on path (idempotent)
+  ansible.builtin.assert:
     that:
-    - not remove_path_again is changed
+      - not remove_path_again is changed
 
-- name: import PEM encoded p7b chain (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.pem'
+- name: Import PEM encoded p7b chain (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.pem'
     state: present
   register: import_pem_p7b_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of subj in p7b chain (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of subj in p7b chain (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_p7b_subj_result_check
 
-- name: get result of root in p7b chain (check)
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+- name: Get result of root in p7b chain (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ root_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_p7b_root_result_check
 
-- name: assert results of import PEM encoded p7b chain (check)
-  assert:
+- name: Assert results of import PEM encoded p7b chain (check)
+  ansible.builtin.assert:
     that:
-    - import_pem_p7b_check is changed
-    - import_pem_p7b_check.thumbprints|count == 2
-    - subj_thumbprint in import_pem_p7b_check.thumbprints
-    - root_thumbprint in import_pem_p7b_check.thumbprints
-    - import_pem_p7b_subj_result_check.stdout_lines[0] == "False"
-    - import_pem_p7b_root_result_check.stdout_lines[0] == "False"
+      - import_pem_p7b_check is changed
+      - import_pem_p7b_check.thumbprints|count == 2
+      - subj_thumbprint in import_pem_p7b_check.thumbprints
+      - root_thumbprint in import_pem_p7b_check.thumbprints
+      - import_pem_p7b_subj_result_check.stdout_lines[0] == "False"
+      - import_pem_p7b_root_result_check.stdout_lines[0] == "False"
 
-- name: import PEM encoded p7b chain
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.pem'
+- name: Import PEM encoded p7b chain
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.pem'
     state: present
   register: import_pem_p7b
 
-- name: get result of subj in p7b chain
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of subj in p7b chain
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_p7b_subj_result
 
-- name: get result of root in p7b chain
-  win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+- name: Get result of root in p7b chain
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ root_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pem_p7b_root_result
 
-- name: assert results of import PEM encoded p7b chain
-  assert:
+- name: Assert results of import PEM encoded p7b chain
+  ansible.builtin.assert:
     that:
-    - import_pem_p7b is changed
-    - import_pem_p7b.thumbprints|count == 2
-    - subj_thumbprint in import_pem_p7b.thumbprints
-    - root_thumbprint in import_pem_p7b.thumbprints
-    - import_pem_p7b_subj_result.stdout_lines[0] == "True"
-    - import_pem_p7b_root_result.stdout_lines[0] == "True"
+      - import_pem_p7b is changed
+      - import_pem_p7b.thumbprints|count == 2
+      - subj_thumbprint in import_pem_p7b.thumbprints
+      - root_thumbprint in import_pem_p7b.thumbprints
+      - import_pem_p7b_subj_result.stdout_lines[0] == "True"
+      - import_pem_p7b_root_result.stdout_lines[0] == "True"
 
-- name: import PEM encoded p7b chain (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.pem'
+- name: Import PEM encoded p7b chain (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.pem'
     state: present
   register: import_pem_p7b_again
 
-- name: assert results of import PEM encoded p7b chain (idempotent)
-  assert:
+- name: Assert results of import PEM encoded p7b chain (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_pem_p7b_again is changed
+      - not import_pem_p7b_again is changed
 
-- name: remove p7b chain certs
-  win_certificate_store:
-    thumbprint: '{{item}}'
+- name: Remove p7b chain certs
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ item }}'
     state: absent
   with_items:
-  - '{{subj_thumbprint}}'
-  - '{{root_thumbprint}}'
+    - '{{ subj_thumbprint }}'
+    - '{{ root_thumbprint }}'
 
-- name: import DER encoded p7b chain into custom store (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.p7b'
+- name: Import DER encoded p7b chain into custom store (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.p7b'
     state: present
     store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of subj in p7b chain in custom store (check)
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of subj in p7b chain in custom store (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_p7b_subj_result_check
 
-- name: get result of root in p7b chain in custom store (check)
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+- name: Get result of root in p7b chain in custom store (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{ root_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_p7b_root_result_check
 
-- name: assert results of import DER encoded p7b chain into custom store (check)
-  assert:
+- name: Assert results of import DER encoded p7b chain into custom store (check)
+  ansible.builtin.assert:
     that:
-    - import_der_p7b_check is changed
-    - import_der_p7b_check.thumbprints|count == 2
-    - subj_thumbprint in import_der_p7b_check.thumbprints
-    - root_thumbprint in import_der_p7b_check.thumbprints
-    - import_der_p7b_subj_result_check.stdout_lines[0] == "False"
-    - import_der_p7b_root_result_check.stdout_lines[0] == "False"
+      - import_der_p7b_check is changed
+      - import_der_p7b_check.thumbprints|count == 2
+      - subj_thumbprint in import_der_p7b_check.thumbprints
+      - root_thumbprint in import_der_p7b_check.thumbprints
+      - import_der_p7b_subj_result_check.stdout_lines[0] == "False"
+      - import_der_p7b_root_result_check.stdout_lines[0] == "False"
 
-- name: import DER encoded p7b chain into custom store
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.p7b'
+- name: Import DER encoded p7b chain into custom store
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.p7b'
     state: present
     store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b
 
-- name: get result of subj in p7b chain in custom store
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get result of subj in p7b chain in custom store
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_p7b_subj_result
 
-- name: get result of root in p7b chain in custom store
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{root_thumbprint}}" }) { $true } else { $false }
+- name: Get result of root in p7b chain in custom store
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\CA | Where-Object { $_.Thumbprint -eq "{{ root_thumbprint }}" })`
+    { $true } else { $false }
   register: import_der_p7b_root_result
 
-- name: assert results of import DER encoded p7b chain into custom store
-  assert:
+- name: Assert results of import DER encoded p7b chain into custom store
+  ansible.builtin.assert:
     that:
-    - import_der_p7b is changed
-    - import_der_p7b.thumbprints|count == 2
-    - subj_thumbprint in import_der_p7b.thumbprints
-    - root_thumbprint in import_der_p7b.thumbprints
-    - import_der_p7b_root_result.stdout_lines[0] == "True"
-    - import_der_p7b_root_result.stdout_lines[0] == "True"
+      - import_der_p7b is changed
+      - import_der_p7b.thumbprints|count == 2
+      - subj_thumbprint in import_der_p7b.thumbprints
+      - root_thumbprint in import_der_p7b.thumbprints
+      - import_der_p7b_root_result.stdout_lines[0] == "True"
+      - import_der_p7b_root_result.stdout_lines[0] == "True"
 
-- name: import DER encoded p7b chain into custom store (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\chain.p7b'
+- name: Import DER encoded p7b chain into custom store (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\chain.p7b'
     state: present
     store_name: CertificateAuthority
     store_location: CurrentUser
   register: import_der_p7b_again
 
-- name: assert results of import DER encoded p7b chain into custom store (idempotent)
-  assert:
+- name: Assert results of import DER encoded p7b chain into custom store (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_der_p7b_again is changed
+      - not import_der_p7b_again is changed
 
-- name: remove p7b chain certs from custom store
-  win_certificate_store:
-    thumbprint: '{{item}}'
+- name: Remove p7b chain certs from custom store
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ item }}'
     state: absent
     store_name: CertificateAuthority
     store_location: CurrentUser
   with_items:
-  - '{{subj_thumbprint}}'
-  - '{{root_thumbprint}}'
+    - '{{ subj_thumbprint }}'
+    - '{{ root_thumbprint }}'
 
 # By importing the cert first we make sure win_certificate_store will reimport
 # a cert with a key present if the imported cert doesn't have the key.
 # https://github.com/ansible-collections/ansible.windows/pull/424
-- name: import cert without key for next test
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert.pem'
+- name: Import cert without key for next test
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
     state: present
 
-- name: import pfx without password and non exportable (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-without-pass.pfx'
+- name: Import pfx without password and non exportable (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-without-pass.pfx'
     state: present
-    key_exportable: no
+    key_exportable: false
   vars: &become_vars
-    ansible_become: yes
+    ansible_become: true
     ansible_become_method: runas
-    ansible_become_user: '{{ansible_user}}'
+    ansible_become_user: '{{ ansible_user }}'
     ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
   register: import_pfx_without_pass_check
-  check_mode: yes
+  check_mode: true
 
-- name: assert results of import pfx without password and non exportable (check)
-  assert:
+- name: Assert results of import pfx without password and non exportable (check)
+  ansible.builtin.assert:
     that:
-    - import_pfx_without_pass_check is changed
-    - import_pfx_without_pass_check.thumbprints == [subj_thumbprint]
+      - import_pfx_without_pass_check is changed
+      - import_pfx_without_pass_check.thumbprints == [subj_thumbprint]
 
-- name: import pfx without password and non exportable
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-without-pass.pfx'
+- name: Import pfx without password and non exportable
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-without-pass.pfx'
     state: present
-    key_exportable: no
+    key_exportable: false
   vars: *become_vars
   register: import_pfx_without_pass
 
-- name: get results of import pfx without password and non exportable
-  win_shell: (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }).PrivateKey.CspKeyContainerInfo.Exportable
+- name: Get results of import pfx without password and non exportable
+  ansible.windows.win_shell: >
+    (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" }).PrivateKey.CspKeyContainerInfo.Exportable
   vars: *become_vars
   register: import_pfx_without_pass_result
 
-- name: assert results of import pfx without password and non exportable
-  assert:
+- name: Assert results of import pfx without password and non exportable
+  ansible.builtin.assert:
     that:
-    - import_pfx_without_pass is changed
-    - import_pfx_without_pass.thumbprints == [subj_thumbprint]
-    - import_pfx_without_pass_result.stdout_lines[0] == "False"
+      - import_pfx_without_pass is changed
+      - import_pfx_without_pass.thumbprints == [subj_thumbprint]
+      - import_pfx_without_pass_result.stdout_lines[0] == "False"
 
-- name: import pfx without password and non exportable (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-without-pass.pfx'
+- name: Import pfx without password and non exportable (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-without-pass.pfx'
     state: present
-    key_exportable: no
+    key_exportable: false
   vars: *become_vars
   register: import_pfx_without_pass_again
 
-- name: assert results of import pfx without password and non exportable (idempotent)
-  assert:
+- name: Assert results of import pfx without password and non exportable (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_pfx_without_pass_again is changed
+      - not import_pfx_without_pass_again is changed
 
-- name: fail import pfx with password and none set
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-with-pass.pfx'
+- name: Fail import pfx with password and none set
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-with-pass.pfx'
     state: present
     store_location: CurrentUser
     store_name: TrustedPeople
   register: fail_import_pfx_with_password
-  failed_when: "'Failed to load cert from file' not in fail_import_pfx_with_password.msg and 'The specified network password is not correct' not in fail_import_pfx_with_password.msg"
+  failed_when: >
+    'Failed to load cert from file' not in fail_import_pfx_with_password.msg and
+    'The specified network password is not correct' not in fail_import_pfx_with_password.msg
 
-- name: import pfx with password (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-with-pass.pfx'
+- name: Import pfx with password (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-with-pass.pfx'
     state: present
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
     store_location: CurrentUser
     store_name: TrustedPeople
   register: import_pfx_with_pass_check
   vars: *become_vars
-  check_mode: yes
+  check_mode: true
 
-- name: get results of import pfx with password (check)
-  win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }) { $true } else { $false }
+- name: Get results of import pfx with password (check)
+  ansible.windows.win_shell: if (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{ subj_thumbprint }}" })`
+    { $true } else { $false }
   register: import_pfx_with_pass_result_check
 
-- name: assert results of import pfx with password (check)
-  assert:
+- name: Assert results of import pfx with password (check)
+  ansible.builtin.assert:
     that:
-    - import_pfx_with_pass_check is changed
-    - import_pfx_with_pass_check.thumbprints == [subj_thumbprint]
-    - import_pfx_with_pass_result_check.stdout_lines[0] == "False"
+      - import_pfx_with_pass_check is changed
+      - import_pfx_with_pass_check.thumbprints == [subj_thumbprint]
+      - import_pfx_with_pass_result_check.stdout_lines[0] == "False"
 
-- name: import pfx with password
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-with-pass.pfx'
+- name: Import pfx with password
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-with-pass.pfx'
     state: present
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
     store_location: CurrentUser
     store_name: TrustedPeople
   vars: *become_vars
   register: import_pfx_with_pass
 
-- name: get results of import pfx with password
-  win_shell: (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }).PrivateKey.CspKeyContainerInfo.Exportable
+- name: Get results of import pfx with password
+  ansible.windows.win_shell: (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object `
+    { $_.Thumbprint -eq "{{ subj_thumbprint }}" }).PrivateKey.CspKeyContainerInfo.Exportable
   vars: *become_vars
   register: import_pfx_with_pass_result
 
-- name: assert results of import pfx with password
-  assert:
+- name: Assert results of import pfx with password
+  ansible.builtin.assert:
     that:
-    - import_pfx_with_pass is changed
-    - import_pfx_with_pass.thumbprints == [subj_thumbprint]
-    - import_pfx_with_pass_result.stdout_lines[0] == "True"
+      - import_pfx_with_pass is changed
+      - import_pfx_with_pass.thumbprints == [subj_thumbprint]
+      - import_pfx_with_pass_result.stdout_lines[0] == "True"
 
-- name: import pfx with password (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\subj-cert-with-pass.pfx'
+- name: Import pfx with password (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert-with-pass.pfx'
     state: present
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
     store_location: CurrentUser
     store_name: TrustedPeople
   vars: *become_vars
   register: import_pfx_with_pass_again
 
-- name: assert results of import pfx with password (idempotent)
-  assert:
+- name: Assert results of import pfx with password (idempotent)
+  ansible.builtin.assert:
     that:
-    - not import_pfx_with_pass_again is changed
+      - not import_pfx_with_pass_again is changed
 
-- name: import root cert for export tests
-  win_certificate_store:
-    path: '{{win_cert_dir}}\root-cert.pem'
+- name: Import root cert for export tests
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\root-cert.pem'
     state: present
 
-- name: export cert as pem (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.pem'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as pem (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pem
   register: export_pem_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of export cert as pem (check)
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.pem'
+- name: Get result of export cert as pem (check)
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
   register: export_pem_result_check
 
-- name: assert results of export cert as pem (check)
-  assert:
+- name: Assert results of export cert as pem (check)
+  ansible.builtin.assert:
     that:
-    - export_pem_check is changed
-    - export_pem_check.thumbprints == [subj_thumbprint]
-    - export_pem_result_check.stat.exists == False
+      - export_pem_check is changed
+      - export_pem_check.thumbprints == [subj_thumbprint]
+      - export_pem_result_check.stat.exists == False
 
-- name: export cert as pem
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.pem'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as pem
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pem
   register: export_pem
 
-- name: get result of export cert as pem
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.pem'
+- name: Get result of export cert as pem
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
   register: export_pem_result
 
-- name: assert results of export cert as pem
-  assert:
+- name: Assert results of export cert as pem
+  ansible.builtin.assert:
     that:
-    - export_pem is changed
-    - export_pem.thumbprints == [subj_thumbprint]
-    - export_pem_result.stat.checksum == '1ebf5467d18230e9f611940a74d12f1d0bc819b7'
+      - export_pem is changed
+      - export_pem.thumbprints == [subj_thumbprint]
+      - export_pem_result.stat.checksum == '1ebf5467d18230e9f611940a74d12f1d0bc819b7'
 
-- name: export cert as pem (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.pem'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as pem (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pem
   register: export_pem_again
 
-- name: assert results of export cert as pem
-  assert:
+- name: Assert results of export cert as pem
+  ansible.builtin.assert:
     that:
-    - not export_pem_again is changed
+      - not export_pem_again is changed
 
-- name: export cert as der (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.cer'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as der (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: der
   register: export_der_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of export cert as der (check)
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.cer'
+- name: Get result of export cert as der (check)
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
   register: export_der_result_check
 
-- name: assert results of export cert as der (check)
-  assert:
+- name: Assert results of export cert as der (check)
+  ansible.builtin.assert:
     that:
-    - export_der_check is changed
-    - export_der_check.thumbprints == [subj_thumbprint]
-    - export_der_result_check.stat.exists == False
+      - export_der_check is changed
+      - export_der_check.thumbprints == [subj_thumbprint]
+      - export_der_result_check.stat.exists == False
 
-- name: export cert as der
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.cer'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as der
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: der
   register: export_der
 
-- name: get result of export cert as der
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.cer'
+- name: Get result of export cert as der
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
   register: export_der_result
 
-- name: assert results of export cert as der
-  assert:
+- name: Assert results of export cert as der
+  ansible.builtin.assert:
     that:
-    - export_der is changed
-    - export_der.thumbprints == [subj_thumbprint]
-    - export_der_result.stat.checksum == 'bd7af104cf1872bdb518d95c9534ea941665fd27'
+      - export_der is changed
+      - export_der.thumbprints == [subj_thumbprint]
+      - export_der_result.stat.checksum == 'bd7af104cf1872bdb518d95c9534ea941665fd27'
 
-- name: export cert as der (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.cer'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as der (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: der
   register: export_der_again
 
-- name: assert results of export cert as der
-  assert:
+- name: Assert results of export cert as der
+  ansible.builtin.assert:
     that:
-    - not export_der_again is changed
+      - not export_der_again is changed
 
-- name: export cert as der replacing pem
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.pem'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as der replacing pem
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: der
   register: export_der_over_pem
 
-- name: get result of export cert as der replacing pem
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.pem'
+- name: Get result of export cert as der replacing pem
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.pem'
   register: export_der_over_pem_result
 
-- name: assert results of export cert as der replacing pem
-  assert:
+- name: Assert results of export cert as der replacing pem
+  ansible.builtin.assert:
     that:
-    - export_der_over_pem is changed
-    - export_der_over_pem.thumbprints == [subj_thumbprint]
-    - export_der_over_pem_result.stat.checksum == 'bd7af104cf1872bdb518d95c9534ea941665fd27'
+      - export_der_over_pem is changed
+      - export_der_over_pem.thumbprints == [subj_thumbprint]
+      - export_der_over_pem_result.stat.checksum == 'bd7af104cf1872bdb518d95c9534ea941665fd27'
 
-- name: export cert as pem replacing der
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert.cer'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert as pem replacing der
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pem
   register: export_pem_over_der
 
-- name: get result of export cert as pem replacing der
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert.cer'
+- name: Get result of export cert as pem replacing der
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert.cer'
   register: export_pem_over_der_result
 
-- name: assert results of export cert as pem replacing der
-  assert:
+- name: Assert results of export cert as pem replacing der
+  ansible.builtin.assert:
     that:
-    - export_pem_over_der is changed
-    - export_pem_over_der.thumbprints == [subj_thumbprint]
-    - export_pem_over_der_result.stat.checksum == '1ebf5467d18230e9f611940a74d12f1d0bc819b7'
+      - export_pem_over_der is changed
+      - export_pem_over_der.thumbprints == [subj_thumbprint]
+      - export_pem_over_der_result.stat.checksum == '1ebf5467d18230e9f611940a74d12f1d0bc819b7'
 
-- name: export cert with key and password as pfx (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key and password as pfx (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
     store_name: TrustedPeople
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
   register: export_pfx_with_pass_check
   vars: *become_vars
-  check_mode: yes
+  check_mode: true
 
-- name: get result of export cert with key and password as pfx (check)
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert-pass.pfx'
+- name: Get result of export cert with key and password as pfx (check)
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert-pass.pfx'
   register: export_pfx_with_pass_result_check
 
-- name: assert results of export cert with key and password as pfx (check)
-  assert:
+- name: Assert results of export cert with key and password as pfx (check)
+  ansible.builtin.assert:
     that:
-    - export_pfx_with_pass_check is changed
-    - export_pfx_with_pass_check.thumbprints == [subj_thumbprint]
-    - export_pfx_with_pass_result_check.stat.exists == False
+      - export_pfx_with_pass_check is changed
+      - export_pfx_with_pass_check.thumbprints == [subj_thumbprint]
+      - export_pfx_with_pass_result_check.stat.exists == False
 
-- name: export cert with key and password as pfx
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key and password as pfx
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
     store_name: TrustedPeople
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
   vars: *become_vars
   register: export_pfx_with_pass
 
-- name: get result of export cert with key and password as pfx
-  win_shell: |
+- name: Get result of export cert with key and password as pfx
+  ansible.windows.win_shell: |
     $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
-    $cert.Import("{{win_cert_dir}}\exported\cert-pass.pfx", "{{key_password}}", 0)
+    $cert.Import("{{ win_cert_dir }}\exported\cert-pass.pfx", "{{ key_password }}", 0)
     $cert.HasPrivateKey
   vars: *become_vars
   register: export_pfx_with_pass_result
 
-- name: assert results of export cert with key and password as pfx
-  assert:
+- name: Assert results of export cert with key and password as pfx
+  ansible.builtin.assert:
     that:
-    - export_pfx_with_pass is changed
-    - export_pfx_with_pass.thumbprints == [subj_thumbprint]
-    - export_pfx_with_pass_result.stdout_lines[0] == "True"
+      - export_pfx_with_pass is changed
+      - export_pfx_with_pass.thumbprints == [subj_thumbprint]
+      - export_pfx_with_pass_result.stdout_lines[0] == "True"
 
-- name: export cert with key and password as pfx (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key and password as pfx (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
     store_name: TrustedPeople
-    password: '{{key_password}}'
+    password: '{{ key_password }}'
   vars: *become_vars
   register: export_pfx_with_pass_again
 
-- name: assert results of export cert with key and password as pfx (idempotent)
-  assert:
+- name: Assert results of export cert with key and password as pfx (idempotent)
+  ansible.builtin.assert:
     that:
-    - not export_pfx_with_pass_again is changed
+      - not export_pfx_with_pass_again is changed
 
-- name: export cert with key without password as pfx (check)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-without-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key without password as pfx (check)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-without-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
     store_name: TrustedPeople
   vars: *become_vars
   register: export_pfx_without_pass_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of export cert with key without password as pfx (check)
-  win_stat:
-    path: '{{win_cert_dir}}\exported\cert-without-pass.pfx'
+- name: Get result of export cert with key without password as pfx (check)
+  ansible.windows.win_stat:
+    path: '{{ win_cert_dir }}\exported\cert-without-pass.pfx'
   register: export_pfx_without_pass_result_check
 
-- name: assert results of export cert with key without password as pfx (check)
-  assert:
+- name: Assert results of export cert with key without password as pfx (check)
+  ansible.builtin.assert:
     that:
-    - export_pfx_without_pass_check is changed
-    - export_pfx_without_pass_check.thumbprints == [subj_thumbprint]
-    - export_pfx_without_pass_result_check.stat.exists == False
+      - export_pfx_without_pass_check is changed
+      - export_pfx_without_pass_check.thumbprints == [subj_thumbprint]
+      - export_pfx_without_pass_result_check.stat.exists == False
 
-- name: export cert with key without password as pfx
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-without-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key without password as pfx
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-without-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
@@ -756,25 +779,25 @@
   vars: *become_vars
   register: export_pfx_without_pass
 
-- name: get result of export cert with key without password as pfx
-  win_shell: |
+- name: Get result of export cert with key without password as pfx
+  ansible.windows.win_shell: |
     $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
-    $cert.Import("{{win_cert_dir}}\exported\cert-without-pass.pfx", $null, 0)
+    $cert.Import("{{ win_cert_dir }}\exported\cert-without-pass.pfx", $null, 0)
     $cert.HasPrivateKey
   vars: *become_vars
   register: export_pfx_without_pass_result
 
-- name: assert results of export cert with key without password as pfx
-  assert:
+- name: Assert results of export cert with key without password as pfx
+  ansible.builtin.assert:
     that:
-    - export_pfx_without_pass is changed
-    - export_pfx_without_pass.thumbprints == [subj_thumbprint]
-    - export_pfx_without_pass_result.stdout_lines[0] == "True"
+      - export_pfx_without_pass is changed
+      - export_pfx_without_pass.thumbprints == [subj_thumbprint]
+      - export_pfx_without_pass_result.stdout_lines[0] == "True"
 
-- name: export cert with key without password as pfx (idempotent)
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-without-pass.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Export cert with key without password as pfx (idempotent)
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-without-pass.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
     store_location: CurrentUser
@@ -782,23 +805,23 @@
   vars: *become_vars
   register: export_pfx_without_pass_again
 
-- name: assert results of export cert with key without password as pfx (idempotent)
-  assert:
+- name: Assert results of export cert with key without password as pfx (idempotent)
+  ansible.builtin.assert:
     that:
-    - not export_pfx_without_pass_again is changed
+      - not export_pfx_without_pass_again is changed
 
-- name: fail to export cert with key as pfx when not marked as exportable
-  win_certificate_store:
-    path: '{{win_cert_dir}}\exported\cert-fail.pfx'
-    thumbprint: '{{subj_thumbprint}}'
+- name: Fail to export cert with key as pfx when not marked as exportable
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\exported\cert-fail.pfx'
+    thumbprint: '{{ subj_thumbprint }}'
     state: exported
     file_type: pkcs12
   vars: *become_vars
   register: fail_export_non_exportable
   failed_when: fail_export_non_exportable.msg is not search("Key not valid for use in specified state.")
 
-- name: fail to import with invalid service name
-  win_certificate_store:
+- name: Fail to import with invalid service name
+  ansible.windows.win_certificate_store:
     path: '{{ win_cert_dir }}\subj-cert.pem'
     store_type: service
     store_location: FakeService
@@ -806,143 +829,146 @@
   register: fail_invalid_service
   failed_when: fail_invalid_service.msg != "value of store_location 'FakeService' is not a valid windows service"
 
-- block:
-  - name: import certificate into service store (check mode)
-    win_certificate_store:
-      path: '{{ win_cert_dir }}\subj-cert.pem'
-      store_type: service
-      store_location: WinRM
-      state: present
-    register: service_store_check
-    check_mode: yes
+- name: Service certificate check
+  block:
+    - name: Import certificate into service store (check mode)
+      ansible.windows.win_certificate_store:
+        path: '{{ win_cert_dir }}\subj-cert.pem'
+        store_type: service
+        store_location: WinRM
+        state: present
+      register: service_store_check
+      check_mode: true
 
-  - name: get result of import certificate into service store (check mode)
-    win_reg_stat:
-      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
-    register: service_store_check_actual
+    - name: Get result of import certificate into service store (check mode)
+      ansible.windows.win_reg_stat:
+        path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+      register: service_store_check_actual
 
-  - name: assert import certificate into service store (check mode)
-    assert:
-      that:
-      - service_store_check is changed
-      - service_store_check.thumbprints == [subj_thumbprint]
-      - not service_store_check_actual.exists
+    - name: Assert import certificate into service store (check mode)
+      ansible.builtin.assert:
+        that:
+          - service_store_check is changed
+          - service_store_check.thumbprints == [subj_thumbprint]
+          - not service_store_check_actual.exists
 
-  - name: import certificate into service store
-    win_certificate_store:
-      path: '{{ win_cert_dir }}\subj-cert.pem'
-      store_type: service
-      store_location: WinRM
-      state: present
-    register: service_store
+    - name: Import certificate into service store
+      ansible.windows.win_certificate_store:
+        path: '{{ win_cert_dir }}\subj-cert.pem'
+        store_type: service
+        store_location: WinRM
+        state: present
+      register: service_store
 
-  - name: get result of import certificate into service store
-    win_reg_stat:
-      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
-    register: service_store_actual
+    - name: Get result of import certificate into service store
+      ansible.windows.win_reg_stat:
+        path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+      register: service_store_actual
 
-  - name: assert import certificate into service store
-    assert:
-      that:
-      - service_store is changed
-      - service_store.thumbprints == [subj_thumbprint]
-      - service_store_actual.exists
+    - name: Assert import certificate into service store
+      ansible.builtin.assert:
+        that:
+          - service_store is changed
+          - service_store.thumbprints == [subj_thumbprint]
+          - service_store_actual.exists
 
-  - name: import certificate into service store (idempotent)
-    win_certificate_store:
-      path: '{{ win_cert_dir }}\subj-cert.pem'
-      store_type: service
-      store_location: WinRM
-      state: present
-    register: service_store_again
+    - name: Import certificate into service store (idempotent)
+      ansible.windows.win_certificate_store:
+        path: '{{ win_cert_dir }}\subj-cert.pem'
+        store_type: service
+        store_location: WinRM
+        state: present
+      register: service_store_again
 
-  - name: assert import certificate into service store (idempotent)
-    assert:
-      that:
-      - not service_store_again is changed
+    - name: Assert import certificate into service store (idempotent)
+      ansible.builtin.assert:
+        that:
+          - not service_store_again is changed
 
-  - name: remove service certificate (check)
-    win_certificate_store:
-      store_type: service
-      store_location: WinRM
-      thumbprint: '{{ subj_thumbprint }}'
-      state: absent
-    register: service_remove_check
-    check_mode: yes
+    - name: Remove service certificate (check)
+      ansible.windows.win_certificate_store:
+        store_type: service
+        store_location: WinRM
+        thumbprint: '{{ subj_thumbprint }}'
+        state: absent
+      register: service_remove_check
+      check_mode: true
 
-  - name: get result of remove service certificate (check)
-    win_reg_stat:
-      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
-    register: service_remove_check_actual
+    - name: Get result of remove service certificate (check)
+      ansible.windows.win_reg_stat:
+        path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+      register: service_remove_check_actual
 
-  - name: assert remove service certificate (check)
-    assert:
-      that:
-      - service_remove_check is changed
-      - service_remove_check.thumbprints == [subj_thumbprint]
-      - service_remove_check_actual.exists
+    - name: Assert remove service certificate (check)
+      ansible.builtin.assert:
+        that:
+          - service_remove_check is changed
+          - service_remove_check.thumbprints == [subj_thumbprint]
+          - service_remove_check_actual.exists
 
-  - name: remove service certificate
-    win_certificate_store:
-      store_type: service
-      store_location: WinRM
-      thumbprint: '{{ subj_thumbprint }}'
-      state: absent
-    register: service_remove
+    - name: Remove service certificate
+      ansible.windows.win_certificate_store:
+        store_type: service
+        store_location: WinRM
+        thumbprint: '{{ subj_thumbprint }}'
+        state: absent
+      register: service_remove
 
-  - name: get result of remove service certificate
-    win_reg_stat:
-      path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
-    register: service_remove_actual
+    - name: Get result of remove service certificate
+      ansible.windows.win_reg_stat:
+        path: HKLM:\Software\Microsoft\Cryptography\Services\WinRM\SystemCertificates\My\Certificates\{{ subj_thumbprint }}
+      register: service_remove_actual
 
-  - name: assert remove service certificate
-    assert:
-      that:
-      - service_remove is changed
-      - service_remove.thumbprints == [subj_thumbprint]
-      - not service_remove_actual.exists
+    - name: Assert remove service certificate
+      ansible.builtin.assert:
+        that:
+          - service_remove is changed
+          - service_remove.thumbprints == [subj_thumbprint]
+          - not service_remove_actual.exists
 
-  - name: remove service certificate (idempotent)
-    win_certificate_store:
-      store_type: service
-      store_location: WinRM
-      thumbprint: '{{ subj_thumbprint }}'
-      state: absent
-    register: service_remove_again
+    - name: Remove service certificate (idempotent)
+      ansible.windows.win_certificate_store:
+        store_type: service
+        store_location: WinRM
+        thumbprint: '{{ subj_thumbprint }}'
+        state: absent
+      register: service_remove_again
 
-  - name: assert remove service certificate (idempotent)
-    assert:
-      that:
-      - not service_remove_again is changed
+    - name: Assert remove service certificate (idempotent)
+      ansible.builtin.assert:
+        that:
+          - not service_remove_again is changed
 
   always:
-  - name: remove service certificate
-    win_certificate_store:
-      path: '{{ win_cert_dir }}\subj-cert.pem'
-      store_type: service
-      store_location: WinRM
-      state: absent
+    - name: Remove service certificate
+      ansible.windows.win_certificate_store:
+        path: '{{ win_cert_dir }}\subj-cert.pem'
+        store_type: service
+        store_location: WinRM
+        state: absent
 
-- name: Generate nonexportable certificate using Microsoft Software Key Storage Provider (CNG)
-  win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy NonExportable -Provider "Microsoft Software Key Storage Provider").Thumbprint
-  register: certificat_using_cng_nonexportable
+    - name: Generate nonexportable certificate using Microsoft Software Key Storage Provider (CNG)
+      ansible.windows.win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy NonExportable `
+        -Provider "Microsoft Software Key Storage Provider").Thumbprint
+      register: certificat_using_cng_nonexportable
 
-- name: Fail to export certificate using Microsoft Software Key Storage Provider (CNG) with key as pfx with password when not marked as exportable
-  win_certificate_store:
-    path: "{{ win_cert_dir }}\\exported\\cert-fail.pfx"
-    thumbprint: "{{ certificat_using_cng_nonexportable.stdout_lines[0] }}"
-    state: exported
-    file_type: pkcs12
-  vars: *become_vars
-  register: fail_export_cng_non_exportable
-  failed_when: fail_export_cng_non_exportable.msg is not search("Key not valid for use in specified state.")
+    - name: Fail to export certificate using Microsoft Software Key Storage Provider (CNG) with key as pfx with password when not marked as exportable
+      ansible.windows.win_certificate_store:
+        path: "{{ win_cert_dir }}\\exported\\cert-fail.pfx"
+        thumbprint: "{{ certificat_using_cng_nonexportable.stdout_lines[0] }}"
+        state: exported
+        file_type: pkcs12
+      vars: *become_vars
+      register: fail_export_cng_non_exportable
+      failed_when: fail_export_cng_non_exportable.msg is not search("Key not valid for use in specified state.")
 
 - name: Generate exportable certificate using Microsoft Software Key Storage Provider (CNG)
-  win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy Exportable -Provider "Microsoft Software Key Storage Provider").Thumbprint
+  ansible.windows.win_shell: (New-SelfSignedCertificate -DnsName cng.local -KeyExportPolicy Exportable -Provider `
+    "Microsoft Software Key Storage Provider").Thumbprint
   register: certificat_using_cng_exportable
 
 - name: Got to export certificate using Microsoft Software Key Storage Provider (CNG) with key without password as pfx when marked as exportable
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: "{{ win_cert_dir }}\\exported\\{{ certificat_using_cng_exportable.stdout_lines[0] }}-pass.pfx"
     thumbprint: "{{ certificat_using_cng_exportable.stdout_lines[0] }}"
     state: exported
@@ -952,7 +978,7 @@
   register: export_cng_pfx_with_pass
 
 - name: Get result of export certificate using Microsoft Software Key Storage Provider (CNG) with key and password as pfx when marked as exportable
-  win_shell: |
+  ansible.windows.win_shell: |
     $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
     $cert.Import("{{ win_cert_dir }}\\exported\\{{ certificat_using_cng_exportable.stdout_lines[0] }}-pass.pfx", "{{ key_password }}", 0)
     $cert.HasPrivateKey
@@ -960,18 +986,19 @@
   register: export_cng_pfx_with_pass_result
 
 - name: Assert results of export certificate using Microsoft Software Key Storage Provider (CNG) with key and password as pfx when marked as exportable
-  assert:
+  ansible.builtin.assert:
     that:
       - export_cng_pfx_with_pass is changed
       - export_cng_pfx_with_pass.thumbprints == [certificat_using_cng_exportable.stdout_lines[0]]
       - export_cng_pfx_with_pass_result.stdout_lines[0] == "True"
 
 - name: Generate nonexportable certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI)
-  win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy NonExportable -Provider "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
+  ansible.windows.win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy NonExportable -Provider `
+    "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
   register: certificat_using_capi_nonexportable
 
 - name: Fail to export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key as pfx with password when not marked as exportable
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: "{{ win_cert_dir }}\\exported\\cert-fail.pfx"
     thumbprint: "{{ certificat_using_capi_nonexportable.stdout_lines[0] }}"
     state: exported
@@ -981,11 +1008,12 @@
   failed_when: fail_export_capi_non_exportable.msg is not search("Key not valid for use in specified state.")
 
 - name: Generate exportable certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI)
-  win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy Exportable -Provider "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
+  ansible.windows.win_shell: (New-SelfSignedCertificate -DnsName capi.local -KeyExportPolicy Exportable -Provider `
+    "Microsoft RSA SChannel Cryptographic Provider").Thumbprint
   register: certificat_using_capi_exportable
 
 - name: Got to export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key without password as pfx when marked as exportable
-  win_certificate_store:
+  ansible.windows.win_certificate_store:
     path: "{{ win_cert_dir }}\\exported\\{{ certificat_using_capi_exportable.stdout_lines[0] }}-pass.pfx"
     thumbprint: "{{ certificat_using_capi_exportable.stdout_lines[0] }}"
     state: exported
@@ -995,7 +1023,7 @@
   register: export_capi_pfx_with_pass
 
 - name: Get result of export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key and password as pfx when marked as exportable
-  win_shell: |
+  ansible.windows.win_shell: |
     $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2
     $cert.Import("{{ win_cert_dir }}\\exported\\{{ certificat_using_capi_exportable.stdout_lines[0] }}-pass.pfx", "{{ key_password }}", 0)
     $cert.HasPrivateKey
@@ -1003,7 +1031,7 @@
   register: export_capi_pfx_with_pass_result
 
 - name: Assert results of export certificate using Microsoft RSA SChannel Cryptographic Provider (CAPI) with key and password as pfx when marked as exportable
-  assert:
+  ansible.builtin.assert:
     that:
       - export_capi_pfx_with_pass is changed
       - export_capi_pfx_with_pass.thumbprints == [certificat_using_capi_exportable.stdout_lines[0]]

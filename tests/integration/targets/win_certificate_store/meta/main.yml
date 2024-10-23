@@ -1,2 +1,5 @@
 dependencies:
-- setup_remote_tmp_dir
+  - setup_remote_tmp_dir
+galaxy_info:
+  role_name: win_certificate_store
+  namespace: win_certificate_store_ns

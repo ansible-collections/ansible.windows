@@ -15,40 +15,40 @@
 # openssl x509 -req -in cert.csr -CA root-cert.pem -CAkey root-key.pem -CAcreateserial -out subj-cert.pem -days 24855
 ###
 ---
-- name: ensure test dir is present
-  win_file:
-    path: '{{win_cert_dir}}\exported'
+- name: Ensure test dir is present
+  ansible.windows.win_file:
+    path: '{{ win_cert_dir }}\exported'
     state: directory
 
-- name: ensure certificates are removed from store before test
-  win_certificate_store:
-    thumbprint: '{{item}}'
+- name: Ensure certificates are removed from store before test
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ item }}'
     state: absent
   with_items:
-  - '{{subj_thumbprint}}'
-  - '{{root_thumbprint}}'
+    - '{{ subj_thumbprint }}'
+    - '{{ root_thumbprint }}'
 
-- name: ensure certificates are removed from custom store before test
-  win_certificate_store:
-    thumbprint: '{{item}}'
+- name: Ensure certificates are removed from custom store before test
+  ansible.windows.win_certificate_store:
+    thumbprint: '{{ item }}'
     state: absent
     store_name: TrustedPeople
     store_location: CurrentUser
   with_items:
-  - '{{subj_thumbprint}}'
-  - '{{root_thumbprint}}'
+    - '{{ subj_thumbprint }}'
+    - '{{ root_thumbprint }}'
 
 # these files are created on the fly so we don't store binary in the git repo
-- name: check if we can use default AES encryption
-  win_powershell:
+- name: Check if we can use default AES encryption
+  ansible.windows.win_powershell:
     script: |
       $osVersion = [Version](Get-Item -LiteralPath "$env:SystemRoot\System32\kernel32.dll").VersionInfo.ProductVersion
       $osVersion -ge [Version]"10.0.17763"
   changed_when: false
   register: aes256_support
 
-- name: create PKCS12 without password
-  command: >-
+- name: Create PKCS12 without password
+  ansible.builtin.command: >-
     openssl pkcs12 -export
     -out subj-cert-without-pass.pfx
     -inkey subj-key.pem
@@ -56,85 +56,91 @@
     -passout pass:
     {{ '' if aes256_support.output[0] else '-certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg SHA1' }}
   args:
-    chdir: '{{role_path}}/files'
+    chdir: '{{ role_path }}/files'
   delegate_to: localhost
-  run_once: yes
+  changed_when: false
+  run_once: true
 
-- name: create PKCS12 with password
-  command: >-
+- name: Create PKCS12 with password
+  ansible.builtin.command: >-
     openssl pkcs12 -export
     -out subj-cert-with-pass.pfx
     -inkey subj-key.pem
     -in subj-cert.pem
-    -passout pass:{{key_password}}
+    -passout pass:{{ key_password }}
     {{ '' if aes256_support.output[0] else '-certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg SHA1' }}
   args:
-    chdir: '{{role_path}}/files'
+    chdir: '{{ role_path }}/files'
   delegate_to: localhost
-  run_once: yes
+  changed_when: false
+  run_once: true
 
-- name: create DER encoded cert
-  command: openssl x509 -outform der -in subj-cert.pem -out subj-cert.cer
+- name: Create DER encoded cert
+  ansible.builtin.command: openssl x509 -outform der -in subj-cert.pem -out subj-cert.cer
   args:
-    chdir: '{{role_path}}/files'
+    chdir: '{{ role_path }}/files'
   delegate_to: localhost
-  run_once: yes
+  changed_when: false
+  run_once: true
 
-- name: create PEM encoded PKCS7 file
-  command: openssl crl2pkcs7 -nocrl -certfile subj-cert.pem -certfile root-cert.pem -out chain.pem
+- name: Create PEM encoded PKCS7 file
+  ansible.builtin.command: openssl crl2pkcs7 -nocrl -certfile subj-cert.pem -certfile root-cert.pem -out chain.pem
   args:
-    chdir: '{{role_path}}/files'
+    chdir: '{{ role_path }}/files'
   delegate_to: localhost
-  run_once: yes
+  changed_when: false
+  run_once: true
 
-- name: create DER encoded PKCS7 file
-  command: openssl crl2pkcs7 -nocrl -certfile subj-cert.pem -certfile root-cert.pem -out chain.p7b -outform der
+- name: Create DER encoded PKCS7 file
+  ansible.builtin.command: openssl crl2pkcs7 -nocrl -certfile subj-cert.pem -certfile root-cert.pem -out chain.p7b -outform der
   args:
-    chdir: '{{role_path}}/files'
+    chdir: '{{ role_path }}/files'
   delegate_to: localhost
-  run_once: yes
+  changed_when: false
+  run_once: true
 
-- name: copy across test cert files
-  win_copy:
+- name: Copy across test cert files
+  ansible.windows.win_copy:
     src: files/
-    dest: '{{win_cert_dir}}'
+    dest: '{{ win_cert_dir }}'
 
-- block:
-  - name: run tests
-    include_tasks: test.yml
+- name: Run tests for win_certificate_store module
+  block:
+    - name: Run tests
+      ansible.builtin.include_tasks: test.yml
 
   always:
-  - name: ensure generated keys are deleted
-    file:
-      path: '{{role_path}}/files/{{item}}'
-      state: absent
-    delegate_to: localhost
-    run_once: yes
-    with_items:
-    - subj-cert-with-pass.pfx
-    - subj-cert-without-pass.pfx
-    - subj-cert.cer
-    - chain.pem
-    - chain.p7b
+    - name: Ensure generated keys are deleted
+      ansible.builtin.file:
+        path: '{{ role_path }}/files/{{ item }}'
+        state: absent
+      delegate_to: localhost
+      run_once: true
+      with_items:
+        - subj-cert-with-pass.pfx
+        - subj-cert-without-pass.pfx
+        - subj-cert.cer
+        - chain.pem
+        - chain.p7b
 
-  - name: ensure certificates are removed from store after test
-    win_certificate_store:
-      thumbprint: '{{item}}'
-      state: absent
-    with_items:
-    - '{{subj_thumbprint}}'
-    - '{{root_thumbprint}}'
-    - '{{certificat_using_cng_nonexportable.stdout_lines[0]}}'
-    - '{{certificat_using_cng_exportable.stdout_lines[0]}}'
-    - '{{certificat_using_capi_nonexportable.stdout_lines[0]}}'
-    - '{{certificat_using_capi_exportable.stdout_lines[0]}}'
+    - name: Ensure certificates are removed from store after test
+      ansible.windows.win_certificate_store:
+        thumbprint: '{{ item }}'
+        state: absent
+      with_items:
+        - '{{ subj_thumbprint }}'
+        - '{{ root_thumbprint }}'
+        - '{{ certificat_using_cng_nonexportable.stdout_lines[0] }}'
+        - '{{ certificat_using_cng_exportable.stdout_lines[0] }}'
+        - '{{ certificat_using_capi_nonexportable.stdout_lines[0] }}'
+        - '{{ certificat_using_capi_exportable.stdout_lines[0] }}'
 
-  - name: ensure certificates are removed from custom store after test
-    win_certificate_store:
-      thumbprint: '{{item}}'
-      state: absent
-      store_name: TrustedPeople
-      store_location: CurrentUser
-    with_items:
-    - '{{subj_thumbprint}}'
-    - '{{root_thumbprint}}'
+    - name: Ensure certificates are removed from custom store after test
+      ansible.windows.win_certificate_store:
+        thumbprint: '{{ item }}'
+        state: absent
+        store_name: TrustedPeople
+        store_location: CurrentUser
+      with_items:
+        - '{{ subj_thumbprint }}'
+        - '{{ root_thumbprint }}'
