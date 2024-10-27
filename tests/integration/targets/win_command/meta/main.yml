@@ -1,2 +1,6 @@
 dependencies:
-- setup_win_printargv
+  - setup_win_printargv
+
+galaxy_info:
+  role_name: win_command
+  namespace: win_command_ns
