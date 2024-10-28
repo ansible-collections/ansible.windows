@@ -1,56 +1,56 @@
 ---
-- name: change workgroup (check mode)
-  win_domain_membership:
+- name: Change workgroup (check mode)
+  ansible.windows.win_domain_membership:
     workgroup_name: ANSIBLETEST
     state: workgroup
     domain_admin_user: fake user
     domain_admin_password: fake password
   register: change_workgroup_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of change workgroup (check mode)
-  win_shell: (Get-WmiObject Win32_ComputerSystem).Workgroup
+- name: Get result of change workgroup (check mode)
+  ansible.windows.win_shell: (Get-WmiObject Win32_ComputerSystem).Workgroup
   register: change_workgroup_result_check
 
-- name: assert result of change workgroup (check mode)
-  assert:
+- name: Assert result of change workgroup (check mode)
+  ansible.builtin.assert:
     that:
-    - change_workgroup_check is changed
-    - change_workgroup_result_check.stdout == workgroup.stdout
+      - change_workgroup_check is changed
+      - change_workgroup_result_check.stdout == workgroup.stdout
 
-- name: change workgroup
-  win_domain_membership:
+- name: Change workgroup
+  ansible.windows.win_domain_membership:
     workgroup_name: ANSIBLETEST
     state: workgroup
     domain_admin_user: fake user
     domain_admin_password: fake password
   register: change_workgroup
 
-- name: get result of change workgroup
-  win_shell: (Get-WmiObject Win32_ComputerSystem).Workgroup
+- name: Get result of change workgroup
+  ansible.windows.win_shell: (Get-WmiObject Win32_ComputerSystem).Workgroup
   register: change_workgroup_result
 
-- name: assert result of change workgroup
-  assert:
+- name: Assert result of change workgroup
+  ansible.builtin.assert:
     that:
-    - change_workgroup is changed
-    - change_workgroup_result.stdout_lines[0] == "ANSIBLETEST"
+      - change_workgroup is changed
+      - change_workgroup_result.stdout_lines[0] == "ANSIBLETEST"
 
-- name: change workgroup (idempotent)
-  win_domain_membership:
+- name: Change workgroup (idempotent)
+  ansible.windows.win_domain_membership:
     workgroup_name: ANSIBLETEST
     state: workgroup
     domain_admin_user: fake user
     domain_admin_password: fake password
   register: change_workgroup_again
 
-- name: assert result of change workgroup (idempotent)
-  assert:
+- name: Assert result of change workgroup (idempotent)
+  ansible.builtin.assert:
     that:
-    - change_workgroup_again is not changed
+      - change_workgroup_again is not changed
 
-- name: change workgroup fail invalid name
-  win_domain_membership:
+- name: Change workgroup fail invalid name
+  ansible.windows.win_domain_membership:
     workgroup_name: ANSIBLELONGNAMEFAILURE
     state: workgroup
     domain_admin_user: fake user
