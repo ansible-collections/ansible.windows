@@ -64,7 +64,7 @@ EXAMPLES = '''
     disk_number: 1
     style: mbr
 
-- name: Forcefully initiallize a disk
+- name: Forcefully initialize a disk
   community.windows.win_initialize_disk:
     disk_number: 2
     force: true
