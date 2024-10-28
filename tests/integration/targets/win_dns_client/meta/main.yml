@@ -1,2 +1,5 @@
 dependencies:
-- setup_win_device
+  - setup_win_device
+galaxy_info:
+  role_name: win_dns_client
+  namespace: win_dns_client_ns
