@@ -1,0 +1,5 @@
+bugfixes:
+  - >-
+    win_updates - Only set the Access control sections on the temporary
+    directory created by the module. This avoids the error when the
+    ``SeSecurityPrivilege`` privilege isn't present.
