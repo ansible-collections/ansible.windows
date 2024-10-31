@@ -83,7 +83,7 @@ The current process for publishing new versions of the Windows Core Collection i
 * Update the `CHANGELOG`:
   * Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed `pip install antsibull-changelog`.
   * Make sure there are fragments for all known changes in `changelogs/fragments`.
-  * Add a new fragment with the header `release_summary` to give a summary on the release.
+  * Add a new `release_summary` fragment: `echo "release_summary: Release summary for v..." > changelogs/fragments/release-summary.yml`
   * Run `antsibull-changelog release`.
 * Commit the changes and wait for CI to be green
 * Create a release with the tag that matches the version number
@@ -94,14 +94,11 @@ The current process for publishing new versions of the Windows Core Collection i
 After the version is published, verify it exists on the [Windows Core Collection Galaxy page](https://galaxy.ansible.com/ansible/windows).
 
 
-## More Information
+## Support
 
-For more information about Ansible's Windows integration, join the `#ansible-windows` channel on [libera.chat](https://libera.chat/) IRC, and browse the resources in the [Windows Working Group](https://github.com/ansible/community/wiki/Windows) Community wiki page.
+As a Red Hat Ansible [Certified Content](https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20Ansible%20Automation%20Platform), this collection is entitled to [support](https://access.redhat.com/support/) through [Ansible Automation Platform](https://www.redhat.com/en/technologies/management/ansible) (AAP).
 
-- [Ansible Collection overview](https://github.com/ansible-collections/overview)
-- [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
-- [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
-- [Ansible Community code of conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html)
+If a support case cannot be opened with Red Hat and the collection has been obtained either from [Galaxy](https://galaxy.ansible.com/ui/) or [GitHub](https://github.com/ansible-collections/ansible.windows), there is community support available at no charge.
 
 
 ## License
