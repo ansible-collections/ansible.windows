@@ -304,6 +304,11 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\somescript.ps1</span>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">no_profile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run a PowerShell script that outputs text with big5 encoding</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\somescript.ps1</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">output_encoding_override</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">big5</span>
 </pre></div>
 </div>
 </section>
