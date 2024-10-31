@@ -1,0 +1,5 @@
+minor_changes:
+  - >-
+    setup - Added ``ansible_os_install_date`` as the OS installation date in the ISO 8601 format
+    ``yyyy-MM-ddTHH:mm:ssZ``. This date is represented in the UTC timezone -
+    https://github.com/ansible-collections/ansible.windows/issues/663
