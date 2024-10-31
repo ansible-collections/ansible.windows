@@ -116,6 +116,11 @@ EXAMPLES = r'''
       - C:\Program Files\My Application\run.exe
       - argument 1
       - -force
+
+- name: Run an executable that outputs text with big5 encoding
+  ansible.windows.win_command: C:\someprog.exe
+  args:
+    output_encoding_override: big5
 '''
 
 RETURN = r'''
