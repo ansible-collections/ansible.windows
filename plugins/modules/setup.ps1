@@ -652,7 +652,7 @@ $factMeta = @(
 
             $osInfoParams = @{
                 LiteralPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
-                Name = 'InstallationType'
+                Name = 'InstallationType', 'InstallTime'
                 ErrorAction = 'SilentlyContinue'
             }
             $osInfo = Get-ItemProperty @osInfoParams
@@ -664,6 +664,11 @@ $factMeta = @(
             $ansibleFacts.ansible_os_name = $null
             $ansibleFacts.ansible_os_product_type = $productType
             $ansibleFacts.ansible_os_installation_type = $osInfo.InstallationType
+            $ansibleFacts.ansible_os_install_date = $null
+            if ($osInfo.InstallTime) {
+                $installDate = [DateTime]::FromFileTimeUtc($osInfo.InstallTime)
+                $ansibleFacts.ansible_os_install_date = $installDate.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            }
 
             # We cannot call WMI if we aren't an admin (on a network logon), conditionally set these facts.
             $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
