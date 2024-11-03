@@ -1,0 +1,102 @@
+### keys in files/ have been generated with
+# generate root private key
+# openssl genrsa -aes256 -out enckey.pem 2048
+# openssl rsa -in envkey.pem -out root-key.pem
+#
+# generate root certificate
+# openssl req -x509 -key root-key.pem -days 24855 -out root-vert.pem -subj "/CN=root.ansible.com/C=US"
+#
+# generate subject private key
+# openssl genrsa -aes256 -out enckey.pem 2048
+# openssl rsa -in enckey.pem -out subj-key.pem
+#
+# generate subject certificate
+# openssl req -new -key subj-key.pem -out cert.csr -subj "/CN=subject.ansible.com/C=US"
+# openssl x509 -req -in cert.csr -CA root-cert.pem -CAkey root-key.pem -CAcreateserial -out subj-cert.pem -days 24855
+###
+---
+- name: Ensure test dir is present
+  ansible.windows.win_file:
+    path: '{{ win_cert_dir }}\exported'
+    state: directory
+
+- name: Copy across test cert files
+  ansible.windows.win_copy:
+    src: files/
+    dest: '{{ win_cert_dir }}'
+
+- name: Subject cert imported to personal store for LocalMachine store location
+  ansible.windows.win_certificate_store:
+    path: '{{win_cert_dir}}\subj-cert.pem'
+    state: present
+    store_name: My
+
+- name: Subject cert imported to personal store for CurrentUser store location
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\subj-cert.pem'
+    state: present
+    store_location: CurrentUser
+    store_name: My
+
+- name: Root certificate imported to trusted root
+  ansible.windows.win_certificate_store:
+    path: '{{ win_cert_dir }}\root-cert.pem'
+    store_name: Root
+    state: present
+
+- name: Get raw root certificate
+  shell: 'cat root-cert.pem | grep "^[^-]"'
+  args:
+    chdir: '{{ role_path }}/files'
+  register: root_raw
+  delegate_to: localhost
+
+- name: Get public key of root certificate
+  shell: 'openssl x509 -pubkey -noout -in root-cert.pem | grep "^[^-]"'
+  args:
+    chdir: '{{ role_path }}/files'
+  register: root_pub
+  delegate_to: localhost
+
+- name: Get subject certificate
+  shell: 'cat subj-cert.pem | grep "^[^-]"'
+  args:
+    chdir: '{{ role_path }}/files'
+  register: subj_raw
+  delegate_to: localhost
+
+- name: Get public key of subject certificate
+  shell: 'openssl x509 -pubkey -noout -in subj-cert.pem | grep "^[^-]"'
+  args:
+    chdir: '{{ role_path }}/files'
+  register: subj_pub
+  delegate_to: localhost
+
+- block:
+  - name: Run tests
+    include_tasks: tests.yml
+
+  always:
+  - name: Ensure subject cert removed from personal store for LocalMachine store location
+    ansible.windows.win_certificate_store:
+      thumbprint: '{{ subj_thumbprint }}'
+      state: absent
+      store_name: My
+
+  - name: Ensure subject cert removed from personal store for CurrentUser store location
+    ansible.windows.win_certificate_store:
+      thumbprint: '{{ subj_thumbprint }}'
+      state: absent
+      store_location: CurrentUser
+      store_name: My
+
+  - name: Ensure root cert removed from trusted root
+    ansible.windows.win_certificate_store:
+      thumbprint: '{{ root_thumbprint }}'
+      state: absent
+      store_name: Root
+
+  - name: Ensure test dir is deleted
+    ansible.windows.win_file:
+      path: '{{ win_cert_dir }}'
+      state: absent
