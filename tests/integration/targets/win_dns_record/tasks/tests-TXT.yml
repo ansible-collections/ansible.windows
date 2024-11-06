@@ -1,0 +1,234 @@
+- name: "TYPE=TXT - creation (check mode)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: txtrecordvalue
+    type: TXT
+  register: cmd_result
+  check_mode: yes
+
+- name: "TYPE=TXT - creation get results (check mode)"
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - creation check results (check mode)"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'absent\r\n'
+
+- name: "TYPE=TXT - creation"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: txtrecordvalue
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - creation get results"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DescriptiveText"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - creation check results"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'txtrecordvalue\r\n'
+
+- name: "TYPE=TXT - creation (idempotent)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: txtrecordvalue
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - creation get results (idempotent)"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DescriptiveText"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - creation check results (idempotent)"
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'txtrecordvalue\r\n'
+
+- name: "TYPE=TXT - update value (check mode)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    type: TXT
+  register: cmd_result
+  check_mode: yes
+
+- name: "TYPE=TXT - update value get results (check mode)"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DescriptiveText"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update value check results (check mode)"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'txtrecordvalue\r\n'
+
+- name: "TYPE=TXT - update value"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - update value get results"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DescriptiveText"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update value check results"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'updated txt record value\r\n'
+
+- name: "TYPE=TXT - update value (idempotent)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - update value get results (idempotent)"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DescriptiveText"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update value check results (idempotent)"
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'updated txt record value\r\n'
+
+- name: "TYPE=TXT - update TTL (check mode)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    ttl: 7200
+    type: TXT
+  register: cmd_result
+  check_mode: true
+
+- name: "TYPE=TXT - update TTL get results (check mode)"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update TTL check results (check mode)"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '3600\r\n'
+
+- name: "TYPE=TXT - update TTL"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    ttl: 7200
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - update TTL get results"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update TTL check results"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '7200\r\n'
+
+- name: "TYPE=TXT - update TTL (idempotent)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    value: updated txt record value
+    ttl: 7200
+    type: TXT
+  register: cmd_result
+
+- name: "TYPE=TXT - update TTL get results (idempotent)"
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - update TTL check results (idempotent)"
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == '7200\r\n'
+
+- name: "TYPE=TXT - remove record (check mode)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    type: TXT
+    state: absent
+  register: cmd_result
+  check_mode: yes
+
+- name: "TYPE=TXT - remove record get results (check mode)"
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - remove record check results (check mode)"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'exists\r\n'
+
+- name: "TYPE=TXT - remove record"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    type: TXT
+    state: absent
+  register: cmd_result
+
+- name: "TYPE=TXT - remove record get results"
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - remove record check results"
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'absent\r\n'
+
+- name: "TYPE=TXT - remove record (idempotent)"
+  win_dns_record:
+    zone: "{{ win_dns_record_zone }}"
+    name: testtxt
+    type: TXT
+    state: absent
+  register: cmd_result
+
+- name: "TYPE=TXT - remove record get results (idempotent)"
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testtxt' -RRType TXT -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: "TYPE=TXT - remove record check results (idempotent)"
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'absent\r\n'
