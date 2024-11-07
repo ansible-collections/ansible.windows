@@ -1,0 +1,100 @@
+---
+- name: Get stats on a store that doesn't exist
+  ansible.windows.win_certificate_info:
+    store_name: teststore
+  register: test_store
+
+- name: Ensure test store does not exist
+  ansible.builtin.assert:
+    that:
+      - test_store.exists == false
+
+- name: Get stats on the Root certificate store
+  ansible.windows.win_certificate_info:
+    store_name: Root
+  register: root_store
+
+- name: Verify at least one certificate is present in Root store
+  ansible.builtin.assert:
+    that:
+      - root_store.exists
+      - root_store.certificates | length > 0
+
+- name: Get stats on a certificate that does not exist
+  ansible.windows.win_certificate_info:
+    thumbprint: "ABC"
+  register: actual
+
+- name: Ensure non-existent certificate has exists set to false
+  ansible.builtin.assert:
+    that:
+      - actual.exists == false
+
+- name: Get stats on root certificate by thumbprint
+  ansible.windows.win_certificate_info:
+    thumbprint: "{{ root_thumbprint }}"
+    store_name: Root
+  register: root_stats
+
+- name: Validate root certificate stats
+  ansible.builtin.assert:
+    that:
+      - root_stats.exists
+      - root_stats.certificates[0].archived == false
+      - root_stats.certificates[0].dns_names == ["root.ansible.com"]
+      - root_stats.certificates[0].extensions | count == 3
+      - root_stats.certificates[0].has_private_key == false
+      - root_stats.certificates[0].issued_by == "root.ansible.com"
+      - root_stats.certificates[0].issued_to == "root.ansible.com"
+      - root_stats.certificates[0].issuer == "C=US, CN=root.ansible.com"
+      - root_stats.certificates[0].path_length_constraint == 0
+      - root_stats.certificates[0].raw == root_raw.stdout_lines | join()
+      - root_stats.certificates[0].serial_number == "00FD6F21D1A0309BFF"
+      - root_stats.certificates[0].signature_algorithm == "sha256RSA"
+      - root_stats.certificates[0].ski == "BA7D9382E63A7011E113ABAA16FE08575B936FA8"
+      - root_stats.certificates[0].subject == "C=US, CN=root.ansible.com"
+      - root_stats.certificates[0].valid_from == 1513327172
+      - root_stats.certificates[0].valid_from_iso8601 == "2017-12-15T08:39:32Z"
+      - root_stats.certificates[0].valid_to == 3660799172
+      - root_stats.certificates[0].valid_to_iso8601 == "2086-01-02T08:39:32Z"
+      - root_stats.certificates[0].version == 3
+
+- name: Get stats on subject certificate in LocalMachine store
+  ansible.windows.win_certificate_info:
+    thumbprint: "{{ subj_thumbprint }}"
+  register: subj_stats
+
+- name: Validate subject certificate stats in LocalMachine store
+  ansible.builtin.assert:
+    that:
+      - subj_stats.exists
+      - subj_stats.certificates[0].archived == false
+      - subj_stats.certificates[0].dns_names == ["subject.ansible.com"]
+      - subj_stats.certificates[0].extensions | count == 0
+      - subj_stats.certificates[0].has_private_key == false
+      - subj_stats.certificates[0].issued_by == "root.ansible.com"
+      - subj_stats.certificates[0].issued_to == "subject.ansible.com"
+      - subj_stats.certificates[0].issuer == "C=US, CN=root.ansible.com"
+      - subj_stats.certificates[0].path_length_constraint is undefined
+      - subj_stats.certificates[0].raw == subj_raw.stdout_lines | join()
+      - subj_stats.certificates[0].serial_number == "00BF32D3816B5503A7"
+      - subj_stats.certificates[0].signature_algorithm == "sha256RSA"
+      - subj_stats.certificates[0].ski is undefined
+      - subj_stats.certificates[0].subject == "C=US, CN=subject.ansible.com"
+      - subj_stats.certificates[0].valid_from == 1513328190
+      - subj_stats.certificates[0].valid_from_iso8601 == "2017-12-15T08:56:30Z"
+      - subj_stats.certificates[0].valid_to == 3660800190
+      - subj_stats.certificates[0].valid_to_iso8601 == "2086-01-02T08:56:30Z"
+      - subj_stats.certificates[0].version == 1
+
+- name: Get stats on subject certificate in CurrentUser store
+  ansible.windows.win_certificate_info:
+    thumbprint: "{{ subj_thumbprint }}"
+    store_location: CurrentUser
+  register: subj_stats_current_user
+
+- name: Validate subject certificate stats in CurrentUser store
+  ansible.builtin.assert:
+    that:
+      - subj_stats_current_user.exists
+      - root_store.certificates | length > 0
