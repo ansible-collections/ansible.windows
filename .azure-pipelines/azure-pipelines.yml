@@ -127,6 +127,10 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
+            - name: 2025 PSRP HTTPS
+              test: 2025/psrp/https
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
   - stage: Windows_2
     displayName: Windows 2
     dependsOn: []
@@ -146,6 +150,10 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
+            - name: 2025 PSRP HTTPS
+              test: 2025/psrp/https
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
   - stage: Windows_3
     displayName: Windows 3
     dependsOn: []
@@ -165,6 +173,10 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
+            - name: 2025 PSRP HTTPS
+              test: 2025/psrp/https
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:

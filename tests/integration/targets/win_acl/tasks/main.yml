@@ -1,11 +1,8 @@
 ---
-- name: ensure we start with a clean dir
+- name: setup test directory
   win_file:
     path: '{{ test_acl_path }}'
-    state: '{{ item }}'
-  with_items:
-  - absent
-  - directory
+    state: directory
 
 - name: ensure we start with a clean reg path
   win_regedit:
@@ -54,11 +51,6 @@
     include_tasks: tests.yml
 
   always:
-  - name: cleanup testing dir
-    win_file:
-      path: '{{ test_acl_path }}'
-      state: absent
-
   - name: cleanup testing reg path
     win_regedit:
       path: '{{ test_acl_reg_path }}'
