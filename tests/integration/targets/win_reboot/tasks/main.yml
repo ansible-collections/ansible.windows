@@ -1,7 +1,7 @@
 ---
 - name: make sure win output dir exists
   win_file:
-    path: "{{win_output_dir}}"
+    path: "{{remote_tmp_dir}}"
     state: directory
 
 - name: reboot with defaults
@@ -21,7 +21,7 @@
 # test a reboot that reboots again during the test_command phase
 - name: create test file
   win_file:
-    path: '{{win_output_dir}}\win_reboot_test'
+    path: '{{remote_tmp_dir}}\win_reboot_test'
     state: touch
 
 - name: reboot with secondary reboot stage

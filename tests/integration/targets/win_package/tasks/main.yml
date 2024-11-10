@@ -4,6 +4,9 @@
     path: '{{ test_path }}'
     state: directory
 
+- name: setup 2025 pre-reqs for testing over PSRP
+  prereq_setup:
+
 # Some of the registry_tests.yml create a badly formed unisntall string so remove the reg entry in case the test
 # didn't get to cleaning itself up
 - name: remove registry package path
