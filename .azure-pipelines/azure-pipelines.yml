@@ -127,8 +127,8 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
-            - name: 2025 PSRP HTTPS
-              test: 2025/psrp/https
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
   - stage: Windows_2
@@ -150,8 +150,8 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
-            - name: 2025 PSRP HTTPS
-              test: 2025/psrp/https
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
   - stage: Windows_3
@@ -173,8 +173,8 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
-            - name: 2025 PSRP HTTPS
-              test: 2025/psrp/https
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
   - stage: Summary
