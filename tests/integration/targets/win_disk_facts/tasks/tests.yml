@@ -17,7 +17,16 @@
     - disks_found.ansible_facts.ansible_disks[0].physical_disk.operational_status is defined
     - disks_found.ansible_facts.ansible_disks[0].win32_disk_drive is defined
     - disks_found.ansible_facts.ansible_disks[0].partitions is defined
-    - disks_found.ansible_facts.ansible_disks[0].partitions[0].volumes is defined
+
+- name: get C disk partition fact
+  set_fact:
+    partition_c: >-
+      {{ disks_found.ansible_facts.ansible_disks[0].partitions | selectattr('drive_letter', 'equalto', 'C') | first }}
+
+- name: assert disk C partition facts
+  assert:
+    that:
+    - partition_c.volumes is defined
 
 - name: get disk partition facts on the target
   win_disk_facts:
@@ -42,8 +51,17 @@
     that:
     - disks_volumes_found.changed == false
     - disks_volumes_found.ansible_facts.ansible_disks[0].partitions is defined
-    - disks_volumes_found.ansible_facts.ansible_disks[0].partitions[0].volumes is defined
 
+
+- name: get C disk partition fact
+  set_fact:
+    partition_c: >-
+      {{ disks_found.ansible_facts.ansible_disks[0].partitions | selectattr('drive_letter', 'equalto', 'C') | first }}
+
+- name: assert volume and partition disk facts for C
+  assert:
+    that:
+    - partition_c.volumes is defined
 
 - name: get disk physical_disk facts on the target
   win_disk_facts:
