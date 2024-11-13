@@ -41,9 +41,31 @@ resources:
 pool: Standard
 
 stages:
+  - stage: Dependencies
+    displayName: Dependencies
+    jobs:
+      - job: dep_download
+        displayName: Download Dependencies
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.10"
+          - bash: python -m pip install ansible-core
+            displayName: Install Ansible
+          - bash: ansible-galaxy collection install -r tests/requirements.yml -p collections
+            displayName: Install collection requirements
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: collections
+              artifactName: CollectionRequirements
   - stage: Ansible_devel
     displayName: Ansible devel
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -58,7 +80,8 @@ stages:
               test: lint
   - stage: Ansible_2_18
     displayName: Ansible 2.18
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -71,7 +94,8 @@ stages:
               test: units
   - stage: Ansible_2_17
     displayName: Ansible 2.17
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -84,7 +108,8 @@ stages:
               test: units
   - stage: Ansible_2_16
     displayName: Ansible 2.16
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -97,7 +122,8 @@ stages:
               test: units
   - stage: Ansible_2_15
     displayName: Ansible 2.15
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -110,7 +136,8 @@ stages:
               test: units
   - stage: Windows_1
     displayName: Windows 1
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -133,7 +160,8 @@ stages:
               test: 2025/ssh/key
   - stage: Windows_2
     displayName: Windows 2
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -156,7 +184,8 @@ stages:
               test: 2025/ssh/key
   - stage: Windows_3
     displayName: Windows 3
-    dependsOn: []
+    dependsOn:
+      - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:

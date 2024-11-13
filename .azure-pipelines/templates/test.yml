@@ -18,6 +18,14 @@ jobs:
         - checkout: self
           fetchDepth: $(fetchDepth)
           path: $(checkoutPath)
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifact: CollectionRequirements
+            path: $(Agent.TempDirectory)
+        - bash: |
+            sudo chown -R "$(whoami)" "${PWD}/../../../ansible_collections"
+            cp -R "$(Agent.TempDirectory)/ansible_collections"/. "${PWD}/../../../ansible_collections"
+          displayName: Set up dependencies
         - bash: .azure-pipelines/scripts/run-tests.sh "$(entryPoint)" "${{ job.test }}" "$(coverageBranches)"
           displayName: Run Tests
         - bash: .azure-pipelines/scripts/process-results.sh
