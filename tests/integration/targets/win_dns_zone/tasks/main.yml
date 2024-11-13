@@ -1,0 +1,3 @@
+---
+- name: Run Defined Test Flow
+  include_tasks: "{{ win_dns_zone_test_type }}.yml"

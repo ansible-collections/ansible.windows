@@ -1,0 +1,306 @@
+---
+- name: Ensure AD/DNS roles are installed
+  ansible.windows.win_feature:
+    name:
+      - AD-Domain-Services
+      - DNS
+    include_management_tools: true
+    include_sub_features: true
+    state: present
+
+- name: Ensure domain is present
+  ansible.microsoft.ad.domain:
+    dns_domain_name: ansible.test
+    safe_mode_password: password123!
+
+- name: Reboot
+  ansible.windows.win_reboot:
+
+- name: Ensure loopback address is set to DNS
+  ansible.windows.win_dns_client:
+    adapter_names: '*'
+    ipv4_addresses: 127.0.0.1
+
+- name: Reboot Again to Avoid DNS Bug
+  ansible.windows.win_reboot:
+
+- name: Ensure DNS zones are absent
+  win_dns_zone:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - jamals.euc.vmware.com
+    - dgemzer.euc.vmware.com
+    - wpinner.euc.vmware.com
+    - marshallb.euc.vmware.com
+    - basavaraju.euc.vmware.com
+    - virajp.euc.vmware.com
+
+- name: Ensure primary DNS zone is present
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: domain
+    type: primary
+    state: present
+  register: test1a
+  failed_when: test1a.changed == false
+
+- name: Ensure primary DNS zone is present (idempotence check)
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: domain
+    type: primary
+    state: present
+  register: test1
+  failed_when: test1 is changed
+
+- name: Ensure Active Directory integrated primary zone is present with secure updates
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    replication: forest
+    dynamic_update: secure
+  register: test9a
+  failed_when: test9a.changed == false
+
+- name: Ensure Active Directory integrated primary zone is present with secure updates (idempotence check)
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    replication: forest
+    dynamic_update: secure
+  register: test9
+  failed_when: test9 is changed
+
+- name: Ensure primary DNS zone is present, change replication
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: forest
+    type: primary
+    state: present
+  register: test2a
+  failed_when: test2a.changed == false
+
+- name: Ensure primary DNS zone is present, change replication (idempotence check)
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: forest
+    type: primary
+    state: present
+  register: test2
+  failed_when: test2 is changed
+
+- name: Ensure DNS zone is absent
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    state: absent
+  register: test3a
+  failed_when: test3a.changed == false
+
+- name: Ensure DNS zone is absent (idempotence check)
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    state: absent
+  register: test3
+  failed_when: test3 is changed
+
+- name: Ensure forwarder has specific DNS servers
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    replication: forest
+    forwarder_timeout: 2
+    dns_servers:
+      - 10.245.51.100
+      - 10.245.51.101
+      - 10.245.51.102
+  register: test4a
+  failed_when: test4a.changed == false
+
+- name: Ensure forwarder has specific DNS servers (idempotence check)
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    dns_servers:
+      - 10.245.51.100
+      - 10.245.51.101
+      - 10.245.51.102
+  register: test4
+  failed_when: test4 is changed
+
+- name: Ensure stub zone is configured
+  win_dns_zone:
+    name: dgemzer.euc.vmware.com
+    type: stub
+    replication: none
+    dns_servers:
+      - 10.19.20.1
+      - 10.19.20.2
+  register: test5a
+  failed_when: test5a.changed == false
+
+- name: Ensure stub zone is configured (idempotence check)
+  win_dns_zone:
+    name: dgemzer.euc.vmware.com
+    type: stub
+    replication: none
+    dns_servers:
+      - 10.19.20.1
+      - 10.19.20.2
+  register: test5
+  failed_when: test5 is changed
+
+- name: Ensure forwarder zone has updated DNS servers
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    dns_servers:
+      - 10.10.1.150
+      - 10.10.1.151
+  register: test6a
+  failed_when: test6a.changed == false
+
+- name: Ensure forwarder zone has updated DNS servers (idempotence check)
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    dns_servers:
+      - 10.10.1.150
+      - 10.10.1.151
+  register: test6
+  failed_when: test6 is changed
+
+- name: Ensure Active Directory integrated secondary zone is present
+  win_dns_zone:
+    name: virajp.euc.vmware.com
+    type: primary
+    replication: forest
+    dynamic_update: none
+  register: test7a
+  failed_when: test7a.changed == false
+
+- name: Ensure Active Directory integrated secondary zone is present (idempotence check)
+  win_dns_zone:
+    name: virajp.euc.vmware.com
+    type: primary
+    replication: forest
+    dynamic_update: none
+  register: test7
+  failed_when: test7 is changed
+
+- name: Ensure file backed primary zone is present
+  win_dns_zone:
+    name: marshallb.euc.vmware.com
+    type: primary
+    replication: none
+  register: test8a
+  failed_when: test8a.changed == false
+
+- name: Ensure file backed primary zone is present (idempotence check)
+  win_dns_zone:
+    name: marshallb.euc.vmware.com
+    type: primary
+    replication: none
+  register: test8
+  failed_when: test8 is changed
+
+- name: Ensure Active Directory integrated dynamic updates set to nonsecureandsecure
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    dynamic_update: nonsecureandsecure
+  register: test10a
+  failed_when: test10a.changed == false
+
+- name: Ensure file backed primary zone has dynamic updates set to nonsecureandsecure (idempotence check)
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    dynamic_update: nonsecureandsecure
+  register: test10
+  failed_when: test10 is changed
+
+- name: Ensure zone has dynamic update set to secure and replication set to domain
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    dynamic_update: secure
+    replication: domain
+  register: test11a
+  failed_when: test11a.changed == false
+
+- name: Ensure zone has dynamic update set to secure and replication set to domain (idempotence check)
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    dynamic_update: secure
+    replication: domain
+  register: test11
+  failed_when: test11 is changed
+
+- name: Ensure primary DNS zones are present (check mode)
+  win_dns_zone:
+    name: mehmoodkhap.euc.vmware.com
+    replication: domain
+    type: primary
+  check_mode: true
+  register: cm_test1
+  failed_when: cm_test1 is changed
+
+- name: Ensure primary DNS zones replicate to forest (check mode)
+  win_dns_zone:
+    name: chall.euc.vmware.com
+    replication: forest
+    type: primary
+  check_mode: true
+  register: cm_test2
+  failed_when: cm_test2 is changed
+
+- name: Ensure forwarder is present (check mode)
+  win_dns_zone:
+    name: nkini.euc.vmware.com
+    type: forwarder
+    dns_servers:
+      - 10.245.51.100
+      - 10.245.51.101
+      - 10.245.51.102
+  check_mode: true
+  register: cm_test3
+  failed_when: cm_test3 is changed
+
+- name: Ensure forwarder zone has specific DNS servers (check mode)
+  win_dns_zone:
+    name: ssanthanagopalan.euc.vmware.com
+    type: forwarder
+    dns_servers:
+      - 10.205.1.219
+      - 10.205.1.220
+  check_mode: true
+  register: cm_test4
+  failed_when: cm_test4 is changed
+
+- name: Ensure Active Directory integrated secondary zone is present (check mode)
+  win_dns_zone:
+    name: rrounsaville.euc.vmware.com
+    type: secondary
+    dns_servers:
+      - 10.205.1.219
+      - 10.205.1.220
+    replication: forest
+    dynamic_update: none
+  check_mode: true
+  register: cm_test5
+  failed_when: cm_test5 is changed
+
+- name: Ensure file backed stub zone is present (check mode)
+  win_dns_zone:
+    name: anup.euc.vmware.com
+    type: stub
+    dns_servers:
+      - 10.205.1.219
+      - 10.205.1.220
+    replication: none
+    dynamic_update: none
+  check_mode: true
+  register: cm_test6
+  failed_when: cm_test6 is changed
