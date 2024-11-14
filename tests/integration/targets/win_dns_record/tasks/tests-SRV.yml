@@ -1,0 +1,321 @@
+- name: 'TYPE=SRV - creation (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: ansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - creation get results (check mode)'
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - creation check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'absent\r\n'
+
+- name: 'TYPE=SRV - creation'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: ansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - creation get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DomainName"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - creation check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'ansible.example.com.\r\n'
+
+- name: 'TYPE=SRV - creation (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: ansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - creation get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DomainName"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - creation check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'ansible.example.com.\r\n'
+
+- name: 'TYPE=SRV - update address (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - update address get results (check mode)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DomainName"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update address check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'ansible.example.com.\r\n'
+
+- name: 'TYPE=SRV - update address'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update address get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DomainName"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update address check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'altansible.example.com.\r\n'
+
+- name: 'TYPE=SRV - update address (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update address get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty DomainName"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update address check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'altansible.example.com.\r\n'
+
+- name: 'TYPE=SRV - update TTL (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, ttl: 7200, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - update TTL get results (check mode)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update TTL check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '3600\r\n'
+
+- name: 'TYPE=SRV - update TTL'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, ttl: 7200, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update TTL get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update TTL check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '7200\r\n'
+
+- name: 'TYPE=SRV - update TTL (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 5, priority: 2, port: 755, ttl: 7200, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update TTL get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update TTL check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == '7200\r\n'
+
+- name: 'TYPE=SRV - update weight (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - update weight get results (check mode)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Weight"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update weight check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '5\r\n'
+
+- name: 'TYPE=SRV - update weight'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 2, port: 755, value: altansible.example.com, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update weight get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Weight"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update weight check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '1\r\n'
+
+- name: 'TYPE=SRV - update weight (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 2, port: 755, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update weight get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Weight"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update weight check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == '1\r\n'
+
+- name: 'TYPE=SRV - update port (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 2, port: 355, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - update port get results (check mode)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Port"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update port check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '755\r\n'
+
+- name: 'TYPE=SRV - update port'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 2, port: 355, value: altansible.example.com, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update port get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Port"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update port check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '355\r\n'
+
+- name: 'TYPE=SRV - update port (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 2, port: 355, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update port get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Port"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update port check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == '355\r\n'
+
+- name: 'TYPE=SRV - update priority (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 7, port: 355, type: SRV}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - update priority get results (check mode)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Priority"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update priority check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '2\r\n'
+
+- name: 'TYPE=SRV - update priority'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 7, port: 355, value: altansible.example.com, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update priority get results'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Priority"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update priority check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == '7\r\n'
+
+- name: 'TYPE=SRV - update priority (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, value: altansible.example.com, weight: 1, priority: 7, port: 355, type: SRV}
+  register: cmd_result
+
+- name: 'TYPE=SRV - update priority get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty Priority"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - update priority check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == '7\r\n'
+
+- name: 'TYPE=SRV - remove record (check mode)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 7, port: 355, type: SRV, state: absent}
+  register: cmd_result
+  check_mode: yes
+
+- name: 'TYPE=SRV - remove record get results (check mode)'
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - remove record check results (check mode)'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'exists\r\n'
+
+- name: 'TYPE=SRV - remove record'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 7, port: 355, type: SRV, state: absent}
+  register: cmd_result
+
+- name: 'TYPE=SRV - remove record get results'
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - remove record check results'
+  assert:
+    that:
+      - cmd_result is changed
+      - cmd_result_actual.stdout == 'absent\r\n'
+
+- name: 'TYPE=SRV - remove record (idempotent)'
+  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: test1, weight: 1, priority: 7, port: 355, type: SRV, state: absent}
+  register: cmd_result
+
+- name: 'TYPE=SRV - remove record get results (idempotent)'
+  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType SRV -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  register: cmd_result_actual
+  changed_when: false
+
+- name: 'TYPE=SRV - remove record check results (idempotent)'
+  assert:
+    that:
+      - cmd_result is not changed
+      - cmd_result_actual.stdout == 'absent\r\n'
