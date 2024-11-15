@@ -10,6 +10,7 @@ module: win_timezone
 short_description: Sets Windows machine timezone
 description:
 - Sets machine time to the specified timezone.
+version_added: 2.6.0
 options:
   timezone:
     description:
@@ -33,19 +34,19 @@ author:
 
 EXAMPLES = r'''
 - name: Set timezone to 'Romance Standard Time' (GMT+01:00)
-  community.windows.win_timezone:
+  ansible.windows.win_timezone:
     timezone: Romance Standard Time
 
 - name: Set timezone to 'GMT Standard Time' (GMT)
-  community.windows.win_timezone:
+  ansible.windows.win_timezone:
     timezone: GMT Standard Time
 
 - name: Set timezone to 'Central Standard Time' (GMT-06:00)
-  community.windows.win_timezone:
+  ansible.windows.win_timezone:
     timezone: Central Standard Time
 
 - name: Set timezime to Pacific Standard time and disable Daylight Saving time adjustments
-  community.windows.win_timezone:
+  ansible.windows.win_timezone:
     timezone: Pacific Standard Time_dstoff
 '''
 
