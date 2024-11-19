@@ -163,7 +163,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 changed:
-    description: Status of copy file execution inforing about destination file changes
+    description: Status of the file copy execution, providing boolean information about changes made to the destination file.
     type: bool
     sample: true
 backup_file:
