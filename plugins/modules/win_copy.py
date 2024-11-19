@@ -162,6 +162,10 @@ EXAMPLES = r"""
 """
 
 RETURN = r"""
+changed:
+    description: Status of copy file execution inforing about destination file changes
+    type: bool
+    sample: true
 backup_file:
     description: Name of the backup file that was created.
     returned: if backup=yes
