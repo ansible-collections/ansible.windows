@@ -1,2 +1,5 @@
 dependencies:
-- setup_remote_tmp_dir
+  - setup_remote_tmp_dir
+galaxy_info:
+  role_name: win_dsc
+  namespace: win_dsc_ns
