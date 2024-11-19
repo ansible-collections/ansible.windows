@@ -1,0 +1,7 @@
+---
+# Defines the test to run, possible values: 'standalone' or 'activedirectory'
+# 'standalone' installs a mock Windows DNS server and runs tests that only
+# include file backed DNS zones.
+# 'activedirectory' installs a mock AD/DNS server and runs tests that include
+# AD integrated and file backed DNS zones.
+win_dns_zone_test_type: standalone

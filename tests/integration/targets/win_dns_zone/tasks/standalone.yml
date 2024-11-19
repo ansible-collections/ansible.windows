@@ -1,0 +1,251 @@
+---
+- name: Ensure AD/DNS roles are installed
+  ansible.windows.win_feature:
+    name:
+      - DNS
+    include_management_tools: true
+    include_sub_features: true
+    state: present
+  register: ensure_addns_roles
+
+- name: Ensure loopback address is set to DNS
+  ansible.windows.win_dns_client:
+    adapter_names: '*'
+    ipv4_addresses: 127.0.0.1
+
+- name: Reboot
+  ansible.windows.win_reboot:
+  when: ensure_addns_roles.reboot_required
+
+- name: Ensure DNS zones are absent
+  win_dns_zone:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - jamals.euc.vmware.com
+    - dgemzer.euc.vmware.com
+    - wpinner.euc.vmware.com
+    - marshallb.euc.vmware.com
+    - basavaraju.euc.vmware.com
+    - virajp.euc.vmware.com
+
+- name: Ensure file-backed primary DNS zone is present
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: none
+    type: primary
+    state: present
+  register: test1a
+  failed_when: test1a.changed == false
+
+- name: Ensure file-backed primary DNS zone is present (idempotence check)
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    replication: none
+    type: primary
+    state: present
+  register: test1
+  failed_when: test1 is changed
+
+- name: Ensure file-backed primary zone is present with secure updates, generates warning
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    replication: none
+    dynamic_update: secure
+  register: test2a
+  failed_when: test2a.changed == false
+
+- name: Ensure file-backed primary zone is present with secure updates, generates warning (idempotence check)
+  win_dns_zone:
+    name: basavaraju.euc.vmware.com
+    type: primary
+    replication: none
+    dynamic_update: secure
+  register: test2
+  failed_when: test2 is changed
+
+- name: Ensure DNS zone is absent
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    state: absent
+  register: test3a
+  failed_when: test3a.changed == false
+
+- name: Ensure DNS zone is absent (idempotence check)
+  win_dns_zone:
+    name: wpinner.euc.vmware.com
+    state: absent
+  register: test3
+  failed_when: test3 is changed
+
+- name: Ensure file-backed forwarder has specific DNS servers
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    replication: none
+    forwarder_timeout: 2
+    dns_servers:
+      - 10.245.51.100
+      - 10.245.51.101
+      - 10.245.51.102
+  register: test4a
+  failed_when: test4a.changed == false
+
+- name: Ensure file-backed forwarder has specific DNS servers (idempotence check)
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    replication: none
+    dns_servers:
+      - 10.245.51.100
+      - 10.245.51.101
+      - 10.245.51.102
+  register: test4
+  failed_when: test4 is changed
+
+- name: Ensure file-backed stub zone is configured
+  win_dns_zone:
+    name: dgemzer.euc.vmware.com
+    type: stub
+    replication: none
+    dns_servers:
+      - 10.19.20.1
+      - 10.19.20.2
+  register: test5a
+  failed_when: test5a.changed == false
+
+- name: Ensure file-backed stub zone is configured (idempotence check)
+  win_dns_zone:
+    name: dgemzer.euc.vmware.com
+    type: stub
+    replication: none
+    dns_servers:
+      - 10.19.20.1
+      - 10.19.20.2
+  register: test5
+  failed_when: test5 is changed
+
+- name: Ensure file-backed forwarder zone has updated DNS servers
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    replication: none
+    dns_servers:
+      - 10.10.1.150
+      - 10.10.1.151
+  register: test6a
+  failed_when: test6a.changed == false
+
+- name: Ensure file-backed forwarder zone has updated DNS servers (idempotence check)
+  win_dns_zone:
+    name: jamals.euc.vmware.com
+    type: forwarder
+    replication: none
+    dns_servers:
+      - 10.10.1.150
+      - 10.10.1.151
+  register: test6
+  failed_when: test6 is changed
+
+- name: Ensure file backed primary zone is present
+  win_dns_zone:
+    name: marshallb.euc.vmware.com
+    type: primary
+    replication: none
+  register: test7a
+  failed_when: test7a.changed == false
+
+- name: Ensure file backed primary zone is present (idempotence check)
+  win_dns_zone:
+    name: marshallb.euc.vmware.com
+    type: primary
+    replication: none
+  register: test7
+  failed_when: test7 is changed
+
+- name: Ensure file backed integrated dynamic updates set to none
+  win_dns_zone:
+    name: virajp.euc.vmware.com
+    type: primary
+    replication: none
+    dynamic_update: none
+  register: test8a
+  failed_when: test8a.changed == false
+
+- name: Ensure file backed primary zone has dynamic updates set to none (idempotence check)
+  win_dns_zone:
+    name: virajp.euc.vmware.com
+    type: primary
+    replication: none
+    dynamic_update: none
+  register: test8
+  failed_when: test8 is changed
+
+- name: Start Check Mode Tests
+  block:
+    - name: Ensure primary DNS zones are present (check mode)
+      win_dns_zone:
+        name: mehmoodkhap.euc.vmware.com
+        replication: none
+        type: primary
+        dynamic_update: none
+      register: cm_test1
+      failed_when: cm_test1 is changed
+
+    - name: Ensure file-backed primary DNS zone is present (check mode)
+      win_dns_zone:
+        name: chall.euc.vmware.com
+        replication: none
+        type: primary
+
+      register: cm_test2
+      failed_when: cm_test2 is changed
+
+    - name: Ensure file-backed forwarder is present (check mode)
+      win_dns_zone:
+        name: nkini.euc.vmware.com
+        replication: none
+        type: forwarder
+        dns_servers:
+          - 10.245.51.100
+          - 10.245.51.101
+          - 10.245.51.102
+      register: cm_test3
+      failed_when: cm_test3 is changed
+
+    - name: Ensure file-backed forwarder zone has specific DNS servers (check mode)
+      win_dns_zone:
+        name: ssanthanagopalan.euc.vmware.com
+        replication: none
+        type: forwarder
+        dns_servers:
+          - 10.205.1.219
+          - 10.205.1.220
+      register: cm_test4
+      failed_when: test4 is changed
+
+    - name: Ensure file-backed integrated secondary zone is present (check mode)
+      win_dns_zone:
+        name: rrounsaville.euc.vmware.com
+        type: secondary
+        dns_servers:
+          - 10.205.1.219
+          - 10.205.1.220
+        replication: none
+        dynamic_update: none
+      register: cm_test5
+      failed_when: cm_test5 is changed
+
+    - name: Ensure file-backed stub zone is present (check mode)
+      win_dns_zone:
+        name: anup.euc.vmware.com
+        type: stub
+        dns_servers:
+          - 10.205.1.219
+          - 10.205.1.220
+        replication: none
+        dynamic_update: none
+      register: cm_test6
+      failed_when: cm_test6 is changed
+  check_mode: true
