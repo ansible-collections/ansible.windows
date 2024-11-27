@@ -23,4 +23,3 @@ ansible-test windows-integration --color -v --retry-on-error "${target}" ${COVER
     --controller "docker:default" \
     --target "remote:windows/${version},connection=${connection}+${connection_setting},provider=${provider}" \
     --remote-terminate always --remote-stage "${stage}"
-

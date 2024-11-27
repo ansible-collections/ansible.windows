@@ -1,1 +1,2 @@
 tests/integration/targets/win_dsc/files/xTestCompositeDsc/1.0.0/DSCResources/xTestComposite/xTestComposite.schema.psm1 pslint!skip # Pwsh cannot parse DSC to MOF on Linux
+.azure-pipelines/scripts/publish-codecov.py replace-urlopen # fixed in newer Ansible versions

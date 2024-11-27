@@ -26,17 +26,12 @@ variables:
     value: ansible_collections/ansible/windows
   - name: coverageBranches
     value: main
-  - name: pipelinesCoverage
-    value: coverage-powershell
   - name: entryPoint
-    value: tests/utils/shippable/shippable.sh
+    value: .azure-pipelines/commands/entry-point.sh
   - name: fetchDepth
     value: 0
-
-resources:
-  containers:
-    - container: default
-      image: quay.io/ansible/azure-pipelines-test-container:6.0.0
+  - name: defaultContainer
+    value: quay.io/ansible/azure-pipelines-test-container:6.0.0
 
 pool: Standard
 
