@@ -1,19 +1,17 @@
-- name: Determine if server has tzutil.exe installed
-  ansible.windows.win_command: tzutil.exe /l
-  register: tzutil
-  ignore_errors: yes
+- name: get current timezone
+  win_command: tzutil.exe /g
+  register: original_timezone
+  changed_when: false
 
-- name: Only run tests if tzutil.exe is installed
-  when: tzutil.rc == 0
-  block:
+- block:
+  - name: Change starting timezone to GMT for test baseline
+    win_timezone:
+      timezone: GMT Standard Time
 
-  - name: Test in normal mode
+  - name: run tests
     import_tasks: tests.yml
-    vars:
-      in_check_mode: no
 
-  - name: Test in check-mode
-    import_tasks: tests.yml
-    vars:
-      in_check_mode: yes
-    check_mode: yes
+  always:
+  - name: reset timezone back to defaults
+    win_timezone:
+      timezone: "{{ original_timezone.stdout | trim }}"
