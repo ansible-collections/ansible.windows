@@ -12,6 +12,7 @@ description:
     - Set the format settings of a Windows Server.
     - Set the unicode language settings of a Windows Server.
     - Copy across these settings to the default profile.
+version_added: 2.6.0
 options:
     location:
         description:
@@ -31,7 +32,7 @@ options:
     unicode_language:
         description:
             - The unicode language format to set for all users, see
-              U(https://msdn.microsoft.com/en-us/library/system.globalization.cultureinfo.aspx)
+              U(https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-input-locales-for-windows-language-packs)
               for a list of culture names to use.
             - This needs to be set if C(location) or C(format) is not set. After setting this
               value a reboot is required for it to take effect.
@@ -46,28 +47,28 @@ options:
         type: bool
         default: no
 seealso:
-- module: community.windows.win_timezone
+- module: ansible.windows.win_timezone
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Set the region format to English United States
-  community.windows.win_region:
+  ansible.windows.win_region:
     format: en-US
 
 - name: Set the region format to English Australia and copy settings to new profiles
-  community.windows.win_region:
+  ansible.windows.win_region:
     format: en-AU
     copy_settings: true
 
 - name: Set the location to United States
-  community.windows.win_region:
+  ansible.windows.win_region:
     location: 244
 
 # Reboot when region settings change
 - name: Set the unicode language to English Great Britain, reboot if required
-  community.windows.win_region:
+  ansible.windows.win_region:
     unicode_language: en-GB
   register: result
 
@@ -76,7 +77,7 @@ EXAMPLES = r'''
 
 # Reboot when format, location or unicode has changed
 - name: Set format, location and unicode to English Australia and copy settings, reboot if required
-  community.windows.win_region:
+  ansible.windows.win_region:
     location: 12
     format: en-AU
     unicode_language: en-AU
