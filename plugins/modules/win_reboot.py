@@ -102,7 +102,7 @@ EXAMPLES = r'''
 # Or you can make win_reboot validate exactly what you need to work before running the next task
 - name: Validate that the netlogon service has started, before running the next task
   ansible.windows.win_reboot:
-    test_command: 'exit (Get-Service -Name Netlogon).Status -ne "Running"'
+    test_command: '(Get-Service -Name Netlogon).Status -ne "Running"'
 '''
 
 RETURN = r'''
