@@ -203,6 +203,19 @@
     - firewall_domain_on.Domain.enabled
   when: in_check_mode
 
+# Set profile Domain back to default values 
+- name: Restore default value for Windows Firewall on Domain outbound connection
+  win_firewall:
+    profiles: Domain
+    state: enabled
+    outbound_action: allow
+  
+- name: Restore default value for Windows Firewall on Domain inbound connection
+  win_firewall:
+    profiles: Domain
+    state: enabled
+    inbound_action: block
+    
 # On purpose no profiles added
 - name: Turn on Windows Firewall again
   win_firewall:

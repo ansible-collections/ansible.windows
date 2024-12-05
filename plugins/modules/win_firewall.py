@@ -12,6 +12,7 @@ description:
 - Enable or Disable Windows Firewall profiles.
 requirements:
   - This module requires Windows Management Framework 5 or later.
+version_added: 2.6.0
 options:
   profiles:
     description:
@@ -23,6 +24,7 @@ options:
   state:
     description:
     - Set state of firewall for given profile.
+    required: true
     type: str
     choices: [ disabled, enabled ]
   inbound_action:
@@ -31,14 +33,12 @@ options:
     - C(not_configured) is valid when configuring a GPO.
     type: str
     choices: [ allow, block, not_configured ]
-    version_added: 1.1.0
   outbound_action:
     description:
     - Set to C(allow) or C(block) inbound network traffic in the profile.
     - C(not_configured) is valid when configuring a GPO.
     type: str
     choices: [ allow, block, not_configured ]
-    version_added: 1.1.0
 seealso:
 - module: community.windows.win_firewall_rule
 author:
@@ -47,7 +47,7 @@ author:
 
 EXAMPLES = r'''
 - name: Enable firewall for Domain, Public and Private profiles
-  community.windows.win_firewall:
+  ansible.windows.win_firewall:
     state: enabled
     profiles:
       - Domain
@@ -56,14 +56,14 @@ EXAMPLES = r'''
   tags: enable_firewall
 
 - name: Disable Domain firewall
-  community.windows.win_firewall:
+  ansible.windows.win_firewall:
     state: disabled
     profiles:
       - Domain
   tags: disable_firewall
 
 - name: Enable firewall for Domain profile and block outbound connections
-  community.windows.win_firewall:
+  ansible.windows.win_firewall:
     profiles: Domain
     state: enabled
     outbound_action: block
