@@ -201,6 +201,30 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
+  - stage: Windows_4
+    displayName: Windows 4
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/4
+          targets:
+            - name: 2016 WinRM HTTP
+              test: 2016/winrm/http
+            - name: 2019 WinRM HTTPS
+              test: 2019/winrm/https
+            - name: 2022 WinRM HTTPS
+              test: 2022/winrm/https
+            - name: 2022 PSRP HTTPS
+              test: 2022/psrp/https
+            - name: 2022 SSH Key
+              test: 2022/ssh/key
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:
@@ -212,5 +236,6 @@ stages:
       - Windows_1
       - Windows_2
       - Windows_3
+      - Windows_4
     jobs:
       - template: templates/coverage.yml
