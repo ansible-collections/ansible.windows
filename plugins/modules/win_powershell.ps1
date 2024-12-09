@@ -801,7 +801,7 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     # https://github.com/ansible-collections/ansible.windows/issues/642
     $resultPipeline = [PowerShell]::Create()
     $resultPipeline.Runspace = $runspace
-    $result = $resultPipeline.AddScript('$Ansible').Invoke()
+    $result = $resultPipeline.AddScript('$Ansible').Invoke()[0]
 }
 finally {
     if (-not $processId) {

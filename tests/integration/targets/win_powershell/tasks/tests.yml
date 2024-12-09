@@ -268,6 +268,19 @@
     - result_ansible.output == []
     - result_ansible.result == ['1970-01-01T00:00:00.0000000Z', 'string']
 
+- name: set empty array as Ansible.Result
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: $Ansible.Result = @()
+  register: result_ansible
+
+- name: assert set empty array as Ansible.Result
+  assert:
+    that:
+    - result_ansible is changed
+    - result_ansible.output == []
+    - result_ansible.result == []
+
 - name: get temporary directory
   win_powershell:
     executable: '{{ pwsh_executable | default(omit) }}'
