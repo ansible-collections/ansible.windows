@@ -363,7 +363,9 @@ Function Convert-OutputObject {
         elseif (&$isType -InputObject $InputObject -Type ([switch])) {
             $InputObject.IsPresent
         }
-        elseif ($InputObject.GetType().IsValueType) {
+        # Have a defensive check to see if GetType() exists as a method on the object.
+        # https://github.com/ansible-collections/ansible.windows/issues/708
+        elseif ('GetType' -in $InputObject.PSObject.Methods.Name -and $InputObject.GetType().IsValueType) {
             # We want to display just this value and not any properties it has (if any).
             $InputObject.PSObject.BaseObject
         }

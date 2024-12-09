@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    ansible.windows.win_powershell - Add extra checks to avoid ``GetType`` error when converting the output object
+    - ttps://github.com/ansible-collections/ansible.windows/issues/708
