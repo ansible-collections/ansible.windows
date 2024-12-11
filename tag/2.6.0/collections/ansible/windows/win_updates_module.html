@@ -1,0 +1,617 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.16.1" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_updates module – Download and install Windows updates &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5707b69d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=c5b67dd2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_uri module – Interacts with webservices" href="win_uri_module.html" />
+    <link rel="prev" title="ansible.windows.win_timezone module – Sets Windows machine timezone" href="win_timezone_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_updates module – Download and install Windows updates</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_updates.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-updates-module"></span><section id="ansible-windows-win-updates-module-download-and-install-windows-updates">
+<h1>ansible.windows.win_updates module – Download and install Windows updates<a class="headerlink" href="#ansible-windows-win-updates-module-download-and-install-windows-updates" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 2.6.0).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_updates</span></code>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id6">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Searches, downloads, and installs Windows updates synchronously by automating the Windows Update client.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module has a corresponding <a class="reference external" href="https://docs.ansible.com/ansible/devel/plugins/action.html#action-plugins" title="(in Ansible vdevel)"><span class="xref std std-ref">action plugin</span></a>.</p>
+</div>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-_operation"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-operation"><strong>_operation</strong></p>
+<a class="ansibleOptionLink" href="#parameter-_operation" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Internal use only.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;start&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;cancel&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;poll&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-_operation_options"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-operation-options"><strong>_operation_options</strong></p>
+<a class="ansibleOptionLink" href="#parameter-_operation_options" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Internal use only.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-accept_list"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-accept-list"><strong>accept_list</strong></p>
+<a class="ansibleOptionLink" href="#parameter-accept_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of update titles or KB numbers that can be used to specify which updates are to be searched or installed.</p>
+<p>If an available update does not match one of the entries, then it is skipped and not installed.</p>
+<p>Each entry can either be the KB article or Update title as a regex according to the PowerShell regex rules.</p>
+<p>The accept list is only validated on updates that were found based on <em>category_names</em>. It will not force the module to install an update if it was not in the category specified.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-category_names"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-category-names"><strong>category_names</strong></p>
+<a class="ansibleOptionLink" href="#parameter-category_names" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A scalar or list of categories to install updates from. To get the list of categories, run the module with <code class="docutils literal notranslate"><span class="pre">state=searched</span></code>. The category must be the full category string, but is case insensitive.</p>
+<p>Some possible categories are Application, Connectors, Critical Updates, Definition Updates, Developer Kits, Feature Packs, Guidance, Security Updates, Service Packs, Tools, Update Rollups, Updates, and Upgrades.</p>
+<p>Since <code class="docutils literal notranslate"><span class="pre">v1.7.0</span></code> the value <code class="docutils literal notranslate"><span class="pre">*</span></code> will match all categories.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">[&quot;CriticalUpdates&quot;,</span> <span class="pre">&quot;SecurityUpdates&quot;,</span> <span class="pre">&quot;UpdateRollups&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-log_path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-log-path"><strong>log_path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-log_path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If set, <code class="docutils literal notranslate"><span class="pre">win_updates</span></code> will append update progress to the specified file. The directory must already exist.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-reboot"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-reboot"><strong>reboot</strong></p>
+<a class="ansibleOptionLink" href="#parameter-reboot" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Ansible will automatically reboot the remote host if it is required and continue to install updates after the reboot.</p>
+<p>This can be used instead of using a <a class="reference internal" href="win_reboot_module.html#ansible-collections-ansible-windows-win-reboot-module"><span class="std std-ref">ansible.windows.win_reboot</span></a> task after this one and ensures all updates for that category is installed in one go.</p>
+<p>Async does not work when <code class="docutils literal notranslate"><span class="pre">reboot=true</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-reboot_timeout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-reboot-timeout"><strong>reboot_timeout</strong></p>
+<a class="ansibleOptionLink" href="#parameter-reboot_timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The time in seconds to wait until the host is back online from a reboot.</p>
+<p>This is only used if <code class="docutils literal notranslate"><span class="pre">reboot=true</span></code> and a reboot is required.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">1200</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-reject_list"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-reject-list"><strong>reject_list</strong></p>
+<a class="ansibleOptionLink" href="#parameter-reject_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of update titles or KB numbers that can be used to specify which updates are to be excluded from installation.</p>
+<p>If an available update does match one of the entries, then it is skipped and not installed.</p>
+<p>Each entry can either be the KB article or Update title as a regex according to the PowerShell regex rules.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-server_selection"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-server-selection"><strong>server_selection</strong></p>
+<a class="ansibleOptionLink" href="#parameter-server_selection" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Defines the Windows Update source catalog.</p>
+<p><code class="docutils literal notranslate"><span class="pre">default</span></code> Use the default search source. For many systems default is set to the Microsoft Windows Update catalog. Systems participating in Windows Server Update Services (WSUS) or similar corporate update server environments may default to those managed update sources instead of the Windows Update catalog.</p>
+<p><code class="docutils literal notranslate"><span class="pre">managed_server</span></code> Use a managed server catalog. For environments utilizing Windows Server Update Services (WSUS) or similar corporate update servers, this option selects the defined corporate update source.</p>
+<p><code class="docutils literal notranslate"><span class="pre">windows_update</span></code> Use the Microsoft Windows Update catalog.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;default&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;managed_server&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;windows_update&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-skip_optional"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-skip-optional"><strong>skip_optional</strong></p>
+<a class="ansibleOptionLink" href="#parameter-skip_optional" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 1.8.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Skip optional updates where the update has BrowseOnly set by Microsoft.</p>
+<p>Microsoft documents show that BrowseOnly means that the update should not be installed automatically and appear as optional updates.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Controls whether found updates are downloaded or installed or listed</p>
+<p>This module also supports Ansible check mode, which has the same effect as setting state=searched</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;installed&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;searched&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;downloaded&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> must be run by a user with membership in the local Administrators group.</p></li>
+<li><p><a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> will use the default update service configured for the machine (Windows Update, Microsoft Update, WSUS, etc).</p></li>
+<li><p>By default <a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> does not manage reboots, but will signal when a reboot is required with the <em>reboot_required</em> return value. <em>reboot</em> can be used to reboot the host if required in the one task.</p></li>
+<li><p><a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> can take a significant amount of time to complete (hours, in some cases). Performance depends on many factors, including OS version, number of updates, system load, and update server load.</p></li>
+<li><p>Beware that just after <a class="reference internal" href="#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">ansible.windows.win_updates</span></a> reboots the system, the Windows system may not have settled yet and some base services could be in limbo. This can result in unexpected behavior. Check the examples for ways to mitigate this.</p></li>
+<li><p>More information about PowerShell and how it handles RegEx strings can be found at <a class="reference external" href="https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx">https://technet.microsoft.com/en-us/library/2007.11.powershell.aspx</a>.</p></li>
+<li><p>The current module doesn’t support Systems Center Configuration Manager (SCCM). See <a class="reference external" href="https://github.com/ansible-collections/ansible.windows/issues/194">https://github.com/ansible-collections/ansible.windows/issues/194</a></p></li>
+<li><p>By default the <code class="docutils literal notranslate"><span class="pre">ansible.builtin.ssh</span></code> connection plugin is configured to have no server timeout. As Windows Updates can restart the network adapter it is recommended to set <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">ServerAliveInterval=30</span></code> and disable control master in <em>ansible_ssh_args</em> to ensure the client can handle a network reset. See the examples showing one way this can be set.</p></li>
+<li><p>By default the module will start a background process using the Task Scheduler on Windows. If the Task Scheduler is unavailable, unreliable, or does not work, run the task with become.</p></li>
+</ul>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/chocolatey/chocolatey/win_chocolatey_module.html#ansible-collections-chocolatey-chocolatey-win-chocolatey-module" title="(in Ansible vdevel)"><span class="xref std std-ref">chocolatey.chocolatey.win_chocolatey</span></a></dt><dd><p>The official documentation on the <strong>chocolatey.chocolatey.win_chocolatey</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_feature_module.html#ansible-collections-ansible-windows-win-feature-module"><span class="std std-ref">ansible.windows.win_feature</span></a></dt><dd><p>Installs and uninstalls Windows Features on Windows Server.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/win_hotfix_module.html#ansible-collections-community-windows-win-hotfix-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_hotfix</span></a></dt><dd><p>The official documentation on the <strong>community.windows.win_hotfix</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_package_module.html#ansible-collections-ansible-windows-win-package-module"><span class="std std-ref">ansible.windows.win_package</span></a></dt><dd><p>Installs/uninstalls an installable package.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all updates and reboot as many times as needed</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set a server alive interval during update stage for the ssh connection plugin</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># This can be set in a few ways, see the ssh connection plugin for more</span>
+<span class="w">    </span><span class="c1"># information. ControlMaster should be disabled to ensure the new timeout</span>
+<span class="w">    </span><span class="c1"># value is applied for this connection instead of through the cached</span>
+<span class="w">    </span><span class="c1"># connection.</span>
+<span class="w">    </span><span class="nt">ansible_ssh_args</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-o ControlMaster=no -o ServerAliveInterval=30</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all security, critical, and rollup updates without a scheduled task</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CriticalUpdates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UpdateRollups</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">  </span><span class="nt">become_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Search-only, return list of found updates (if any), log to C:\ansible_wu.txt</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">searched</span>
+<span class="w">    </span><span class="nt">log_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\ansible_wu.txt</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install all security updates with automatic reboots</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install only particular updates based on the KB numbers</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
+<span class="w">    </span><span class="nt">accept_list</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KB4056892</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KB4073117</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exclude updates based on the update title</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">category_names</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SecurityUpdates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CriticalUpdates</span>
+<span class="w">    </span><span class="nt">reject_list</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Windows Malicious Software Removal Tool for Windows</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">\d{4}-\d{2} Cumulative Update for Windows Server 2016</span>
+
+<span class="c1"># Optionally, you can increase the reboot_timeout to survive long updates during reboot</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure we wait long enough for the updates to be applied during reboot</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">reboot</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">reboot_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3600</span>
+
+<span class="c1"># Search and download Windows updates</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Search and download Windows updates without installing them</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_updates</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">downloaded</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-failed_update_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-failed-update-count"><strong>failed_update_count</strong></p>
+<a class="ansibleOptionLink" href="#return-failed_update_count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of updates that failed to install.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-filtered_updates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates"><strong>filtered_updates</strong></p>
+<a class="ansibleOptionLink" href="#return-filtered_updates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Updates that were found but were filtered based on <em>blacklist</em>, <em>whitelist</em> or <em>category_names</em>. The return value is in the same form as <em>updates</em>, along with <em>filtered_reason</em>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;see</span> <span class="pre">the</span> <span class="pre">updates</span> <span class="pre">return</span> <span class="pre">value&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-filtered_updates/filtered_reason"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates-filtered-reason"><strong>filtered_reason</strong></p>
+<a class="ansibleOptionLink" href="#return-filtered_updates/filtered_reason" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The reason why this update was filtered.</p>
+<p>This value has been deprecated since <code class="docutils literal notranslate"><span class="pre">1.7.0</span></code>, use <code class="docutils literal notranslate"><span class="pre">filtered_reasons</span></code> which contain a list of all the reasons why the update is filtered.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;skip_hidden&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-filtered_updates/filtered_reasons"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates-filtered-reasons"><strong>filtered_reasons</strong></p>
+<a class="ansibleOptionLink" href="#return-filtered_updates/filtered_reasons" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>A list of reasons why the update has been filtered.</p>
+<p>Can be <code class="docutils literal notranslate"><span class="pre">accept_list</span></code>, <code class="docutils literal notranslate"><span class="pre">reject_list</span></code>, <code class="docutils literal notranslate"><span class="pre">hidden</span></code>, <code class="docutils literal notranslate"><span class="pre">category_names</span></code>, or <code class="docutils literal notranslate"><span class="pre">skip_optional</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;category_names&quot;,</span> <span class="pre">&quot;accept_list&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-found_update_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-found-update-count"><strong>found_update_count</strong></p>
+<a class="ansibleOptionLink" href="#return-found_update_count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of updates found needing to be applied.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">3</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-installed_update_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-installed-update-count"><strong>installed_update_count</strong></p>
+<a class="ansibleOptionLink" href="#return-installed_update_count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of updates successfully installed or downloaded.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-reboot-required"><strong>reboot_required</strong></p>
+<a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>True when the target server requires a reboot to complete updates (no further updates can be installed until after a reboot).</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-rebooted"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-rebooted"><strong>rebooted</strong></p>
+<a class="ansibleOptionLink" href="#return-rebooted" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 1.14.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> when the target Windows host has been rebooted by <code class="docutils literal notranslate"><span class="pre">win_updates</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates"><strong>updates</strong></p>
+<a class="ansibleOptionLink" href="#return-updates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Updates that were found/installed.</p>
+<p>The key for each update is the <code class="docutils literal notranslate"><span class="pre">id</span></code> of the update.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/categories"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-categories"><strong>categories</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/categories" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>A list of category strings for this update.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Critical</span> <span class="pre">Updates&quot;,</span> <span class="pre">&quot;Windows</span> <span class="pre">Server</span> <span class="pre">2012</span> <span class="pre">R2&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/downloaded"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-downloaded"><strong>downloaded</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/downloaded" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Was the update downloaded.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/failure_hresult_code"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-hresult-code"><strong>failure_hresult_code</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/failure_hresult_code" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The HRESULT code from a failed update.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> on install or download failure</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2147942402</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/failure_msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-msg"><strong>failure_msg</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/failure_msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The error message with more details on the failure.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> on install or download failure and not running with async</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Operation</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">complete</span> <span class="pre">because</span> <span class="pre">there</span> <span class="pre">is</span> <span class="pre">no</span> <span class="pre">logged-on</span> <span class="pre">interactive</span> <span class="pre">user</span> <span class="pre">(WU_E_NO_INTERACTIVE_USER</span> <span class="pre">0x80240020)&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-id"><strong>id</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/id" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Internal Windows Update GUID.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;fb95c1c8-de23-4089-ae29-fd3351d55421&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/installed"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-installed"><strong>installed</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/installed" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Was the update successfully installed.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/kb"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-kb"><strong>kb</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/kb" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>A list of KB article IDs that apply to the update.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;3004365&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-updates/title"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-title"><strong>title</strong></p>
+<a class="ansibleOptionLink" href="#return-updates/title" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Display name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Security</span> <span class="pre">Update</span> <span class="pre">for</span> <span class="pre">Windows</span> <span class="pre">Server</span> <span class="pre">2012</span> <span class="pre">R2</span> <span class="pre">(KB3004365)&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Matt Davis (&#64;nitzmahone)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_timezone_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_timezone module – Sets Windows machine timezone" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_uri_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_uri module – Interacts with webservices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
