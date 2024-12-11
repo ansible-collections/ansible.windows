@@ -4,6 +4,41 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.6.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.6.0. Includes various modules promoted from ``community.windows``.
+
+Minor Changes
+-------------
+
+- Added support for Windows Server 2025
+- setup - Added ``ansible_os_install_date`` as the OS installation date in the ISO 8601 format ``yyyy-MM-ddTHH:mm:ssZ``. This date is represented in the UTC timezone - https://github.com/ansible-collections/ansible.windows/issues/663
+
+Bugfixes
+--------
+
+- ansible.windows.win_powershell - Add extra checks to avoid ``GetType`` error when converting the output object - ttps://github.com/ansible-collections/ansible.windows/issues/708
+- win_powershell - Ensure ``$Ansible.Result = @()`` as an empty array is returned as an empty list and not null - https://github.com/ansible-collections/ansible.windows/issues/686
+- win_updates - Only set the Access control sections on the temporary directory created by the module. This avoids the error when the ``SeSecurityPrivilege`` privilege isn't present.
+
+New Modules
+-----------
+
+- win_certificate_info - Get information on certificates from a Windows Certificate Store
+- win_dhcp_lease - Manage Windows Server DHCP Leases
+- win_dns_record - Manage Windows Server DNS records
+- win_dns_zone - Manage Windows Server DNS Zones
+- win_eventlog - Manage Windows event logs
+- win_firewall - Enable or disable the Windows Firewall
+- win_hosts - Manages hosts file entries on Windows.
+- win_hotfix - Install and uninstalls Windows hotfixes
+- win_region - Set the region and format settings
+- win_timezone - Sets Windows machine timezone
+
 v2.5.0
 ======
 
