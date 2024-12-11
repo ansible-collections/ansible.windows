@@ -769,3 +769,59 @@ releases:
     - release_summary-2.5.0.yml
     - win_powershell-fix.yml
     release_date: '2024-08-30'
+  2.6.0:
+    changes:
+      bugfixes:
+      - ansible.windows.win_powershell - Add extra checks to avoid ``GetType`` error
+        when converting the output object - ttps://github.com/ansible-collections/ansible.windows/issues/708
+      - win_powershell - Ensure ``$Ansible.Result = @()`` as an empty array is returned
+        as an empty list and not null - https://github.com/ansible-collections/ansible.windows/issues/686
+      - win_updates - Only set the Access control sections on the temporary directory
+        created by the module. This avoids the error when the ``SeSecurityPrivilege``
+        privilege isn't present.
+      minor_changes:
+      - Added support for Windows Server 2025
+      - setup - Added ``ansible_os_install_date`` as the OS installation date in the
+        ISO 8601 format ``yyyy-MM-ddTHH:mm:ssZ``. This date is represented in the
+        UTC timezone - https://github.com/ansible-collections/ansible.windows/issues/663
+      release_summary: Release summary for v2.6.0. Includes various modules promoted
+        from ``community.windows``.
+    fragments:
+    - release-summary.yml
+    - setup-install-date.yml
+    - win-2025.yml
+    - win_powershell-result-array.yml
+    - win_powershell-type.yml
+    - win_updates-acl.yml
+    modules:
+    - description: Get information on certificates from a Windows Certificate Store
+      name: win_certificate_info
+      namespace: ''
+    - description: Manage Windows Server DHCP Leases
+      name: win_dhcp_lease
+      namespace: ''
+    - description: Manage Windows Server DNS records
+      name: win_dns_record
+      namespace: ''
+    - description: Manage Windows Server DNS Zones
+      name: win_dns_zone
+      namespace: ''
+    - description: Manage Windows event logs
+      name: win_eventlog
+      namespace: ''
+    - description: Enable or disable the Windows Firewall
+      name: win_firewall
+      namespace: ''
+    - description: Manages hosts file entries on Windows.
+      name: win_hosts
+      namespace: ''
+    - description: Install and uninstalls Windows hotfixes
+      name: win_hotfix
+      namespace: ''
+    - description: Set the region and format settings
+      name: win_region
+      namespace: ''
+    - description: Sets Windows machine timezone
+      name: win_timezone
+      namespace: ''
+    release_date: '2024-12-11'

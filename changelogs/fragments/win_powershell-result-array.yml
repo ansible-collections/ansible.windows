@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    win_powershell - Ensure ``$Ansible.Result = @()`` as an empty array is returned as an empty list and not null
-    - https://github.com/ansible-collections/ansible.windows/issues/686
