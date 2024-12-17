@@ -118,13 +118,13 @@
   register: change3_checkmode
   check_mode: yes
 
-- name: Change organization only in check mode
+- name: Change organization only 
   win_computer_description:
    organization: "{{ test_organization2 }}"
   register: change3_set
   check_mode: no
 
-- name: Change organization only in check mode
+- name: Change organization only, there should be no change happening
   win_computer_description:
    organization: "{{ test_organization2 }}"
   register: change3_set2

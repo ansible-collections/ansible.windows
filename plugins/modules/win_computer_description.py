@@ -33,24 +33,24 @@ author:
 
 EXAMPLES = r'''
 - name: Set Windows description, owner and organization
-  community.windows.win_computer_description:
+  ansible.windows.win_computer_description:
    description: Best Box
    owner: RusoSova
    organization: MyOrg
   register: result
 
 - name: Set Windows description only
-  community.windows.win_computer_description:
+  ansible.windows.win_computer_description:
    description: This is my Windows machine
   register: result
 
 - name: Set organization and clear owner field
-  community.windows.win_computer_description:
+  ansible.windows.win_computer_description:
    owner: ''
    organization: Black Mesa
 
 - name: Clear organization, description and owner
-  community.windows.win_computer_description:
+  ansible.windows.win_computer_description:
    organization: ""
    owner: ""
    description: ""
