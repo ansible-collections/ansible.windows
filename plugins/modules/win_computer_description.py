@@ -11,6 +11,7 @@ short_description: Set windows description, owner and organization
 description:
  - This module sets Windows description that is shown under My Computer properties. Module also sets
    Windows license owner and organization. License information can be viewed by running winver commad.
+version_added: 2.7.0
 options:
  description:
    description:
