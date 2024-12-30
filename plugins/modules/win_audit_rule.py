@@ -54,7 +54,7 @@ options:
       - For more information on the choices see MSDN PropagationFlags enumeration
         at U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx).
     type: str
-    choices: [ None, InherityOnly, NoPropagateInherit ]
+    choices: [ None, InheritOnly, NoPropagateInherit ]
     default: "None"
   audit_flags:
     description:

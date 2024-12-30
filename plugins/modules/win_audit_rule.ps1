@@ -11,13 +11,18 @@ $spec = @{
         path = @{ type = "str" ; required = $true ; aliases = @("destination", "dest") }
         user = @{ type = "str" ; required = $true }
         rights = @{ type = "list" ; elements = "str" }
-        inheritance_flags = @{ type = "list" ; elements = "str" ; default = @('ContainerInherit', 'ObjectInherit') ; choices = @('None', 'ContainerInherit', 'ObjectInherit') }
+        inheritance_flags = @{
+            type = "list"
+            elements = "str"
+            default = @('ContainerInherit', 'ObjectInherit')
+            choices = @('None', 'ContainerInherit', 'ObjectInherit')
+        }
         propagation_flags = @{ type = "str" ; choices = @('None', 'InheritOnly', 'NoPropagateInherit') ; default = 'None' }
         audit_flags = @{ type = "list" ; elements = "str" ; default = @('success') ; choices = @('failure', 'success') }
         state = @{ type = 'str' ; default = 'present'; choices = 'absent', 'present' }
     }
     required_if = @(
-        @(@("state"), @("present"), @("rights"))
+        , @("state", "present", @(, "rights"))
     )
     supports_check_mode = $true
 }
