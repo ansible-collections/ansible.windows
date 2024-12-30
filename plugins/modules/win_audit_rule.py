@@ -14,6 +14,7 @@ description:
     Log in the Event viewer.
   - The behavior is designed to ignore inherited rules since those cannot be adjusted without first disabling
     the inheritance behavior. It will still print inherited rules in the output though for debugging purposes.
+version_added: 2.7.0
 options:
   path:
     description:
