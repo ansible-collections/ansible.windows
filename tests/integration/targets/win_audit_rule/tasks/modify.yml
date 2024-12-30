@@ -1,172 +1,122 @@
-#########################
-### modify check mode ###
-#########################
-- name: check mode modify audit policy directory
+- name: check mode modify user1 audit policy rule directory
   win_audit_rule:
-    path: "{{ test_audit_rule_folder }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
+    path: "{{ test_audit_rule_directory }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
     state: present
     audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: directory
+  register: directory_checkmode_user1
   check_mode: yes
 
-- name: check mode modify audit policy file
+- name: modify user1 audit policy rule directory
+  win_audit_rule:
+    path: "{{ test_audit_rule_directory }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
+    audit_flags: "{{ test_audit_rule_audit_flags }}"
+  register: directory_change1_user1
+
+- name: idempotent modify user1 audit policy rule directory
+  win_audit_rule:
+    path: "{{ test_audit_rule_directory }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
+    audit_flags: "{{ test_audit_rule_audit_flags }}"
+  register: directory_change2_user1
+
+- name: Assert directory modify tasks
+  assert:
+    that:
+    - directory_checkmode_user1 is changed
+    - directory_change1_user1 is changed
+    - directory_change2_user1 is not changed
+    - directory_checkmode_user1.path_type == 'directory'
+    - directory_change1_user1.path_type == 'directory'
+    - directory_change2_user1.path_type == 'directory'
+    - directory_change1_user1.current_audit_rules[0].rights == "Delete, Read, ChangePermissions"
+    - directory_change1_user1.current_audit_rules[1].rights == "Delete"
+
+- name: check mode modify user1 audit policy rule file
   win_audit_rule:
     path: "{{ test_audit_rule_file }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
     state: present
     audit_flags: "{{ test_audit_rule_audit_flags }}"
     inheritance_flags: none
-  register: file
+  register: file_checkmode
   check_mode: yes
 
-- name: check mode modify audit policy registry
+- name: modify user1 audit policy rule file
   win_audit_rule:
-    path: "{{ test_audit_rule_registry }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
+    path: "{{ test_audit_rule_file }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
     state: present
     audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: registry
+    inheritance_flags: none
+  register: file_change1
+
+- name: idempotent modify user1 audit policy rule file
+  win_audit_rule:
+    path: "{{ test_audit_rule_file }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
+    audit_flags: "{{ test_audit_rule_audit_flags }}"
+    inheritance_flags: none
+  register: file_change2
+
+- name: Assert file modify tasks
+  assert:
+    that:
+    - file_checkmode is changed
+    - file_change1 is changed
+    - file_change2 is not changed
+    - file_checkmode.path_type == 'file'
+    - file_change1.path_type == 'file'
+    - file_change2.path_type == 'file'
+    - file_change1.current_audit_rules.rights == "Delete, ChangePermissions"
+
+- name: check mode modify user1 audit policy rule registry
+  win_audit_rule:
+    path: "{{ test_audit_rule_registry }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
+    audit_flags: "{{ test_audit_rule_audit_flags }}"
+  register: registry_checkmode
   check_mode: yes
 
-- name: check mode modify get directory rule results
-  test_get_audit_rule:
-    path: "{{ test_audit_rule_folder }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: directory_results
-
-- name: check mode modify get file rule results
-  test_get_audit_rule:
-    path: "{{ test_audit_rule_file }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-    inheritance_flags: none
-  register: file_results
-
-- name: check mode modify get REGISTRY rule results
-  test_get_audit_rule:
+- name:  modify user1 audit policy rule registry
+  win_audit_rule:
     path: "{{ test_audit_rule_registry }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
     audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: registry_results
+  register: registry_change1
 
-- name: check mode modify assert that change is needed but rights still equal the original rights and not test_audit_rule_new_rights
+- name: idempotent modify user1 audit policy rule registry
+  win_audit_rule:
+    path: "{{ test_audit_rule_registry }}"
+    user: "{{ test_audit_rule_user1 }}"
+    rights: "{{ test_audit_rule_rights2 }}"
+    state: present
+    audit_flags: "{{ test_audit_rule_audit_flags }}"
+  register: registry_change2
+
+
+- name: Assert registry modify tasks
   assert:
     that:
-    - directory is changed
-    - file is changed
-    - registry is changed
-    - not directory_results.matching_rule_found and directory_results.path_type == 'directory'
-    - not file_results.matching_rule_found and file_results.path_type == 'file'
-    - not registry_results.matching_rule_found and registry_results.path_type == 'registry'
+    - registry_checkmode is changed
+    - registry_change1 is changed
+    - registry_change2 is not changed
+    - registry_checkmode.path_type == 'registry'
+    - registry_change1.path_type == 'registry'
+    - registry_change2.path_type == 'registry'
+    - registry_change1.current_audit_rules.rights == "Delete, ChangePermissions"
 
-##############
-### modify ###
-##############
-- name: modify audit policy directory
-  win_audit_rule:
-    path: "{{ test_audit_rule_folder }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: directory
-
-- name: modify audit policy file
-  win_audit_rule:
-    path: "{{ test_audit_rule_file }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-    inheritance_flags: none
-  register: file
-
-- name: modify audit policy registry
-  win_audit_rule:
-    path: "{{ test_audit_rule_registry }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: registry
-
-- name: modify get directory rule results
-  test_get_audit_rule:
-    path: "{{ test_audit_rule_folder }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: directory_results
-
-- name: modify get file rule results
-  test_get_audit_rule:
-    path: "{{ test_audit_rule_file }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-    inheritance_flags: none
-  register: file_results
-
-- name: modify get REGISTRY rule results
-  test_get_audit_rule:
-    path: "{{ test_audit_rule_registry }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: registry_results
-
-- name: modify assert that the rules were modified and a change is detected
-  assert:
-    that:
-    - directory is changed
-    - file is changed
-    - registry is changed
-    - directory_results.matching_rule_found and directory_results.path_type == 'directory'
-    - file_results.matching_rule_found and file_results.path_type == 'file'
-    - registry_results.matching_rule_found and registry_results.path_type == 'registry'
-
-#####################################
-### idempotent test modify a rule ###
-#####################################
-- name: idempotent modify audit policy directory
-  win_audit_rule:
-    path: "{{ test_audit_rule_folder }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: directory
-
-- name: idempotent modify audit policy file
-  win_audit_rule:
-    path: "{{ test_audit_rule_file }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-    inheritance_flags: none
-  register: file
-
-- name: idempotent modify audit policy registry
-  win_audit_rule:
-    path: "{{ test_audit_rule_registry }}"
-    user: "{{ test_audit_rule_user }}"
-    rights: "{{ test_audit_rule_new_rights }}"
-    state: present
-    audit_flags: "{{ test_audit_rule_audit_flags }}"
-  register: registry
-
-- name: idempotent modify assert that and a change is not detected
-  assert:
-    that:
-    - directory is not changed and directory.path_type == 'directory'
-    - file is not changed and file.path_type == 'file'
-    - registry is not changed and registry.path_type == 'registry'

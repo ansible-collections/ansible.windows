@@ -3,35 +3,36 @@
 # Copyright: (c) 2017, Noah Sparks <nsparks@outlook.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.SID
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.SID
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
-
-# module parameters
-$path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "destination", "dest"
-$user = Get-AnsibleParam -obj $params -name "user" -type "str" -failifempty $true
-$rights = Get-AnsibleParam -obj $params -name "rights" -type "list"
-$inheritance_flags = Get-AnsibleParam -obj $params -name "inheritance_flags" -type "list" -default 'ContainerInherit', 'ObjectInherit'
-$prop_options = 'InheritOnly', 'None', 'NoPropagateInherit'
-$propagation_flags = Get-AnsibleParam -obj $params -name "propagation_flags" -type "str" -default "none" -ValidateSet $prop_options
-$audit_flags = Get-AnsibleParam -obj $params -name "audit_flags" -type "list" -default 'success'
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset 'present', 'absent'
-
-#Make sure target path is valid
-If (-not (Test-Path -Path $path) ) {
-    Fail-Json -obj $result -message "defined path ($path) is not found/invalid"
+$spec = @{
+    options = @{
+        path = @{ type = "str"; required =$true; aliases= @("destination", "dest")}
+        user = @{ type = "str"; required =$true }
+        rights = @{ type = "list" }
+        inheritance_flags = @{ type = "list"; elements= "str" ; default=@('ContainerInherit', 'ObjectInherit') }
+        propagation_flags = @{ type = "str"; choices= 'InheritOnly', 'None', 'NoPropagateInherit'; default='None' }
+        audit_flags = @{ type = "list"; elements= "str" ; default=@('success') }
+        state = @{ type = 'str'; default = 'present'; choices = 'absent', 'present' }
+    }
+    supports_check_mode = $true
 }
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$check_mode = $module.CheckMode
 
-#function get current audit rules and convert to hashtable
+$path = $module.Params.path
+$user = $module.Params.user
+$rights = $module.Params.rights
+$inheritance_flags = $module.Params.inheritance_flags
+$propagation_flags = $module.Params.propagation_flags
+$audit_flags = $module.Params.audit_flags
+$state = $module.Params.state
+
+
 Function Get-CurrentAuditRule ($path) {
-    Try {
-        $ACL = Get-Acl $path -Audit
-    }
-    Catch {
-        Return "Unable to retrieve the ACL on $Path"
-    }
+    Try { $ACL = Get-Acl $path -Audit }
+    Catch { Return "Unable to retrieve the ACL on $Path" }
 
     $HT = Foreach ($Obj in $ACL.Audit) {
         @{
@@ -43,132 +44,123 @@ Function Get-CurrentAuditRule ($path) {
             propagation_flags = $Obj.PropagationFlags.ToString()
         }
     }
-
     If (-Not $HT) {
-        "No audit rules defined on $path"
+        @{}
     }
     Else { $HT }
 }
 
-$result = @{
-    changed = $false
-    current_audit_rules = Get-CurrentAuditRule $path
+Function Contains-AllElements {
+    param (
+        [Parameter(Mandatory=$true)]
+        [array]$SubSet,
+
+        [Parameter(Mandatory=$true)]
+        [array]$SuperSet
+    )
+    $SubSet = $SubSet -split ',\s*' | ForEach-Object { $_.Trim().ToString() }
+    $SuperSet = $SuperSet -split ',\s*' | ForEach-Object { $_.Trim().ToString() }
+
+    foreach ($item in $SubSet) {
+        if (-not ($SuperSet -contains $item)) {
+            return $false
+        }
+    }
+
+    return $true
 }
 
-#Make sure identity is valid and can be looked up
-Try {
-    $SID = Convert-ToSid $user
-}
-Catch {
-    Fail-Json -obj $result -message "Failed to lookup the identity ($user) - $($_.exception.message)"
+Function Compare-AuditRule{
+    param (
+        [Parameter(Mandatory=$true)]
+        [Object]$DesiredRule,
+        [Parameter(Mandatory=$true)]
+        [Object]$ExistingRule,
+        [Parameter(Mandatory=$true)]
+        [Object]$SID
+    )
+    $audit_flags_contained = Contains-AllElements $DesiredRule.AuditFlags $ExistingRule.AuditFlags
+    $rights_contained = Contains-AllElements ($DesiredRule | Select-Object -ExpandProperty "*Rights") ($ExistingRule | Select-Object -ExpandProperty "*Rights")
+    $inheritance_flags_contained = Contains-AllElements @($DesiredRule.InheritanceFlags) @($ExistingRule.InheritanceFlags)
+    If (
+        $audit_flags_contained -and
+        $rights_contained -and
+        $inheritance_flags_contained -and
+        $ExistingRule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]) -eq $SID -and
+        $ExistingRule.PropagationFlags -eq $DesiredRule.PropagationFlags
+    ) {
+        return $true
+    } else {
+        return $false
+    }
 }
 
-#get the path type
+
+If (-not (Test-Path -Path $path) ) { $module.FailJson("defined path ($path) is not found/invalid", $_) }
+
+Try { $SID = Convert-ToSid $user }
+Catch { $module.FailJson("Failed to lookup the identity ($user)", $_.exception.message) }
+
 $ItemType = (Get-Item $path -Force).GetType()
+
 switch ($ItemType) {
-    ([Microsoft.Win32.RegistryKey]) { $registry = $true; $result.path_type = 'registry' }
-    ([System.IO.FileInfo]) { $file = $true; $result.path_type = 'file' }
-    ([System.IO.DirectoryInfo]) { $result.path_type = 'directory' }
+    ([Microsoft.Win32.RegistryKey]) { $registry = $true; $module.result.path_type = 'registry' }
+    ([System.IO.FileInfo]) { $file = $true; $module.result.path_type = 'file' }
+    ([System.IO.DirectoryInfo]) { $module.result.path_type = 'directory' }
 }
 
-#Get current acl/audit rules on the target
-Try {
-    $ACL = Get-Acl $path -Audit
-}
-Catch {
-    Fail-Json -obj $result -message "Unable to retrieve the ACL on $Path -  $($_.Exception.Message)"
-}
+Try { $ACL = Get-Acl $path -Audit }
+Catch { $module.FailJson("Unable to retrieve the ACL on $Path", $_.exception.message) }
 
-#configure acl object to remove the specified user
 If ($state -eq 'absent') {
-    #Try and find an identity on the object that matches user
-    #We skip inherited items since we can't remove those
     $ToRemove = ($ACL.Audit | Where-Object { $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]) -eq $SID -and
             $_.IsInherited -eq $false }).IdentityReference
-
-    #Exit with changed false if no identity is found
     If (-Not $ToRemove) {
-        $result.current_audit_rules = Get-CurrentAuditRule $path
-        Exit-Json -obj $result
+        $module.result.current_audit_rules = Get-CurrentAuditRule $path
+        $module.ExitJson()
     }
-
-    #update the ACL object if identity found
-    Try {
-        $ToRemove | ForEach-Object { $ACL.PurgeAuditRules($_) }
-    }
+    Try { $ToRemove | ForEach-Object { $ACL.PurgeAuditRules($_) } }
     Catch {
-        $result.current_audit_rules = Get-CurrentAuditRule $path
-        Fail-Json -obj $result -message "Failed to remove audit rule: $($_.Exception.Message)"
+        $module.result.current_audit_rules = Get-CurrentAuditRule $path
+        $module.FailJson("Failed to remove audit rule:", $($_.Exception.Message))
     }
 }
-
 Else {
-    If ($registry) {
+    If ( $registry ) {
         $PossibleRights = [System.Enum]::GetNames([System.Security.AccessControl.RegistryRights])
-
         Foreach ($right in $rights) {
-            if ($right -notin $PossibleRights) {
-                Fail-Json -obj $result -message "$right does not seem to be a valid REGISTRY right"
-            }
+            if ($right -notin $PossibleRights) { $module.FailJson("$right does not seem to be a valid REGISTRY right") }
         }
-
         $NewAccessRule = New-Object System.Security.AccessControl.RegistryAuditRule($user, $rights, $inheritance_flags, $propagation_flags, $audit_flags)
     }
     Else {
         $PossibleRights = [System.Enum]::GetNames([System.Security.AccessControl.FileSystemRights])
-
         Foreach ($right in $rights) {
-            if ($right -notin $PossibleRights) {
-                Fail-Json -obj $result -message "$right does not seem to be a valid FILE SYSTEM right"
-            }
+            if ($right -notin $PossibleRights) { $module.FailJson("$right does not seem to be a valid FILE SYSTEM right") }
         }
-
-        If ($file -and $inheritance_flags -ne 'none') {
-            Fail-Json -obj $result -message "The target type is a file. inheritance_flags must be changed to 'none'"
-        }
-
+        If ($file -and $inheritance_flags -ne 'none') { $module.FailJson("The target type is a file. inheritance_flags must be changed to 'none'") }
         $NewAccessRule = New-Object System.Security.AccessControl.FileSystemAuditRule($user, $rights, $inheritance_flags, $propagation_flags, $audit_flags)
     }
-
-    #exit here if any existing rule matches defined rule since no change is needed
-    #if we need to ignore inherited rules in the future, this would be where to do it
-    #Just filter out inherited rules from $ACL.Audit
     Foreach ($group in $ACL.Audit | Where-Object { $_.IsInherited -eq $false }) {
-        If (
-            ($group | Select-Object -expand "*Rights") -eq ($NewAccessRule | Select-Object -expand "*Rights") -and
-            $group.AuditFlags -eq $NewAccessRule.AuditFlags -and
-            $group.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]) -eq $SID -and
-            $group.InheritanceFlags -eq $NewAccessRule.InheritanceFlags -and
-            $group.PropagationFlags -eq $NewAccessRule.PropagationFlags
-        ) {
-            $result.current_audit_rules = Get-CurrentAuditRule $path
-            Exit-Json -obj $result
+        $RuleExists = Compare-AuditRule -DesiredRule $NewAccessRule -ExistingRule $group -SID $SID
+        If ( $RuleExists )
+        {
+            $module.result.current_audit_rules = Get-CurrentAuditRule $path
+            $module.ExitJson()
         }
     }
-
-    #try and set the acl object. AddAuditRule allows for multiple entries to exist under the same
-    #identity...so if someone wanted success: write and failure: delete for example, that setup would be
-    #possible. The alternative is SetAuditRule which would instead modify an existing rule and not allow
-    #for setting the above example.
-    Try {
-        $ACL.AddAuditRule($NewAccessRule)
-    }
-    Catch {
-        Fail-Json -obj $result -message "Failed to set the audit rule: $($_.Exception.Message)"
+    If ( -not $check_mode) {
+        Try { $ACL.AddAuditRule($NewAccessRule) }
+        Catch { $module.FailJson("Failed to set the audit rule:", $($_.Exception.Message)) }
     }
 }
 
-
-#finally set the permissions
-Try {
-    Set-Acl -Path $path -ACLObject $ACL -WhatIf:$check_mode
-}
+Try { Set-Acl -Path $path -ACLObject $ACL -WhatIf:$check_mode }
 Catch {
-    $result.current_audit_rules = Get-CurrentAuditRule $path
-    Fail-Json -obj $result -message "Failed to apply audit change: $($_.Exception.Message)"
-}
+    $module.result.current_audit_rules = Get-CurrentAuditRule $path
+    $module.FailJson("Failed to apply audit change:",$($_.Exception.Message))
 
-#exit here after a change is applied
-$result.current_audit_rules = Get-CurrentAuditRule $path
-$result.changed = $true
-Exit-Json -obj $result
+}
+$module.result.current_audit_rules = Get-CurrentAuditRule $path
+$module.result.changed = $true
+$module.ExitJson()
