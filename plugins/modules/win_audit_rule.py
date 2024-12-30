@@ -37,7 +37,6 @@ options:
         RegistryRights U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.registryrights.aspx).
     type: list
     elements: str
-    required: yes
   inheritance_flags:
     description:
       - Defines what objects inside of a folder or registry key will inherit the settings.
@@ -46,7 +45,7 @@ options:
         at U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.inheritanceflags.aspx).
     type: list
     elements: str
-    choices: [ ContainerInherit, ObjectInherit ]
+    choices: [ None, ContainerInherit, ObjectInherit ]
     default: ContainerInherit,ObjectInherit
   propagation_flags:
     description:
@@ -54,6 +53,7 @@ options:
       - This value is ignored when the path type is a file.
       - For more information on the choices see MSDN PropagationFlags enumeration
         at U(https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.propagationflags.aspx).
+    type: str
     choices: [ None, InherityOnly, NoPropagateInherit ]
     default: "None"
   audit_flags:
@@ -62,9 +62,8 @@ options:
       - To log both define as comma separated list "Success, Failure".
     type: list
     elements: str
-    required: yes
-    choices: [ Failure, Success ]
-    default: Success
+    choices: [ failure, success ]
+    default: success
   state:
     description:
       - Whether the rule should be C(present) or C(absent).
