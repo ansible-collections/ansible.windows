@@ -1,7 +1,11 @@
-test_audit_rule_folder: c:\windows\temp\{{ 'ansible test win_audit_policy' | to_uuid }}
+test_audit_rule_directory: c:\windows\temp\{{ 'ansible test win_audit_policy' | to_uuid }}
 test_audit_rule_file: c:\windows\temp\{{ 'ansible test win_audit_policy' | to_uuid }}.txt
 test_audit_rule_registry: HKCU:\{{ 'ansible test win_audit_policy' | to_uuid }}
-test_audit_rule_rights: 'delete'
-test_audit_rule_new_rights: 'delete,changepermissions'
-test_audit_rule_user: 'everyone'
+test_audit_rule_rights1: 'Delete'
+test_audit_rule_rights2: 'Delete,ChangePermissions'
+test_audit_rule_rights3: 'Delete,Read'
+test_audit_rule_user1: 'everyone'
+test_audit_rule_user2: 'Administrator'
 test_audit_rule_audit_flags: success
+test_audit_rule_propagation_flag: NoPropagateInherit
+test_audit_rule_inheritance_flags: ContainerInherit

@@ -20,7 +20,7 @@ options:
       - Path to the file, folder, or registry key.
       - Registry paths should be in Powershell format, beginning with an abbreviation for the root
         such as, C(HKLM:\Software).
-    type: path
+    type: str
     required: yes
     aliases: [ dest, destination ]
   user:
@@ -64,6 +64,7 @@ options:
     elements: str
     required: yes
     choices: [ Failure, Success ]
+    default: Success
   state:
     description:
       - Whether the rule should be C(present) or C(absent).
@@ -72,15 +73,13 @@ options:
     type: str
     choices: [ absent, present ]
     default: present
-seealso:
-- module: community.windows.win_audit_policy_system
 author:
   - Noah Sparks (@nwsparks)
 '''
 
 EXAMPLES = r'''
 - name: Add filesystem audit rule for a folder
-  community.windows.win_audit_rule:
+  ansible.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website
     user: BUILTIN\Users
     rights: write,delete,changepermissions
@@ -88,7 +87,7 @@ EXAMPLES = r'''
     inheritance_flags: ContainerInherit,ObjectInherit
 
 - name: Add filesystem audit rule for a file
-  community.windows.win_audit_rule:
+  ansible.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website\web.config
     user: BUILTIN\Users
     rights: write,delete,changepermissions
@@ -96,20 +95,20 @@ EXAMPLES = r'''
     inheritance_flags: None
 
 - name: Add registry audit rule
-  community.windows.win_audit_rule:
+  ansible.windows.win_audit_rule:
     path: HKLM:\software
     user: BUILTIN\Users
     rights: delete
     audit_flags: 'success'
 
 - name: Remove filesystem audit rule
-  community.windows.win_audit_rule:
+  ansible.windows.win_audit_rule:
     path: C:\inetpub\wwwroot\website
     user: BUILTIN\Users
     state: absent
 
 - name: Remove registry audit rule
-  community.windows.win_audit_rule:
+  ansible.windows.win_audit_rule:
     path: HKLM:\software
     user: BUILTIN\Users
     state: absent
@@ -119,7 +118,7 @@ RETURN = r'''
 current_audit_rules:
   description:
     - The current rules on the defined I(path)
-    - Will return "No audit rules defined on I(path)"
+    - Will return an empty dict"
   returned: always
   type: dict
   sample: |

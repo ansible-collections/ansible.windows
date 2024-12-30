@@ -1,6 +1,6 @@
-- name: create temporary folder to test with
+- name: create temporary directory to test with
   ansible.windows.win_file:
-    path: "{{ test_audit_rule_folder }}"
+    path: "{{ test_audit_rule_directory }}"
     state: directory
 
 - name: create temporary file to test with
@@ -17,9 +17,9 @@
     - include_tasks: modify.yml
     - include_tasks: remove.yml
   always:
-  - name: remove testing folder
+  - name: remove testing directory
     ansible.windows.win_file:
-      path: "{{ test_audit_rule_folder }}"
+      path: "{{ test_audit_rule_directory }}"
       state: absent
 
   - name: remove testing file
