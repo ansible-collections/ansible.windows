@@ -8,14 +8,17 @@
 
 $spec = @{
     options = @{
-        path = @{ type = "str"; required =$true; aliases= @("destination", "dest")}
-        user = @{ type = "str"; required =$true }
-        rights = @{ type = "list" }
-        inheritance_flags = @{ type = "list"; elements= "str" ; default=@('ContainerInherit', 'ObjectInherit') }
-        propagation_flags = @{ type = "str"; choices= 'InheritOnly', 'None', 'NoPropagateInherit'; default='None' }
-        audit_flags = @{ type = "list"; elements= "str" ; default=@('success') }
-        state = @{ type = 'str'; default = 'present'; choices = 'absent', 'present' }
+        path = @{ type = "str" ; required = $true ; aliases = @("destination", "dest") }
+        user = @{ type = "str" ; required = $true }
+        rights = @{ type = "list" ; elements = "str" }
+        inheritance_flags = @{ type = "list" ; elements = "str" ; default = @('ContainerInherit', 'ObjectInherit') ; choices = @('None', 'ContainerInherit', 'ObjectInherit') }
+        propagation_flags = @{ type = "str" ; choices = @('None', 'InheritOnly', 'NoPropagateInherit') ; default = 'None' }
+        audit_flags = @{ type = "list" ; elements = "str" ; default = @('success') ; choices = @('failure', 'success') }
+        state = @{ type = 'str' ; default = 'present'; choices = 'absent', 'present' }
     }
+    required_if = @(
+        @(@("state"), @("present"), @("rights"))
+    )
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
@@ -50,12 +53,11 @@ Function Get-CurrentAuditRule ($path) {
     Else { $HT }
 }
 
-Function Contains-AllElements {
+Function Confirm-AllElement {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [array]$SubSet,
-
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [array]$SuperSet
     )
     $SubSet = $SubSet -split ',\s*' | ForEach-Object { $_.Trim().ToString() }
@@ -70,18 +72,18 @@ Function Contains-AllElements {
     return $true
 }
 
-Function Compare-AuditRule{
+Function Confirm-AuditRule {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]$DesiredRule,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]$ExistingRule,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Object]$SID
     )
-    $audit_flags_contained = Contains-AllElements $DesiredRule.AuditFlags $ExistingRule.AuditFlags
-    $rights_contained = Contains-AllElements ($DesiredRule | Select-Object -ExpandProperty "*Rights") ($ExistingRule | Select-Object -ExpandProperty "*Rights")
-    $inheritance_flags_contained = Contains-AllElements @($DesiredRule.InheritanceFlags) @($ExistingRule.InheritanceFlags)
+    $audit_flags_contained = Confirm-AllElement $DesiredRule.AuditFlags $ExistingRule.AuditFlags
+    $rights_contained = Confirm-AllElement ($DesiredRule | Select-Object -ExpandProperty "*Rights") ($ExistingRule | Select-Object -ExpandProperty "*Rights")
+    $inheritance_flags_contained = Confirm-AllElement @($DesiredRule.InheritanceFlags) @($ExistingRule.InheritanceFlags)
     If (
         $audit_flags_contained -and
         $rights_contained -and
@@ -90,18 +92,19 @@ Function Compare-AuditRule{
         $ExistingRule.PropagationFlags -eq $DesiredRule.PropagationFlags
     ) {
         return $true
-    } else {
+    }
+    else {
         return $false
     }
 }
 
 
-If (-not (Test-Path -Path $path) ) { $module.FailJson("defined path ($path) is not found/invalid", $_) }
+If (-not (Test-Path -LiteralPath $path) ) { $module.FailJson("defined path ($path) is not found/invalid", $_) }
 
 Try { $SID = Convert-ToSid $user }
 Catch { $module.FailJson("Failed to lookup the identity ($user)", $_.exception.message) }
 
-$ItemType = (Get-Item $path -Force).GetType()
+$ItemType = (Get-Item -LiteralPath $path -Force).GetType()
 
 switch ($ItemType) {
     ([Microsoft.Win32.RegistryKey]) { $registry = $true; $module.result.path_type = 'registry' }
@@ -142,9 +145,8 @@ Else {
         $NewAccessRule = New-Object System.Security.AccessControl.FileSystemAuditRule($user, $rights, $inheritance_flags, $propagation_flags, $audit_flags)
     }
     Foreach ($group in $ACL.Audit | Where-Object { $_.IsInherited -eq $false }) {
-        $RuleExists = Compare-AuditRule -DesiredRule $NewAccessRule -ExistingRule $group -SID $SID
-        If ( $RuleExists )
-        {
+        $RuleExists = Confirm-AuditRule -DesiredRule $NewAccessRule -ExistingRule $group -SID $SID
+        If ( $RuleExists ) {
             $module.result.current_audit_rules = Get-CurrentAuditRule $path
             $module.ExitJson()
         }
@@ -158,8 +160,7 @@ Else {
 Try { Set-Acl -Path $path -ACLObject $ACL -WhatIf:$check_mode }
 Catch {
     $module.result.current_audit_rules = Get-CurrentAuditRule $path
-    $module.FailJson("Failed to apply audit change:",$($_.Exception.Message))
-
+    $module.FailJson("Failed to apply audit change:", $($_.Exception.Message))
 }
 $module.result.current_audit_rules = Get-CurrentAuditRule $path
 $module.result.changed = $true

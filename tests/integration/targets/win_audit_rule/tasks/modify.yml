@@ -108,7 +108,6 @@
     audit_flags: "{{ test_audit_rule_audit_flags }}"
   register: registry_change2
 
-
 - name: Assert registry modify tasks
   assert:
     that:
@@ -119,4 +118,3 @@
     - registry_change1.path_type == 'registry'
     - registry_change2.path_type == 'registry'
     - registry_change1.current_audit_rules.rights == "Delete, ChangePermissions"
-
