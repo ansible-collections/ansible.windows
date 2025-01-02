@@ -51,12 +51,16 @@
   ansible.windows.win_command: 'net use {{test_win_mapped_drive_letter}}:'
   register: create_drive_actual
 
+- name: Set expected remote path
+  set_fact:
+    expected_remote: "Remote name       \\\\{{ ansible_hostname }}\\{{ test_win_mapped_drive_path }}"
+
 - name: assert create mapped drive
   assert:
     that:
     - create_drive is changed
     - create_drive_actual.rc == 0
-    - create_drive_actual.stdout_lines[1] == "Remote name       \\\\{{ansible_hostname}}\\{{test_win_mapped_drive_path}}"
+    - create_drive_actual.stdout_lines[1] == expected_remote
 
 - name: create mapped drive again
   win_mapped_drive:
@@ -87,7 +91,7 @@
     that:
     - change_drive_target_check is changed
     - change_drive_target_actual_check.rc == 0
-    - change_drive_target_actual_check.stdout_lines[1] == "Remote name       \\\\{{ansible_hostname}}\\{{test_win_mapped_drive_path}}"
+    - change_drive_target_actual_check.stdout_lines[1] == expected_remote
 
 - name: change mapped drive target
   win_mapped_drive:
@@ -100,12 +104,16 @@
   ansible.windows.win_command: 'net use {{test_win_mapped_drive_letter}}:'
   register: change_drive_target_actual
 
+- name: Set expected remote path
+  set_fact:
+    expected_remote2: "Remote name       \\\\{{ ansible_hostname }}\\{{ test_win_mapped_drive_path2 }}"
+
 - name: assert change mapped drive target
   assert:
     that:
     - change_drive_target is changed
     - change_drive_target_actual.rc == 0
-    - change_drive_target_actual.stdout_lines[1] == "Remote name       \\\\{{ansible_hostname}}\\{{test_win_mapped_drive_path2}}"
+    - change_drive_target_actual.stdout_lines[1] == expected_remote2
 
 - name: fail to delete mapped drive if target doesn't match
   win_mapped_drive:
@@ -132,7 +140,7 @@
     that:
     - delete_drive_check is changed
     - delete_drive_actual_check.rc == 0
-    - delete_drive_actual_check.stdout_lines[1] == "Remote name       \\\\{{ansible_hostname}}\\{{test_win_mapped_drive_path2}}"
+    - delete_drive_actual_check.stdout_lines[1] == expected_remote2
 
 - name: delete mapped drive
   win_mapped_drive:
