@@ -11,6 +11,7 @@ short_description: Alters the compression of files and directories on NTFS parti
 description:
   - This module sets the compressed attribute for files and directories on a filesystem that supports it like NTFS.
   - NTFS compression can be used to save disk space.
+version_added: 2.7.0
 options:
   path:
     description:
@@ -48,24 +49,24 @@ options:
 author:
   - Micah Hunsberger (@mhunsber)
 notes:
-  - M(community.windows.win_file_compression) sets the file system's compression state, it does not create a zip
+  - M(ansible.windows.win_file_compression) sets the file system's compression state, it does not create a zip
     archive file.
   - For more about NTFS Compression, see U(http://www.ntfs.com/ntfs-compressed.htm)
 '''
 
 EXAMPLES = r'''
 - name: Compress log files directory
-  community.windows.win_file_compression:
+  ansible.windows.win_file_compression:
     path: C:\Logs
     state: present
 
 - name: Decompress log files directory
-  community.windows.win_file_compression:
+  ansible.windows.win_file_compression:
     path: C:\Logs
     state: absent
 
 - name: Compress reports directory and all subdirectories
-  community.windows.win_file_compression:
+  ansible.windows.win_file_compression:
     path: C:\business\reports
     state: present
     recurse: true
@@ -75,7 +76,7 @@ EXAMPLES = r'''
 # even if one of the child items is uncompressed
 
 - name: Compress reports directory and all subdirectories (quick)
-  community.windows.win_file_compression:
+  ansible.windows.win_file_compression:
     path: C:\business\reports
     compressed: true
     recurse: true
