@@ -21,20 +21,12 @@ options:
     description:
       - The initial size of the pagefile in megabytes.
     type: int
+    default: 0
   maximum_size:
     description:
       - The maximum size of the pagefile in megabytes.
     type: int
-  override:
-    description:
-      - Override the current pagefile on the drive.
-    type: bool
-    default: yes
-  system_managed:
-    description:
-      - Configures current pagefile to be managed by the system.
-    type: bool
-    default: no
+    default: 0
   automatic:
     description:
       - Configures AutomaticManagedPagefile for the entire system.
@@ -43,21 +35,26 @@ options:
     description:
       - Remove all pagefiles in the system, not including automatic managed.
     type: bool
-    default: no
+    default: false
   test_path:
     description:
       - Use Test-Path on the drive to make sure the drive is accessible before creating the pagefile.
     type: bool
-    default: yes
+    default: true
   state:
     description:
       - State of the pagefile.
     type: str
-    choices: [ absent, present, query ]
+    choices: [ present, absent, query ]
     default: query
+  override:
+    description:
+      - Use Test-Path on the drive to make sure the drive is accessible before creating the pagefile.
+    type: bool
+    default: false
 notes:
 - There is difference between automatic managed pagefiles that configured once for the entire system and system managed pagefile that configured per pagefile.
-- InitialSize 0 and MaximumSize 0 means the pagefile is managed by the system.
+- initial_size 0 and maximum_size 0 means the pagefile is managed by the system.
 - Value out of range exception may be caused by several different issues, two common problems - No such drive, Pagefile size is too small.
 - Setting a pagefile when AutomaticManagedPagefile is on will disable the AutomaticManagedPagefile.
 author:
@@ -77,7 +74,6 @@ EXAMPLES = r'''
     drive: C
     initial_size: 1024
     maximum_size: 1024
-    override: false
     state: present
 
 - name: Set C pagefile, override if exists
