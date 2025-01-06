@@ -12,6 +12,7 @@ description:
 - Used to create and remove Windows Credentials in the Credential Manager.
 - This module can manage both standard username/password credentials as well as
   certificate credentials.
+version_added: 2.7.0
 options:
   alias:
     description:
@@ -150,7 +151,7 @@ author:
 
 EXAMPLES = r'''
 - name: Create a local only credential
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: server.domain.com
     type: domain_password
     username: DOMAIN\username
@@ -158,13 +159,13 @@ EXAMPLES = r'''
     state: present
 
 - name: Remove a credential
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: server.domain.com
     type: domain_password
     state: absent
 
 - name: Create a credential with full values
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: server.domain.com
     type: domain_password
     alias: server
@@ -180,14 +181,14 @@ EXAMPLES = r'''
         data_format: base64
 
 - name: Create a certificate credential
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: '*.domain.com'
     type: domain_certificate
     username: 0074CC4F200D27DC3877C24A92BA8EA21E6C7AF4
     state: present
 
 - name: Create a generic credential
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: smbhost
     type: generic_password
     username: smbuser
@@ -195,7 +196,7 @@ EXAMPLES = r'''
     state: present
 
 - name: Remove a generic credential
-  community.windows.win_credential:
+  ansible.windows.win_credential:
     name: smbhost
     type: generic_password
     state: absent
