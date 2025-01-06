@@ -12,6 +12,7 @@
 
 - block:
     - include_tasks: add.yml
+    - include_tasks: modify.yml
     - include_tasks: remove.yml
   always:
   - name: CLEANUP turn "{{ category_name }}" back to no auditing

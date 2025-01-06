@@ -1,24 +1,12 @@
 #!powershell
 
-# Copyright: (c) 2017, Noah Sparks <nsparks@outlook.com>
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 
-$ErrorActionPreference = 'Stop'
 
-$params = Parse-Args -arguments $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
-$results = @{
-    changed = $false
-}
-
-######################################
-### populate sets for -validateset ###
-######################################
 $categories_rc = run-command -command 'auditpol /list /category /r'
 $subcategories_rc = run-command -command 'auditpol /list /subcategory:* /r'
 
@@ -26,8 +14,8 @@ If ($categories_rc.item('rc') -eq 0) {
     $categories = ConvertFrom-Csv $categories_rc.item('stdout') | Select-Object -expand Category*
 }
 Else {
-    Fail-Json -obj $results -message "Failed to retrive audit policy categories. Please make sure the auditpol command is functional on
-    the system and that the account ansible is running under is able to retrieve them. $($_.Exception.Message)"
+    $module.FailJson("Failed to retrive audit policy categories. Please make sure the auditpol command is functional on
+    the system and that the account ansible is running under is able to retrieve them." , $($_.Exception.Message))
 }
 
 If ($subcategories_rc.item('rc') -eq 0) {
@@ -35,20 +23,30 @@ If ($subcategories_rc.item('rc') -eq 0) {
         Where-Object { $_ -notin $categories }
 }
 Else {
-    Fail-Json -obj $results -message "Failed to retrive audit policy subcategories. Please make sure the auditpol command is functional on
-    the system and that the account ansible is running under is able to retrieve them. $($_.Exception.Message)"
+    $module.FailJson("Failed to retrive audit policy subcategories. Please make sure the auditpol command is functional on
+    the system and that the account ansible is running under is able to retrieve them." , $($_.Exception.Message))
 }
 
-######################
-### ansible params ###
-######################
-$category = Get-AnsibleParam -obj $params -name "category" -type "str" -ValidateSet $categories
-$subcategory = Get-AnsibleParam -obj $params -name "subcategory" -type "str" -ValidateSet $subcategories
-$audit_type = Get-AnsibleParam -obj $params -name "audit_type" -type "list" -failifempty -
+$spec = @{
+    options = @{
+        category = @{ type = 'str' ; choices = $categories }
+        subcategory = @{ type = 'str' ; choices = $subcategories }
+        audit_type = @{ type = 'list'; elements = 'str' ; required = $true }
+    }
+    supports_check_mode = $true
+    mutually_exclusive = @(
+        , @('subcategory', 'category')
+    )
+    required_one_of = @(
+        , @('subcategory', 'category')
+    )
+}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-########################
-### Start Processing ###
-########################
+$category = $module.Params.category
+$subcategory = $module.Params.subcategory
+$audit_type = $module.Params.audit_type
+$check_mode = $module.Checkmode
 Function Get-AuditPolicy ($GetString) {
     $auditpolcsv = Run-Command -command $GetString
     If ($auditpolcsv.item('rc') -eq 0) {
@@ -66,67 +64,44 @@ Function Get-AuditPolicy ($GetString) {
     $HT
 }
 
-################
-### Validate ###
-################
 
-#make sure category and subcategory are valid
-If (-Not $category -and -Not $subcategory) { Fail-Json -obj $results -message "You must provide either a Category or Subcategory parameter" }
-If ($category -and $subcategory) { Fail-Json -obj $results -message "Must pick either a specific subcategory or category. You cannot define both" }
-
-
-$possible_audit_types = 'success', 'failure', 'none'
-$audit_type | ForEach-Object {
-    If ($_ -notin $possible_audit_types) {
-        Fail-Json -obj $result -message "$_ is not a valid audit_type. Please choose from $($possible_audit_types -join ',')"
-    }
-}
-
-#############################################################
-### build lists for setting, getting, and comparing rules ###
-#############################################################
-$audit_type_string = $audit_type -join ' and '
 
 $SetString = 'auditpol /set'
 $GetString = 'auditpol /get /r'
 
 If ($category) { $SetString = "$SetString /category:`"$category`""; $GetString = "$GetString /category:`"$category`"" }
-If ($subcategory) { $SetString = "$SetString /subcategory:`"$subcategory`""; $GetString = "$GetString /subcategory:`"$subcategory`"" }
+Elseif ($subcategory) { $SetString = "$SetString /subcategory:`"$subcategory`""; $GetString = "$GetString /subcategory:`"$subcategory`"" }
 
-
-Switch ($audit_type_string) {
-    'success and failure' { $SetString = "$SetString /success:enable /failure:enable"; $audit_type_check = $audit_type_string }
-    'failure' { $SetString = "$SetString /success:disable /failure:enable"; $audit_type_check = $audit_type_string }
-    'success' { $SetString = "$SetString /success:enable /failure:disable"; $audit_type_check = $audit_type_string }
-    'none' { $SetString = "$SetString /success:disable /failure:disable"; $audit_type_check = 'No Auditing' }
-    default { Fail-Json -obj $result -message "It seems you have specified an invalid combination of items for audit_type. Please review documentation" }
+if ('success' -in $audit_type -and 'failure' -in $audit_type) {
+    $SetString = "$SetString /success:enable /failure:enable"; $audit_type_check = "success and failure"
+}
+Elseif ( 'success' -in $audit_type ) {
+    $SetString = "$SetString /success:enable /failure:disable"; $audit_type_check = "success"
+}
+Elseif ( 'failure' -in $audit_type ) {
+    $SetString = "$SetString /success:disable /failure:enable"; $audit_type_check = "failure"
+}
+Else {
+    $SetString = "$SetString /success:disable /failure:disable"; $audit_type_check = 'No Auditing'
 }
 
-#########################
-### check Idempotence ###
-#########################
 
 $CurrentRule = Get-AuditPolicy $GetString
-
 #exit if the audit_type is already set properly for the category
 If (-not ($CurrentRule.Values | Where-Object { $_ -ne $audit_type_check }) ) {
-    $results.current_audit_policy = Get-AuditPolicy $GetString
-    Exit-Json -obj $results
+    $module.result.current_audit_policy = $CurrentRule
+    $module.ExitJson()
 }
-
-####################
-### Apply Change ###
-####################
 
 If (-not $check_mode) {
     $ApplyPolicy = Run-Command -command $SetString
 
     If ($ApplyPolicy.Item('rc') -ne 0) {
-        $results.current_audit_policy = Get-AuditPolicy $GetString
-        Fail-Json $results "Failed to set audit policy - $($_.Exception.Message)"
+        $module.result.current_audit_policy = Get-AuditPolicy $GetString
+        $module.FailJson("Failed to set audit policy $($_.Exception.Message)")
     }
 }
 
-$results.changed = $true
-$results.current_audit_policy = Get-AuditPolicy $GetString
-Exit-Json $results
+$module.result.changed = $true
+$module.result.current_audit_policy = Get-AuditPolicy $GetString
+$module.ExitJson()
