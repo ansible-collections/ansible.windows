@@ -10,6 +10,7 @@ module: win_auto_logon
 short_description: Adds or Sets auto logon registry keys.
 description:
   - Used to apply auto logon registry setting.
+version_added: 2.7.0
 options:
   logon_count:
     description:
@@ -47,21 +48,21 @@ author:
 
 EXAMPLES = r'''
 - name: Set autologon for user1
-  community.windows.win_auto_logon:
+  ansible.windows.win_auto_logon:
     username: User1
     password: str0ngp@ssword
 
 - name: Set autologon for abc.com\user1
-  community.windows.win_auto_logon:
+  ansible.windows.win_auto_logon:
     username: abc.com\User1
     password: str0ngp@ssword
 
 - name: Remove autologon for user1
-  community.windows.win_auto_logon:
+  ansible.windows.win_auto_logon:
     state: absent
 
 - name: Set autologon for user1 with a limited logon count
-  community.windows.win_auto_logon:
+  ansible.windows.win_auto_logon:
     username: User1
     password: str0ngp@ssword
     logon_count: 5
