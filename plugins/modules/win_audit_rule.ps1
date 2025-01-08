@@ -104,10 +104,10 @@ Function Confirm-AuditRule {
 }
 
 
-If (-not (Test-Path -LiteralPath $path) ) { $module.FailJson("defined path ($path) is not found/invalid", $_) }
+If (-not (Test-Path -LiteralPath $path) ) { $module.FailJson("defined path ($path) is not found/invalid") }
 
 Try { $SID = Convert-ToSid $user }
-Catch { $module.FailJson("Failed to lookup the identity ($user)", $_.exception.message) }
+Catch { $module.FailJson("Failed to lookup the identity ($user): $_", $_) }
 
 $ItemType = (Get-Item -LiteralPath $path -Force).GetType()
 
@@ -118,7 +118,7 @@ switch ($ItemType) {
 }
 
 Try { $ACL = Get-Acl $path -Audit }
-Catch { $module.FailJson("Unable to retrieve the ACL on $Path", $_.exception.message) }
+Catch { $module.FailJson("Unable to retrieve the ACL on $($Path): $_", $_) }
 
 If ($state -eq 'absent') {
     $ToRemove = ($ACL.Audit | Where-Object { $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]) -eq $SID -and
@@ -130,7 +130,7 @@ If ($state -eq 'absent') {
     Try { $ToRemove | ForEach-Object { $ACL.PurgeAuditRules($_) } }
     Catch {
         $module.result.current_audit_rules = Get-CurrentAuditRule $path
-        $module.FailJson("Failed to remove audit rule:", $($_.Exception.Message))
+        $module.FailJson("Failed to remove audit rule: $_", $_)
     }
 }
 Else {
@@ -158,14 +158,14 @@ Else {
     }
     If ( -not $check_mode) {
         Try { $ACL.AddAuditRule($NewAccessRule) }
-        Catch { $module.FailJson("Failed to set the audit rule:", $($_.Exception.Message)) }
+        Catch { $module.FailJson("Failed to set the audit rule: $_", $_) }
     }
 }
 
 Try { Set-Acl -Path $path -ACLObject $ACL -WhatIf:$check_mode }
 Catch {
     $module.result.current_audit_rules = Get-CurrentAuditRule $path
-    $module.FailJson("Failed to apply audit change:", $($_.Exception.Message))
+    $module.FailJson("Failed to apply audit change: $_", $_)
 }
 $module.result.current_audit_rules = Get-CurrentAuditRule $path
 $module.result.changed = $true
