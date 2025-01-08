@@ -3,7 +3,7 @@
 - name: turn off auditing for category
   win_audit_policy_system:
     category: "{{ category_name }}"
-    audit_type: none
+    audit_type: [none]
 
 - name: turn off auditing for subcategory
   win_audit_policy_system:
