@@ -11,6 +11,7 @@ module: win_audit_policy_system
 short_description: Used to make changes to the system wide Audit Policy
 description:
   - Used to make changes to the system wide Audit Policy.
+version_added: 2.7.0
 options:
   category:
     description:
@@ -35,24 +36,25 @@ notes:
   - It is recommended to take a backup of the policies before adjusting them for the first time.
   - See this page for in depth information U(https://technet.microsoft.com/en-us/library/cc766468.aspx).
 seealso:
-- module: community.windows.win_audit_rule
+- module: ansible.windows.win_audit_rule
 author:
-  - Noah Sparks (@nwsparks)
+  - Amit Weinstock (@amitosw15)
 '''
+
 
 EXAMPLES = r'''
 - name: Enable failure auditing for the subcategory "File System"
-  community.windows.win_audit_policy_system:
+  ansible.windows.win_audit_policy_system:
     subcategory: File System
     audit_type: failure
 
 - name: Enable all auditing types for the category "Account logon events"
-  community.windows.win_audit_policy_system:
+  ansible.windows.win_audit_policy_system:
     category: Account logon events
     audit_type: success, failure
 
 - name: Disable auditing for the subcategory "File System"
-  community.windows.win_audit_policy_system:
+  ansible.windows.win_audit_policy_system:
     subcategory: File System
     audit_type: none
 '''

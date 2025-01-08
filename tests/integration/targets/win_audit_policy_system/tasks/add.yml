@@ -4,7 +4,7 @@
 - name: check mode enable category
   win_audit_policy_system:
     category: "{{ category_name }}"
-    audit_type: success
+    audit_type: [success]
   check_mode: yes
   register: category
 
