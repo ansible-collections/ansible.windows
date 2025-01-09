@@ -170,6 +170,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <a class="ansibleOptionLink" href="#parameter-checksum" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>If a <em>checksum</em> is passed to this parameter, the digest of the destination file will be calculated after it is downloaded to ensure its integrity and verify that the transfer completed successfully.</p>
+<p>If a checksum is passed in this parameter or via <code class="docutils literal notranslate"><span class="pre">checksum_url</span></code> and the file in <code class="docutils literal notranslate"><span class="pre">dest</span></code> exists then <code class="docutils literal notranslate"><span class="pre">checksum_dest</span></code> is calculated. If <code class="docutils literal notranslate"><span class="pre">checksum_dest</span></code> equals the checksum no download is done unless <code class="docutils literal notranslate"><span class="pre">force</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>. If the checksum does not match the file is always downloaded, as if <code class="docutils literal notranslate"><span class="pre">force</span></code> was set. This behaviour was added in the <code class="docutils literal notranslate"><span class="pre">2.7.0</span></code> release of this collection.</p>
 <p>This option cannot be set with <em>checksum_url</em>.</p>
 </div></td>
 </tr>
