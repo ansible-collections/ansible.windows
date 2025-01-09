@@ -151,6 +151,7 @@ Function Invoke-DownloadFile {
         [Parameter(Mandatory = $true)][Uri]$Uri,
         [Parameter(Mandatory = $true)][String]$Dest,
         [String]$Checksum,
+        [String]$DestChecksum,
         [String]$ChecksumAlgorithm
     )
 
@@ -187,14 +188,12 @@ Function Invoke-DownloadFile {
 
         $download = $true
         if (Test-Path -LiteralPath $Dest) {
-            # Validate the remote checksum against the existing downloaded file
-            $dest_checksum = Get-Checksum -Path $Dest -Algorithm $ChecksumAlgorithm
-
+            # Validate the remote checksum against the existing downloaded file.
             # If we don't need to download anything, save the dest checksum so we don't waste time calculating it
             # again at the end of the script
-            if ($dest_checksum -eq $tmp_checksum) {
+            if ($DestChecksum -eq $tmp_checksum) {
                 $download = $false
-                $Module.Result.checksum_dest = $dest_checksum
+                $Module.Result.checksum_dest = $DestChecksum
                 $Module.Result.size = (Get-AnsibleItem -Path $Dest).Length
             }
         }
@@ -260,17 +259,33 @@ if ($checksum_url) {
     $checksum = Get-ChecksumFromUri -Module $Module -Uri $checksum_uri -SourceUri $url
 }
 
-if ($force -or -not (Test-Path -LiteralPath $dest)) {
+$dest_checksum = $null
+if (Test-Path -LiteralPath $dest) {
+    $dest_checksum = Get-Checksum -Path $dest -Algorithm $checksum_algorithm
+    if ($dest_checksum -ne $checksum) {
+        # Destination does not match checksum, force fetching
+        $force = $true
+    }
+}
+
+if ($dest_checksum -and $checksum -and $dest_checksum -eq $checksum -and -not $force) {
+    # No need to do any requests, the file is already as expected
+    $module.Result.checksum_dest = $dest_checksum
+    $module.Result.size = (Get-AnsibleItem -Path $dest).Length
+}
+elseif ($force -or -not (Test-Path -LiteralPath $dest)) {
     # force=yes or dest does not exist, download the file
     # Note: Invoke-DownloadFile will compare the checksums internally if dest exists
-    Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
+    Invoke-DownloadFile -Module $module -Uri $url -Checksum $checksum `
+        -Dest $dest -DestChecksum $dest_checksum `
         -ChecksumAlgorithm $checksum_algorithm
 }
 else {
     # force=no, we want to check the last modified dates and only download if they don't match
     $is_modified = Compare-ModifiedFile -Module $module -Uri $url -Dest $dest
     if ($is_modified) {
-        Invoke-DownloadFile -Module $module -Uri $url -Dest $dest -Checksum $checksum `
+        Invoke-DownloadFile -Module $module -Uri $url -Checksum $checksum `
+            -Dest $dest -DestChecksum $dest_checksum `
             -ChecksumAlgorithm $checksum_algorithm
     }
 }

@@ -1,0 +1,7 @@
+minor_changes:
+  - win_get_url - if checksum is passed and destination file exists with
+    identical checksum no download is done unless force=yes
+    (https://github.com/ansible-collections/ansible.windows/issues/717)
+  - win_get_url - if checksum is passed and destination file exists with
+    different checksum file is always downloaded
+    (https://github.com/ansible-collections/ansible.windows/issues/717)

@@ -59,6 +59,15 @@
     checksum_algorithm: sha256
   register: download_sha256_value
 
+- name: re-downloading file with matching checksum should not do any downloads if force=no
+  win_get_url:
+    url: https://{{ httpbin_host }}/base64/cHR1eA==
+    dest: '{{ testing_dir }}\sha256.txt'
+    checksum: b1b6ce5073c8fac263a8fc5edfffdbd5dec1980c784e09c5bc69f8fb6056f006
+    checksum_algorithm: sha256
+    force: false
+  register: redownload_sha256
+
 - name: assert download file with sha256 checksum
   assert:
     that:
@@ -71,6 +80,7 @@
     - not download_sha256_value is changed
     - download_sha256_value.status_code == 200
     - download_sha256_value.checksum_dest == 'b1b6ce5073c8fac263a8fc5edfffdbd5dec1980c784e09c5bc69f8fb6056f006'
+    - "'status_code' not in redownload_sha256"
 
 - name: fail download with invalid checksum and force=no
   win_get_url:
