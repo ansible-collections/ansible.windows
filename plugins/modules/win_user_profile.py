@@ -13,6 +13,7 @@ description:
 - This can be used to create a profile before a user logs on or delete a
   profile when removing a user account.
 - A profile can be created for both a local or domain account.
+version_added: 2.7.0
 options:
   name:
     description:
@@ -67,33 +68,33 @@ author:
 
 EXAMPLES = r'''
 - name: Create a profile for an account
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     username: ansible-account
     state: present
 
 - name: Create a profile for an account at C:\Users\ansible
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     username: ansible-account
     name: ansible
     state: present
 
 - name: Remove a profile for a still valid account
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     username: ansible-account
     state: absent
 
 - name: Remove a profile for a deleted account
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     name: ansible
     state: absent
 
 - name: Remove a profile for a deleted account based on the SID
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     username: S-1-5-21-3233007181-2234767541-1895602582-1305
     state: absent
 
 - name: Remove multiple profiles that exist at the basename path
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     name: ansible
     state: absent
     remove_multiple: true
