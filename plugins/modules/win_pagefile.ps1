@@ -52,47 +52,6 @@ Function Get-Pagefile($path) {
 }
 
 
-Function Set-RegistryWorkaround {
-    param(
-        [string]$full_path,
-        [int]$initial_size,
-        [int]$maximum_size,
-        [string]$reg_path,
-        [string]$exception_message,
-        [switch]$check_mode
-    )
-    $result = @{
-        succeeded = $false
-    }
-    try {
-        Remove-Pagefile $full_path -whatif:$check_mode
-    }
-    catch {
-        $result.msg = "Failed to remove pagefile before workaround: $($_.Exception.Message). Original exception: $exception_message"
-        return $result
-    }
-    try {
-        $pagingFilesValues = (Get-ItemProperty -LiteralPath $reg_path).PagingFiles
-    }
-    catch {
-        $result.msg = "Failed to get pagefile settings from the registry: $($_.Exception.Message). Original exception: $exception_message"
-        return $result
-    }
-    $pagingFilesValues += "$full_path $initial_size $maximum_size"
-    try {
-        Set-ItemProperty -LiteralPath $reg_path -Name "PagingFiles" -Value $pagingFilesValues
-    }
-    catch {
-        $result.msg = "Failed to set pagefile settings in the registry: $($_.Exception.Message). Original exception: $exception_message"
-        return $result
-    }
-
-    $result.succeeded = $true
-    return $result
-}
-
-$regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-
 if ($remove_all) {
     $current_page_file = Get-CIMInstance Win32_PageFileSetting
     if ($null -ne $current_page_file) {
@@ -107,7 +66,7 @@ if ($null -ne $automatic) {
         $computer_system = Get-CIMInstance -Class win32_computersystem
     }
     catch {
-        $module.FailJson("Failed to query WMI computer system object", $_.Exception.Message )
+        $module.FailJson("Failed to query WMI computer system object", $_ )
     }
     if ($computer_system.AutomaticManagedPagefile -ne $automatic) {
         if (-not $check_mode) {
@@ -115,7 +74,7 @@ if ($null -ne $automatic) {
                 $computer_system | Set-CimInstance -Property @{automaticmanagedpagefile = "$automatic" } > $null
             }
             catch {
-                $module.FailJson("Failed to set AutomaticManagedPagefile", $_.Exception.Message )
+                $module.FailJson("Failed to set AutomaticManagedPagefile", $_ )
             }
         }
         $module.result.changed = $true
@@ -129,13 +88,24 @@ if ($state -eq "absent") {
             Remove-Pagefile $full_path -whatif:$check_mode
         }
         catch {
-            $module.FailJson("Failed to remove pagefile", $_.Exception.Message )
+            $module.FailJson("Failed to remove pagefile", $_ )
         }
         $module.result.changed = $true
     }
 }
 
 elseif ($state -eq "present") {
+    if ($override) {
+        if ($null -ne (Get-Pagefile $fullPath)) {
+            try {
+                Remove-Pagefile $fullPath -whatif:$check_mode
+            }
+            catch {
+                $module.FailJson("Failed to remove current pagefile", $_)
+            }
+            $result.changed = $true
+        }
+    }
     # Make sure drive is accessible
     if (($test_path) -and (-not (Test-Path -LiteralPath "${drive}:"))) {
         $module.FailJson("Unable to access '${drive}:' drive")
@@ -144,43 +114,33 @@ elseif ($state -eq "present") {
     # Set pagefile from scratch
     if ($null -eq $cur_page_file) {
         try {
-            $pagefile = New-CIMInstance -Class Win32_PageFileSetting -Arguments @{name = $full_path; } -WhatIf:$check_mode
+            $pagefile = New-CIMInstance -Class Win32_PageFileSetting -Arguments @{ name = $full_path; } -WhatIf:$check_mode
         }
         catch {
-            $module.FailJson("Failed to create pagefile", $_.Exception.Message )
+            $module.FailJson("Failed to create pagefile", $_ )
         }
         if (-not $check_mode) {
             try {
                 $pagefile | Set-CimInstance -Property @{ InitialSize = $initial_size; MaximumSize = $maximum_size }
             }
             catch {
-                $exception_message = $_.Exception.Message
-                $result = Set-RegistryWorkaround -full_path $full_path -initial_size $initial_size
-                -maximum_size $maximum_size -reg_path $regPath -exception_message $exception_message -check_mode:$check_mode
-                if (-not $result.succeeded) {
-                    $module.FailJson($result.msg)
-                }
+                $module.FailJson("Failed to set pagefile", $_ )
             }
         }
         $module.result.changed = $true
     }
     # pagefile to be changed
     else {
-        if ((-not $check_mode) -and
+        if ((-not $check_mode) -and $override -and
             ( ($cur_page_file.InitialSize -ne $initial_size) -or ($cur_page_file.maximumSize -ne $maximum_size) )
         ) {
             $cur_page_file.InitialSize = $initial_size
             $cur_page_file.MaximumSize = $maximum_size
             try {
-                $cur_page_file.Put() | out-null
+                $cur_page_file | Set-CimInstance -Property @{ InitialSize = $initial_size; MaximumSize = $maximum_size }
             }
             catch {
-                $exception_message = $_.Exception.Message
-                $result = Set-RegistryWorkaround -full_path $full_path -initial_size $initial_size
-                -maximum_size $maximum_size -reg_path $regPath -exception_message $exception_message -check_mode:$check_mode
-                if (-not $result.succeeded) {
-                    $module.FailJson($result.msg)
-                }
+                $module.FailJson("Failed to modify pagefile", $_ )
             }
             $module.result.changed = $true
         }
@@ -193,7 +153,7 @@ else {
             $pagefiles = Get-CIMInstance Win32_PageFileSetting
         }
         catch {
-            $module.FailJson("Failed to query all pagefiles", $_.Exception.Message )
+            $module.FailJson("Failed to query all pagefiles", $_ )
         }
     }
     else {
@@ -201,7 +161,7 @@ else {
             $pagefiles = Get-Pagefile $full_path
         }
         catch {
-            $module.FailJson("Failed to query specific pagefile", $_.Exception.Message )
+            $module.FailJson("Failed to query specific pagefile", $_ )
         }
     }
     # Get all pagefiles
@@ -220,7 +180,7 @@ else {
         $module.result.automatic_managed_pagefiles = (Get-CIMInstance -Class win32_computersystem).AutomaticManagedPagefile
     }
     catch {
-        $module.FailJson("Failed to query automatic managed pagefile state", $_.Exception.Message )
+        $module.FailJson("Failed to query automatic managed pagefile state", $_ )
     }
 }
 $module.ExitJson()

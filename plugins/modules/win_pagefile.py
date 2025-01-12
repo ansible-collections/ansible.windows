@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2017, Liran Nisanov <lirannis@gmail.com>
+# Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 DOCUMENTATION = r'''
@@ -12,6 +12,7 @@ description:
     - Query current pagefile configuration.
     - Enable/Disable AutomaticManagedPagefile.
     - Create new or override pagefile configuration.
+version_added: 2.7.0
 options:
   drive:
     description:
@@ -58,43 +59,43 @@ notes:
 - Value out of range exception may be caused by several different issues, two common problems - No such drive, Pagefile size is too small.
 - Setting a pagefile when AutomaticManagedPagefile is on will disable the AutomaticManagedPagefile.
 author:
-- Liran Nisanov (@LiranNis)
+- Amit Weinstock (@aweinsto)
 '''
 
 EXAMPLES = r'''
 - name: Query pagefiles configuration
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
 
 - name: Query C pagefile
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: C
 
 - name: Set C pagefile, don't override if exists
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
     state: present
 
 - name: Set C pagefile, override if exists
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
     state: present
 
 - name: Remove C pagefile
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: C
     state: absent
 
 - name: Remove all current pagefiles, enable AutomaticManagedPagefile and query at the end
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     remove_all: true
     automatic: true
 
 - name: Remove all pagefiles disable AutomaticManagedPagefile and set C pagefile
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: C
     initial_size: 2048
     maximum_size: 2048
@@ -103,7 +104,7 @@ EXAMPLES = r'''
     state: present
 
 - name: Set D pagefile, override if exists
-  community.windows.win_pagefile:
+  ansible.windows.win_pagefile:
     drive: d
     initial_size: 1024
     maximum_size: 1024

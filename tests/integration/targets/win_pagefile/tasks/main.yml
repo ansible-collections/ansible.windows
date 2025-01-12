@@ -97,6 +97,7 @@
   win_pagefile:
     drive: C
     state: present
+    automatic: no
   register: c_pagefile_system_managed
 
 - name: Test set c pagefile as system managed
@@ -126,13 +127,41 @@
     - pagefiles_query.pagefiles == expected.pagefiles
     - pagefiles_query.automatic_managed_pagefiles == false
 
- # Test 5: Test idempotent
+ # Test 5: Test no override
+- name: Set c pagefile 1024-1024, no override
+  win_pagefile:
+    drive: C
+    initial_size: 1024
+    maximum_size: 1024
+    state: present
+    override: false
+  register: c_pagefile_no_override
+
+- name: Test set c pagefile no override
+  assert:
+    that:
+    - c_pagefile_no_override.changed == false
+
+- name: Query all pagefiles
+  win_pagefile:
+    state: query
+  register: pagefiles_query
+
+- name: Test query - c pagefile unchanged
+  assert:
+    that:
+    - pagefiles_query.changed == false
+    - pagefiles_query.pagefiles == expected.pagefiles
+    - pagefiles_query.automatic_managed_pagefiles == false
+
+# Test 6: Test override
 - name: Set c pagefile 1024-1024, override
   win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
     state: present
+    override: yes
   register: c_pagefile_override
 
 - name: Test set c pagefile no override
@@ -140,12 +169,13 @@
     that:
     - c_pagefile_override.changed == true
 
-
+# Test 7: Test idempotent
 - name: Set c pagefile 1024-1024, idempotent
   win_pagefile:
     drive: C
     initial_size: 1024
     maximum_size: 1024
+    override: no
     state: present
   register: c_pagefile_idempotent
 
