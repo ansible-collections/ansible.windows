@@ -1,0 +1,58 @@
+---
+- name: test we can get info for all features
+  win_feature_info:
+  register: all_actual
+  check_mode: yes  # tests that this will run in check mode
+
+- name: assert test we can get info for all features
+  assert:
+    that:
+      - all_actual.exists
+      - not all_actual is changed
+
+- name: test info on a missing feature
+  win_feature_info:
+    name: ansible_feature_info_missing
+  register: missing_feature
+
+- name: assert test info on a missing feature
+  assert:
+    that:
+    - not missing_feature is changed
+    - not missing_feature.exists
+
+- name: Install Test Feature
+  ansible.windows.win_feature:
+    name: "{{ test_feature }}"
+    state: present
+
+- name: test info on a single Feature
+  win_feature_info:
+    name: '{{ test_feature }}'
+  register: specific_feature_present
+
+- name: assert test info on single feature
+  assert:
+    that:
+    - not specific_feature_present is changed
+    - specific_feature_present.exists
+    - specific_feature_present.features | length == 1
+    - specific_feature_present.features[0].install_state == "Installed"
+
+- name: Uninstall Test Feature
+  ansible.windows.win_feature:
+    name: "{{ test_feature }}"
+    state: absent
+
+- name: test info on a single Feature
+  win_feature_info:
+    name: '{{ test_feature }}'
+  register: specific_feature_absent
+
+- name: assert test info on single feature
+  assert:
+    that:
+    - not specific_feature_absent is changed
+    - specific_feature_absent.exists
+    - specific_feature_absent.features | length == 1
+    - specific_feature_absent.features[0].install_state == "Available"
