@@ -10,29 +10,30 @@ module: win_snmp
 short_description: Configures the Windows SNMP service
 description:
     - This module configures the Windows SNMP service.
+version_added: 2.7.0
 options:
     permitted_managers:
         description:
         - The list of permitted SNMP managers.
         type: list
         elements: str
-    community_strings:
+    communities:
         description:
-        - The list of read-only SNMP community strings.
+        - The list of read-only SNMP communities.
         type: list
         elements: str
     action:
         description:
-        - C(add) will add new SNMP community strings and/or SNMP managers
-        - C(set) will replace SNMP community strings and/or SNMP managers. An
-          empty list for either C(community_strings) or C(permitted_managers)
+        - C(add) will add new SNMP communities and/or SNMP managers
+        - C(set) will replace SNMP communities and/or SNMP managers. An
+          empty list for either C(communities) or C(permitted_managers)
           will result in the respective lists being removed entirely.
-        - C(remove) will remove SNMP community strings and/or SNMP managers
+        - C(remove) will remove SNMP communities and/or SNMP managers
         type: str
         choices: [ add, set, remove ]
         default: set
 author:
-    - Michael Cassaniti (@mcassaniti)
+    - Amit Weinstock (@amitosw15)
 '''
 
 EXAMPLES = r'''

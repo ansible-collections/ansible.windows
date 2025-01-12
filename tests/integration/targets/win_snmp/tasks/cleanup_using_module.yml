@@ -3,7 +3,7 @@
     register: snmp_cleanup
     win_snmp:
       action: set
-      community_strings: []
+      communities: []
       permitted_managers: []
 
   - name: Check registry for no SNMP community

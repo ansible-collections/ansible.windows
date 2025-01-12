@@ -3,7 +3,7 @@
     register: snmp_community
     win_snmp:
       action: add
-      community_strings:
+      communities:
         - ansible-ro-test
 
   - name: Check initial SNMP community exists in registry
@@ -24,7 +24,7 @@
     register: snmp_community_again
     win_snmp:
       action: add
-      community_strings:
+      communities:
         - ansible-ro-test
 
   - name: Check no change occurred when adding SNMP community again
@@ -36,7 +36,7 @@
     register: snmp_community_next
     win_snmp:
       action: add
-      community_strings:
+      communities:
         - ansible-ro-test-next
 
   - name: Check initial SNMP community still exists in registry
@@ -70,7 +70,7 @@
     register: snmp_community_replace
     win_snmp:
       action: set
-      community_strings:
+      communities:
         - ansible-ro-test-replace
 
   - name: Check initial SNMP community does not exist in registry
@@ -105,14 +105,14 @@
   - name: Add another SNMP community before testing removal
     win_snmp:
       action: add
-      community_strings:
+      communities:
         - ansible-ro-remove-add
 
   - name: Remove the replaced SNMP community
     register: snmp_community_remove
     win_snmp:
       action: remove
-      community_strings:
+      communities:
         - ansible-ro-test-replace
 
   - name: Check replace SNMP community is removed in registry
@@ -140,7 +140,7 @@
     register: snmp_community_remove
     win_snmp:
       action: remove
-      community_strings:
+      communities:
         - ansible-ro-test-replace
 
   - name: Check replace SNMP community is removed in registry (again)
