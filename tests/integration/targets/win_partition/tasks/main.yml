@@ -1,0 +1,18 @@
+---
+- name: Copy VHDX scripts
+  ansible.windows.win_template:
+    src: "{{ item.src }}"
+    dest: '{{ remote_tmp_dir }}\{{ item.dest }}'
+  loop:
+    - { src: vhdx_creation_script.j2, dest: vhdx_creation_script.txt }
+    - { src: vhdx_deletion_script.j2, dest: vhdx_deletion_script.txt }
+
+- name: Create VHD
+  ansible.windows.win_command: diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_creation_script.txt"
+
+- name: Run tests
+  block:
+    - import_tasks: tests.yml
+  always:
+    - name: Detach disk
+      ansible.windows.win_command: diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_deletion_script.txt"
