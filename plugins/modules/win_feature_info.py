@@ -7,7 +7,7 @@
 DOCUMENTATION = r'''
 ---
 module: win_feature_info
-version_added: '1.4.0'
+version_added: '2.7.0'
 short_description: Gather information about Windows features
 description:
 - Gather information about all or a specific installed Windows feature(s).
@@ -27,12 +27,14 @@ author:
 
 EXAMPLES = r'''
 - name: Get info for all installed features
-  community.windows.win_feature_info:
+  ansible.windows.win_feature_info:
   register: feature_info
+
 - name: Get info for a single feature
-  community.windows.win_feature_info:
+  ansible.windows.win_feature_info:
     name: DNS
   register: feature_info
+
 - name: Find all features that start with 'FS'
   ansible.windows.win_feature_info:
     name: FS*
