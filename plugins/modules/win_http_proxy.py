@@ -13,6 +13,7 @@ description:
   C(WinHTTP).
 - WinHTTP is a framework used by applications or services, typically .NET
   applications or non-interactive services, to make web requests.
+version_added: 2.7.0
 options:
   bypass:
     description:
