@@ -16,6 +16,7 @@ description:
       date when the parent process was launched.
     - The module's goal is to replicate the functionality of the linux module
       listen_ports_facts, mantaining the format of the said module.
+version_added: 2.7.0
 options:
   date_format:
     description:
@@ -46,16 +47,16 @@ author:
 
 EXAMPLES = r'''
 - name: Recopilate ports facts
-  community.windows.win_listen_ports_facts:
+  ansible.windows.win_listen_ports_facts:
 
 - name: Retrieve only ports with Closing and Established states
-  community.windows.win_listen_ports_facts:
+  ansible.windows.win_listen_ports_facts:
     tcp_filter:
       - Closing
       - Established
 
 - name: Get ports facts with only the year within the date field
-  community.windows.win_listen_ports_facts:
+  ansible.windows.win_listen_ports_facts:
     date_format: '%Y'
 '''
 
