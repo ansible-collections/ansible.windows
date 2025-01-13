@@ -1,0 +1,30 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor]
+"BIGCAT_HOME"="C:\\Bigcat97"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor\Tasks]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor\Tasks\FishTank]
+"ComponentID"=dword:00000000
+"Name"="Bigcat7"
+"Version"=""
+"Archive"=""
+"InstallDate"=hex:00,00,00,00,00,00,00,00
+"Product"="FishTank"
+"IsBusStopOnly"=dword:00000000
+"MaxEggCount"=dword:00000005
+"MaxEggDuration"=dword:00000001
+"StopTimeout"=dword:00001388
+"IsService"=dword:00000001
+"IsDCOMService"=dword:00000000
+"Command"=""
+"NumberOfMoos"=dword:00000000
+"StatusOnShutdown"=hex:02,00,00,00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor\Tasks\FishTank\Counters]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor\Tasks\FishTank\Udders]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor\Tasks\FishTank\Hooves]
+
