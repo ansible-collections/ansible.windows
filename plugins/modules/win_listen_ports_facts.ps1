@@ -7,7 +7,7 @@
 
 $spec = @{
     options = @{
-        date_format = @{ type = 'str'; default = '%c' }
+        date_uformat = @{ type = 'str'; default = '%c' }
         tcp_filter = @{ type = 'list'; elements = 'str'; default = 'Listen' }
     }
     supports_check_mode = $true
@@ -15,7 +15,7 @@ $spec = @{
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-$date_format = $module.Params.date_format
+$date_uformat = $module.Params.date_uformat
 $tcp_filter = $module.Params.tcp_filter
 
 # Structure of the response the script will return
@@ -39,7 +39,7 @@ function Format-Date {
     )
 
     if ($null -ne $date) {
-        $date = Get-Date $date -UFormat $date_format
+        $date = Get-Date $date -UFormat $date_uformat
     }
 
     return $date

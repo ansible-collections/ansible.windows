@@ -7,7 +7,6 @@
 DOCUMENTATION = r'''
 ---
 module: win_listen_ports_facts
-version_added: '1.10.0'
 short_description: Recopilates the facts of the listening ports of the machine
 description:
     - Recopilates the information of the TCP and UDP ports of the machine and
@@ -18,7 +17,7 @@ description:
       listen_ports_facts, mantaining the format of the said module.
 version_added: 2.7.0
 options:
-  date_format:
+  date_uformat:
     description:
       - The format of the date when the process that owns the port started.
       - The date specification is UFormat
@@ -39,8 +38,6 @@ notes:
   the listen_ports_facts schema to achieve compatibility with the said module
   output, even though this module if capable of extracting ports with a state
   other than Listen
-seealso:
-- module: community.general.listen_ports_facts
 author:
 - David Nieto (@david-ns)
 '''
@@ -57,7 +54,7 @@ EXAMPLES = r'''
 
 - name: Get ports facts with only the year within the date field
   ansible.windows.win_listen_ports_facts:
-    date_format: '%Y'
+    date_uformat: '%Y'
 '''
 
 RETURN = r'''
