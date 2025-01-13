@@ -56,19 +56,17 @@ notes:
   known as C(WinINet); use the M(community.windows.win_inet_proxy) module to manage that instead.
 - These settings are set system wide and not per user, it will require
   Administrative privileges to run.
-seealso:
-- module: community.windows.win_inet_proxy
 author:
 - Jordan Borean (@jborean93)
 '''
 
 EXAMPLES = r'''
 - name: Set a proxy to use for all protocols
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     proxy: hostname
 
 - name: Set a proxy with a specific port with a bypass list
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     proxy: hostname:8080
     bypass:
       - server1
@@ -76,22 +74,22 @@ EXAMPLES = r'''
       - <local>
 
 - name: Set the proxy based on the IE proxy settings
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     source: ie
 
 - name: Set a proxy for specific protocols
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     proxy:
       http: hostname:8080
       https: hostname:8443
 
 - name: Set a proxy for specific protocols using a string
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     proxy: http=hostname:8080;https=hostname:8443
     bypass: server1,server2,<local>
 
 - name: Remove any proxy settings
-  community.windows.win_http_proxy:
+  ansible.windows.win_http_proxy:
     proxy: ''
     bypass: ''
 '''
