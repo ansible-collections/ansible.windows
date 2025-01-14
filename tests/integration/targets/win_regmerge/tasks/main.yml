@@ -1,20 +1,5 @@
 # test code for the win_regmerge module
-# (c) 2014, Michael DeHaan <michael.dehaan@gmail.com>
-
-# This file is part of Ansible
-#
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+# Copyright: (c) 2025, Red Hat, Inc.
 
 # clear the area of the registry we are using for tests
 - name: remove setting
@@ -30,7 +15,19 @@
      - settings2.reg
      - settings3.reg
 
-# test 1 -  basic test of changed behaviour
+# basic test of changed behaviour in check mode
+# merge in REG_SZ
+- name: test 1 merge in a setting
+  win_regmerge:
+     path: "{{ remote_tmp_dir }}\\settings1.reg"
+  register: merge10_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge10_result.changed == true"
+
+# basic test of changed behaviour
 # merge in REG_SZ
 - name: test 1 merge in a setting
   win_regmerge:
@@ -51,7 +48,6 @@
 - assert:
     that:
       - "merge12_result.changed == true"
-# assert changed false
 
 # prune reg key
 - name: test 1 remove setting
@@ -59,9 +55,21 @@
      key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
      state: absent
 
-#
-# test 2, observe behaviour when compare_to param is set
-#
+# observe behaviour when compare_to param is set check mode
+
+- name: test 2 merge in a setting check mode
+  win_regmerge:
+    path: "{{ remote_tmp_dir }}\\settings1.reg"
+    compare_to: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp\Moosic\ILikeToMooveIt'
+  register: merge20_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge20_result.changed == true"
+
+# observe behaviour when compare_to param is set
+
 - name: test 2 merge in a setting
   win_regmerge:
     path: "{{ remote_tmp_dir }}\\settings1.reg"
@@ -83,15 +91,27 @@
 - assert:
     that:
       - "merge22_result.changed == false"
-# assert changed false
 
 # prune the contents of the registry from the parent of the compare key downwards
-- name: test 2 clean up remove setting
+- name: clean up remove setting
   ansible.windows.win_regedit:
     key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
     state: absent
 
-# test 3 merge in more complex settings
+# merge in more complex settings check mode
+- name: test 3 merge in a setting check mode
+  win_regmerge:
+    path: "{{ remote_tmp_dir }}\\settings3.reg"
+    compare_to: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor'
+  register: merge30_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge30_result.changed == true"
+
+# merge in more complex settings
+
 - name: test 3 merge in a setting
   win_regmerge:
     path: "{{ remote_tmp_dir }}\\settings3.reg"
@@ -113,13 +133,14 @@
 - assert:
     that:
       - "merge32_result.changed == false"
-# assert changed false
 
 # prune the contents of the registry from the compare key downwards
-- name: test 3 clean up remove setting
+- name: clean up remove setting
   ansible.windows.win_regedit:
     key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
     state: absent
+
+
 
 # clean up registry files
 
@@ -138,7 +159,17 @@
     key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
     state: absent
 
-# test 1 -  basic test of changed behaviour
+# merge in REG_SZ check mode
+- name: test 1 merge in a setting using 'content'
+  win_regmerge:
+    content: "{{ lookup('file', 'settings1c.reg') }}"
+  register: merge10_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge10_result.changed == true"
+
 # merge in REG_SZ
 - name: test 1 merge in a setting using 'content'
   win_regmerge:
@@ -159,17 +190,28 @@
 - assert:
     that:
       - "merge12_result.changed == true"
-# assert changed false
 
 # prune reg key
-- name: test 1 remove setting
+- name: remove setting
   ansible.windows.win_regedit:
      key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
      state: absent
 
-#
-# test 2, observe behaviour when compare_to param is set
-#
+#observe behaviour when compare_to param is set check mode
+
+- name: test 2 merge in a setting using 'content'
+  win_regmerge:
+    content: "{{ lookup('file', 'settings1c.reg') }}"
+    compare_to: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp\Moosic\ILikeToMooveIt'
+  register: merge20_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge20_result.changed == true"
+
+#observe behaviour when compare_to param is set
+
 - name: test 2 merge in a setting using 'content'
   win_regmerge:
     content: "{{ lookup('file', 'settings1c.reg') }}"
@@ -194,12 +236,24 @@
 # assert changed false
 
 # prune the contents of the registry from the parent of the compare key downwards
-- name: test 2 clean up remove setting
+- name: clean up remove setting
   ansible.windows.win_regedit:
     key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
     state: absent
 
-# test 3 merge in more complex settings
+# merge in more complex settings check mode
+- name: test 3 merge in a setting using 'content'
+  win_regmerge:
+    content: "{{ lookup('file', 'settings3c.reg') }}"
+    compare_to: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp\Moo Monitor'
+  register: merge30_result
+  check_mode: yes
+
+- assert:
+    that:
+      - "merge30_result.changed == true"
+
+# merge in more complex settings
 - name: test 3 merge in a setting using 'content'
   win_regmerge:
     content: "{{ lookup('file', 'settings3c.reg') }}"
@@ -209,6 +263,7 @@
 - assert:
     that:
       - "merge31_result.changed == true"
+
 
 # re run the merge
 - name: test 3 merge in the setting again but with compare_key check using 'content'
@@ -221,10 +276,10 @@
 - assert:
     that:
       - "merge32_result.changed == false"
-# assert changed false
+
 
 # prune the contents of the registry from the compare key downwards
-- name: test 3 clean up remove setting
+- name: clean up remove setting
   ansible.windows.win_regedit:
     key: 'HKLM:\SOFTWARE\Wow6432Node\Cow Corp'
     state: absent

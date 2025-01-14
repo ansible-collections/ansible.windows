@@ -20,7 +20,7 @@ options:
   path:
     description:
       - The full path including file name to the registry file on the remote machine to be merged
-    type: path
+    type: str
   content:
     description:
       - When used instead of O(path), merges the value specified into the Windows registry. It must not include the Byte Order Mark.
