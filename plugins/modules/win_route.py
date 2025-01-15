@@ -43,14 +43,14 @@ author:
 EXAMPLES = r'''
 ---
 - name: Add a network static route
-  community.windows.win_route:
+  ansible.windows.win_route:
     destination: 192.168.2.10/32
     gateway: 192.168.1.1
     metric: 1
     state: present
 
 - name: Remove a network static route
-  community.windows.win_route:
+  ansible.windows.win_route:
     destination: 192.168.2.10/32
     state: absent
 '''
