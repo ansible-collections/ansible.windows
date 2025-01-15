@@ -1,0 +1,1 @@
+tests/integration/targets/win_regmerge/templates/win_line_ending.j2 line-endings
