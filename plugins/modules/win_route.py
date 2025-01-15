@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2017, Daniele Lazzari <lazzari@mailup.com>
+# Copyright: (c) 2025, Red Hat, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 DOCUMENTATION = r'''
@@ -21,6 +21,7 @@ options:
         - The gateway used by the static route.
         - If C(gateway) is not provided it will be set to C(0.0.0.0).
     type: str
+    default: 0.0.0.0
   metric:
     description:
         - Metric used by the static route.
@@ -36,7 +37,7 @@ options:
 notes:
   - Works only with Windows 2012 R2 and newer.
 author:
-- Daniele Lazzari (@dlazz)
+- Amit Weinstock (@amitosw15)
 '''
 
 EXAMPLES = r'''
@@ -54,7 +55,7 @@ EXAMPLES = r'''
     state: absent
 '''
 RETURN = r'''
-output:
+msg:
     description: A message describing the task result.
     returned: always
     type: str

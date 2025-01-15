@@ -1,41 +1,31 @@
 #!powershell
 
-# Copyright: (c) 2016, Daniele Lazzari <lazzari@mailup.com>
+# Copyright: (c) 2025, Red Hat, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
 
-# win_route (Add or remove a network static route)
-
-$params = Parse-Args $args -supports_check_mode $true
-
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
-$dest = Get-AnsibleParam -obj $params -name "destination" -type "str" -failifempty $true
-$gateway = Get-AnsibleParam -obj $params -name "gateway" -type "str"
-$metric = Get-AnsibleParam -obj $params -name "metric" -type "int" -default 1
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateSet "present", "absent"
-$result = @{
-    "changed" = $false
-    "output" = ""
+#AnsibleRequires -CSharpUtil Ansible.Basic
+$spec = @{
+    options = @{
+        destination = @{ type = 'str' ; required = $true }
+        gateway = @{ type = 'str' ; default = "0.0.0.0" }
+        state = @{ type = 'str' ; default = "present" ; choices = @( "present", "absent") }
+        metric = @{ type = 'int' ; default = 1 }
+    }
+    supports_check_mode = $true
 }
 
-Function Add-Route {
-    Param (
-        [Parameter(Mandatory = $true)]
-        [string]$Destination,
-        [Parameter(Mandatory = $true)]
-        [string]$Gateway,
-        [Parameter(Mandatory = $true)]
-        [int]$Metric,
-        [Parameter(Mandatory = $true)]
-        [bool]$CheckMode
-    )
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$Destination = $module.Params.destination
+$Gateway = $module.Params.gateway
+$State = $module.Params.state
+$Metric = $module.metric
+$check_mode = $module.Checkmode
 
+$IpAddress = $Destination.split('/')[0]
+$Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
 
-    $IpAddress = $Destination.split('/')[0]
-
-    # Check if the static route is already present
-    $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
+if ($State -eq "present") {
     if (!($Route)) {
         try {
             # Find Interface Index
@@ -48,65 +38,28 @@ Function Add-Route {
                 InterfaceIndex = $InterfaceIndex
                 RouteMetric = $Metric
                 ErrorAction = "Stop"
-                WhatIf = $CheckMode
+                WhatIf = $check_mode
             }
             New-NetRoute @routeParams | Out-Null
-            $result.changed = $true
-            $result.output = "Route added"
+            $module.result.changed = $true
+            $module.result.msg = "Route added"
 
         }
-        catch {
-            $ErrorMessage = $_.Exception.Message
-            Fail-Json $result $ErrorMessage
-        }
+        catch { $module.FailJson("Failed to create a new route", $_) }
     }
-    else {
-        $result.output = "Static route already exists"
-    }
-
+    else { $module.result.msg = "Static route already exists" }
 }
-
-Function Remove-Route {
-    Param (
-        [Parameter(Mandatory = $true)]
-        [string]$Destination,
-        [bool]$CheckMode
-    )
-    $IpAddress = $Destination.split('/')[0]
-    $Route = Get-CimInstance win32_ip4PersistedrouteTable -Filter "Destination = '$($IpAddress)'"
+else {
     if ($Route) {
         try {
 
-            Remove-NetRoute -DestinationPrefix $Destination -Confirm:$false -ErrorAction Stop -WhatIf:$CheckMode
-            $result.changed = $true
-            $result.output = "Route removed"
+            Remove-NetRoute -DestinationPrefix $Destination -Confirm:$false -ErrorAction Stop -WhatIf:$check_mode
+            $module.result.changed = $true
+            $module.result.msg = "Route removed"
         }
-        catch {
-            $ErrorMessage = $_.Exception.Message
-            Fail-Json $result $ErrorMessage
-        }
+        catch { $module.FailJson("Failed to remove the requested route", $_) }
     }
-    else {
-        $result.output = "No route to remove"
-    }
-
+    else { $module.result.msg = "No route to remove" }
 }
 
-# Set gateway if null
-if (!($gateway)) {
-    $gateway = "0.0.0.0"
-}
-
-
-if ($state -eq "present") {
-
-    Add-Route -Destination $dest -Gateway $gateway -Metric $metric -CheckMode $check_mode
-
-}
-else {
-
-    Remove-Route -Destination $dest -CheckMode $check_mode
-
-}
-
-Exit-Json $result
+$module.ExitJson()

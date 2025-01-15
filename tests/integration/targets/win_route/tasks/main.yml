@@ -17,11 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
+- block:
+  - name: get os info
+    ansible.windows.win_shell: '[Environment]::OSVersion.Version -ge [Version]"6.3"'
+    register: os
 
-- name: get os info
-  ansible.windows.win_shell: '[Environment]::OSVersion.Version -ge [Version]"6.3"'
-  register: os
+  - name: run all tasks
+    include_tasks: tests.yml
+    when: os.stdout_lines[0] == "True"
 
-- name: run all tasks
-  include_tasks: tests.yml
-  when: os.stdout_lines[0] == "True"
+  always:
+  - name: remove test routes
+    win_route:
+      destination: "{{ destination_ip_address }}/32"
+      state: absent
+    register: route_removed

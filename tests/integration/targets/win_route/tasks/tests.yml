@@ -1,4 +1,18 @@
 ---
+- name: add a static route check mode
+  win_route:
+    destination: "{{ destination_ip_address }}/32"
+    gateway: "{{ default_gateway }}"
+    metric: 1
+    state: present
+  register: route_checkmode
+  check_mode: yes
+
+- name: test if route successfully added check mode
+  assert:
+    that:
+      - route_checkmode is changed
+
 - name: add a static route
   win_route:
     destination: "{{ destination_ip_address }}/32"
@@ -34,7 +48,19 @@
   assert:
     that:
       - idempotent_route is not changed
-      - idempotent_route.output == "Static route already exists"
+      - idempotent_route.msg == "Static route already exists"
+
+- name: remove route check mode
+  win_route:
+    destination: "{{ destination_ip_address }}/32"
+    state: absent
+  register: route_removed_checkmode
+  check_mode: yes
+
+- name: test route is removed
+  assert:
+    that:
+      - route_removed_checkmode is changed
 
 - name: remove route
   win_route:
@@ -62,7 +88,7 @@
   assert:
     that:
       - idempotent_route_removed is not changed
-      - idempotent_route_removed.output == "No route to remove"
+      - idempotent_route_removed.msg == "No route to remove"
 
 - name: add route to wrong ip address
   win_route:
