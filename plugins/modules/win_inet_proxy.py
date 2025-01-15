@@ -16,6 +16,7 @@ description:
   requests through.
 - The proxy settings can also be used by other applications like Firefox,
   Chrome, and others but there is no definitive list.
+version_added: 2.7.0
 options:
   auto_detect:
     description:
@@ -70,18 +71,18 @@ options:
     type: raw
 notes:
 - This is not the same as the proxy settings set in WinHTTP through the
-  C(netsh) command. Use the M(community.windows.win_http_proxy) module to manage that instead.
+  C(netsh) command. Use the M(ansible.windows.win_http_proxy) module to manage that instead.
 - These settings are by default set per user and not system wide. A registry
   property must be set independently from this module if you wish to apply the
   proxy for all users. See examples for more detail.
 - If per user proxy settings are desired, use I(become) to become any local
   user on the host. No password is needed to be set for this to work.
 - If the proxy requires authentication, set the credentials using the
-  M(community.windows.win_credential) module. This requires I(become) to be used so the
+  M(ansible.windows.win_credential) module. This requires I(become) to be used so the
   credential store can be accessed.
 seealso:
-- module: community.windows.win_http_proxy
-- module: community.windows.win_credential
+- module: ansible.windows.win_http_proxy
+- module: ansible.windows.win_credential
 author:
 - Jordan Borean (@jborean93)
 '''
