@@ -38,24 +38,24 @@ author:
 
 EXAMPLES = r'''
 - name: Replace SNMP communities and managers
-  community.windows.win_snmp:
-    community_strings:
+  windows.windows.win_snmp:
+    communities:
       - public
     permitted_managers:
       - 192.168.1.2
     action: set
 
 - name: Replace SNMP communities and clear managers
-  community.windows.win_snmp:
-    community_strings:
+  windows.windows.win_snmp:
+    communities:
       - public
     permitted_managers: []
     action: set
 '''
 
 RETURN = r'''
-community_strings:
-    description: The list of community strings for this machine.
+communities:
+    description: The list of communities for this machine.
     type: list
     returned: always
     sample:
