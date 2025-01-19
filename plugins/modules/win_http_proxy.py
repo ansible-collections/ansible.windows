@@ -53,7 +53,7 @@ options:
     type: str
 notes:
 - This is not the same as the proxy settings set in Internet Explorer, also
-  known as C(WinINet); use the M(community.windows.win_inet_proxy) module to manage that instead.
+  known as C(WinINet); use the M(ansible.windows.win_inet_proxy) module to manage that instead.
 - These settings are set system wide and not per user, it will require
   Administrative privileges to run.
 author:
