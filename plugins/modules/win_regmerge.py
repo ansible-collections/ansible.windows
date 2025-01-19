@@ -16,6 +16,7 @@ description:
     - Exported registry files often start with a Byte Order Mark which must be removed if the file is to templated using M(ansible.windows.win_template).
     - Registry file format is described at U(https://support.microsoft.com/en-us/kb/310516)
     - See also M(ansible.windows.win_template), M(ansible.windows.win_regedit)
+version_added: 2.7.0
 options:
   path:
     description:
@@ -40,7 +41,7 @@ notes:
      the module will merge the contents of the file but continue to report
      differences on subsequent runs.
    - To force registry change, use M(ansible.windows.win_regedit) with C(state=absent) before
-     using C(community.windows.win_regmerge).
+     using C(windows.windows.win_regmerge).
 seealso:
 - module: ansible.windows.win_reg_stat
 - module: ansible.windows.win_regedit
@@ -50,16 +51,16 @@ author:
 
 EXAMPLES = r'''
 - name: Merge in a registry file without comparing to current registry
-  community.windows.win_regmerge:
+  windows.windows.win_regmerge:
     path: C:\autodeploy\myCompany-settings.reg
 
 - name: Compare and merge registry file
-  community.windows.win_regmerge:
+  windows.windows.win_regmerge:
     path: C:\autodeploy\myCompany-settings.reg
     compare_to: HKLM:\SOFTWARE\myCompany
 
 - name: Merge in a registry file specified as content without comparing to current registry
-  community.windows.win_regmerge:
+  windows.windows.win_regmerge:
     content: |
       Windows Registry Editor Version 5.00
 
@@ -67,7 +68,7 @@ EXAMPLES = r'''
       "ExampleKey"=dword:00000001
 
 - name: Compare and merge registry file specified as content
-  community.windows.win_regmerge:
+  windows.windows.win_regmerge:
     content: |
       Windows Registry Editor Version 5.00
 
