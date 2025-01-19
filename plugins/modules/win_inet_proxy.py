@@ -107,36 +107,36 @@ EXAMPLES = r'''
     state: present
 
 - name: Configure IE proxy to use auto detected settings without an explicit proxy
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     auto_detect: true
 
 - name: Configure IE proxy to use auto detected settings with a configuration script
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     auto_detect: true
     auto_config_url: http://proxy.ansible.com/proxy.pac
 
 - name: Configure IE to use explicit proxy host
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     auto_detect: true
     proxy: ansible.proxy
 
 - name: Configure IE to use explicit proxy host with port and without auto detection
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     auto_detect: false
     proxy: ansible.proxy:8080
 
 - name: Configure IE to use a specific proxy per protocol
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     proxy:
       http: ansible.proxy:8080
       https: ansible.proxy:8443
 
 - name: Configure IE to use a specific proxy per protocol using a string
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     proxy: http=ansible.proxy:8080;https=ansible.proxy:8443
 
 - name: Set a proxy with a bypass list
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     proxy: ansible.proxy
     bypass:
       - server1
@@ -145,18 +145,18 @@ EXAMPLES = r'''
       - <local>
 
 - name: Remove any explicit proxies that are set
-  win_inet_proxy:
+  ansible.windows.win_inet_proxy:
     proxy: ''
     bypass: ''
 
 # This should be done after setting the IE proxy with win_inet_proxy
 - name: Import IE proxy configuration to WinHTTP
-  win_http_proxy:
+  ansible.windows.win_http_proxy:
     source: ie
 
 # Explicit credentials can only be set per user and require become to work
 - name: Set credential to use for proxy auth
-  win_credential:
+  ansible.windows.win_credential:
     name: ansible.proxy  # The name should be the FQDN of the proxy host
     type: generic_password
     username: proxyuser
