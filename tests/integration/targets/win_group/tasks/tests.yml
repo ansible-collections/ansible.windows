@@ -1,0 +1,237 @@
+- name: create test group with missing name parameter
+  win_group:
+    description: My desc
+  register: create_no_name
+  failed_when:
+  - >-
+      not create_no_name.failed or
+      create_no_name.msg is search("name parameter is required")
+
+- name: create group - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+  register: create_check
+  check_mode: true
+
+- name: get result of create group - check mode
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: create_check_actual
+
+- name: assert create group - check mode
+  assert:
+    that:
+    - create_check is changed
+    - create_check_actual.output == []
+
+- name: create group
+  win_group:
+    name: '{{ test_win_group_name }}'
+  register: create
+
+- name: get result of create group
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: create_actual
+
+- name: assert create group
+  assert:
+    that:
+    - create is changed
+    - create_actual.output | length == 1
+    - create_actual.output[0].Name == test_win_group_name
+    - create_actual.output[0].Description == ""
+
+- name: create group - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+  register: create_again
+
+- name: assert create group - idempotent
+  assert:
+    that:
+    - not create_again is changed
+
+- name: set description of existing group - check
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: My desc
+  register: set_description_check
+  check_mode: true
+
+- name: get result of set description of existing group - check mode
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: set_description_check_actual
+
+- name: assert set description of existing group - check mode
+  assert:
+    that:
+    - set_description_check is changed
+    - set_description_check_actual.output | length == 1
+    - set_description_check_actual.output[0].Name == test_win_group_name
+    - set_description_check_actual.output[0].Description == ""
+
+- name: set description of existing group
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: My desc
+  register: set_description
+
+- name: get result of set description of existing group
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: set_description_actual
+
+- name: assert set description of existing group
+  assert:
+    that:
+    - set_description is changed
+    - set_description_actual.output | length == 1
+    - set_description_actual.output[0].Name == test_win_group_name
+    - set_description_actual.output[0].Description == "My desc"
+
+- name: set description of existing group - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: My desc
+  register: set_description_again
+
+- name: assert set description of existing group - idempotent
+  assert:
+    that:
+    - not set_description_again is changed
+
+- name: remove group - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    state: absent
+  register: remove_check
+  check_mode: true
+
+- name: get result of remove group - check mode
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: remove_check_actual
+
+- name: assert remove group - check mode
+  assert:
+    that:
+    - remove_check is changed
+    - remove_check_actual.output | length == 1
+
+- name: remove group
+  win_group:
+    name: '{{ test_win_group_name }}'
+    state: absent
+  register: remove
+
+- name: get result of remove group
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: remove_actual
+
+- name: assert remove group
+  assert:
+    that:
+    - remove is changed
+    - remove_actual.output == []
+
+- name: remove group - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    state: absent
+  register: remove_again
+
+- name: assert remove group - idempotent
+  assert:
+    that:
+    - not remove_again is changed
+
+- name: create group with desc - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: My desc
+  register: create_desc_check
+  check_mode: true
+
+- name: get result of create group with desc - check mode
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: create_desc_check_actual
+
+- name: assert create group with desc - check mode
+  assert:
+    that:
+    - create_desc_check is changed
+    - create_desc_check_actual.output == []
+
+- name: create group with desc
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: My desc
+  register: create_desc
+
+- name: get result of create group with desc
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  register: create_desc_actual
+
+- name: assert create group with desc
+  assert:
+    that:
+    - create_desc is changed
+    - create_desc_actual.output | length == 1
+    - create_desc_actual.output[0].Name == test_win_group_name
+    - create_desc_actual.output[0].Description == "My desc"
+
+- name: create group with desc - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: my desc
+  register: create_desc_again
+
+- name: assert create group - idempotent
+  assert:
+    that:
+    - not create_desc_again is changed
