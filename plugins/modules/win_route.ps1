@@ -45,7 +45,7 @@ if ($State -eq "present") {
             $module.result.msg = "Route added"
 
         }
-        catch { $module.FailJson("Failed to create a new route", $_) }
+        catch { $module.FailJson("Failed to create a new route: $_", $_) }
     }
     else { $module.result.msg = "Static route already exists" }
 }
@@ -57,7 +57,7 @@ else {
             $module.result.changed = $true
             $module.result.msg = "Route removed"
         }
-        catch { $module.FailJson("Failed to remove the requested route", $_) }
+        catch { $module.FailJson("Failed to remove the requested route: $_", $_) }
     }
     else { $module.result.msg = "No route to remove" }
 }
