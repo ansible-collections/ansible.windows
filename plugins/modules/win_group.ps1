@@ -28,8 +28,19 @@ $name = $module.Params.name
 $state = $module.Params.state
 $description = $module.Params.description
 
+$module.Diff.before = $null
+$module.Diff.after = $null
+
 $adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
 $group = $adsi.Children | Where-Object { $_.SchemaClassName -eq 'group' -and $_.Name -eq $name }
+if ($group) {
+    $module.Diff.before = @{
+        name = $name
+        # ADSI returns a collection for values even if they are single valued,
+        # this ensures it's a single value in the diff output
+        description = $group.Description | Select-Object -First 1
+    }
+}
 
 if ($state -eq "present") {
     if (-not $group) {
@@ -43,15 +54,26 @@ if ($state -eq "present") {
 
     # If in check mode and the group was created we skip the extra checks
     if ($group) {
+        $existingDescription = $group.Description | Select-Object -First 1
+
         if ($null -ne $description) {
-            if (-not $group.description -or $group.description -ne $description) {
+            if ($existingDescription -ne $description) {
                 if (-not $module.CheckMode) {
-                    $group.description = $description
+                    $group.Description = $description
                     $group.SetInfo()
                 }
                 $module.Result.changed = $true
             }
         }
+        else {
+            # For diff output
+            $description = $existingDescription
+        }
+    }
+
+    $module.Diff.after = @{
+        name = $name
+        description = $description
     }
 }
 elseif ($state -eq "absent" -and $group) {
