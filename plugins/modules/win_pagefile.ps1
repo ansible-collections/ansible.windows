@@ -66,7 +66,7 @@ if ($null -ne $automatic) {
         $computer_system = Get-CIMInstance -Class win32_computersystem
     }
     catch {
-        $module.FailJson("Failed to query WMI computer system object", $_ )
+        $module.FailJson("Failed to query WMI computer system object: $_", $_ )
     }
     if ($computer_system.AutomaticManagedPagefile -ne $automatic) {
         if (-not $check_mode) {
@@ -74,7 +74,7 @@ if ($null -ne $automatic) {
                 $computer_system | Set-CimInstance -Property @{automaticmanagedpagefile = "$automatic" } > $null
             }
             catch {
-                $module.FailJson("Failed to set AutomaticManagedPagefile", $_ )
+                $module.FailJson("Failed to set AutomaticManagedPagefile: $_", $_ )
             }
         }
         $module.result.changed = $true
@@ -88,7 +88,7 @@ if ($state -eq "absent") {
             Remove-Pagefile $full_path -whatif:$check_mode
         }
         catch {
-            $module.FailJson("Failed to remove pagefile", $_ )
+            $module.FailJson("Failed to remove pagefile: $_", $_ )
         }
         $module.result.changed = $true
     }
@@ -101,7 +101,7 @@ elseif ($state -eq "present") {
                 Remove-Pagefile $fullPath -whatif:$check_mode
             }
             catch {
-                $module.FailJson("Failed to remove current pagefile", $_)
+                $module.FailJson("Failed to remove current pagefile: $_", $_)
             }
             $result.changed = $true
         }
@@ -117,14 +117,14 @@ elseif ($state -eq "present") {
             $pagefile = New-CIMInstance -Class Win32_PageFileSetting -Arguments @{ name = $full_path; } -WhatIf:$check_mode
         }
         catch {
-            $module.FailJson("Failed to create pagefile", $_ )
+            $module.FailJson("Failed to create pagefile: $_", $_ )
         }
         if (-not $check_mode) {
             try {
                 $pagefile | Set-CimInstance -Property @{ InitialSize = $initial_size; MaximumSize = $maximum_size }
             }
             catch {
-                $module.FailJson("Failed to set pagefile", $_ )
+                $module.FailJson("Failed to set pagefile: $_", $_ )
             }
         }
         $module.result.changed = $true
@@ -140,7 +140,7 @@ elseif ($state -eq "present") {
                 $cur_page_file | Set-CimInstance -Property @{ InitialSize = $initial_size; MaximumSize = $maximum_size }
             }
             catch {
-                $module.FailJson("Failed to modify pagefile", $_ )
+                $module.FailJson("Failed to modify pagefile: $_", $_ )
             }
             $module.result.changed = $true
         }
@@ -153,7 +153,7 @@ else {
             $pagefiles = Get-CIMInstance Win32_PageFileSetting
         }
         catch {
-            $module.FailJson("Failed to query all pagefiles", $_ )
+            $module.FailJson("Failed to query all pagefiles: $_", $_ )
         }
     }
     else {
@@ -161,7 +161,7 @@ else {
             $pagefiles = Get-Pagefile $full_path
         }
         catch {
-            $module.FailJson("Failed to query specific pagefile", $_ )
+            $module.FailJson("Failed to query specific pagefile: $_", $_ )
         }
     }
     # Get all pagefiles
@@ -180,7 +180,7 @@ else {
         $module.result.automatic_managed_pagefiles = (Get-CIMInstance -Class win32_computersystem).AutomaticManagedPagefile
     }
     catch {
-        $module.FailJson("Failed to query automatic managed pagefile state", $_ )
+        $module.FailJson("Failed to query automatic managed pagefile state: $_", $_ )
     }
 }
 $module.ExitJson()
