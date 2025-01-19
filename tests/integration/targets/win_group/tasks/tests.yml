@@ -21,6 +21,7 @@
       Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: create_check_actual
 
 - name: assert create group - check mode
@@ -42,6 +43,7 @@
       Get-LocalGroup -Name $Name
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: create_actual
 
 - name: assert create group
@@ -77,6 +79,7 @@
       Get-LocalGroup -Name $Name
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: set_description_check_actual
 
 - name: assert set description of existing group - check mode
@@ -101,6 +104,7 @@
       Get-LocalGroup -Name $Name
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: set_description_actual
 
 - name: assert set description of existing group
@@ -137,6 +141,7 @@
       Get-LocalGroup -Name $Name
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: remove_check_actual
 
 - name: assert remove group - check mode
@@ -159,6 +164,7 @@
       Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: remove_actual
 
 - name: assert remove group
@@ -193,6 +199,7 @@
       Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: create_desc_check_actual
 
 - name: assert create group with desc - check mode
@@ -215,6 +222,7 @@
       Get-LocalGroup -Name $Name
     parameters:
       Name: '{{ test_win_group_name }}'
+  changed_when: false
   register: create_desc_actual
 
 - name: assert create group with desc
@@ -235,3 +243,65 @@
   assert:
     that:
     - not create_desc_again is changed
+
+- name: remove description from group - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: ""
+  register: remove_desc_check
+  check_mode: true
+
+- name: get result of remove description from group - check mode
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: remove_desc_check_actual
+
+- name: assert remove description from group - check mode
+  assert:
+    that:
+    - remove_desc_check is changed
+    - remove_desc_check_actual.output | length == 1
+    - remove_desc_check_actual.output[0].Name == test_win_group_name
+    - remove_desc_check_actual.output[0].Description == "My desc"
+
+- name: remove description from group
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: ""
+  register: remove_desc
+
+- name: get result of remove description from group
+  win_powershell:
+    script: |
+      param ($Name)
+
+      Get-LocalGroup -Name $Name
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: remove_desc_actual
+
+- name: assert remove description from group
+  assert:
+    that:
+    - remove_desc is changed
+    - remove_desc_actual.output | length == 1
+    - remove_desc_actual.output[0].Name == test_win_group_name
+    - remove_desc_actual.output[0].Description == ""
+
+- name: remove description from group - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    description: ""
+  register: remove_desc_again
+
+- name: assert remove description from group - idempotent
+  assert:
+    that:
+    - not remove_desc_again is changed

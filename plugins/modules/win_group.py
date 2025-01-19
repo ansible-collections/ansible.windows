@@ -20,6 +20,7 @@ options:
   description:
     description:
       - Description of the group.
+      - Set to an empty string C("") to unset the description.
     type: str
   state:
     description:
@@ -46,4 +47,10 @@ EXAMPLES = r'''
   ansible.windows.win_group:
     name: deploy
     state: absent
+
+- name: Remove the group description
+  ansible.windows.win_group:
+    name: MyGroup
+    description: ""
+    state: present
 '''
