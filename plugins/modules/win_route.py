@@ -10,6 +10,7 @@ module: win_route
 short_description: Add or remove a static route
 description:
     - Add or remove a static route.
+version_added: 2.7.0
 options:
   destination:
     description:
