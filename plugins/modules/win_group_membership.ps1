@@ -8,31 +8,36 @@
 
 $ErrorActionPreference = "Stop"
 
-function Test-GroupMember {
+Function Get-InputMember {
     <#
     .SYNOPSIS
-    Return SID and consistent account name (DOMAIN\Username) format of desired member.
-    Also, ensure member can be resolved/exists on the target system by checking its SID.
-    .NOTES
-    Returns a hashtable of the same type as returned from Get-GroupMember.
-    Accepts username (users, groups) and domains in the formats accepted by Convert-ToSID.
+    Converts the input member list to a unique list of accounts and their SIDs.
+    .PARAMETER Member
+    The input members.
     #>
-    param(
-        [String]$GroupMember
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [string[]]
+        $Member
     )
 
-    $parsed_member = @{
-        sid = $null
-        account_name = $null
+    begin {
+        $member_list = [System.Collections.Generic.HashSet[string]]@()
     }
 
-    $sid = Convert-ToSID -account_name $GroupMember
-    $account_name = Convert-FromSID -sid $sid
-
-    $parsed_member.sid = $sid
-    $parsed_member.account_name = $account_name
-
-    return $parsed_member
+    process {
+        foreach ($m in $Member) {
+            $sid = Convert-ToSID -account_name $m
+            if ($member_list.Add($sid)) {
+                $account_name = Convert-FromSID -sid $sid
+                @{
+                    sid = $sid
+                    account_name = $account_name
+                }
+            }
+        }
+    }
 }
 
 function Get-GroupMember {
@@ -113,38 +118,38 @@ if (!$group) {
     Fail-Json -obj $result -message "Could not find local group $name"
 }
 
+$target_members = $members | Get-InputMember
 $current_members = Get-GroupMember -Group $group
 $pure_members = @()
 
-foreach ($member in $members) {
-    $group_member = Test-GroupMember -GroupMember $member
+foreach ($member in $target_members) {
     if ($state -eq "pure") {
-        $pure_members += $group_member
+        $pure_members += $member
     }
 
     $user_in_group = $false
     foreach ($current_member in $current_members) {
-        if ($current_member.sid -eq $group_member.sid) {
+        if ($current_member.sid -eq $member.sid) {
             $user_in_group = $true
             break
         }
     }
 
-    $member_sid = "WinNT://{0}" -f $group_member.sid
+    $member_sid = "WinNT://{0}" -f $member.sid
 
     try {
         if ($state -in @("present", "pure") -and !$user_in_group) {
             if (!$check_mode) {
                 $group.Add($member_sid)
             }
-            $result.added += $group_member.account_name
+            $result.added += $member.account_name
             $result.changed = $true
         }
         elseif ($state -eq "absent" -and $user_in_group) {
             if (!$check_mode) {
                 $group.Remove($member_sid)
             }
-            $result.removed += $group_member.account_name
+            $result.removed += $member.account_name
             $result.changed = $true
         }
     }

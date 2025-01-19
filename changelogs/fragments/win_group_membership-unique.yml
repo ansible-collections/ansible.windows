@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    win_group_membership - Fix bug when input ``members`` contained duplicate members that were not already present in the group -
+    https://github.com/ansible-collections/ansible.windows/issues/736

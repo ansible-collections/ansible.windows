@@ -53,6 +53,7 @@
     members:
       - "{{ admin_account_name }}"
       - "{{ win_local_user }}"
+      - "{{ admin_account_name }}"
       - NT AUTHORITY\SYSTEM
     state: present
   register: add_users_to_group
@@ -271,6 +272,7 @@
     members:
       - "{{ admin_account_name }}"
       - NT AUTHORITY\NETWORK SERVICE
+      - "{{ admin_account_name }}"
   check_mode: false
 
 - name: Define users as pure
