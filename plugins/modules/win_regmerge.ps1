@@ -65,7 +65,7 @@ If ( $should_compare ) {
     $export_reg_cmd = @{ CommandLine = "reg.exe EXPORT `"$expanded_compare_key`" `"$exported_path`"" }
     $res = Start-AnsibleWindowsProcess @export_reg_cmd
     if ($res.ExitCode -ne 0) {
-        $module.FailJson("error exporting registry '$expanded_compare_key' to '$exported_path'", $res.Stderr)
+        $module.FailJson("error exporting registry '$expanded_compare_key' to '$exported_path': $res.Stderr", $res.Stderr)
     }
 
     # compare the two files
@@ -77,7 +77,7 @@ If ( $should_compare ) {
             $import_reg_cmd = @{ CommandLine = "reg.exe IMPORT $path" }
             $res = Start-AnsibleWindowsProcess @import_reg_cmd
             if ($res.ExitCode -ne 0) {
-                $module.FailJson("error importing registry values from '$path'", $res.Stderr)
+                $module.FailJson("error importing registry values from '$path': $res.Stderr", $res.Stderr)
             }
         }
         $module.result.changed = $true
@@ -97,7 +97,7 @@ Else {
         $import_reg_cmd = @{ CommandLine = "reg.exe IMPORT $path" }
         $res = Start-AnsibleWindowsProcess @import_reg_cmd
         if ($res.ExitCode -ne 0) {
-            $module.FailJson("error importing registry values from '$path'", $res.Stderr)
+            $module.FailJson("error importing registry values from '$path': $res.Stderr ", $res.Stderr)
         }
     }
     $module.result.changed = $true
