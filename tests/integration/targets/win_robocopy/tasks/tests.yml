@@ -1,0 +1,268 @@
+# # Test Case 1: Fail if the source directory does not exist
+# - name: Fail if src does not exist
+#   win_robocopy:
+#     src: "{{ nonexistent_src_directory }}"
+#     dst: "{{ dst_directory }}"
+#   register: fail_src_not_exist
+#   ignore_errors: true
+
+# - name: Validate result - Fail if src does not exist
+#   assert:
+#     that:
+#     - fail_src_not_exist is failed
+#     - "'does not exist' in fail_src_not_exist.msg"
+
+# # Test Case 2: Fail if the source file does not exist
+# - name: Fail if src file does not exist
+#   win_robocopy:
+#     src: "{{ src_directory }}\\NonExistentFile.txt"
+#     dst: "{{ dst_directory }}"
+#   register: fail_src_file_not_exist
+#   ignore_errors: true
+
+
+# - name: Validate result - Fail if src file does not exist
+#   assert:
+#     that:
+#     - fail_src_file_not_exist is failed
+#     - "'does not exist' in fail_src_file_not_exist.msg"
+
+# # Test Case 3: Perform a regular copy in check mode
+# - name: Regular copy in check mode
+#   win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#   register: check_mode_copy
+#   check_mode: yes
+
+# - name: Validate result - Regular copy in check mode
+#   assert:
+#     that:
+#     - check_mode_copy is changed
+
+# # Test Case 4: Perform a regular copy (non-check mode)
+# - name: Regular copy from src to dst
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     recurse: false
+#   register: regular_copy
+
+# - name: Validate result - Regular copy from src to dst
+#   assert:
+#     that:
+#     - regular_copy is changed
+
+# # Test Case 5: Idempotency check after regular copy
+# - name: Idempotency check after regular copy
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     recurse: false
+#   register: idempotent_regular_copy
+
+# - name: Validate result - Idempotency check after regular copy
+#   assert:
+#     that:
+#     - idempotent_regular_copy is not changed
+
+# # Test Case 6: Prune extra files in check mode
+# - name: Create extra file in destination directory
+#   ansible.windows.win_copy:
+#     content: "Extra content"
+#     dest: "{{ dst_directory }}\\ExtraFile.txt"
+
+# - name: Prune extra file in check mode
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     purge: true
+#   register: prune_check_mode
+#   check_mode: yes
+
+# - name: Validate result - Prune extra file in check mode
+#   assert:
+#     that:
+#     - prune_check_mode is changed
+
+# # Test Case 7: Prune extra files for real
+# - name: Prune extra files for real
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     purge: true
+#   register: prune_real
+
+# - name: Validate result - Prune extra files for real
+#   assert:
+#     that:
+#     - prune_real is changed
+
+# # Test Case 8: Idempotency after pruning
+# - name: Idempotency after pruning
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     purge: true
+#   register: idempotent_prune
+
+# - name: Validate result - Idempotency after pruning
+#   assert:
+#     that:
+#     - idempotent_prune is not changed
+
+# # Test Case 9: Recursive copy with subdirectories
+# - name: Create a subdirectory in the source directory
+#   ansible.windows.win_file:
+#     path: "{{ src_directory }}\\SubDir"
+#     state: directory
+
+# - name: Create a test file in the subdirectory
+#   ansible.windows.win_copy:
+#     content: "Subdirectory content"
+#     dest: "{{ src_directory }}\\SubDir\\SubFile.txt"
+
+# - name: Recursive copy in check mode
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     recurse: true
+#   register: recursive_check_mode
+#   check_mode: yes
+
+# - name: Validate result - Recursive copy in check mode
+#   assert:
+#     that:
+#     - recursive_check_mode is changed
+
+# - name: Recursive copy for real
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     recurse: true
+#   register: recursive_real
+
+# - name: Validate result - Recursive copy for real
+#   assert:
+#     that:
+#     - recursive_real is changed
+
+# - name: Idempotency after recursive copy
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     recurse: true
+#   register: idempotent_recursive
+
+# - name: Validate result - Idempotency after recursive copy
+#   assert:
+#     that:
+#     - idempotent_recursive is not changed
+
+# # Test Case: Use /XO to exclude older files
+# - name: Create an older file in the src directory
+#   ansible.windows.win_copy:
+#     dest: "{{ src_directory }}\\OlderFile.txt"
+#     content: "Older write test"
+#   register: older_file
+
+# - name: Set older timestamp on new src file
+#   ansible.windows.win_shell: |
+#     Get-ChildItem '{{ src_directory }}\\OlderFile.txt' | % {$_.LastWriteTime = '01/11/2005 06:01:36'}
+
+# - name: Create destination file with a newer timestamp
+#   ansible.windows.win_copy:
+#     dest: "{{ dst_directory }}\\OlderFile.txt"
+#     content: "Newer content"
+
+# - name: Use /XO to exclude older files
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     flags: "/XO"
+#   register: exclude_older_result
+
+# - name: Validate result - Use /XO
+#   assert:
+#     that:
+#     - exclude_older_result is not changed
+
+# - name: Delete olderfile in src directory
+#   ansible.windows.win_file:
+#     path: "{{ src_directory }}\\OlderFile.txt"
+#     state: absent
+
+# - name: Delete olderfile in dst directory
+#   ansible.windows.win_file:
+#     path: "{{ dst_directory }}\\OlderFile.txt"
+#     state: absent
+
+# # Test Case: Use /XN to exclude newer files
+# - name: Create a newer file in the src directory
+#   ansible.windows.win_copy:
+#     dest: "{{ src_directory }}\\NewerFile.txt"
+#     content: "test content"
+
+# - name: Set newer timestamp on source file
+#   ansible.windows.win_shell: |
+#     Get-ChildItem '{{ src_directory }}\\NewerFile.txt' | % {$_.LastWriteTime = '01/19/2025 06:01:36'}
+
+# - name: Create destination file with an older timestamp
+#   ansible.windows.win_copy:
+#     dest: "{{ dst_directory }}\\NewerFile.txt"
+#     content: "test content"
+
+# - name: Set older timestamp on destination file
+#   ansible.windows.win_shell: |
+#     Get-ChildItem '{{ dst_directory }}\\NewerFile.txt' | % {$_.LastWriteTime = '01/11/2005 06:01:36'}
+
+# - name: Use /XN to exclude newer files
+#   ansible.windows.win_robocopy:
+#     src: "{{ src_directory }}"
+#     dst: "{{ dst_directory }}"
+#     flags: "/XN"
+#   register: exclude_newer_result
+
+# - name: Validate result - Use /XN
+#   assert:
+#     that:
+#     - exclude_newer_result is not changed
+
+# - name: Delete newerfile in src directory
+#   ansible.windows.win_file:
+#     path: "{{ src_directory }}\\NewerFile.txt"
+#     state: absent
+
+# - name: Delete newerfile in dst directory
+#   ansible.windows.win_file:
+#     path: "{{ dst_directory }}\\NewerFile.txt"
+#     state: absent
+
+# Test Case: Permission denied (bad path)
+- name: Remove write permissions from destination directory
+  ansible.windows.win_shell: |
+    $acl = Get-Acl -Path "{{ dst_directory }}"
+    $deny = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "Write", "Deny")
+    $acl.SetAccessRule($deny)
+    Set-Acl -Path "{{ dst_directory }}" -AclObject $acl
+
+- name: Try copying to a write-protected directory
+  ansible.windows.win_robocopy:
+    src: "{{ src_directory }}"
+    dst: "{{ dst_directory }}"
+    flags: "/r:3 /w:1"
+  register: permission_denied_result
+  ignore_errors: true
+
+- name: Validate result - Permission denied
+  assert:
+    that:
+    - permission_denied_result is failed
+    - "'Access is denied' in permission_denied_result.msg"
+
+- name: Restore permissions on destination directory
+  ansible.windows.win_shell: |
+    $acl = Get-Acl -Path "{{ dst_directory }}"
+    $deny = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "Write", "Allow")
+    $acl.SetAccessRule($deny)
+    Set-Acl -Path "{{ dst_directory }}" -AclObject $acl

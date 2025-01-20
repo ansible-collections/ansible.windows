@@ -1,0 +1,3 @@
+src_directory: C:\TestSource
+src_file: C:\TestSource\TestFile.txt
+dst_directory: C:\TestDestination
