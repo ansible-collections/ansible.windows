@@ -28,6 +28,7 @@
   assert:
     that:
     - create_check is changed
+    - create_check.sid == "S-1-5-0000"
     - create_check_actual.output == []
 
 - name: create group
@@ -50,9 +51,11 @@
   assert:
     that:
     - create is changed
+    - create.sid is defined
     - create_actual.output | length == 1
     - create_actual.output[0].Name == test_win_group_name
     - create_actual.output[0].Description == ""
+    - create_actual.output[0].SID.Value == create.sid
 
 - name: create group - idempotent
   win_group:
@@ -63,6 +66,7 @@
   assert:
     that:
     - not create_again is changed
+    - create_again.sid == create.sid
 
 - name: set description of existing group - check
   win_group:
@@ -86,6 +90,7 @@
   assert:
     that:
     - set_description_check is changed
+    - set_description_check.sid == create.sid
     - set_description_check_actual.output | length == 1
     - set_description_check_actual.output[0].Name == test_win_group_name
     - set_description_check_actual.output[0].Description == ""
@@ -111,6 +116,7 @@
   assert:
     that:
     - set_description is changed
+    - set_description.sid == create.sid
     - set_description_actual.output | length == 1
     - set_description_actual.output[0].Name == test_win_group_name
     - set_description_actual.output[0].Description == "My desc"
@@ -125,6 +131,7 @@
   assert:
     that:
     - not set_description_again is changed
+    - set_description_again.sid == create.sid
 
 - name: remove group - check mode
   win_group:
@@ -148,6 +155,7 @@
   assert:
     that:
     - remove_check is changed
+    - remove_check.sid == None
     - remove_check_actual.output | length == 1
 
 - name: remove group
@@ -171,6 +179,7 @@
   assert:
     that:
     - remove is changed
+    - remove.sid == None
     - remove_actual.output == []
 
 - name: remove group - idempotent
@@ -183,6 +192,7 @@
   assert:
     that:
     - not remove_again is changed
+    - remove_again.sid == None
 
 - name: create group with desc - check mode
   win_group:
@@ -206,6 +216,7 @@
   assert:
     that:
     - create_desc_check is changed
+    - create_desc_check.sid == "S-1-5-0000"
     - create_desc_check_actual.output == []
 
 - name: create group with desc
@@ -229,9 +240,11 @@
   assert:
     that:
     - create_desc is changed
+    - create_desc.sid is defined
     - create_desc_actual.output | length == 1
     - create_desc_actual.output[0].Name == test_win_group_name
     - create_desc_actual.output[0].Description == "My desc"
+    - create_desc_actual.output[0].SID.Value == create_desc.sid
 
 - name: create group with desc - idempotent
   win_group:
@@ -243,6 +256,7 @@
   assert:
     that:
     - not create_desc_again is changed
+    - create_desc_again.sid == create_desc.sid
 
 - name: remove description from group - check mode
   win_group:
@@ -266,6 +280,7 @@
   assert:
     that:
     - remove_desc_check is changed
+    - remove_desc_check.sid == create_desc.sid
     - remove_desc_check_actual.output | length == 1
     - remove_desc_check_actual.output[0].Name == test_win_group_name
     - remove_desc_check_actual.output[0].Description == "My desc"
@@ -291,6 +306,7 @@
   assert:
     that:
     - remove_desc is changed
+    - remove_desc.sid == create_desc.sid
     - remove_desc_actual.output | length == 1
     - remove_desc_actual.output[0].Name == test_win_group_name
     - remove_desc_actual.output[0].Description == ""
@@ -305,3 +321,9 @@
   assert:
     that:
     - not remove_desc_again is changed
+    - remove_desc_again.sid == create_desc.sid
+
+- name: remove group for subsequent tests
+  win_group:
+    name: '{{ test_win_group_name }}'
+    state: absent
