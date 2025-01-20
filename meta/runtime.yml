@@ -1,4 +1,4 @@
-requires_ansible: ">=2.15"
+requires_ansible: ">=2.15.0"
 plugin_routing:
   modules:
     win_domain_controller:
