@@ -1,0 +1,3 @@
+minor_changes:
+  - >-
+      Set minimum supported Ansible version to 2.16.0 to align with the versions still supported by Ansible.

@@ -115,20 +115,6 @@ stages:
               test: sanity
             - name: Units
               test: units
-  - stage: Ansible_2_15
-    displayName: Ansible 2.15
-    dependsOn:
-      - Dependencies
-    jobs:
-      - template: templates/matrix.yml
-        parameters:
-          nameFormat: '{0}'
-          testFormat: '2.15/{0}'
-          targets:
-            - name: Sanity
-              test: sanity
-            - name: Units
-              test: units
   - stage: Windows_1
     displayName: Windows 1
     dependsOn:
@@ -232,7 +218,6 @@ stages:
       - Ansible_2_18
       - Ansible_2_17
       - Ansible_2_16
-      - Ansible_2_15
       - Windows_1
       - Windows_2
       - Windows_3
