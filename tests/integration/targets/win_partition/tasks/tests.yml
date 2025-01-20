@@ -47,7 +47,7 @@
 
 - name: Create 1 gib partition using drive_letter and default (huge) mbr type
   win_partition:
-    drive_letter: D
+    drive_letter: H
     state: present
     partition_size: 1 GiB
     disk_number: 1
@@ -56,7 +56,7 @@
 
 - name: Create 1 gib partition using drive_letter and default (huge) mbr type (idempotence)
   win_partition:
-    drive_letter: D
+    drive_letter: H
     state: present
     partition_size: 1 GiB
     disk_number: 1
@@ -64,7 +64,7 @@
   register: create_small_part_idempotence
 
 - name: "Check if partition was created successfully"
-  ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter D; "$($AnsiPart.DriveLetter),$($AnsiPart.Size),$($AnsiPart.IsActive),$($AnsiPart.MbrType)"
+  ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter H; "$($AnsiPart.DriveLetter),$($AnsiPart.Size),$($AnsiPart.IsActive),$($AnsiPart.MbrType)"
   register: get_small_part
 
 - assert:
@@ -72,7 +72,7 @@
       - create_small_part_check is changed
       - create_small_part is changed
       - create_small_part_idempotence is not changed
-      - get_small_part.stdout | trim == "D,1073741824,True,6"
+      - get_small_part.stdout | trim == "H,1073741824,True,6"
 
 - name: "Change drive letter, maximize partition size and set partition to read only (check mode)"
   win_partition:
@@ -200,7 +200,7 @@
 
 - name: "Adding a drive letter to our partition should bring it back online (check mode)"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     disk_number: 1
     partition_number: 1
   register: add_drive_letter_check
@@ -209,7 +209,7 @@
 
 - name: "Adding a drive letter to our partition should bring it back online"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     disk_number: 1
     partition_number: 1
   register: add_drive_letter
@@ -217,7 +217,7 @@
 
 - name: "Adding a drive letter to our partition should bring it back online (idempotence)"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     disk_number: 1
     partition_number: 1
   register: add_drive_letter_idempotence
@@ -233,24 +233,24 @@
       - add_drive_letter_check is changed
       - add_drive_letter is changed
       - add_drive_letter_idempotence is not changed
-      - confirm_add_drive_letter.stdout | trim == "D,False"
+      - confirm_add_drive_letter.stdout | trim == "H,False"
 
 - name: "Remove partition again (check mode)"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     state: absent
   register: delete_partition_again_check
   check_mode: True
 
 - name: "Remove partition again"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     state: absent
   register: delete_partition_again
 
 - name: "Remove partition again (idempotence)"
   win_partition:
-    drive_letter: D
+    drive_letter: H
     state: absent
   register: delete_partition_again_idempotence
 
