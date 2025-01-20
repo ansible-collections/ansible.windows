@@ -1,14 +1,34 @@
-- name: remove test group before test
-  win_group:
-    name: '{{ test_win_group_name }}'
-    state: absent
-
 - block:
+  - name: remove test group before test
+    win_group:
+      name: '{{ test_win_group_name }}'
+      state: absent
+
+  - name: create test users
+    win_user:
+      name: '{{ item }}'
+      state: present
+      password: 7a4e3943-3f80-4b6b-baed-408c2d763c8f
+    register: test_users
+    loop:
+    - LocalUser1
+    - LocalUser2
+    - LocalUser3
+
   - name: run tests
     import_tasks: tests.yml
+
+  - name: run membership tests
+    import_tasks: members.yml
 
   always:
   - name: remove test group after test
     win_group:
       name: '{{ test_win_group_name }}'
       state: absent
+
+  - name: remove test users after test
+    win_user:
+      name: '{{ item.name }}'
+      state: absent
+    loop: '{{ test_users.results | default([]) }}'

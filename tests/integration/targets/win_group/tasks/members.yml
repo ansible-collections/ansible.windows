@@ -1,0 +1,289 @@
+- name: set get local users script
+  set_fact:
+    get_local_users: |
+      param(
+          [Parameter(Mandatory)]
+          [string]
+          $Name
+      )
+
+      Get-LocalGroup -Name $Name -ErrorAction SilentlyContinue |
+          Get-LocalGroupMember |
+          ForEach-Object -Process {
+              $domain, $user = $_.Name -split '\\', 2
+              if ($domain -eq $env:COMPUTERNAME) {
+                  $domain = '.'
+              }
+
+              [PSCustomObject]@{
+                  Name = "$domain\$user"
+                  SID = $_.SID.Value
+              }
+          } | Sort-Object { $_.Name }
+
+- name: fail when add and set together
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser1
+      set:
+      - LocalUser2
+  register: add_set_fail
+  failed_when: >-
+    add_set_fail is successful or
+    add_set_fail.msg != "parameters are mutually exclusive: set, add found in members"
+
+- name: fail when remove and set together
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      remove:
+      - LocalUser1
+      set:
+      - LocalUser2
+  register: remove_set_fail
+  failed_when: >-
+    remove_set_fail is successful or
+    remove_set_fail.msg != "parameters are mutually exclusive: set, remove found in members"
+
+- name: create group with members - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser1
+      remove:
+      - .\LocalUser2
+  register: member_create_check
+  check_mode: true
+
+- name: get result of create group with members - check mode
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_create_check_actual
+
+- name: assert create group with members - check mode
+  assert:
+    that:
+    - member_create_check is changed
+    - member_create_check.sid == 'S-1-5-0000'
+    - member_create_check_actual.output == []
+
+- name: create group with members
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser1
+      remove:
+      - .\LocalUser2
+  register: member_create
+
+- name: get result of create group with members
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_create_actual
+
+- name: assert create group with members
+  assert:
+    that:
+    - member_create is changed
+    - member_create.sid is defined
+    - member_create_actual.output | length == 1
+    - member_create_actual.output[0].Name == '.\LocalUser1'
+    - member_create_actual.output[0].SID == test_users.results[0].sid
+
+- name: create group with members - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser1
+      - LocalUser1
+      remove:
+      - .\LocalUser2
+  register: member_create_again
+
+- name: assert create group with members - idempotent
+  assert:
+    that:
+    - not member_create_again is changed
+
+- name: add and remove members - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser2
+      - .\LocalUser2
+      remove:
+      - LocalUser1
+  register: member_add_remove_check
+  check_mode: true
+
+- name: get result of add and remove members - check mode
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_add_remove_check_actual
+
+- name: assert add and remove members - check mode
+  assert:
+    that:
+    - member_add_remove_check is changed
+    - member_add_remove_check_actual.output | length == 1
+    - member_add_remove_check_actual.output[0].Name == '.\LocalUser1'
+    - member_add_remove_check_actual.output[0].SID == test_users.results[0].sid
+
+- name: add and remove members
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      add:
+      - LocalUser2
+      - .\LocalUser2
+      remove:
+      - LocalUser1
+  register: member_add_remove
+
+- name: get result of add and remove members
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_add_remove_actual
+
+- name: assert add and remove members
+  assert:
+    that:
+    - member_add_remove is changed
+    - member_add_remove_actual.output | length == 1
+    - member_add_remove_actual.output[0].Name == '.\LocalUser2'
+    - member_add_remove_actual.output[0].SID == test_users.results[1].sid
+
+- name: set members - check mode
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      set:
+      - LocalUser3
+      - '{{ test_users.results[0].sid }}'
+  register: member_set_check
+  check_mode: true
+
+- name: get result of set members - check mode
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_set_check_actual
+
+- name: assert set members - check mode
+  assert:
+    that:
+    - member_set_check is changed
+    - member_set_check_actual.output | length == 1
+    - member_set_check_actual.output[0].Name == '.\LocalUser2'
+    - member_set_check_actual.output[0].SID == test_users.results[1].sid
+
+- name: set members
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      set:
+      - LocalUser3
+      - '{{ test_users.results[0].sid }}'
+  register: member_set
+
+- name: get result of set members
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_set_actual
+
+- name: assert set members
+  assert:
+    that:
+    - member_set is changed
+    - member_set_actual.output | length == 2
+    - member_set_actual.output[0].Name == '.\LocalUser1'
+    - member_set_actual.output[0].SID == test_users.results[0].sid
+    - member_set_actual.output[1].Name == '.\LocalUser3'
+    - member_set_actual.output[1].SID == test_users.results[2].sid
+
+- name: set members - idempotent
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      set:
+      - LocalUser3
+      - '{{ test_users.results[0].sid }}'
+  register: member_set_again
+
+- name: assert set members - idempotent
+  assert:
+    that:
+    - not member_set_again is changed
+
+- name: expect failure when translating invalid member name
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      set:
+      - LocalUser1
+      - InvalidUser
+  register: invalid_member
+  failed_when: >-
+    invalid_member is successful or
+    not invalid_member.msg is search(".*Failed to translate 'InvalidUser' to a SecurityIdentifier.*")
+
+- name: get result of set members
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: invalid_member_actual
+
+- name: assert group membership are translation failure
+  assert:
+    that:
+    - invalid_member_actual.output | length == 2
+    - invalid_member_actual.output[0].Name == '.\LocalUser1'
+    - invalid_member_actual.output[0].SID == test_users.results[0].sid
+    - invalid_member_actual.output[1].Name == '.\LocalUser3'
+    - invalid_member_actual.output[1].SID == test_users.results[2].sid
+
+- name: clear all members
+  win_group:
+    name: '{{ test_win_group_name }}'
+    members:
+      set: []
+  register: member_clear
+
+- name: get result of clear all members
+  win_powershell:
+    script: '{{ get_local_users }}'
+    parameters:
+      Name: '{{ test_win_group_name }}'
+  changed_when: false
+  register: member_clear_actual
+
+- name: assert clear all members
+  assert:
+    that:
+    - member_clear is changed
+    - member_clear_actual.output == []
