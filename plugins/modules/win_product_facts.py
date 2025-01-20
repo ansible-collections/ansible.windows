@@ -10,13 +10,14 @@ module: win_product_facts
 short_description: Provides Windows product and license information
 description:
 - Provides Windows product and license information.
+version_added: 2.7.0
 author:
 - Dag Wieers (@dagwieers)
 '''
 
 EXAMPLES = r'''
 - name: Get product id and product key
-  community.windows.win_product_facts:
+  ansible.windows.win_product_facts:
 
 - name: Display Windows edition
   debug:
