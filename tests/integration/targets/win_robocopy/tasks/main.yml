@@ -1,0 +1,29 @@
+---
+- name: Create source directory
+  ansible.windows.win_file:
+      path: "{{ src_directory  }}"
+      state: directory
+
+- name: Create source file
+  ansible.windows.win_copy:
+      content: "Test content"
+      dest: "{{ src_file }}"
+
+- name: Create destination directory
+  ansible.windows.win_file:
+      path: "{{ dst_directory  }}"
+      state: directory
+
+- block:
+    - include_tasks: tests.yml
+
+  always:
+  - name: Delete source directory
+    ansible.windows.win_file:
+        path: "{{ src_directory  }}"
+        state: absent
+
+  - name: Delete destination directory
+    ansible.windows.win_file:
+        path: "{{ dst_directory  }}"
+        state: absent
