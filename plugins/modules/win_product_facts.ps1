@@ -78,8 +78,9 @@ if (-not $product_key) {
 }
 
 # Retrieve license information
-$license_info = Get-CimInstance SoftwareLicensingProduct | Where-Object PartialProductKey
-
+$license_info = Get-CimInstance SoftwareLicensingProduct | Where-Object {
+    $product_key -match $_.PartialProductKey -and $_.Name -match "Windows"
+}
 $winlicense_status = switch ($license_info.LicenseStatus) {
     0 { "Unlicensed" }
     1 { "Licensed" }
