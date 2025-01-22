@@ -1,3 +1,0 @@
-minor_changes:
-  - >-
-    win_group - Migrate to newer Ansible.Basic fragment for better input validation and testing support.

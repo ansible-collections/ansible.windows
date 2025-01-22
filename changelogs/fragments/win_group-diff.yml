@@ -1,3 +1,0 @@
-minor_changes:
-  - >-
-      win_group - Added ``--diff`` output support.

@@ -825,3 +825,72 @@ releases:
       name: win_timezone
       namespace: ''
     release_date: '2024-12-11'
+  2.7.0:
+    changes:
+      bugfixes:
+      - win_group_membership - Fix bug when input ``members`` contained duplicate
+        members that were not already present in the group - https://github.com/ansible-collections/ansible.windows/issues/736
+      minor_changes:
+      - win_get_url - if checksum is passed and destination file exists with different
+        checksum file is always downloaded (https://github.com/ansible-collections/ansible.windows/issues/717)
+      - win_get_url - if checksum is passed and destination file exists with identical
+        checksum no download is done unless force=yes (https://github.com/ansible-collections/ansible.windows/issues/717)
+      - win_group - Added ``--diff`` output support.
+      - win_group - Added ``members`` option to set the group membership. This is
+        designed to replace the functionality of the ``win_group_membership`` module.
+      - win_group - Added ``sid`` return value representing the security identifier
+        of the group when ``state=present``.
+      - win_group - Migrate to newer Ansible.Basic fragment for better input validation
+        and testing support.
+      release_summary: Release summary for v2.7.0
+    fragments:
+    - 717-win_get_url-checksum.yml
+    - release-summary.yml
+    - win_group-basic.yml
+    - win_group-diff.yml
+    - win_group-sid.yml
+    - win_group_membership-unique.yml
+    modules:
+    - description: Used to make changes to the system wide Audit Policy
+      name: win_audit_policy_system
+      namespace: ''
+    - description: Adds an audit rule to files, folders, or registry keys
+      name: win_audit_rule
+      namespace: ''
+    - description: Adds or Sets auto logon registry keys.
+      name: win_auto_logon
+      namespace: ''
+    - description: Set windows description, owner and organization
+      name: win_computer_description
+      namespace: ''
+    - description: Manages Windows Credentials in the Credential Manager
+      name: win_credential
+      namespace: ''
+    - description: Gather information about Windows features
+      name: win_feature_info
+      namespace: ''
+    - description: Alters the compression of files and directories on NTFS partitions.
+      name: win_file_compression
+      namespace: ''
+    - description: Manages proxy settings for WinHTTP
+      name: win_http_proxy
+      namespace: ''
+    - description: Manages proxy settings for WinINet and Internet Explorer
+      name: win_inet_proxy
+      namespace: ''
+    - description: Recopilates the facts of the listening ports of the machine
+      name: win_listen_ports_facts
+      namespace: ''
+    - description: Map network drives for users
+      name: win_mapped_drive
+      namespace: ''
+    - description: Provides Windows product and license information
+      name: win_product_facts
+      namespace: ''
+    - description: Add or remove a static route
+      name: win_route
+      namespace: ''
+    - description: Manages the Windows user profiles.
+      name: win_user_profile
+      namespace: ''
+    release_date: '2025-01-22'
