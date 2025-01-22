@@ -1,6 +1,0 @@
-minor_changes:
-  - >-
-      win_group - Added ``sid`` return value representing the security identifier of the group when ``state=present``.
-  - >-
-      win_group - Added ``members`` option to set the group membership. This is designed to replace the functionality
-      of the ``win_group_membership`` module.

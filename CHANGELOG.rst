@@ -4,6 +4,47 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.7.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.7.0
+
+Minor Changes
+-------------
+
+- win_get_url - if checksum is passed and destination file exists with different checksum file is always downloaded (https://github.com/ansible-collections/ansible.windows/issues/717)
+- win_get_url - if checksum is passed and destination file exists with identical checksum no download is done unless force=yes (https://github.com/ansible-collections/ansible.windows/issues/717)
+- win_group - Added ``--diff`` output support.
+- win_group - Added ``members`` option to set the group membership. This is designed to replace the functionality of the ``win_group_membership`` module.
+- win_group - Added ``sid`` return value representing the security identifier of the group when ``state=present``.
+- win_group - Migrate to newer Ansible.Basic fragment for better input validation and testing support.
+
+Bugfixes
+--------
+
+- win_group_membership - Fix bug when input ``members`` contained duplicate members that were not already present in the group - https://github.com/ansible-collections/ansible.windows/issues/736
+
+New Modules
+-----------
+
+- win_audit_policy_system - Used to make changes to the system wide Audit Policy
+- win_audit_rule - Adds an audit rule to files, folders, or registry keys
+- win_auto_logon - Adds or Sets auto logon registry keys.
+- win_computer_description - Set windows description, owner and organization
+- win_credential - Manages Windows Credentials in the Credential Manager
+- win_feature_info - Gather information about Windows features
+- win_file_compression - Alters the compression of files and directories on NTFS partitions.
+- win_http_proxy - Manages proxy settings for WinHTTP
+- win_inet_proxy - Manages proxy settings for WinINet and Internet Explorer
+- win_listen_ports_facts - Recopilates the facts of the listening ports of the machine
+- win_mapped_drive - Map network drives for users
+- win_product_facts - Provides Windows product and license information
+- win_route - Add or remove a static route
+- win_user_profile - Manages the Windows user profiles.
+
 v2.6.0
 ======
 
