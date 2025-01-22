@@ -25,6 +25,10 @@ Plugins and modules within a collection may be tested with only specific Ansible
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
 
+## Changelog
+
+See [CHANGELOG.rst](https://github.com/ansible-collections/ansible.windows/blob/main/CHANGELOG.rst) for the release history and changes made to this collection.
+
 ## Collection Documentation
 
 Browsing the [**latest** collection documentation](https://docs.ansible.com/ansible/latest/collections/ansible/windows) will show docs for the _latest version released in the Ansible package_ not the latest version of the collection released on Galaxy.
