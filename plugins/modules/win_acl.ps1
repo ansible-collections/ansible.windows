@@ -7,10 +7,10 @@
 # Copyright: (c) 2023, Jordan Pitlor <jordan@pitlor.dev>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.PrivilegeUtil
-#Requires -Module Ansible.ModuleUtils.SID
-#Requires -Module Ansible.ModuleUtils.LinkUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.Legacy
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.PrivilegeUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.SID
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.LinkUtil
 #AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils._CertACLHelper
 
 $ErrorActionPreference = "Stop"

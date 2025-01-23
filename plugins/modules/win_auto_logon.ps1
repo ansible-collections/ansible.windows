@@ -5,7 +5,7 @@
 
 # All helper methods are written in a binary module and has to be loaded for consuming them.
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.AddType
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 Set-StrictMode -Version 2.0
 

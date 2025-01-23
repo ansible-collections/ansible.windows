@@ -5,7 +5,7 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
-#Requires -Module Ansible.ModuleUtils.CamelConversion
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.CamelConversion
 
 $ErrorActionPreference = "Stop"
 

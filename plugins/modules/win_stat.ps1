@@ -4,8 +4,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.FileUtil
-#Requires -Module Ansible.ModuleUtils.LinkUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.FileUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.LinkUtil
 
 function ConvertTo-Timestamp($start_date, $end_date) {
     if ($start_date -and $end_date) {

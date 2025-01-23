@@ -4,8 +4,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.ArgvParser
-#Requires -Module Ansible.ModuleUtils.CommandUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.ArgvParser
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.CommandUtil
 
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidLongLines', '',
     Justification = 'XML literal values exceed this line')]

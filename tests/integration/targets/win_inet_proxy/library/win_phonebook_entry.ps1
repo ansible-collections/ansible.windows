@@ -4,7 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.AddType
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 # This is a very basic skeleton of a possible Windows module for managing RAS connections. It is mostly barebones
 # to enable testing for win_inet_proxy but I've done a bit of extra work in the PInvoke space to possible expand

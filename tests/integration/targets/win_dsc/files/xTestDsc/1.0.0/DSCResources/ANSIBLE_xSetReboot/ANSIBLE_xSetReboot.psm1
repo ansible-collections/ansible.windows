@@ -2,8 +2,6 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSDSCDscTestsPresent", "")]
 param()
 
-#Requires -Version 5.0 -Modules CimCmdlets
-
 Function Get-TargetResource {
     [CmdletBinding()]
     [OutputType([Hashtable])]

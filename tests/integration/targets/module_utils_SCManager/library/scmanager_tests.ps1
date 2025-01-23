@@ -2,8 +2,8 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.SCManager
-#Requires -Module Ansible.ModuleUtils.ArgvParser
-#Requires -Module Ansible.ModuleUtils.CommandUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.ArgvParser
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.CommandUtil
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, @{})
 

@@ -3,9 +3,9 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.CommandUtil
-#Requires -Module Ansible.ModuleUtils.FileUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.Legacy
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.CommandUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.FileUtil
 
 # TODO: add check mode support
 

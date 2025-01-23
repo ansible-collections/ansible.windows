@@ -22,6 +22,51 @@ $spec = @{
     supports_check_mode = $true
 }
 
+Function ConvertFrom-AnsibleJson {
+    param(
+        [Parameter(Mandatory = $true, Position = 0)][String]$InputObject
+    )
+
+    # we can use -AsHashtable to get PowerShell to convert the JSON to
+    # a Hashtable and not a PSCustomObject. This was added in PowerShell
+    # 6.0, fall back to a manual conversion for older versions
+    $cmdlet = Get-Command -Name ConvertFrom-Json -CommandType Cmdlet
+    if ("AsHashtable" -in $cmdlet.Parameters.Keys) {
+        return , (ConvertFrom-Json -InputObject $InputObject -AsHashtable)
+    }
+    else {
+        # get the PSCustomObject and then manually convert from there
+        $raw_obj = ConvertFrom-Json -InputObject $InputObject
+
+        Function ConvertTo-Hashtable {
+            param($InputObject)
+
+            if ($null -eq $InputObject) {
+                return $null
+            }
+
+            if ($InputObject -is [PSCustomObject]) {
+                $new_value = @{}
+                foreach ($prop in $InputObject.PSObject.Properties.GetEnumerator()) {
+                    $new_value.($prop.Name) = (ConvertTo-Hashtable -InputObject $prop.Value)
+                }
+                return , $new_value
+            }
+            elseif ($InputObject -is [Array]) {
+                $new_value = [System.Collections.ArrayList]@()
+                foreach ($val in $InputObject) {
+                    $new_value.Add((ConvertTo-Hashtable -InputObject $val)) > $null
+                }
+                return , $new_value.ToArray()
+            }
+            else {
+                return , $InputObject
+            }
+        }
+        return , (ConvertTo-Hashtable -InputObject $raw_obj)
+    }
+}
+
 # This module can be called by the gather_facts action plugin in ansible-base. While it shouldn't add any new options
 # we need to make sure the module doesn't break if it does. To do this we need to add any options in the input args
 if ($args.Length -gt 0) {

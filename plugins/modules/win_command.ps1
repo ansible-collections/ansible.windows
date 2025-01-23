@@ -5,7 +5,7 @@
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #AnsibleRequires -PowerShell ..module_utils.Process
-#Requires -Module Ansible.ModuleUtils.FileUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.FileUtil
 
 $spec = @{
     options = @{

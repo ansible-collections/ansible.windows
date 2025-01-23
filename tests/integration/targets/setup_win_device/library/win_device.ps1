@@ -1,7 +1,7 @@
 #!powershell
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.AddType
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
 
 $spec = @{
     options = @{

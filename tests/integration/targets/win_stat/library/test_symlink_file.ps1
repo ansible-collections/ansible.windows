@@ -1,7 +1,7 @@
 #!powershell
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.LinkUtil
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.Legacy
+#AnsibleRequires -PowerShell Ansible.ModuleUtils.LinkUtil
 
 $params = Parse-Args $args
 
