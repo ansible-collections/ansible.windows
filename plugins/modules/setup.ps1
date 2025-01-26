@@ -25,19 +25,28 @@ $spec = @{
 # This module can be called by the gather_facts action plugin in ansible-base. While it shouldn't add any new options
 # we need to make sure the module doesn't break if it does. To do this we need to add any options in the input args
 if ($args.Length -gt 0) {
-    $params = Get-Content -LiteralPath $args[0] | ConvertFrom-AnsibleJson
+    $params = Get-Content $args[0] | ConvertFrom-Json
+    if ($params) {
+        foreach ($prop in $params.PSObject.Properties.Name) {
+            if ($prop.StartsWith('_') -or $spec.options.ContainsKey($prop)) {
+                continue
+            }
+            $spec.options.$prop = @{ type = 'raw' }
+        }
+    }
 }
 else {
     $params = $complex_args
-}
-if ($params) {
-    foreach ($param in $params.GetEnumerator()) {
-        if ($param.Key.StartsWith('_') -or $spec.options.ContainsKey($param.Key)) {
-            continue
+    if ($params) {
+        foreach ($param in $params.GetEnumerator()) {
+            if ($param.Key.StartsWith('_') -or $spec.options.ContainsKey($param.Key)) {
+                continue
+            }
+            $spec.options."$($param.Key)" = @{ type = 'raw' }
         }
-        $spec.options."$($param.Key)" = @{ type = 'raw' }
     }
 }
+
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
