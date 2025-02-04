@@ -1,0 +1,9 @@
+minor_changes:
+  - >-
+    win_powershell - Add support for running scripts on a Windows host with an active Windows Application Control
+    policy in place. Scripts that are unsigned will be run in Constrained Language Mode while scripts that are signed
+    and trusted by the remote host's WDAC policy will be run in Full Language Mode.
+  - >-
+    win_shell - Add support for running scripts on a Windows host with an active Windows Application Control policy
+    in place. Scripts will always run in Contrained Language Mode as they are executed in memory, use the
+    ``ansible.windows.win_powershell`` module to run signed scripts in Full Language Mode on a WDAC enabled host.
