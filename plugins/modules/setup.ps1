@@ -1131,17 +1131,19 @@ $factMeta = @(
             $modelMap = @{
                 kvm = @('KVM', 'KVM Server', 'Bochs', 'AHV')
                 RHEV = @('RHEV Hypervisor')
-                VMware = @('VMWare Virtual Platform', 'VMware7,1')
+                VMware = @('VMWare*')
                 openstack = @('OpenStack Compute', 'OpenStack Nova')
                 xen = @('xen', 'HVM domU')
                 'Hyper-V' = @('Virtual Machine')
                 VirtualBox = @('VirtualBox')
             }
             foreach ($modelInfo in $modelMap.GetEnumerator()) {
-                if ($bios.Model -in $modelInfo.Value) {
-                    $ansibleFacts.ansible_virtualization_role = 'guest'
-                    $ansibleFacts.ansible_virtualization_type = $modelInfo.Key
-                    return
+                foreach ($entry in $modelInfo.Value) {
+                    if ($bios.Model -like $entry) {
+                        $ansibleFacts.ansible_virtualization_role = 'guest'
+                        $ansibleFacts.ansible_virtualization_type = $modelInfo.Key
+                        return
+                    }
                 }
             }
 
