@@ -39,6 +39,24 @@ options:
       or uninstalling a package.
     - This is only used for the C(msi), C(msp), and C(registry) providers.
     type: path
+  checksum:
+    description:
+      - If a I(checksum) is passed to this parameter, the digest of the
+        package will be calculated before executing it to verify that the
+        transfer completed successfully.
+    type: str
+  checksum_algorithm:
+    description:
+      - Specifies the hashing algorithm used when calculating the checksum of
+        the remote and destination file.
+    type: str
+    choices:
+      - md5
+      - sha1
+      - sha256
+      - sha384
+      - sha512
+    default: sha1
   creates_path:
     description:
     - Will check the existence of the path specified and use the result to
@@ -340,6 +358,11 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
+checksum:
+    description: <algorithm> checksum of the package
+    returned: checksum_algorithm is set, package exists, and not check mode
+    type: str
+    sample: 6e642bb8dd5c2e027bf21dd923337cbb4214f827
 log:
   description: The contents of the MSI or MSP log.
   returned: installation/uninstallation failure for MSI or MSP packages
