@@ -28,6 +28,8 @@
 - name: install local msi with log
   win_package:
     path: '{{ test_path }}\good.msi'
+    checksum: '6736380C8C81D6BF1CC9BB6F59A6FC4713AD276EEFF434FC6B35E443CAFBAE55'
+    checksum_algorithm: sha256
     state: present
     log_path: '{{ test_path }}\msi.log'
   register: install_local_msi
@@ -40,6 +42,7 @@
 - name: assert install local msi
   assert:
     that:
+    - install_local_msi.checksum == '6736380C8C81D6BF1CC9BB6F59A6FC4713AD276EEFF434FC6B35E443CAFBAE55'
     - install_local_msi is changed
     - install_local_msi.reboot_required == False
     - install_local_msi.rc == 0

@@ -1,0 +1,5 @@
+minor_changes:
+  - win_get_url - Added ``checksum`` and ``checksum_algorithm`` to verify the
+    package before installation. Also returns ``checksum`` if
+    ``checksum_algorithm`` is provided -
+    https://github.com/ansible-collections/ansible.windows/issues/596
