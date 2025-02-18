@@ -6,6 +6,13 @@
     state: present
     expected_return_code: 0,1603
 
+- name: check mode ignore non-existent files
+  win_package:
+    path: '{{ test_path }}\noexist.msi'
+    state: present
+  register: check_mode_no_exist
+  check_mode: yes
+
 - name: install local msi (check mode)
   win_package:
     path: '{{ test_path }}\good.msi'
@@ -21,6 +28,7 @@
 - name: assert install local msi (check mode)
   assert:
     that:
+    - check_mode_no_exist is changed
     - install_local_msi_check is changed
     - install_local_msi_check.reboot_required == False
     - install_local_msi_actual_check.exists == False
