@@ -713,6 +713,31 @@ Function Invoke-Msiexec {
     }
 }
 
+Function Get-Checksum {
+    param(
+        [Parameter(Mandatory = $true)][String]$Path,
+        [String]$Algorithm = "sha1"
+    )
+
+    switch ($Algorithm) {
+        'md5' { $sp = New-Object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider }
+        'sha1' { $sp = New-Object -TypeName System.Security.Cryptography.SHA1CryptoServiceProvider }
+        'sha256' { $sp = New-Object -TypeName System.Security.Cryptography.SHA256CryptoServiceProvider }
+        'sha384' { $sp = New-Object -TypeName System.Security.Cryptography.SHA384CryptoServiceProvider }
+        'sha512' { $sp = New-Object -TypeName System.Security.Cryptography.SHA512CryptoServiceProvider }
+    }
+
+    $fs = [System.IO.File]::Open($Path, [System.IO.Filemode]::Open, [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::ReadWrite)
+    try {
+        $hash = [System.BitConverter]::ToString($sp.ComputeHash($fs)).Replace("-", "").ToLower()
+    }
+    finally {
+        $fs.Dispose()
+    }
+    return $hash
+}
+
 $providerInfo = [Ordered]@{
     msi = @{
         FileSupported = {
@@ -1282,6 +1307,8 @@ $spec = @{
         expected_return_code = @{ type = "list"; elements = "int"; default = @(0, 3010) }
         path = @{ type = "str" }
         chdir = @{ type = "path" }
+        checksum = @{ type = 'str' }
+        checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
         product_id = @{ type = "str" }
         state = @{
             type = "str"
@@ -1310,6 +1337,8 @@ $arguments = $module.Params.arguments
 $expectedReturnCode = $module.Params.expected_return_code
 $path = $module.Params.path
 $chdir = $module.Params.chdir
+$checksum = $module.Params.checksum
+$checksum_algorithm = $module.Params.checksum_algorithm
 $productId = $module.Params.product_id
 $state = $module.Params.state
 $createsPath = $module.Params.creates_path
@@ -1381,6 +1410,16 @@ try {
                 url { Get-UrlFile -Module $module -Url $path }
             }
             $path = $tempFile
+        }
+
+        if ($checksum_algorithm -and $state -eq 'present' -and $path) {
+            $tmp_checksum = Get-Checksum -Path $path -Algorithm $checksum_algorithm
+            $module.Result.checksum = $tmp_checksum
+
+            # If the checksum has been set, verify the checksum of the remote against the input checksum.
+            if ($checksum -and $checksum -ne $tmp_checksum) {
+                $Module.FailJson(("The checksum for {0} did not match '{1}', it was '{2}'" -f $path, $checksum, $tmp_checksum))
+            }
         }
 
         $setParams = @{
