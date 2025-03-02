@@ -1365,7 +1365,7 @@ try {
         $getParams.Path = $path
     }
     elseif ($path -and -not $pathType) {
-        if (-not (Test-Path -LiteralPath $path)) {
+        if (-not (Test-Path -LiteralPath $path) -and -not $module.CheckMode) {
             $module.FailJson("the file at the path '$path' cannot be reached")
         }
         $getParams.Path = $path
