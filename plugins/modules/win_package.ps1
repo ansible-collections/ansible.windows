@@ -1282,6 +1282,8 @@ $spec = @{
         expected_return_code = @{ type = "list"; elements = "int"; default = @(0, 3010) }
         path = @{ type = "str" }
         chdir = @{ type = "path" }
+        checksum = @{ type = 'str' }
+        checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
         product_id = @{ type = "str" }
         state = @{
             type = "str"
@@ -1310,6 +1312,8 @@ $arguments = $module.Params.arguments
 $expectedReturnCode = $module.Params.expected_return_code
 $path = $module.Params.path
 $chdir = $module.Params.chdir
+$checksum = $module.Params.checksum
+$checksum_algorithm = $module.Params.checksum_algorithm
 $productId = $module.Params.product_id
 $state = $module.Params.state
 $createsPath = $module.Params.creates_path
@@ -1381,6 +1385,16 @@ try {
                 url { Get-UrlFile -Module $module -Url $path }
             }
             $path = $tempFile
+        }
+
+        if ($checksum_algorithm -and $state -eq 'present' -and $path) {
+            $tmp_checksum = (Get-FileHash -LiteralPath $path -Algorithm $checksum_algorithm).Hash
+            $module.Result.checksum = $tmp_checksum
+
+            # If the checksum has been set, verify the checksum of the remote against the input checksum.
+            if ($checksum -and $checksum -ne $tmp_checksum) {
+                $Module.FailJson(("The checksum for {0} did not match '{1}', it was '{2}'" -f $path, $checksum, $tmp_checksum))
+            }
         }
 
         $setParams = @{

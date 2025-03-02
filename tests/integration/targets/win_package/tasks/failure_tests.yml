@@ -58,3 +58,11 @@
     creates_version: 1
   register: fail_creates_version_not_a_file
   failed_when: "'creates_path must be a file not a directory when creates_version is set' not in fail_creates_version_not_a_file.msg"
+
+- name: bad checksum local msi (check mode)
+  win_package:
+    path: '{{ test_path }}\good.msi'
+    checksum: 'deadbeef'
+    state: present
+  register: fail_bad_checksum
+  failed_when: "\"good.msi did not match 'deadbeef', it was '28A630152517E3ED9306729491871264D45D062C'\" not in fail_bad_checksum.msg"
