@@ -111,6 +111,7 @@ options:
       - Set the value to just C(*) to apply the rule for all ICMP type codes.
       - See U(https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml)
         for a list of ICMP types and the codes that apply to them.
+      - ICMP types and codes for IPV6 can be found at U(https://www.iana.org/assignments/icmpv6-parameters/icmpv6-parameters.xhtml).
     type: list
     elements: str
 notes:
