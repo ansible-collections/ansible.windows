@@ -186,6 +186,30 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-checksum"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-checksum"><strong>checksum</strong></p>
+<a class="ansibleOptionLink" href="#parameter-checksum" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.8.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>If a <em>checksum</em> is passed to this parameter, the digest of the package will be calculated before executing it to verify that the path or downloaded file has the expected contents.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-checksum_algorithm"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-checksum-algorithm"><strong>checksum_algorithm</strong></p>
+<a class="ansibleOptionLink" href="#parameter-checksum_algorithm" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.8.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies the hashing algorithm used when calculating the checksum of the path provided.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;md5&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;sha1&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;sha256&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;sha384&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;sha512&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-client_cert"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-parameter-client-cert"><strong>client_cert</strong></p>
 <a class="ansibleOptionLink" href="#parameter-client_cert" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -675,6 +699,16 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-checksum"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-checksum"><strong>checksum</strong></p>
+<a class="ansibleOptionLink" href="#return-checksum" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 2.8.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>&lt;algorithm&gt; checksum of the package</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> checksum_algorithm is set, package exists, and not check mode</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;6E642BB8DD5C2E027BF21DD923337CBB4214F827&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-log"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-log"><strong>log</strong></p>
 <a class="ansibleOptionLink" href="#return-log" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -683,7 +717,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Installation</span> <span class="pre">completed</span> <span class="pre">successfully&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-rc"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-rc"><strong>rc</strong></p>
 <a class="ansibleOptionLink" href="#return-rc" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -692,7 +726,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">0</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-reboot-required"><strong>reboot_required</strong></p>
 <a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -701,7 +735,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-stderr"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-stderr"><strong>stderr</strong></p>
 <a class="ansibleOptionLink" href="#return-stderr" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -710,7 +744,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Failed</span> <span class="pre">to</span> <span class="pre">install</span> <span class="pre">program&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-stdout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-package-module-return-stdout"><strong>stdout</strong></p>
 <a class="ansibleOptionLink" href="#return-stdout" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
