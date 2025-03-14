@@ -107,6 +107,24 @@ options:
         - This is mutually exclusive with I(value) and must be set when
           I(username) is provided.
         type: str
+  enable_winrm_reconnection:
+    description:
+    - Whether to enable automatic WinRM reconnection attempts if the connection is lost.
+    - When set to C(true), the module will attempt to reconnect if a WinRM transport exception occurs.
+    type: bool
+    default: false
+  winrm_reconnection_attempts:
+    description:
+    - The maximum number of reconnection attempts to make when WinRM connection is lost.
+    - Only used when I(enable_winrm_reconnection) is C(true).
+    type: int
+    default: 5
+  winrm_reconnection_delay:
+    description:
+    - The number of seconds to wait between reconnection attempts.
+    - Only used when I(enable_winrm_reconnection) is C(true).
+    type: int
+    default: 10
 seealso:
 - module: ansible.windows.win_command
 - module: ansible.windows.win_shell

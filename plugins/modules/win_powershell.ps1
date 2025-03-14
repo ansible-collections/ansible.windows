@@ -792,97 +792,97 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
         $invoke.Invoke($ps, @(@(), $psOutput))
     }
     catch [System.Management.Automation.Remoting.PSRemotingTransportException] {
-    # This is likely a WinRM connection issue, possibly due to network adapter restart
-    $maxReconnectAttempts = $module.Params.winrm_reconnection_attempts
-    $reconnectDelay = $module.Params.winrm_reconnection_delay
-    $reconnectDelay = 10  # seconds, could be a module parameter
-    $reconnected = $false
-    
-    Write-Verbose -Message "WinRM connection lost, attempting to reconnect..."
-    
-    while ($reconnectAttempts -lt $maxReconnectAttempts) {
-        $reconnectAttempts++
-        Write-Verbose -Message "Reconnection attempt $reconnectAttempts of $maxReconnectAttempts..."
-        Start-Sleep -Seconds $reconnectDelay
-        
-        try {
-            # Close and reopen the runspace
-            if ($runspace) {
-                $runspace.Dispose()
+        # This is likely a WinRM connection issue, possibly due to network adapter restart
+        $maxReconnectAttempts = $module.Params.winrm_reconnection_attempts
+        $reconnectDelay = $module.Params.winrm_reconnection_delay
+        $reconnectAttempts = 0
+        $reconnected = $false
+
+        Write-Verbose -Message "WinRM connection lost, attempting to reconnect..."
+
+        while ($reconnectAttempts -lt $maxReconnectAttempts) {
+            $reconnectAttempts++
+            Write-Verbose -Message "Reconnection attempt $reconnectAttempts of $maxReconnectAttempts..."
+            Start-Sleep -Seconds $reconnectDelay
+
+            try {
+                # Close and reopen the runspace
+                if ($runspace) {
+                    $runspace.Dispose()
+                }
+
+                # Recreate the runspace and PowerShell pipeline
+                if ($processId) {
+                    $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$processId
+                    $connInfo.OpenTimeout = 60000
+                    $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
+                }
+                else {
+                    $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost)
+                }
+
+                $runspace.Open()
+                $ps = [PowerShell]::Create()
+                $ps.Runspace = $runspace
+
+                # Re-add variables and configuration
+                $ps.Runspace.SessionStateProxy.SetVariable('Ansible', [PSCustomObject]@{
+                    PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
+                    CheckMode = $module.CheckMode
+                    Verbosity = $module.Verbosity
+                    Result = @{}
+                    Diff = @{}
+                    Changed = $true
+                    Failed = $false
+                    Tmpdir = $module.Tmpdir
+                })
+
+                $ps.Runspace.SessionStateProxy.SetVariable('ErrorActionPreference', [Management.Automation.ActionPreference]$eap)
+
+                # Verify connectivity with a simple command
+                $testPs = [PowerShell]::Create()
+                $testPs.Runspace = $runspace
+                [void]$testPs.AddScript("1").Invoke()
+                $testPs.Dispose()
+
+                $reconnected = $true
+                Write-Verbose -Message "Successfully reconnected to WinRM"
+
+                # Re-add the script and parameters
+                if ($module.Params.chdir) {
+                    [void]$ps.AddCommand('Set-Location').AddParameter('LiteralPath', $module.Params.chdir).AddStatement()
+                }
+
+                [void]$ps.AddScript($module.Params.script)
+
+                if ($parameters) {
+                    [void]$ps.AddParameters($parameters)
+                }
+
+                # Try invoking again
+                $invoke = $invokeMethod.MakeGenericMethod([object])
+                $invoke.Invoke($ps, @(@(), $psOutput))
+                break
             }
-            
-            # Recreate the runspace and PowerShell pipeline
-            if ($processId) {
-                $connInfo = [System.Management.Automation.Runspaces.NamedPipeConnectionInfo]$processId
-                $connInfo.OpenTimeout = 60000
-                $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
+            catch {
+                Write-Verbose -Message "Reconnection attempt failed: $_"
+                if ($runspace) {
+                    $runspace.Dispose()
+                }
             }
-            else {
-                $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost)
-            }
-            
-            $runspace.Open()
-            $ps = [PowerShell]::Create()
-            $ps.Runspace = $runspace
-            
-            # Re-add variables and configuration
-            $ps.Runspace.SessionStateProxy.SetVariable('Ansible', [PSCustomObject]@{
-                PSTypeName = 'Ansible.Windows.WinPowerShell.Module'
-                CheckMode = $module.CheckMode
-                Verbosity = $module.Verbosity
-                Result = @{}
-                Diff = @{}
-                Changed = $true
-                Failed = $false
-                Tmpdir = $module.Tmpdir
-            })
-            
-            $ps.Runspace.SessionStateProxy.SetVariable('ErrorActionPreference', [Management.Automation.ActionPreference]$eap)
-            
-            # Verify connectivity with a simple command
-            $testPs = [PowerShell]::Create()
-            $testPs.Runspace = $runspace
-            [void]$testPs.AddScript("1").Invoke()
-            $testPs.Dispose()
-            
-            $reconnected = $true
-            Write-Verbose -Message "Successfully reconnected to WinRM"
-            
-            # Re-add the script and parameters
-            if ($module.Params.chdir) {
-                [void]$ps.AddCommand('Set-Location').AddParameter('LiteralPath', $module.Params.chdir).AddStatement()
-            }
-            
-            [void]$ps.AddScript($module.Params.script)
-            
-            if ($parameters) {
-                [void]$ps.AddParameters($parameters)
-            }
-            
-            # Try invoking again
-            $invoke = $invokeMethod.MakeGenericMethod([object])
-            $invoke.Invoke($ps, @(@(), $psOutput))
-            break
         }
-        catch {
-            Write-Verbose -Message "Reconnection attempt failed: $_"
-            if ($runspace) {
-                $runspace.Dispose()
-            }
+
+        if (-not $reconnected) {
+            $module.Result.failed = $true
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList (
+                (New-Object -TypeName System.Exception -ArgumentList "Failed to reconnect after $maxReconnectAttempts attempts"),
+                "WinRMReconnectionFailure",
+                [System.Management.Automation.ErrorCategory]::ConnectionError,
+                $null
+            )
+            $ps.Streams.Error.Add($errorRecord)
         }
     }
-    
-    if (-not $reconnected) {
-        $module.Result.failed = $true
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList (
-            (New-Object -TypeName System.Exception -ArgumentList "Failed to reconnect after $maxReconnectAttempts attempts"),
-            "WinRMReconnectionFailure",
-            [System.Management.Automation.ErrorCategory]::ConnectionError,
-            $null
-        )
-        $ps.Streams.Error.Add($errorRecord)
-    }
-}
     catch [Management.Automation.RuntimeException] {
         # $ErrorActionPrefrence = 'Stop' and an error was raised
         # OR
