@@ -281,19 +281,11 @@ updates:
 filtered_updates:
     description: Updates that were found but were filtered based on
       I(blacklist), I(whitelist) or I(category_names). The return value is in
-      the same form as I(updates), along with I(filtered_reason).
+      the same form as I(updates).
     returned: success
     type: dict
     sample: see the updates return value
     contains:
-        filtered_reason:
-            description:
-            - The reason why this update was filtered.
-            - This value has been deprecated since C(1.7.0), use C(filtered_reasons) which contain a list of all the
-              reasons why the update is filtered.
-            returned: always
-            type: str
-            sample: 'skip_hidden'
         filtered_reasons:
             description:
             - A list of reasons why the update has been filtered.

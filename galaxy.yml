@@ -1,6 +1,6 @@
 namespace: ansible
 name: windows
-version: 2.8.0
+version: 3.0.0
 readme: README.md
 authors:
   - Jordan Borean @jborean93

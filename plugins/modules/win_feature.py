@@ -117,12 +117,6 @@ feature_result:
             returned: always
             type: bool
             sample: true
-        restart_needed:
-            description: DEPRECATED in Ansible 2.4 (refer to C(reboot_required) instead). True when the target server requires a reboot as a
-                         result of installing or removing this feature.
-            returned: always
-            type: bool
-            sample: true
         skip_reason:
             description: The reason a feature installation or removal was skipped.
             returned: always

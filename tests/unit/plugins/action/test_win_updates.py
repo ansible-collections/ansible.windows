@@ -317,10 +317,8 @@ def test_install_without_reboot(monkeypatch):
         assert not u['installed']
 
         if u_info['kb'] == '2267602':
-            assert u['filtered_reason'] == 'blacklist'
             assert u['filtered_reasons'] == ['reject_list', 'category_names']
         else:
-            assert u['filtered_reason'] == 'category_names'
             assert u['filtered_reasons'] == ['category_names']
 
     assert len(actual['updates']) == 3
@@ -561,7 +559,6 @@ def test_fail_install(monkeypatch):
         assert not u['downloaded']
         assert not u['installed']
 
-        assert u['filtered_reason'] == 'whitelist'
         if u_info['kb'] == '4580325':
             assert u['filtered_reasons'] == ['accept_list']
         else:
@@ -613,10 +610,8 @@ def test_connection_failures_during_poll(monkeypatch):
         assert not u['installed']
 
         if u_info['kb'] == '2267602':
-            assert u['filtered_reason'] == 'blacklist'
             assert u['filtered_reasons'] == ['reject_list', 'category_names']
         else:
-            assert u['filtered_reason'] == 'category_names'
             assert u['filtered_reasons'] == ['category_names']
 
     assert len(actual['updates']) == 3

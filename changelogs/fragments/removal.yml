@@ -1,0 +1,6 @@
+removed_features:
+  - win_domain_controller - Removed deprecated module, use ``microsoft.ad.domain_controller`` instead
+  - win_domain_membership - Removed deprecated module, use ``microsoft.ad.membership`` instead
+  - win_domain - Removed deprecated module, use ``microsoft.ad.domain`` instead
+  - win_feature - Removed deprecated return value ``restart_needed`` in ``feature_result``, use ``reboot_required`` instead
+  - win_updates - Removed deprecated return value ``filtered_reason``, use ``filtered_reasons`` instead

@@ -710,16 +710,6 @@ class ActionModule(ActionBase):
 
             for update_id, reasons in self._filtered_updates.items():
                 update_info = self._get_update_info(update_id)
-
-                # filtered_reason is deprecated in favour of filtered_reasons, we also need to use whitelist/blacklist
-                # for backwards compatibility - remove after 2023-06-01.
-                dep_reason = reasons[0]
-                if dep_reason == 'accept_list':
-                    dep_reason = 'whitelist'
-                elif dep_reason == 'reject_list':
-                    dep_reason = 'blacklist'
-                update_info['filtered_reason'] = dep_reason
-
                 update_info['filtered_reasons'] = reasons
 
                 result['filtered_updates'][update_id] = update_info
