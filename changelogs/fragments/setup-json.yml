@@ -1,2 +1,0 @@
-minor_changes:
-  - setup - Remove dependency on shared function loaded by Ansible

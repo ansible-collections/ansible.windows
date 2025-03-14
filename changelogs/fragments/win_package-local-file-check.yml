@@ -1,2 +1,0 @@
-bugfixes:
-  - win_package - Support check mode with local file path sources

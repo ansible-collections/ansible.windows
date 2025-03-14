@@ -894,3 +894,21 @@ releases:
       name: win_user_profile
       namespace: ''
     release_date: '2025-01-22'
+  2.8.0:
+    changes:
+      bugfixes:
+      - setup - Add better detection for VMWare base virtualization platforms - https://github.com/ansible-collections/ansible.windows/issues/753
+      - win_package - Support check mode with local file path sources
+      minor_changes:
+      - setup - Remove dependency on shared function loaded by Ansible
+      - win_get_url - Added ``checksum`` and ``checksum_algorithm`` to verify the
+        package before installation. Also returns ``checksum`` if ``checksum_algorithm``
+        is provided - https://github.com/ansible-collections/ansible.windows/issues/596
+      release_summary: Release summary for v2.8.0
+    fragments:
+    - release-summary.yml
+    - setup-json.yml
+    - setup-vmware.yml
+    - win_package-checksum.yml
+    - win_package-local-file-check.yml
+    release_date: '2025-03-14'

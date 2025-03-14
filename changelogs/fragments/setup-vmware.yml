@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    setup - Add better detection for VMWare base virtualization platforms -
-    https://github.com/ansible-collections/ansible.windows/issues/753

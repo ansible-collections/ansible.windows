@@ -4,6 +4,26 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v2.8.0
+======
+
+Release Summary
+---------------
+
+Release summary for v2.8.0
+
+Minor Changes
+-------------
+
+- setup - Remove dependency on shared function loaded by Ansible
+- win_get_url - Added ``checksum`` and ``checksum_algorithm`` to verify the package before installation. Also returns ``checksum`` if ``checksum_algorithm`` is provided - https://github.com/ansible-collections/ansible.windows/issues/596
+
+Bugfixes
+--------
+
+- setup - Add better detection for VMWare base virtualization platforms - https://github.com/ansible-collections/ansible.windows/issues/753
+- win_package - Support check mode with local file path sources
+
 v2.7.0
 ======
 
