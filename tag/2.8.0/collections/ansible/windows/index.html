@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.16.3" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ansible.Windows &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=41de9001" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=c5b67dd2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.async_status module – Obtain status of asynchronous task" href="async_status_module.html" />
+    <link rel="prev" title="Collections in the Ansible Namespace" href="../index.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Ansible.Windows</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+      <li class="breadcrumb-item active">Ansible.Windows</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <section id="ansible-windows">
+<span id="plugins-in-ansible-windows"></span><h1>Ansible.Windows<a class="headerlink" href="#ansible-windows" title="Link to this heading"></a></h1>
+<p>Collection version 2.8.0</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#description" id="id1">Description</a></p></li>
+<li><p><a class="reference internal" href="#plugin-index" id="id2">Plugin Index</a></p></li>
+</ul>
+</nav>
+<section id="description">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Description</a><a class="headerlink" href="#description" title="Link to this heading"></a></h2>
+<p>Ansible collection for core Windows plugins.</p>
+<p><strong>Authors:</strong></p>
+<ul class="simple">
+<li><p>Jordan Borean &#64;jborean93</p></li>
+<li><p>Matt Davis &#64;nitzmahone</p></li>
+</ul>
+<p><strong>Supported ansible-core versions:</strong></p>
+<ul class="simple">
+<li><p>2.15.0 or newer</p></li>
+</ul>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="plugin-index">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Plugin Index</a><a class="headerlink" href="#plugin-index" title="Link to this heading"></a></h2>
+<p>These are the plugins in the ansible.windows collection:</p>
+<section id="modules">
+<h3>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="async_status_module.html#ansible-collections-ansible-windows-async-status-module"><span class="std std-ref">async_status module</span></a> – Obtain status of asynchronous task</p></li>
+<li><p><a class="reference internal" href="setup_module.html#ansible-collections-ansible-windows-setup-module"><span class="std std-ref">setup module</span></a> – Gathers facts about remote hosts</p></li>
+<li><p><a class="reference internal" href="slurp_module.html#ansible-collections-ansible-windows-slurp-module"><span class="std std-ref">slurp module</span></a> – Slurps a file from remote nodes</p></li>
+<li><p><a class="reference internal" href="win_acl_module.html#ansible-collections-ansible-windows-win-acl-module"><span class="std std-ref">win_acl module</span></a> – Set file/directory/registry/certificate permissions for a system user or group</p></li>
+<li><p><a class="reference internal" href="win_acl_inheritance_module.html#ansible-collections-ansible-windows-win-acl-inheritance-module"><span class="std std-ref">win_acl_inheritance module</span></a> – Change ACL inheritance</p></li>
+<li><p><a class="reference internal" href="win_audit_policy_system_module.html#ansible-collections-ansible-windows-win-audit-policy-system-module"><span class="std std-ref">win_audit_policy_system module</span></a> – Used to make changes to the system wide Audit Policy</p></li>
+<li><p><a class="reference internal" href="win_audit_rule_module.html#ansible-collections-ansible-windows-win-audit-rule-module"><span class="std std-ref">win_audit_rule module</span></a> – Adds an audit rule to files, folders, or registry keys</p></li>
+<li><p><a class="reference internal" href="win_auto_logon_module.html#ansible-collections-ansible-windows-win-auto-logon-module"><span class="std std-ref">win_auto_logon module</span></a> – Adds or Sets auto logon registry keys.</p></li>
+<li><p><a class="reference internal" href="win_certificate_info_module.html#ansible-collections-ansible-windows-win-certificate-info-module"><span class="std std-ref">win_certificate_info module</span></a> – Get information on certificates from a Windows Certificate Store</p></li>
+<li><p><a class="reference internal" href="win_certificate_store_module.html#ansible-collections-ansible-windows-win-certificate-store-module"><span class="std std-ref">win_certificate_store module</span></a> – Manages the certificate store</p></li>
+<li><p><a class="reference internal" href="win_command_module.html#ansible-collections-ansible-windows-win-command-module"><span class="std std-ref">win_command module</span></a> – Executes a command on a remote Windows node</p></li>
+<li><p><a class="reference internal" href="win_computer_description_module.html#ansible-collections-ansible-windows-win-computer-description-module"><span class="std std-ref">win_computer_description module</span></a> – Set windows description, owner and organization</p></li>
+<li><p><a class="reference internal" href="win_copy_module.html#ansible-collections-ansible-windows-win-copy-module"><span class="std std-ref">win_copy module</span></a> – Copies files to remote locations on windows hosts</p></li>
+<li><p><a class="reference internal" href="win_credential_module.html#ansible-collections-ansible-windows-win-credential-module"><span class="std std-ref">win_credential module</span></a> – Manages Windows Credentials in the Credential Manager</p></li>
+<li><p><a class="reference internal" href="win_dhcp_lease_module.html#ansible-collections-ansible-windows-win-dhcp-lease-module"><span class="std std-ref">win_dhcp_lease module</span></a> – Manage Windows Server DHCP Leases</p></li>
+<li><p><a class="reference internal" href="win_dns_client_module.html#ansible-collections-ansible-windows-win-dns-client-module"><span class="std std-ref">win_dns_client module</span></a> – Configures DNS lookup on Windows hosts</p></li>
+<li><p><a class="reference internal" href="win_dns_record_module.html#ansible-collections-ansible-windows-win-dns-record-module"><span class="std std-ref">win_dns_record module</span></a> – Manage Windows Server DNS records</p></li>
+<li><p><a class="reference internal" href="win_dns_zone_module.html#ansible-collections-ansible-windows-win-dns-zone-module"><span class="std std-ref">win_dns_zone module</span></a> – Manage Windows Server DNS Zones</p></li>
+<li><p><a class="reference internal" href="win_domain_module.html#ansible-collections-ansible-windows-win-domain-module"><span class="std std-ref">win_domain module</span></a> – Ensures the existence of a Windows domain <strong class="ansible-deprecation-marker">DEPRECATED: REMOVED IN 3.0.0</strong></p></li>
+<li><p><a class="reference internal" href="win_domain_controller_module.html#ansible-collections-ansible-windows-win-domain-controller-module"><span class="std std-ref">win_domain_controller module</span></a> – Manage domain controller/member server state for a Windows host <strong class="ansible-deprecation-marker">DEPRECATED: REMOVED IN 3.0.0</strong></p></li>
+<li><p><a class="reference internal" href="win_domain_membership_module.html#ansible-collections-ansible-windows-win-domain-membership-module"><span class="std std-ref">win_domain_membership module</span></a> – Manage domain/workgroup membership for a Windows host <strong class="ansible-deprecation-marker">DEPRECATED: REMOVED IN 3.0.0</strong></p></li>
+<li><p><a class="reference internal" href="win_dsc_module.html#ansible-collections-ansible-windows-win-dsc-module"><span class="std std-ref">win_dsc module</span></a> – Invokes a PowerShell DSC configuration</p></li>
+<li><p><a class="reference internal" href="win_environment_module.html#ansible-collections-ansible-windows-win-environment-module"><span class="std std-ref">win_environment module</span></a> – Modify environment variables on windows hosts</p></li>
+<li><p><a class="reference internal" href="win_eventlog_module.html#ansible-collections-ansible-windows-win-eventlog-module"><span class="std std-ref">win_eventlog module</span></a> – Manage Windows event logs</p></li>
+<li><p><a class="reference internal" href="win_feature_module.html#ansible-collections-ansible-windows-win-feature-module"><span class="std std-ref">win_feature module</span></a> – Installs and uninstalls Windows Features on Windows Server</p></li>
+<li><p><a class="reference internal" href="win_feature_info_module.html#ansible-collections-ansible-windows-win-feature-info-module"><span class="std std-ref">win_feature_info module</span></a> – Gather information about Windows features</p></li>
+<li><p><a class="reference internal" href="win_file_module.html#ansible-collections-ansible-windows-win-file-module"><span class="std std-ref">win_file module</span></a> – Creates, touches or removes files or directories</p></li>
+<li><p><a class="reference internal" href="win_file_compression_module.html#ansible-collections-ansible-windows-win-file-compression-module"><span class="std std-ref">win_file_compression module</span></a> – Alters the compression of files and directories on NTFS partitions.</p></li>
+<li><p><a class="reference internal" href="win_find_module.html#ansible-collections-ansible-windows-win-find-module"><span class="std std-ref">win_find module</span></a> – Return a list of files based on specific criteria</p></li>
+<li><p><a class="reference internal" href="win_firewall_module.html#ansible-collections-ansible-windows-win-firewall-module"><span class="std std-ref">win_firewall module</span></a> – Enable or disable the Windows Firewall</p></li>
+<li><p><a class="reference internal" href="win_get_url_module.html#ansible-collections-ansible-windows-win-get-url-module"><span class="std std-ref">win_get_url module</span></a> – Downloads file from HTTP, HTTPS, or FTP to node</p></li>
+<li><p><a class="reference internal" href="win_group_module.html#ansible-collections-ansible-windows-win-group-module"><span class="std std-ref">win_group module</span></a> – Add and remove local groups</p></li>
+<li><p><a class="reference internal" href="win_group_membership_module.html#ansible-collections-ansible-windows-win-group-membership-module"><span class="std std-ref">win_group_membership module</span></a> – Manage Windows local group membership</p></li>
+<li><p><a class="reference internal" href="win_hostname_module.html#ansible-collections-ansible-windows-win-hostname-module"><span class="std std-ref">win_hostname module</span></a> – Manages local Windows computer name</p></li>
+<li><p><a class="reference internal" href="win_hosts_module.html#ansible-collections-ansible-windows-win-hosts-module"><span class="std std-ref">win_hosts module</span></a> – Manages hosts file entries on Windows.</p></li>
+<li><p><a class="reference internal" href="win_hotfix_module.html#ansible-collections-ansible-windows-win-hotfix-module"><span class="std std-ref">win_hotfix module</span></a> – Install and uninstalls Windows hotfixes</p></li>
+<li><p><a class="reference internal" href="win_http_proxy_module.html#ansible-collections-ansible-windows-win-http-proxy-module"><span class="std std-ref">win_http_proxy module</span></a> – Manages proxy settings for WinHTTP</p></li>
+<li><p><a class="reference internal" href="win_inet_proxy_module.html#ansible-collections-ansible-windows-win-inet-proxy-module"><span class="std std-ref">win_inet_proxy module</span></a> – Manages proxy settings for WinINet and Internet Explorer</p></li>
+<li><p><a class="reference internal" href="win_listen_ports_facts_module.html#ansible-collections-ansible-windows-win-listen-ports-facts-module"><span class="std std-ref">win_listen_ports_facts module</span></a> – Recopilates the facts of the listening ports of the machine</p></li>
+<li><p><a class="reference internal" href="win_mapped_drive_module.html#ansible-collections-ansible-windows-win-mapped-drive-module"><span class="std std-ref">win_mapped_drive module</span></a> – Map network drives for users</p></li>
+<li><p><a class="reference internal" href="win_optional_feature_module.html#ansible-collections-ansible-windows-win-optional-feature-module"><span class="std std-ref">win_optional_feature module</span></a> – Manage optional Windows features</p></li>
+<li><p><a class="reference internal" href="win_owner_module.html#ansible-collections-ansible-windows-win-owner-module"><span class="std std-ref">win_owner module</span></a> – Set owner</p></li>
+<li><p><a class="reference internal" href="win_package_module.html#ansible-collections-ansible-windows-win-package-module"><span class="std std-ref">win_package module</span></a> – Installs/uninstalls an installable package</p></li>
+<li><p><a class="reference internal" href="win_path_module.html#ansible-collections-ansible-windows-win-path-module"><span class="std std-ref">win_path module</span></a> – Manage Windows path environment variables</p></li>
+<li><p><a class="reference internal" href="win_ping_module.html#ansible-collections-ansible-windows-win-ping-module"><span class="std std-ref">win_ping module</span></a> – A windows version of the classic ping module</p></li>
+<li><p><a class="reference internal" href="win_powershell_module.html#ansible-collections-ansible-windows-win-powershell-module"><span class="std std-ref">win_powershell module</span></a> – Run PowerShell scripts</p></li>
+<li><p><a class="reference internal" href="win_product_facts_module.html#ansible-collections-ansible-windows-win-product-facts-module"><span class="std std-ref">win_product_facts module</span></a> – Provides Windows product and license information</p></li>
+<li><p><a class="reference internal" href="win_reboot_module.html#ansible-collections-ansible-windows-win-reboot-module"><span class="std std-ref">win_reboot module</span></a> – Reboot a windows machine</p></li>
+<li><p><a class="reference internal" href="win_reg_stat_module.html#ansible-collections-ansible-windows-win-reg-stat-module"><span class="std std-ref">win_reg_stat module</span></a> – Get information about Windows registry keys</p></li>
+<li><p><a class="reference internal" href="win_regedit_module.html#ansible-collections-ansible-windows-win-regedit-module"><span class="std std-ref">win_regedit module</span></a> – Add, change, or remove registry keys and values</p></li>
+<li><p><a class="reference internal" href="win_region_module.html#ansible-collections-ansible-windows-win-region-module"><span class="std std-ref">win_region module</span></a> – Set the region and format settings</p></li>
+<li><p><a class="reference internal" href="win_route_module.html#ansible-collections-ansible-windows-win-route-module"><span class="std std-ref">win_route module</span></a> – Add or remove a static route</p></li>
+<li><p><a class="reference internal" href="win_service_module.html#ansible-collections-ansible-windows-win-service-module"><span class="std std-ref">win_service module</span></a> – Manage and query Windows services</p></li>
+<li><p><a class="reference internal" href="win_service_info_module.html#ansible-collections-ansible-windows-win-service-info-module"><span class="std std-ref">win_service_info module</span></a> – Gather information about Windows services</p></li>
+<li><p><a class="reference internal" href="win_share_module.html#ansible-collections-ansible-windows-win-share-module"><span class="std std-ref">win_share module</span></a> – Manage Windows shares</p></li>
+<li><p><a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">win_shell module</span></a> – Execute shell commands on target hosts</p></li>
+<li><p><a class="reference internal" href="win_stat_module.html#ansible-collections-ansible-windows-win-stat-module"><span class="std std-ref">win_stat module</span></a> – Get information about Windows files</p></li>
+<li><p><a class="reference internal" href="win_tempfile_module.html#ansible-collections-ansible-windows-win-tempfile-module"><span class="std std-ref">win_tempfile module</span></a> – Creates temporary files and directories</p></li>
+<li><p><a class="reference internal" href="win_template_module.html#ansible-collections-ansible-windows-win-template-module"><span class="std std-ref">win_template module</span></a> – Template a file out to a remote server</p></li>
+<li><p><a class="reference internal" href="win_timezone_module.html#ansible-collections-ansible-windows-win-timezone-module"><span class="std std-ref">win_timezone module</span></a> – Sets Windows machine timezone</p></li>
+<li><p><a class="reference internal" href="win_updates_module.html#ansible-collections-ansible-windows-win-updates-module"><span class="std std-ref">win_updates module</span></a> – Download and install Windows updates</p></li>
+<li><p><a class="reference internal" href="win_uri_module.html#ansible-collections-ansible-windows-win-uri-module"><span class="std std-ref">win_uri module</span></a> – Interacts with webservices</p></li>
+<li><p><a class="reference internal" href="win_user_module.html#ansible-collections-ansible-windows-win-user-module"><span class="std std-ref">win_user module</span></a> – Manages local Windows user accounts</p></li>
+<li><p><a class="reference internal" href="win_user_profile_module.html#ansible-collections-ansible-windows-win-user-profile-module"><span class="std std-ref">win_user_profile module</span></a> – Manages the Windows user profiles.</p></li>
+<li><p><a class="reference internal" href="win_user_right_module.html#ansible-collections-ansible-windows-win-user-right-module"><span class="std std-ref">win_user_right module</span></a> – Manage Windows User Rights</p></li>
+<li><p><a class="reference internal" href="win_wait_for_module.html#ansible-collections-ansible-windows-win-wait-for-module"><span class="std std-ref">win_wait_for module</span></a> – Waits for a condition before continuing</p></li>
+<li><p><a class="reference internal" href="win_whoami_module.html#ansible-collections-ansible-windows-win-whoami-module"><span class="std std-ref">win_whoami module</span></a> – Get information about the current user and process</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="filter-plugins">
+<h3>Filter Plugins<a class="headerlink" href="#filter-plugins" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="quote_filter.html#ansible-collections-ansible-windows-quote-filter"><span class="std std-ref">quote filter</span></a> – Quotes argument(s) for various Windows shells</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>List of <a class="reference internal" href="../../index.html#list-of-collections"><span class="std std-ref">collections</span></a> with docs hosted here.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Collections in the Ansible Namespace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="async_status_module.html" class="btn btn-neutral float-right" title="ansible.windows.async_status module – Obtain status of asynchronous task" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
