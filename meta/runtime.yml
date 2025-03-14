@@ -2,14 +2,14 @@ requires_ansible: ">=2.15.0"
 plugin_routing:
   modules:
     win_domain_controller:
-      deprecation:
+      tombstone:
         removal_version: 3.0.0
         warning_text: Use microsoft.ad.domain_controller instead.
     win_domain_membership:
-      deprecation:
+      tombstone:
         removal_version: 3.0.0
         warning_text: Use microsoft.ad.membership instead.
     win_domain:
-      deprecation:
+      tombstone:
         removal_version: 3.0.0
         warning_text: Use microsoft.ad.domain instead.

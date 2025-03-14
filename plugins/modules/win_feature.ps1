@@ -102,7 +102,6 @@ foreach ($action_result in $action_results.FeatureResult) {
         reboot_required = ConvertTo-Bool -obj $action_result.RestartNeeded
         skip_reason = $action_result.SkipReason.ToString()
         success = ConvertTo-Bool -obj $action_result.Success
-        restart_needed = ConvertTo-Bool -obj $action_result.RestartNeeded
     }
     $result.changed = $true
 }
