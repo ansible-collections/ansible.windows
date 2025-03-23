@@ -2275,15 +2275,7 @@ if ($wait) {
 
                     if ($updateInfo.id -in $filterMap.Keys) {
                         $reasons = @($filterMap[$updateInfo.id])
-
-                        # This value is deprecated in favour of the full list and should be removed in 2023-06-01. We also
-                        # need to rename the whitelist/blacklist reasons for backwards compatibility.
-                        $depReason = $reasons[0]
-                        if ($depReason -eq 'accept_list') { $depReason = 'whitelist' }
-                        if ($depReason -eq 'reject_list') { $depReason = 'blacklist' }
-
                         $resultInfo.filtered_reasons = $reasons
-                        $resultInfo.filtered_reason = $depReason
                     }
 
                     $updates[$updateInfo.id] = $resultInfo
