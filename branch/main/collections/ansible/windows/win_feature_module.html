@@ -132,7 +132,7 @@
 <h1>ansible.windows.win_feature module – Installs and uninstalls Windows Features on Windows Server<a class="headerlink" href="#ansible-windows-win-feature-module-installs-and-uninstalls-windows-features-on-windows-server" title="Link to this heading"></a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 2.8.0).</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.0.0).</p>
 <p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
 To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
@@ -330,15 +330,6 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="return-feature_result/restart_needed"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-feature-module-return-feature-result-restart-needed"><strong>restart_needed</strong></p>
-<a class="ansibleOptionLink" href="#return-feature_result/restart_needed" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
-</div></td>
-<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>DEPRECATED in Ansible 2.4 (refer to <code class="docutils literal notranslate"><span class="pre">reboot_required</span></code> instead). True when the target server requires a reboot as a result of installing or removing this feature.</p>
-<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
-<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-feature_result/skip_reason"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-feature-module-return-feature-result-skip-reason"><strong>skip_reason</strong></p>
 <a class="ansibleOptionLink" href="#return-feature_result/skip_reason" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -347,7 +338,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;NotSkipped&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-feature_result/success"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-feature-module-return-feature-result-success"><strong>success</strong></p>
 <a class="ansibleOptionLink" href="#return-feature_result/success" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -356,7 +347,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-feature-module-return-reboot-required"><strong>reboot_required</strong></p>
 <a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>

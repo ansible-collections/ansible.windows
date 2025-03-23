@@ -132,7 +132,7 @@
 <h1>ansible.windows.win_updates module – Download and install Windows updates<a class="headerlink" href="#ansible-windows-win-updates-module-download-and-install-windows-updates" title="Link to this heading"></a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 2.8.0).</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.0.0).</p>
 <p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
 To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
 <p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
@@ -419,22 +419,12 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <div class="ansibleOptionAnchor" id="return-filtered_updates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates"><strong>filtered_updates</strong></p>
 <a class="ansibleOptionLink" href="#return-filtered_updates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>Updates that were found but were filtered based on <em>blacklist</em>, <em>whitelist</em> or <em>category_names</em>. The return value is in the same form as <em>updates</em>, along with <em>filtered_reason</em>.</p>
+<td><div class="ansible-option-cell"><p>Updates that were found but were filtered based on <em>blacklist</em>, <em>whitelist</em> or <em>category_names</em>. The return value is in the same form as <em>updates</em>.</p>
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;see</span> <span class="pre">the</span> <span class="pre">updates</span> <span class="pre">return</span> <span class="pre">value&quot;</span></code></p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="return-filtered_updates/filtered_reason"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates-filtered-reason"><strong>filtered_reason</strong></p>
-<a class="ansibleOptionLink" href="#return-filtered_updates/filtered_reason" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
-</div></td>
-<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The reason why this update was filtered.</p>
-<p>This value has been deprecated since <code class="docutils literal notranslate"><span class="pre">1.7.0</span></code>, use <code class="docutils literal notranslate"><span class="pre">filtered_reasons</span></code> which contain a list of all the reasons why the update is filtered.</p>
-<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
-<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;skip_hidden&quot;</span></code></p>
-</div></td>
-</tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-filtered_updates/filtered_reasons"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-filtered-updates-filtered-reasons"><strong>filtered_reasons</strong></p>
 <a class="ansibleOptionLink" href="#return-filtered_updates/filtered_reasons" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
@@ -445,7 +435,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;category_names&quot;,</span> <span class="pre">&quot;accept_list&quot;]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-found_update_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-found-update-count"><strong>found_update_count</strong></p>
 <a class="ansibleOptionLink" href="#return-found_update_count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -454,7 +444,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">3</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-installed_update_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-installed-update-count"><strong>installed_update_count</strong></p>
 <a class="ansibleOptionLink" href="#return-installed_update_count" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -463,7 +453,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-reboot-required"><strong>reboot_required</strong></p>
 <a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -472,7 +462,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-rebooted"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-rebooted"><strong>rebooted</strong></p>
 <a class="ansibleOptionLink" href="#return-rebooted" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.14.0</em></p>
@@ -482,7 +472,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates"><strong>updates</strong></p>
 <a class="ansibleOptionLink" href="#return-updates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
@@ -491,7 +481,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/categories"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-categories"><strong>categories</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/categories" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -500,7 +490,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Critical</span> <span class="pre">Updates&quot;,</span> <span class="pre">&quot;Windows</span> <span class="pre">Server</span> <span class="pre">2012</span> <span class="pre">R2&quot;]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/downloaded"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-downloaded"><strong>downloaded</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/downloaded" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
@@ -510,7 +500,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/failure_hresult_code"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-hresult-code"><strong>failure_hresult_code</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/failure_hresult_code" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -519,7 +509,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">2147942402</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/failure_msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-failure-msg"><strong>failure_msg</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/failure_msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 <p><em class="ansible-option-versionadded">added in ansible.windows 1.7.0</em></p>
@@ -529,7 +519,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Operation</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">complete</span> <span class="pre">because</span> <span class="pre">there</span> <span class="pre">is</span> <span class="pre">no</span> <span class="pre">logged-on</span> <span class="pre">interactive</span> <span class="pre">user</span> <span class="pre">(WU_E_NO_INTERACTIVE_USER</span> <span class="pre">0x80240020)&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-id"><strong>id</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/id" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -538,7 +528,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;fb95c1c8-de23-4089-ae29-fd3351d55421&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/installed"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-installed"><strong>installed</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/installed" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
 </div></td>
@@ -547,7 +537,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/kb"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-kb"><strong>kb</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/kb" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -556,7 +546,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;3004365&quot;]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-updates/title"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-updates-module-return-updates-title"><strong>title</strong></p>
 <a class="ansibleOptionLink" href="#return-updates/title" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
