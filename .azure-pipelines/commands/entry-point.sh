@@ -50,7 +50,7 @@ command -v pip
 pip --version
 pip list --disable-pip-version-check
 if [ "${ansible_version}" == "devel" ]; then
-    retry pip install https://github.com/jborean93/ansible/archive/win-exec.tar.gz --disable-pip-version-check
+    retry pip install https://github.com/jborean93/ansible/archive/app-control.tar.gz --disable-pip-version-check
 else
     retry pip install "https://github.com/ansible/ansible/archive/stable-${ansible_version}.tar.gz" --disable-pip-version-check
 fi
