@@ -365,7 +365,10 @@ Function Convert-OutputObject {
         }
         # Have a defensive check to see if GetType() exists as a method on the object.
         # https://github.com/ansible-collections/ansible.windows/issues/708
-        elseif ('GetType' -in $InputObject.PSObject.Methods.Name -and $InputObject.GetType().IsValueType) {
+        # We use ForEach-Object to defensively get the Methods as it fails on a WMI
+        # based object
+        # https://github.com/ansible-collections/ansible.windows/issues/767
+        elseif ('GetType' -in ($InputObject.PSObject | ForEach-Object Methods | ForEach-Object Name) -and $InputObject.GetType().IsValueType) {
             # We want to display just this value and not any properties it has (if any).
             $InputObject.PSObject.BaseObject
         }

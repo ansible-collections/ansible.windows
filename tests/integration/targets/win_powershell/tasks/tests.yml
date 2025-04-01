@@ -1003,3 +1003,18 @@
     that:
     - result_depth is changed
     - result_depth.result.One.Two.Three.Four == 'abc'
+
+- name: get WMI object
+  win_powershell:
+    script: |
+      Get-WmiObject -Class Win32_Service -Filter 'Name="WinRM"'
+  register: wmi_object
+  when: pwsh_executable is not defined
+
+- name: assert get WMI object
+  assert:
+    that:
+    - wmi_object.output | length == 1
+    - wmi_object.output[0]['Name'] == 'WinRM'
+    - wmi_object.output[0]['__RELPATH'] == 'Win32_Service.Name="WinRM"'
+  when: pwsh_executable is not defined
