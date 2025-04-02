@@ -21,6 +21,7 @@ $spec = @{
         get_checksum = @{ type = "bool"; default = $true }
         checksum_algorithm = @{ type = "str"; default = "sha1"; choices = "md5", "sha1", "sha256", "sha384", "sha512" }
         depth = @{ type = "int" }
+        case_sensitive = @{ type = "bool"; default = $false }
     }
     supports_check_mode = $true
 }
@@ -40,6 +41,7 @@ $use_regex = $module.Params.use_regex
 $get_checksum = $module.Params.get_checksum
 $checksum_algorithm = $module.Params.checksum_algorithm
 $depth = $module.Params.depth
+$case_sensitive = $module.Params.case_sensitive
 
 $module.Result.examined = 0
 $module.Result.files = @()
@@ -105,9 +107,17 @@ Function Assert-FileNamePattern {
     $valid_match = $false
     foreach ($pattern in $Patterns) {
         if ($UseRegex) {
-            if ($File.Name -match $pattern) {
-                $valid_match = $true
-                break
+            if ($case_sensitive) {
+                if ($File.Name -cmatch $pattern) {
+                    $valid_match = $true
+                    break
+                }
+            }
+            else {
+                if ($File.Name -match $pattern) {
+                    $valid_match = $true
+                    break
+                }
             }
         }
         else {
