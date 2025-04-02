@@ -36,6 +36,7 @@
         "nested\out.log",
         "nested\archive.log",
         "nested\sub-nest\test.ps1",
+        "nested\sub-nest\FILE.ps1",
         "nested\sub-nest\readonly.txt",
         "nested\sub-nest\sub-sub-nest\test.ps1",
         "link-dest\link.ps1",

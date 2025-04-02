@@ -98,6 +98,13 @@ options:
             - Will set patterns to run as a regex check if set to C(true).
         type: bool
         default: no
+    case_sensitive:
+        description:
+            - Make case-sensitive string comparisons for the filename match.
+            - Set C(use_regex) to V(true) to make this work.
+        type: bool
+        default: no
+        version_added: 3.0.0
 notes:
 - When scanning directories with a large number of files containing lots of data it is recommended to set
   C(get_checksum=false). This will speed up the time it takes to scan the folders as getting a checksum needs to
