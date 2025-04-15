@@ -1,0 +1,2 @@
+bugfixes:
+  - win_regedit - Handle decimal values with no decimal values which may be the result of a Jinja2 template

@@ -193,7 +193,7 @@
   ansible.builtin.assert:
     that:
       - change_decription is changed
-      - change_description_actual.stdout == "{{ test_win_share_description }}\r\n"
+      - change_description_actual.stdout | trim == test_win_share_description
 
 - name: Set Description again
   win_share:

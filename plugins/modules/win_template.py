@@ -38,6 +38,18 @@ options:
     - The string marking the beginning of a block.
     type: str
     default: '{%'
+  comment_start_string:
+    description:
+    - The string marking the beginning of a comment statement.
+    type: str
+    default: '{#'
+    version_added: '3.0.0'
+  comment_end_string:
+    description:
+    - The string marking the end of a comment statement.
+    type: str
+    default: '#}'
+    version_added: '3.0.0'
   dest:
     description:
     - Location to render the template to on the remote machine.

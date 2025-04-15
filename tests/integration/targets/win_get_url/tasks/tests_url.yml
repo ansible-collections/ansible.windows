@@ -15,8 +15,8 @@
     that:
     - http_download_check is not failed
     - http_download_check is changed
-    - http_download_check.url
-    - http_download_check.dest
+    - http_download_check.url is defined
+    - http_download_check.dest is defined
     - not http_download_result_check.stat.exists
 
 - name: download single file
@@ -35,8 +35,8 @@
     that:
     - http_download is not failed
     - http_download is changed
-    - http_download.url
-    - http_download.dest
+    - http_download.url is defined
+    - http_download.dest is defined
     - http_download_result.stat.exists
 
 - name: download single file (idempotent)

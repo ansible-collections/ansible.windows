@@ -9,7 +9,7 @@ set -o pipefail -eux
 # The galaxy_ng_commit from can be used to find the specific commit to check.
 # https://galaxy.ansible.com/api/
 python -m pip install \
-    'ansible-lint==24.7.0' \
+    'ansible-lint==24.12.2' \
     'ansible-compat==24.10.0'
 
 ansible-lint
