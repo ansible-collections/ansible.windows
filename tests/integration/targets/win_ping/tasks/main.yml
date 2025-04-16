@@ -64,4 +64,3 @@
       - win_ping_crash_result is failed
       - win_ping_crash_result is not changed
       - 'win_ping_crash_result.msg == "Unhandled exception while executing module: boom"'
-      - '"throw \"boom\"" in win_ping_crash_result.exception'

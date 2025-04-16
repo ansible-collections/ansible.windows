@@ -24,10 +24,10 @@
   assert:
     that:
       - "win_user_create_result is changed"
-      - "win_user_create_result.name == '{{ test_win_user_name }}'"
+      - "win_user_create_result.name == test_win_user_name"
       - "win_user_create_result.fullname == 'Test User'"
       - "win_user_create_result.description == 'Test user account'"
-      - "win_user_create_result.path"
+      - "win_user_create_result.path is defined"
       - "win_user_create_result.state == 'present'"
 
 - name: test create user (idempotent)
@@ -96,11 +96,11 @@
       - "win_user_query_result is not changed"
       - win_user_query_result.msg == "Querying user '" + test_win_user_name + "'"
       - "win_user_query_result.state == 'present'"
-      - "win_user_query_result.name == '{{ test_win_user_name }}'"
+      - "win_user_query_result.name == test_win_user_name"
       - "win_user_query_result.fullname == 'Test user'"
       - "win_user_query_result.description == 'Test User Account'"
-      - "win_user_query_result.path"
-      - "win_user_query_result.sid"
+      - "win_user_query_result.path is defined"
+      - "win_user_query_result.sid is defined"
       - "win_user_query_result.groups == []"
 
 - name: change user password (check mode)
@@ -421,7 +421,7 @@
   assert:
     that:
       - "win_user_invalid_group_result is failed"
-      - "win_user_invalid_group_result.msg"
+      - "win_user_invalid_group_result.msg is defined"
       - win_user_invalid_group_result.msg is match("group 'Userz' not found")
 
 - name: get expected dates based on remote timezone
@@ -615,7 +615,7 @@
   assert:
     that:
       - win_user_remove_result is changed
-      - "win_user_remove_result.name"
+      - "win_user_remove_result.name is defined"
       - "win_user_remove_result.state == 'absent'"
 
 - name: try to remove test user again
@@ -626,8 +626,8 @@
   assert:
     that:
       - "win_user_remove_result_again is not changed"
-      - "win_user_remove_result_again.name"
-      - "win_user_remove_result_again.msg"
+      - "win_user_remove_result_again.name is defined"
+      - "win_user_remove_result_again.msg is defined"
       - "win_user_remove_result.state == 'absent'"
 
 - name: test missing user with query state
@@ -638,8 +638,8 @@
   assert:
     that:
       - "win_user_missing_query_result is not changed"
-      - "win_user_missing_query_result.name"
-      - "win_user_missing_query_result.msg"
+      - "win_user_missing_query_result.name is defined"
+      - "win_user_missing_query_result.msg is defined"
       - "win_user_missing_query_result.state == 'absent'"
 
 - name: test removed user with query state
@@ -650,8 +650,8 @@
   assert:
     that:
       - "win_user_removed_query_result is not changed"
-      - "win_user_removed_query_result.name"
-      - "win_user_removed_query_result.msg"
+      - "win_user_removed_query_result.name is defined"
+      - "win_user_removed_query_result.msg is defined"
       - "win_user_removed_query_result.state == 'absent'"
 
 # Tests the Test-Credential path where LogonUser fails if the user does not

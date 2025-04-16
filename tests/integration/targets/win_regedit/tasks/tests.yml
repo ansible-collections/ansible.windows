@@ -25,6 +25,16 @@
   register: invalid_path
   failed_when: "invalid_path.msg != 'path: ABCD:\\efg is not a valid powershell path, see module documentation for examples.'"
 
+- name: run win_regedit with dword and decimal number
+  win_regedit:
+    path: '{{test_win_regedit_local_key}}'
+    name: test
+    data: 1.1
+    type: dword
+    state: present
+  register: invalid_decimal
+  failed_when: invalid_decimal.msg != 'data ' + "'" + '1.1' + "'" + ' cannot be a decimal or float value with a remainder when type is dword or qword'
+
 - name: change string to binary check
   win_regedit:
     path: '{{test_win_regedit_local_key}}'

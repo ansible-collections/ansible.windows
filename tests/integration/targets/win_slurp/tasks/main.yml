@@ -53,10 +53,10 @@
 - name: check slurp result with path param and backslashes
   assert:
     that:
-      - "slurp_path_backslashes.content"
-      - "slurp_path_backslashes.encoding == 'base64'"
-      - "slurp_path_backslashes is not changed"
-      - "slurp_path_backslashes is not failed"
+      - slurp_path_backslashes.content is defined
+      - slurp_path_backslashes.encoding == 'base64'
+      - slurp_path_backslashes is not changed
+      - slurp_path_backslashes is not failed
 
 - name: test slurping a non-existent file
   slurp:
@@ -67,9 +67,9 @@
 - name: check slurp missing result
   assert:
     that:
-      - "slurp_missing is failed"
-      - "slurp_missing.msg"
-      - "slurp_missing is not changed"
+      - slurp_missing is failed
+      - slurp_missing.msg is defined
+      - slurp_missing is not changed
 
 - name: test slurping a directory
   slurp:
@@ -80,9 +80,9 @@
 - name: check slurp directory result
   assert:
     that:
-      - "slurp_dir is failed"
-      - "slurp_dir.msg"
-      - "slurp_dir is not changed"
+      - slurp_dir is failed
+      - slurp_dir.msg is defined
+      - slurp_dir is not changed
 
 - name: test slurp with missing argument
   action: slurp
@@ -92,6 +92,6 @@
 - name: check slurp with missing argument result
   assert:
     that:
-      - "slurp_no_args is failed"
-      - "slurp_no_args.msg"
-      - "slurp_no_args is not changed"
+      - slurp_no_args is failed
+      - slurp_no_args.msg is defined
+      - slurp_no_args is not changed

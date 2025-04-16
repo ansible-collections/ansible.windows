@@ -71,7 +71,7 @@
     that:
     - create_machine is changed
     - create_machine.before_value == None
-    - create_machine_actual.stdout == "{{test_machine_environment_value}}\r\n"
+    - create_machine_actual.stdout | trim == test_machine_environment_value
 
 - name: create test environment value for machine again
   win_environment:
@@ -90,7 +90,7 @@
     that:
     - create_machine_again is not changed
     - create_machine_again.before_value == test_machine_environment_value
-    - create_machine_actual_again.stdout == "{{test_machine_environment_value}}\r\n"
+    - create_machine_actual_again.stdout | trim == test_machine_environment_value
 
 - name: change test environment value for machine check
   win_environment:
@@ -110,7 +110,7 @@
     that:
     - change_machine_check is changed
     - change_machine_check.before_value == test_machine_environment_value
-    - change_machine_actual_check.stdout == "{{test_machine_environment_value}}\r\n"
+    - change_machine_actual_check.stdout | trim == test_machine_environment_value
 
 - name: change test environment value for machine
   win_environment:
@@ -129,7 +129,7 @@
     that:
     - change_machine is changed
     - change_machine.before_value == test_machine_environment_value
-    - change_machine_actual.stdout == "{{test_new_machine_environment_value}}\r\n"
+    - change_machine_actual.stdout | trim == test_new_machine_environment_value
 
 - name: change test environment value for machine again
   win_environment:
@@ -148,7 +148,7 @@
     that:
     - change_machine_again is not changed
     - change_machine_again.before_value == test_new_machine_environment_value
-    - change_machine_actual_again.stdout == "{{test_new_machine_environment_value}}\r\n"
+    - change_machine_actual_again.stdout | trim == test_new_machine_environment_value
 
 - name: create test environment value for user check
   win_environment:
@@ -186,7 +186,7 @@
     that:
     - create_user is changed
     - create_user.before_value == None
-    - create_user_actual.stdout == "{{test_user_environment_value}}\r\n"
+    - create_user_actual.stdout | trim == test_user_environment_value
 
 - name: create test environment value for user again
   win_environment:
@@ -205,7 +205,7 @@
     that:
     - create_user_again is not changed
     - create_user_again.before_value == test_user_environment_value
-    - create_user_actual_again.stdout == "{{test_user_environment_value}}\r\n"
+    - create_user_actual_again.stdout | trim == test_user_environment_value
 
 - name: change test environment value for user check
   win_environment:
@@ -225,7 +225,7 @@
     that:
     - change_user_check is changed
     - change_user_check.before_value == test_user_environment_value
-    - change_user_actual_check.stdout == "{{test_user_environment_value}}\r\n"
+    - change_user_actual_check.stdout | trim == test_user_environment_value
 
 - name: change test environment value for user
   win_environment:
@@ -244,7 +244,7 @@
     that:
     - change_user is changed
     - change_user.before_value == test_user_environment_value
-    - change_user_actual.stdout == "{{test_new_user_environment_value}}\r\n"
+    - change_user_actual.stdout | trim == test_new_user_environment_value
 
 - name: change test environment value for user again
   win_environment:
@@ -263,7 +263,7 @@
     that:
     - change_user_again is not changed
     - change_user_again.before_value == test_new_user_environment_value
-    - change_user_actual_again.stdout == "{{test_new_user_environment_value}}\r\n"
+    - change_user_actual_again.stdout | trim  == test_new_user_environment_value
 
 # multi-value checks:
 #
