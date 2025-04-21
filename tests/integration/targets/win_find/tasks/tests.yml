@@ -247,8 +247,8 @@
   assert:
     that:
     - not actual is changed
-    - actual.examined == 10
-    - actual.matched == 4
+    - actual.examined == 11
+    - actual.matched == 5
     - actual.files[0].attributes == 'Archive'
     - actual.files[0].checksum == '8df33cee3325596517df5bb5aa980cf9c5c1fda3'
     - actual.files[0].creationtime == 1477984205
@@ -278,7 +278,7 @@
     - actual.files[1].creationtime == 1477984205
     - actual.files[1].exists == True
     - actual.files[1].extension == '.ps1'
-    - actual.files[1].filename == 'test.ps1'
+    - actual.files[1].filename == 'FILE.ps1'
     - actual.files[1].hlnk_targets == []
     - actual.files[1].isarchive == True
     - actual.files[1].isdir == False
@@ -294,7 +294,7 @@
     - actual.files[1].lnk_target == None
     - actual.files[1].nlink == 1
     - actual.files[1].owner == 'BUILTIN\\Administrators'
-    - actual.files[1].path == win_find_dir + '\\nested\\sub-nest\\sub-sub-nest\\test.ps1'
+    - actual.files[1].path == win_find_dir + '\\nested\\sub-nest\\FILE.ps1'
     - actual.files[1].sharename == None
     - actual.files[1].size == 14
     - actual.files[2].attributes == 'Archive'
@@ -318,7 +318,7 @@
     - actual.files[2].lnk_target == None
     - actual.files[2].nlink == 1
     - actual.files[2].owner == 'BUILTIN\\Administrators'
-    - actual.files[2].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
+    - actual.files[2].path == win_find_dir + '\\nested\\sub-nest\\sub-sub-nest\\test.ps1'
     - actual.files[2].sharename == None
     - actual.files[2].size == 14
     - actual.files[3].attributes == 'Archive'
@@ -342,7 +342,7 @@
     - actual.files[3].lnk_target == None
     - actual.files[3].nlink == 1
     - actual.files[3].owner == 'BUILTIN\\Administrators'
-    - actual.files[3].path == win_find_dir + '\\nested\\test.ps1'
+    - actual.files[3].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
     - actual.files[3].sharename == None
     - actual.files[3].size == 14
 
@@ -358,8 +358,8 @@
   assert:
     that:
     - not actual is changed
-    - actual.examined == 12
-    - actual.matched == 5
+    - actual.examined == 13
+    - actual.matched == 6
     - actual.files[0].attributes == 'Archive'
     - actual.files[0].checksum == '8df33cee3325596517df5bb5aa980cf9c5c1fda3'
     - actual.files[0].creationtime == 1477984205
@@ -413,7 +413,7 @@
     - actual.files[2].creationtime == 1477984205
     - actual.files[2].exists == True
     - actual.files[2].extension == '.ps1'
-    - actual.files[2].filename == 'test.ps1'
+    - actual.files[2].filename == 'FILE.ps1'
     - actual.files[2].hlnk_targets == []
     - actual.files[2].isarchive == True
     - actual.files[2].isdir == False
@@ -429,7 +429,7 @@
     - actual.files[2].lnk_target == None
     - actual.files[2].nlink == 1
     - actual.files[2].owner == 'BUILTIN\\Administrators'
-    - actual.files[2].path == win_find_dir + '\\nested\\sub-nest\\sub-sub-nest\\test.ps1'
+    - actual.files[2].path == win_find_dir + '\\nested\\sub-nest\\FILE.ps1'
     - actual.files[2].sharename == None
     - actual.files[2].size == 14
     - actual.files[3].attributes == 'Archive'
@@ -453,7 +453,7 @@
     - actual.files[3].lnk_target == None
     - actual.files[3].nlink == 1
     - actual.files[3].owner == 'BUILTIN\\Administrators'
-    - actual.files[3].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
+    - actual.files[3].path == win_find_dir + '\\nested\\sub-nest\\sub-sub-nest\\test.ps1'
     - actual.files[3].sharename == None
     - actual.files[3].size == 14
     - actual.files[4].attributes == 'Archive'
@@ -477,7 +477,7 @@
     - actual.files[4].lnk_target == None
     - actual.files[4].nlink == 1
     - actual.files[4].owner == 'BUILTIN\\Administrators'
-    - actual.files[4].path == win_find_dir + '\\nested\\test.ps1'
+    - actual.files[4].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
     - actual.files[4].sharename == None
     - actual.files[4].size == 14
 
@@ -493,8 +493,8 @@
   assert:
     that:
     - not actual is changed
-    - actual.examined == 9
-    - actual.matched == 3
+    - actual.examined == 10
+    - actual.matched == 4
     - actual.files[0].attributes == 'Archive'
     - actual.files[0].checksum == '8df33cee3325596517df5bb5aa980cf9c5c1fda3'
     - actual.files[0].creationtime == 1477984205
@@ -524,7 +524,7 @@
     - actual.files[1].creationtime == 1477984205
     - actual.files[1].exists == True
     - actual.files[1].extension == '.ps1'
-    - actual.files[1].filename == 'test.ps1'
+    - actual.files[1].filename == 'FILE.ps1'
     - actual.files[1].hlnk_targets == []
     - actual.files[1].isarchive == True
     - actual.files[1].isdir == False
@@ -540,7 +540,7 @@
     - actual.files[1].lnk_target == None
     - actual.files[1].nlink == 1
     - actual.files[1].owner == 'BUILTIN\\Administrators'
-    - actual.files[1].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
+    - actual.files[1].path == win_find_dir + '\\nested\\sub-nest\\FILE.ps1'
     - actual.files[1].sharename == None
     - actual.files[1].size == 14
     - actual.files[2].attributes == 'Archive'
@@ -564,7 +564,7 @@
     - actual.files[2].lnk_target == None
     - actual.files[2].nlink == 1
     - actual.files[2].owner == 'BUILTIN\\Administrators'
-    - actual.files[2].path == win_find_dir + '\\nested\\test.ps1'
+    - actual.files[2].path == win_find_dir + '\\nested\\sub-nest\\test.ps1'
     - actual.files[2].sharename == None
     - actual.files[2].size == 14
 
@@ -617,7 +617,7 @@
   assert:
     that:
     - not actual is changed
-    - actual.examined == 39
+    - actual.examined == 40
     - actual.matched == 18
     - actual.files[0].filename == 'broken-link'
     - actual.files[0].isjunction == False
@@ -935,3 +935,21 @@
     - secure_result.files[0].path == win_find_dir + "\secure-tests\open"
     - secure_result.files[1].path == win_find_dir + "\secure-tests\open\internal-folder"
     - secure_result.files[2].path == win_find_dir + "\secure-tests\secure"
+
+- name: find files with recurse set
+  win_find:
+    paths: '{{win_find_dir}}\nested'
+    recurse: true
+    patterns: 'FILE.ps1'
+    use_regex: true
+    case_sensitive: true
+  register: actual
+
+- name: assert find file with case sensitive
+  assert:
+    that:
+    - not actual is changed
+    - actual.matched == 1
+    - actual.files[0].exists == True
+    - actual.files[0].extension == '.ps1'
+    - actual.files[0].filename == 'FILE.ps1'
