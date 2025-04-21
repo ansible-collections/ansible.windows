@@ -3,13 +3,13 @@
 set -o pipefail -eux
 
 # This is aligned with the galaxy-importer used by AH.
-# Need to pin to the released tag at.
-# https://github.com/ansible/galaxy_ng/blob/master/requirements/requirements.common.txt
-#
-# The galaxy_ng_commit from can be used to find the specific commit to check.
+# Check what galaxy_importer_version is used in the galaxy project at
 # https://galaxy.ansible.com/api/
+
+# Then check the ansible-lint upper bound at
+# https://github.com/ansible/galaxy-importer/blob/v${VERSION}/setup.cfg
+
 python -m pip install \
-    'ansible-lint==24.12.2' \
-    'ansible-compat==24.10.0'
+    'ansible-lint==25.1.2'
 
 ansible-lint

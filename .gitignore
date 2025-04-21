@@ -389,5 +389,8 @@ $RECYCLE.BIN/
 # Changelog cache files
 changelogs/.plugin-cache.yaml
 
+# Ansible dev tools
+.ansible/
+
 # ansible-test ignores
 tests/integration/inventory*
