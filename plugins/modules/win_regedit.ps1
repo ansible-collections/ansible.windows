@@ -399,6 +399,7 @@ elseif ($type -in @("dword", "qword")) {
         $data = 0
     }
 
+    $too_large = $false
     if ($data -is [String]) {
         # if the data is a string we need to convert it to an unsigned int64
         # it needs to be unsigned as Ansible passes in an unsigned value while
@@ -406,9 +407,20 @@ elseif ($type -in @("dword", "qword")) {
         # below
         $data = [UInt64]$data
     }
+    elseif ($data -is [Decimal] -or $data -is [Single] -or $data -is [Float]) {
+        if ($data % 1 -ne 0) {
+            $module.FailJson("data '$data' cannot be a decimal or float value with a remainder when type is dword or qword")
+        }
+        elseif ($data -gt [UInt64]::MaxValue) {
+            $too_large = $true
+        }
+        else {
+            $data = [UInt64]$data
+        }
+    }
 
     if ($type -eq "dword") {
-        if ($data -gt [UInt32]::MaxValue) {
+        if ($too_large -or $data -gt [UInt32]::MaxValue) {
             $module.FailJson("data cannot be larger than 0xffffffff when type is dword")
         }
         elseif ($data -gt [Int32]::MaxValue) {
@@ -420,7 +432,7 @@ elseif ($type -in @("dword", "qword")) {
         $data = [Int32]$data
     }
     else {
-        if ($data -gt [UInt64]::MaxValue) {
+        if ($too_large -or $data -gt [UInt64]::MaxValue) {
             $module.FailJson("data cannot be larger than 0xffffffffffffffff when type is qword")
         }
         elseif ($data -gt [Int64]::MaxValue) {

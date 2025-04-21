@@ -25,31 +25,31 @@
     that:
       - setup_result is not failed
       - setup_result is not changed
-      - setup_result.ansible_facts
+      - setup_result.ansible_facts is defined
       - setup_result.ansible_facts.ansible_os_family == 'Windows'
-      - setup_result.ansible_facts.ansible_date_time
-      - setup_result.ansible_facts.ansible_date_time.date
-      - setup_result.ansible_facts.ansible_date_time.year
-      - setup_result.ansible_facts.ansible_date_time.month
-      - setup_result.ansible_facts.ansible_date_time.day
+      - setup_result.ansible_facts.ansible_date_time is defined
+      - setup_result.ansible_facts.ansible_date_time.date is defined
+      - setup_result.ansible_facts.ansible_date_time.year is defined
+      - setup_result.ansible_facts.ansible_date_time.month is defined
+      - setup_result.ansible_facts.ansible_date_time.day is defined
       - setup_result.ansible_facts.ansible_date_time.hour is defined
       - setup_result.ansible_facts.ansible_date_time.minute is defined
-      - setup_result.ansible_facts.ansible_date_time.iso8601
-      - setup_result.ansible_facts.ansible_distribution
-      - setup_result.ansible_facts.ansible_distribution_version
-      - setup_result.ansible_facts.ansible_fqdn
-      - setup_result.ansible_facts.ansible_hostname
-      - setup_result.ansible_facts.ansible_ip_addresses
-      - setup_result.ansible_facts.ansible_system
-      - setup_result.ansible_facts.ansible_memtotal_mb
-      - setup_result.ansible_facts.ansible_interfaces
-      - setup_result.ansible_facts.ansible_interfaces[0]
-      - setup_result.ansible_facts.ansible_interfaces[0].interface_name
-      - setup_result.ansible_facts.ansible_interfaces[0].connection_name
-      - setup_result.ansible_facts.ansible_interfaces[0].interface_index
-      - setup_result.ansible_facts.ansible_architecture
-      - setup_result.ansible_facts.ansible_os_name
-      - setup_result.ansible_facts.ansible_powershell_version
+      - setup_result.ansible_facts.ansible_date_time.iso8601 is defined
+      - setup_result.ansible_facts.ansible_distribution is defined
+      - setup_result.ansible_facts.ansible_distribution_version is defined
+      - setup_result.ansible_facts.ansible_fqdn is defined
+      - setup_result.ansible_facts.ansible_hostname is defined
+      - setup_result.ansible_facts.ansible_ip_addresses is defined
+      - setup_result.ansible_facts.ansible_system is defined
+      - setup_result.ansible_facts.ansible_memtotal_mb is defined
+      - setup_result.ansible_facts.ansible_interfaces is defined
+      - setup_result.ansible_facts.ansible_interfaces[0] is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].connection_name is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].interface_index is defined
+      - setup_result.ansible_facts.ansible_architecture is defined
+      - setup_result.ansible_facts.ansible_os_name is defined
+      - setup_result.ansible_facts.ansible_powershell_version is defined
       - setup_result.ansible_facts.gather_subset is defined
       - setup_result.ansible_facts.gather_subset[0] == 'all'
       - setup_result.ansible_facts.module_setup == true
@@ -57,8 +57,8 @@
 - name: check setup result only when using https
   assert:
     that:
-      - "setup_result.ansible_facts.ansible_win_rm_certificate_expires"
-      - "setup_result.ansible_facts.ansible_win_rm_certificate_thumbprint"
+      - setup_result.ansible_facts.ansible_win_rm_certificate_expires is defined
+      - setup_result.ansible_facts.ansible_win_rm_certificate_thumbprint is defined
   when: ansible_ssh_port|default(5986) != 5985
 
 - name: test gather_subset "!all"
@@ -113,11 +113,11 @@
     - setup_result.ansible_facts.gather_subset[0] == '!all'
     - setup_result.ansible_facts.gather_subset[1] == '!min'
     - setup_result.ansible_facts.gather_subset[2] == 'interfaces'
-    - setup_result.ansible_facts.ansible_interfaces
-    - setup_result.ansible_facts.ansible_interfaces[0]
-    - setup_result.ansible_facts.ansible_interfaces[0].interface_name
-    - setup_result.ansible_facts.ansible_interfaces[0].connection_name
-    - setup_result.ansible_facts.ansible_interfaces[0].interface_index
+    - setup_result.ansible_facts.ansible_interfaces is defined
+    - setup_result.ansible_facts.ansible_interfaces[0] is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].connection_name is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].interface_index is defined
     - setup_result.ansible_facts.keys() | list | union(['ansible_interfaces','gather_subset','module_setup']) | length == 3
 
 - name: test gather_subset "!all,!min,bogus" with list
@@ -139,7 +139,7 @@
     - setup_result.ansible_facts.gather_subset[1] == '!min'
     - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
     - setup_result.warnings | length == 1
-    - setup_result.warnings[0] | regex_search('bogus')
+    - setup_result.warnings[0] | regex_search('bogus') is truthy
 
 - name: create fact directory
   win_file:

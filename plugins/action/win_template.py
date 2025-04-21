@@ -9,6 +9,15 @@ import os
 import shutil
 import tempfile
 
+from jinja2.defaults import (
+    BLOCK_END_STRING,
+    BLOCK_START_STRING,
+    COMMENT_END_STRING,
+    COMMENT_START_STRING,
+    VARIABLE_END_STRING,
+    VARIABLE_START_STRING,
+)
+
 from ansible import constants as C
 from ansible.config.manager import ensure_type
 from ansible.errors import AnsibleError, AnsibleFileNotFound, AnsibleAction, AnsibleActionFail
@@ -17,6 +26,15 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.six import string_types
 from ansible.plugins.action import ActionBase
 from ansible.template import generate_ansible_template_vars
+
+USE_DATA_TAGGING = False
+try:
+    from ansible.template import trust_as_template
+    AnsibleEnvironment = None
+
+    USE_DATA_TAGGING = True
+except ImportError:
+    from ansible.template import AnsibleEnvironment  # type: ignore[no-redef]
 
 
 class ActionModule(ActionBase):
@@ -35,7 +53,7 @@ class ActionModule(ActionBase):
         # Options type validation
         # stings
         for s_type in ('src', 'dest', 'state', 'newline_sequence', 'variable_start_string', 'variable_end_string', 'block_start_string',
-                       'block_end_string'):
+                       'block_end_string', 'comment_start_string', 'comment_end_string'):
             if s_type in self._task.args:
                 value = ensure_type(self._task.args[s_type], 'string')
                 if value is not None and not isinstance(value, string_types):
@@ -54,10 +72,12 @@ class ActionModule(ActionBase):
         dest = self._task.args.get('dest', None)
         state = self._task.args.get('state', None)
         newline_sequence = self._task.args.get('newline_sequence', "\r\n")
-        variable_start_string = self._task.args.get('variable_start_string', None)
-        variable_end_string = self._task.args.get('variable_end_string', None)
-        block_start_string = self._task.args.get('block_start_string', None)
-        block_end_string = self._task.args.get('block_end_string', None)
+        variable_start_string = self._task.args.get('variable_start_string', VARIABLE_START_STRING)
+        variable_end_string = self._task.args.get('variable_end_string', VARIABLE_END_STRING)
+        block_start_string = self._task.args.get('block_start_string', BLOCK_START_STRING)
+        block_end_string = self._task.args.get('block_end_string', BLOCK_END_STRING)
+        comment_start_string = self._task.args.get('comment_start_string', COMMENT_START_STRING)
+        comment_end_string = self._task.args.get('comment_end_string', COMMENT_END_STRING)
         output_encoding = self._task.args.get('output_encoding', 'utf-8') or 'utf-8'
 
         # Option `lstrip_blocks' was added in Jinja2 version 2.7.
@@ -102,11 +122,15 @@ class ActionModule(ActionBase):
 
             # template the source data locally & get ready to transfer
             try:
-                with open(b_tmp_source, 'rb') as f:
-                    try:
-                        template_data = to_text(f.read(), errors='surrogate_or_strict')
-                    except UnicodeError:
-                        raise AnsibleActionFail("Template source files must be utf-8 encoded")
+                if USE_DATA_TAGGING:
+                    template_data = trust_as_template(self._loader.get_text_file_contents(source))
+
+                else:
+                    with open(b_tmp_source, 'rb') as f:
+                        try:
+                            template_data = to_text(f.read(), errors='surrogate_or_strict')
+                        except UnicodeError:
+                            raise AnsibleActionFail("Template source files must be utf-8 encoded")
 
                 # set jinja2 internal search path for includes
                 searchpath = task_vars.get('ansible_search_path', [])
@@ -122,14 +146,45 @@ class ActionModule(ActionBase):
 
                 # add ansible 'template' vars
                 temp_vars = task_vars.copy()
-                temp_vars.update(generate_ansible_template_vars(source, dest_path=dest))
+                temp_vars.update(generate_ansible_template_vars(self._task.args.get('src', None), fullpath=source, dest_path=dest))
 
-                with self._templar.set_temporary_context(searchpath=searchpath, newline_sequence=newline_sequence,
-                                                         block_start_string=block_start_string, block_end_string=block_end_string,
-                                                         variable_start_string=variable_start_string, variable_end_string=variable_end_string,
-                                                         trim_blocks=trim_blocks, lstrip_blocks=lstrip_blocks,
-                                                         available_variables=temp_vars):
-                    resultant = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
+                overrides = dict(
+                    block_start_string=block_start_string,
+                    block_end_string=block_end_string,
+                    variable_start_string=variable_start_string,
+                    variable_end_string=variable_end_string,
+                    comment_start_string=comment_start_string,
+                    comment_end_string=comment_end_string,
+                    trim_blocks=trim_blocks,
+                    lstrip_blocks=lstrip_blocks
+                )
+
+                if USE_DATA_TAGGING:
+                    overrides['newline_sequence'] = newline_sequence
+                    data_templar = self._templar.copy_with_new_env(searchpath=searchpath, available_variables=temp_vars)
+                    resultant = data_templar.template(
+                        template_data,
+                        preserve_trailing_newlines=True,
+                        escape_backslashes=False,
+                        overrides=overrides,
+                    )
+
+                else:
+                    # force templar to use AnsibleEnvironment to prevent issues with native types
+                    # https://github.com/ansible/ansible/issues/46169
+                    data_templar = self._templar.copy_with_new_env(
+                        environment_class=AnsibleEnvironment,
+                        searchpath=searchpath,
+                        newline_sequence=newline_sequence,
+                        available_variables=temp_vars,
+                    )
+
+                    resultant = data_templar.do_template(
+                        template_data,
+                        preserve_trailing_newlines=True,
+                        escape_backslashes=False,
+                        overrides=overrides,
+                    )
             except AnsibleAction:
                 raise
             except Exception as e:
@@ -141,7 +196,7 @@ class ActionModule(ActionBase):
 
             # remove 'template only' options:
             for remove in ('newline_sequence', 'block_start_string', 'block_end_string', 'variable_start_string', 'variable_end_string',
-                           'trim_blocks', 'lstrip_blocks', 'output_encoding'):
+                           'comment_start_string', 'comment_end_string', 'trim_blocks', 'lstrip_blocks', 'output_encoding'):
                 new_task.args.pop(remove, None)
 
             local_tempdir = tempfile.mkdtemp(dir=C.DEFAULT_LOCAL_TMP)

@@ -265,6 +265,9 @@ class ActionModule(ActionBase):
     def _copy_single_file(self, local_file, dest, source_rel, dest_rel, task_vars, tmp, backup):
         if self._play_context.check_mode:
             module_return = dict(changed=True)
+            if backup:
+                module_return['backup_file'] = 'check-mode-backup-file.bak'
+
             return module_return
 
         # copy the file across to the server

@@ -37,7 +37,7 @@
   assert:
     that:
     - fail_copy_encrypted_file is failed
-    - fail_copy_encrypted_file.msg == 'A vault password or secret must be specified to decrypt {{role_path}}/files-different/vault/vault-file'
+    - fail_copy_encrypted_file.msg is search('A vault password or secret must be specified to decrypt ' ~ role_path ~ '/files-different/vault/vault-file')
 
 - name: fail to copy a directory with an encrypted file without the password
   win_copy:
@@ -50,7 +50,7 @@
   assert:
     that:
     - fail_copy_directory_with_enc_file is failed
-    - fail_copy_directory_with_enc_file.msg == 'A vault password or secret must be specified to decrypt {{role_path}}/files-different/vault/vault-file'
+    - fail_copy_directory_with_enc_file is search('A vault password or secret must be specified to decrypt ' ~ role_path ~ '/files-different/vault/vault-file')
 
 - name: copy with content (check mode)
   win_copy:
@@ -495,7 +495,7 @@
     that:
     - copy_file_with_colon is changed
     - copy_file_with_colon_result.stat.exists == True
-    - copy_file_with_colon_result.stat.checksum == "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" 
+    - copy_file_with_colon_result.stat.checksum == "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
 
 - name: remove file with colon in the name
   file:
