@@ -1,0 +1,42 @@
+- name: get OS version
+  win_powershell:
+    script: (Get-Item -LiteralPath $env:SystemRoot\System32\kernel32.dll).VersionInfo.ProductVersion.ToString()
+  changed_when: False
+  register: os_version
+
+- name: check if pwsh is installed locally
+  shell: command -V pwsh
+  delegate_to: localhost
+  failed_when: False
+  changed_when: False
+  register: pwsh_stat
+
+- name: run tests if pwsh is present and running on Server 2019 or later
+  when:
+  - pwsh_stat.rc == 0
+  - os_version.output[0] is version('10.0.17763', '>=')
+  block:
+  - name: setup App Control
+    import_tasks: setup.yml
+
+  - name: run App Control tests
+    import_tasks: test.yml
+
+  always:
+  - name: disable policy through CiTool if present
+    win_command: CiTool.exe --remove-policy {{ policy_info.output[0].policy_id }}
+    when:
+    - policy_info is defined
+    - policy_info.output[0].policy_id is truthy
+
+  - name: remove App Control policy
+    win_file:
+      path: '{{ policy_info.output[0].path }}'
+      state: absent
+    register: policy_removal
+    when:
+    - policy_info is defined
+
+  - name: reboot after removing policy file
+    win_reboot:
+    when: policy_removal is changed

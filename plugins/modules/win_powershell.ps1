@@ -9,6 +9,7 @@
 #AnsibleRequires -PowerShell ..module_utils.Process
 
 using namespace System.IO
+using namespace System.Management.Automation.Language
 using namespace System.Management.Automation.Security
 
 $spec = @{
@@ -20,6 +21,7 @@ $spec = @{
         error_action = @{ type = 'str'; choices = 'silently_continue', 'continue', 'stop'; default = 'continue' }
         executable = @{ type = 'str' }
         parameters = @{ type = 'dict' }
+        path = @{ type = 'str' }
         sensitive_parameters = @{
             type = 'list'
             elements = 'dict'
@@ -36,9 +38,16 @@ $spec = @{
             required_one_of = @(, @('username', 'value'))
             required_together = @(, @('username', 'password'))
         }
+        remote_src = @{ type = 'bool'; default = $false }
         removes = @{ type = 'str' }
-        script = @{ type = 'str'; required = $true }
+        script = @{ type = 'str' }
     }
+    required_one_of = @(
+        , @('path', 'script')
+    )
+    mutually_exclusive = @(
+        , @('path', 'script')
+    )
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
@@ -538,11 +547,18 @@ if ($removes -and -not (Test-AnsiblePath -Path $removes)) {
     $module.ExitJson()
 }
 
-# Check if the script has [CmdletBinding(SupportsShouldProcess)] on it
-try {
-    $scriptAst = [ScriptBlock]::Create($module.Params.script).Ast
+$errors = @()
+$scriptAst = if ($module.Params.script) {
+    [Parser]::ParseInput($module.Params.script, [ref]$null, [ref]$errors)
 }
-catch [System.Management.Automation.ParseException] {
+else {
+    if (-not (Test-Path -LiteralPath $module.Params.path)) {
+        $module.FailJson("Could not find or access '$($module.Params.path)' on Windows host")
+    }
+
+    [Parser]::ParseFile($module.Params.path, [ref]$null, [ref]$errors)
+}
+if ($errors) {
     # Trying to parse pwsh 7 code may fail if using new syntax not available in
     # WinPS. Need to fallback to a more rudimentary scanner.
     # https://github.com/ansible-collections/ansible.windows/issues/452
@@ -561,7 +577,13 @@ if ($scriptAst -and $scriptAst -is [Management.Automation.Language.ScriptBlockAs
             })
 }
 elseif (-not $scriptAst) {
-    $supportsShouldProcess = $module.Params.script -match '\[CmdletBinding\((?:[\w=\$]+,\s*)?SupportsShouldProcess(?:=\$true)?(?:,\s*[\w=\$]+)?\)\]'
+    $scriptContent = if ($module.Params.script) {
+        $module.Params.script
+    }
+    else {
+        Get-Content -LiteralPath $module.Params.path -Raw
+    }
+    $supportsShouldProcess = $scriptContent -match '\[CmdletBinding\((?:[\w=\$]+,\s*)?SupportsShouldProcess(?:=\$true)?(?:,\s*[\w=\$]+)?\)\]'
 }
 
 if ($module.CheckMode -and -not $supportsShouldProcess) {
@@ -737,13 +759,6 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
     }
 
     if ($isWDACEnabled) {
-        # If WDAC is applied we need to run the script from a temporary location
-        # so that PowerShell can perform its normal trust operations. We need
-        # to start from CLM or else we won't be able to run untrusted scripts
-        # in CLM.
-        $tempScript = Join-Path $module.TmpDir "ansible.windows.win_powershell-$([Guid]::NewGuid()).ps1"
-        [File]::WriteAllText($tempScript, $module.Params.script)
-
         # Using an external process will already be in CLM so this is a safety
         # check to ensure it doesn't fail when in CLM already.
         $null = $ps.AddScript({
@@ -751,10 +766,38 @@ $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = $utf8No
                     $ExecutionContext.SessionState.LanguageMode = 'ConstrainedLanguage'
                 }
             }).AddStatement()
-        $null = $ps.AddCommand($tempScript)
+
+        # If WDAC is applied we need to run the script from a temporary location
+        # so that PowerShell can perform its normal trust operations. We need
+        # to start from CLM or else we won't be able to run untrusted scripts
+        # in CLM.
+        if ($module.Params.script) {
+            $tempScript = Join-Path $module.TmpDir "ansible.windows.win_powershell-$([Guid]::NewGuid()).ps1"
+            [File]::WriteAllText($tempScript, $module.Params.script)
+            $null = $ps.AddCommand($tempScript)
+        }
+        else {
+            $null = $ps.AddCommand($module.Params.path)
+        }
+    }
+    elseif ($module.Params.script) {
+        $null = $ps.AddScript($module.Params.script)
     }
     else {
-        $null = $ps.AddScript($module.Params.script)
+        # To ensure encoding is consistent with pwsh.exe and when running with WDAC,
+        # we force WinPS to use UTF-8 in case the file does not have a BOM.
+        # We do it in the pipeline as this could be running on a target executable.
+        $null = $ps.AddScript(@'
+if ($PSVersionTable.PSVersion -lt '6.0') {
+    $clrFacade = [PSObject].Assembly.GetType('System.Management.Automation.ClrFacade')
+    $defaultEncodingField = $clrFacade.GetField(
+        '_defaultEncoding',
+        [System.Reflection.BindingFlags]'NonPublic, Static')
+    $defaultEncodingField.SetValue($null, [System.Text.UTF8Encoding]::new($false))
+}
+'@).AddStatement()
+
+        $null = $ps.AddCommand($module.Params.path)
     }
 
     # We copy the existing parameter dictionary and add/modify the Confirm/WhatIf parameters if the script supports
