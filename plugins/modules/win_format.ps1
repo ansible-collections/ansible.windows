@@ -152,8 +152,6 @@ $ansible_file_system = $ansible_volume.FileSystem
 $ansible_volume_size = $ansible_volume.Size
 $ansible_volume_alu = (Get-CimInstance -ClassName Win32_Volume -Filter "DeviceId = '$($ansible_volume.path.replace('\','\\'))'" -Property BlockSize).BlockSize
 
-$ansible_partition = Get-Partition -Volume $ansible_volume
-
 if (
     -not $force_format -and
     $null -ne $allocation_unit_size -and
@@ -168,29 +166,25 @@ if (
     $module.FailJson($msg)
 }
 
-foreach ($access_path in $ansible_partition.AccessPaths) {
-    if ($access_path -ne $Path) {
-        if ($null -ne $file_system -and
-            -not [string]::IsNullOrEmpty($ansible_file_system) -and
-            $file_system -ne $ansible_file_system) {
-            if (-not $force_format) {
-                $no_files_in_volume = (Get-ChildItem -LiteralPath $access_path -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0
-                if ($no_files_in_volume) {
-                    $msg = -join @(
-                        "Force format must be specified since target file system: $($file_system) "
-                        "is different from the current file system of the volume: $($ansible_file_system.ToLower())"
-                    )
-                    $module.FailJson($msg)
-                }
-                else {
-                    $module.FailJson("Force format must be specified to format non-pristine volumes")
-                }
-            }
+if ($null -ne $file_system -and
+    -not [string]::IsNullOrEmpty($ansible_file_system) -and
+    $file_system -ne $ansible_file_system) {
+    if (-not $force_format) {
+        $no_files_in_volume = (Get-ChildItem -LiteralPath $ansible_volume.Path -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0
+        if ($no_files_in_volume) {
+            $msg = -join @(
+                "Force format must be specified since target file system: $($file_system) "
+                "is different from the current file system of the volume: $($ansible_file_system.ToLower())"
+            )
+            $module.FailJson($msg)
         }
         else {
-            $pristine = -not $force_format
+            $module.FailJson("Force format must be specified to format non-pristine volumes")
         }
     }
+}
+else {
+    $pristine = -not $force_format
 }
 
 if ($force_format) {
