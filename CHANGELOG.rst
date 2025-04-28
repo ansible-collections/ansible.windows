@@ -4,6 +4,37 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.0.0
+======
+
+Release Summary
+---------------
+
+Major release of the ansible.windows collection. This release includes fixes for Ansible 2.19 and removes some deprecated modules.
+
+Minor Changes
+-------------
+
+- Set minimum supported Ansible version to 2.16 to align with the versions still supported by Ansible.
+- win_template - Added ``comment_start_string`` and ``comment_end_string`` as options to align with the builtin ``template`` module.
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- win_domain - Removed deprecated module, use ``microsoft.ad.domain`` instead
+- win_domain_controller - Removed deprecated module, use ``microsoft.ad.domain_controller`` instead
+- win_domain_membership - Removed deprecated module, use ``microsoft.ad.membership`` instead
+- win_feature - Removed deprecated return value ``restart_needed`` in ``feature_result``, use ``reboot_required`` instead
+- win_updates - Removed deprecated return value ``filtered_reason``, use ``filtered_reasons`` instead
+
+Bugfixes
+--------
+
+- win_find - allow users case sensitive match the filename (https://github.com/ansible-collections/ansible.windows/issues/473).
+- win_powershell - Handle failure on output conversion when the output object uses a custom adapter set that fails to enumerate the method members. This is seen when using the output from ``Get-WmiObject`` - https://github.com/ansible-collections/ansible.windows/issues/767
+- win_regedit - Handle decimal values with no decimal values which may be the result of a Jinja2 template
+- win_template - Added support for Ansible 2.19 and the introduction of the data tagging feature.
+
 v2.8.0
 ======
 
