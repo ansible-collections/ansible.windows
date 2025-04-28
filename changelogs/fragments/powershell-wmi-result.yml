@@ -1,5 +1,0 @@
-bugfixes:
-  - >-
-    win_powershell - Handle failure on output conversion when the output object uses a custom adapter set that fails to
-    enumerate the method members. This is seen when using the output from ``Get-WmiObject`` -
-    https://github.com/ansible-collections/ansible.windows/issues/767

@@ -1,5 +1,0 @@
-minor_changes:
-  - win_template - Added ``comment_start_string`` and ``comment_end_string`` as options to align with the builtin ``template`` module.
-
-bugfixes:
-  - win_template - Added support for Ansible 2.19 and the introduction of the data tagging feature.

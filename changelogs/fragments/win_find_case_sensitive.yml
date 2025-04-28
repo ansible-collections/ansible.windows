@@ -1,3 +1,0 @@
----
-bugfixes:
- - win_find - allow users case sensitive match the filename (https://github.com/ansible-collections/ansible.windows/issues/473).
