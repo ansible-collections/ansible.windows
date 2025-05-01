@@ -5,7 +5,7 @@
     path: '{{ test_path }}\bad.msi'
     state: present
   register: fail_bad_rc
-  failed_when: "'unexpected rc from' not in fail_bad_rc.msg and fail_bad_rc.rc != 1603" 
+  failed_when: "'unexpected rc from' not in fail_bad_rc.msg and fail_bad_rc.rc != 1603"
 
 - name: fail when not using an int for a return code
   win_package:
@@ -41,6 +41,13 @@
     state: present
   register: fail_invalid_url_path
   failed_when: "\"The remote name could not be resolved: 'fakeurl'\" not in fail_invalid_url_path.msg"
+
+- name: fail uninstall when no product id is specified and path is URL
+  win_package:
+    path: https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe
+    state: absent
+  register: fail_uninstall_url_path
+  failed_when: "\"Unable to find Product ID from the URL path.\" not in fail_uninstall_url_path.msg"
 
 - name: fail to check version without creates_path
   win_package:
