@@ -232,3 +232,46 @@
     assert:
       that:
       - not set_ipv6_again is changed
+
+  - name: Set DNS suffix search list
+    win_dns_client:
+      adapter_names: '{{ network_adapter_name }}'
+      dns_servers:
+      - 192.168.34.7
+      - 192.168.34.8
+      - 2001:db8::1
+      - 2001:db8::2
+      suffix_search_list:
+        - ad1.com
+        - sample.com
+    register: set_suffix
+
+  - name: Get DNS suffix search list
+    win_shell: |
+        $dnsCGSetting = Get-DnsClientGlobalSetting
+        $dnsCGSetting.SuffixSearchList
+    register: r
+
+  - name: assert set DNS suffix search list
+    assert:
+      that:
+        - set_suffix is changed
+        - "'ad1.com' in r.stdout_lines"
+
+  - name: Set DNS suffix search list (idempotent)
+    win_dns_client:
+      adapter_names: '{{ network_adapter_name }}'
+      dns_servers:
+      - 192.168.34.7
+      - 192.168.34.8
+      - 2001:db8::1
+      - 2001:db8::2
+      suffix_search_list:
+        - ad1.com
+        - sample.com
+    register: set_suffix_again
+
+  - name: assert set DNS suffix search list (idempotent)
+    assert:
+      that:
+        - not set_suffix_again is changed
