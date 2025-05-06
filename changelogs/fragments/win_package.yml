@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - win_package - fail to remove package when no product id is provided with path as an URL (https://github.com/ansible-collections/ansible.windows/issues/667).
