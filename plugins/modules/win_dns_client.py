@@ -28,6 +28,13 @@ options:
     elements: str
     required: yes
     aliases: [ "ipv4_addresses", "ip_addresses", "addresses" ]
+  suffix_search_list:
+    description:
+      - Specifies a list of global suffixes that can be used in the specified order by the DNS client for resolving the IP address.
+    type: list
+    elements: str
+    required: no
+    version_added: 3.1.0
 author:
 - Matt Davis (@nitzmahone)
 - Brian Scholer (@briantist)
@@ -45,6 +52,9 @@ EXAMPLES = r'''
     dns_servers:
       - 192.168.34.5
       - 192.168.34.6
+    suffix_search_list:
+      - "corp.contoso.com"
+      - "na.corp.contoso.com"
     log_path: C:\dns_log.txt
 
 - name: Set IPv6 DNS servers on the adapter named Ethernet

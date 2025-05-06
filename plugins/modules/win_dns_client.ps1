@@ -23,6 +23,7 @@ Set-Variable -Visibility Public -Option ReadOnly, AllScope, Constant -Name "log_
 $adapter_names = Get-AnsibleParam $params "adapter_names" -Default "*"
 $dns_servers = Get-AnsibleParam $params "dns_servers" -aliases "ipv4_addresses", "ip_addresses", "addresses" -FailIfEmpty $result
 $check_mode = Get-AnsibleParam $params "_ansible_check_mode" -Default $false
+$suffix_search_list = Get-AnsibleParam $params "suffix_search_list"
 
 
 Function Write-DebugLog {
@@ -316,6 +317,23 @@ Function Test-DnsClientMatch {
     return $true
 }
 
+Function Test-DnsSuffixSearchList {
+    Param(
+        [Array]$desired_suffix_search_list
+    )
+    $tmp_arr = Get-DnsClientGlobalSetting
+    $current_suffix_search_list = $tmp_arr.SuffixSearchList
+
+    if ($desired_suffix_search_list -and -not $current_suffix_search_list) {
+        return $false
+    }
+    if ($null -ne $current_suffix_search_list -and
+        $null -ne $desired_suffix_search_list -and
+    (Compare-Object -ReferenceObject $current_suffix_search_list -DifferenceObject $desired_suffix_search_list -SyncWindow 0)) {
+        return $false
+    }
+    return $true
+}
 
 Function Assert-IPAddress {
     Param([string] $address)
@@ -341,6 +359,22 @@ Function Set-DnsClientAddress {
     }
 }
 
+Function Set-DnsClientSuffixSearchList {
+    Param(
+        [string[]] $suffix_search_list
+    )
+
+    Write-DebugLog ("Setting DNS Suffix Search List ({0})" -f [string[]]$suffix_search_list -join ", ")
+
+    If ($suffix_search_list) {
+        Set-DnsClientGlobalSetting -SuffixSearchList $suffix_search_list
+    }
+    Else {
+        Set-DnsClientGlobalSetting -SuffixSearchList @()
+    }
+}
+
+
 if ($dns_servers -is [string]) {
     if ($dns_servers.Length -gt 0) {
         $dns_servers = @($dns_servers)
@@ -349,6 +383,16 @@ if ($dns_servers -is [string]) {
         $dns_servers = @()
     }
 }
+
+if ($suffix_search_list -is [string]) {
+    if ($suffix_search_list.Length -gt 0) {
+        $suffix_search_list = @($suffix_search_list)
+    }
+    else {
+        $suffix_search_list = @()
+    }
+}
+
 # Using object equals here, to check for exact match (without implicit type conversion)
 if ([System.Object]::Equals($adapter_names, "*")) {
     $adapters = Get-NetAdapterInfo
@@ -374,11 +418,20 @@ Try {
                 Set-DnsClientAddress $adapter_info $dns_servers
             }
             else {
-                Write-DebugLog "Check mode, skipping"
+                Write-DebugLog "Check mode, skipping DNS address"
             }
         }
     }
 
+    if (-not (Test-DnsSuffixSearchList $suffix_search_list)) {
+        $result.changed = $true
+        if (-not $check_mode) {
+            Set-DnsClientSuffixSearchList $suffix_search_list
+        }
+        else {
+            Write-DebugLog "Check mode, skipping setting suffix_search_list"
+        }
+    }
     Exit-Json $result
 
 }
