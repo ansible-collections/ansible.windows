@@ -336,7 +336,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>This package can either be on the local file system, network share or a url.</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">state=present</span></code>, <code class="docutils literal notranslate"><span class="pre">product_id</span></code> is not set and the path is a URL, this file will always be downloaded to a temporary directory for idempotency checks, otherwise the file will only be downloaded if the package has not been installed based on the <code class="docutils literal notranslate"><span class="pre">product_id</span></code> checks.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">state=present</span></code> then this value MUST be set.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> then this value does not need to be set if <code class="docutils literal notranslate"><span class="pre">product_id</span></code> is.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> and <code class="docutils literal notranslate"><span class="pre">product_id</span></code> is set then this value is not required.</p>
+<p>Module can not derive product id if <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> and path is a URL.</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -349,7 +350,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>For msp packages, this is the <code class="docutils literal notranslate"><span class="pre">PatchCode</span></code> (GUID) of the package which can found under the <code class="docutils literal notranslate"><span class="pre">Details</span> <span class="pre">-&gt;</span> <span class="pre">Revision</span> <span class="pre">number</span></code> of the file’s properties.</p>
 <p>For msix packages, this is the <code class="docutils literal notranslate"><span class="pre">Name</span></code> or <code class="docutils literal notranslate"><span class="pre">PackageFullName</span></code> of the package found under the <code class="docutils literal notranslate"><span class="pre">Get-AppxPackage</span></code> cmdlet.</p>
 <p>For registry (exe) packages, this is the registry key name under the registry paths specified in <em>provider</em>.</p>
-<p>This value is ignored if <code class="docutils literal notranslate"><span class="pre">path</span></code> is set to a local accesible file path and the package is not an <code class="docutils literal notranslate"><span class="pre">exe</span></code>.</p>
+<p>This value is ignored if <code class="docutils literal notranslate"><span class="pre">path</span></code> is set to a local accessible file path and the package is not an <code class="docutils literal notranslate"><span class="pre">exe</span></code>.</p>
 <p>This SHOULD be set when the package is an <code class="docutils literal notranslate"><span class="pre">exe</span></code>, or the path is a url or a network share and credential delegation is not being used. The <code class="docutils literal notranslate"><span class="pre">creates_*</span></code> options can be used instead but is not recommended.</p>
 </div></td>
 </tr>
@@ -416,7 +417,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 <td><div class="ansible-option-cell"><p>Whether to install or uninstall the package.</p>
 <p>The module uses <em>product_id</em> to determine whether the package is installed or not.</p>
-<p>For all providers but <code class="docutils literal notranslate"><span class="pre">auto</span></code>, the <em>path</em> can be used for idempotency checks if it is locally accesible filesystem path.</p>
+<p>For all providers but <code class="docutils literal notranslate"><span class="pre">auto</span></code>, the <em>path</em> can be used for idempotency checks if it is locally accessible filesystem path.</p>
 <p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
