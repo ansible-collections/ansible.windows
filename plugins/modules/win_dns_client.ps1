@@ -361,7 +361,7 @@ Function Set-DnsClientAddress {
 
 Function Set-DnsClientSuffixSearchList {
     Param(
-        [string] $suffix_search_list
+        [string[]] $suffix_search_list
     )
 
     Write-DebugLog ("Setting DNS Suffix Search List ({0})" -f [string[]]$suffix_search_list -join ", ")
@@ -418,28 +418,18 @@ Try {
                 Set-DnsClientAddress $adapter_info $dns_servers
             }
             else {
-                Write-DebugLog "Check mode, skipping"
+                Write-DebugLog "Check mode, skipping DNS address"
             }
         }
     }
 
-}
-Catch {
-    $excep = $_
-
-    Write-DebugLog "Exception: $($excep | Out-String)"
-
-    Throw
-}
-
-Try {
     if (-not (Test-DnsSuffixSearchList $suffix_search_list)) {
         $result.changed = $true
         if (-not $check_mode) {
             Set-DnsClientSuffixSearchList $suffix_search_list
         }
         else {
-            Write-DebugLog "Check mode, skipping"
+            Write-DebugLog "Check mode, skipping setting suffix_search_list"
         }
     }
     Exit-Json $result
