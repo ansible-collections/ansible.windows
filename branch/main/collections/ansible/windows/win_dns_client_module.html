@@ -181,6 +181,14 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>IPv6 DNS servers can only be set on Windows Server 2012 or newer, older hosts can only set IPv4 addresses.</p>
 </div></td>
 </tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-suffix_search_list"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-client-module-parameter-suffix-search-list"><strong>suffix_search_list</strong></p>
+<a class="ansibleOptionLink" href="#parameter-suffix_search_list" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.1.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies a list of global suffixes that can be used in the specified order by the DNS client for resolving the IP address.</p>
+</div></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -197,6 +205,9 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">dns_servers</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.34.5</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.34.6</span>
+<span class="w">    </span><span class="nt">suffix_search_list</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;corp.contoso.com&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;na.corp.contoso.com&quot;</span>
 <span class="w">    </span><span class="nt">log_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\dns_log.txt</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set IPv6 DNS servers on the adapter named Ethernet</span>
