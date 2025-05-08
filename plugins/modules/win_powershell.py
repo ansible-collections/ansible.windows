@@ -64,6 +64,23 @@ options:
     - Parameters to pass into the script as key value pairs.
     - The key corresponds to the parameter name and the value is the value for that parameter.
     type: dict
+  path:
+    description:
+    - The path to a PowerShell script to run.
+    - When O(remote_src=False), or unset, this path is searched on the Ansible host.
+    - When O(remote_src=True), or set, this path is searched on the target host.
+    - This option is mutually exclusive with O(script).
+    - Scripts are expected to be saved with UTF-8 encoding, using a different encoding will result in non-ASCII
+      characters being read as invalid characters.
+    type: str
+    version_added: 3.1.0
+  remote_src:
+    description:
+    - When V(false), the O(path) specified will be searched on the Ansible host.
+    - When V(true), the O(path) specified will be searched on the target host.
+    default: false
+    type: bool
+    version_added: 3.1.0
   removes:
     description:
     - A path or path filter pattern; when the referenced path B(does not) exist on the target host, the task will be
@@ -72,8 +89,8 @@ options:
   script:
     description:
     - The PowerShell script to run.
+    - This option is mutually exclusive with O(path).
     type: str
-    required: true
   sensitive_parameters:
     description:
     - Parameters to pass into the script as a SecureString or PSCredential.
@@ -148,6 +165,15 @@ EXAMPLES = r'''
   ansible.windows.win_powershell:
     script: |
       echo "Hello World"
+
+- name: Run script located in the adjacent files directory
+  ansible.windows.win_powershell:
+    path: my-script.ps1
+
+- name: Run script located on the target Windows host
+  ansible.windows.win_powershell:
+    path: C:\temp\my-script.ps1
+    remote_src: true
 
 - name: Run PowerShell script with parameters
   ansible.windows.win_powershell:

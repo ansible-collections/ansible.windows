@@ -1018,3 +1018,34 @@
     - wmi_object.output[0]['Name'] == 'WinRM'
     - wmi_object.output[0]['__RELPATH'] == 'Win32_Service.Name="WinRM"'
   when: pwsh_executable is not defined
+
+- name: execute script from local path
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    path: test-script.ps1
+    parameters:
+      Name: café
+  register: script_from_local_path
+
+- name: assert execute script from local path
+  assert:
+    that:
+    - script_from_local_path is changed
+    - script_from_local_path.output[0]['Name'] == 'café'
+    - script_from_local_path.output[0]['Unicode'] == 'ü'
+
+- name: execute script from remote path
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    path: '{{ remote_tmp_dir }}\test-script.ps1'
+    remote_src: true
+    parameters:
+      Name: café
+  register: script_from_remote_path
+
+- name: assert execute script from local path
+  assert:
+    that:
+    - script_from_remote_path is changed
+    - script_from_remote_path.output[0]['Name'] == 'café'
+    - script_from_remote_path.output[0]['Unicode'] == 'ü'

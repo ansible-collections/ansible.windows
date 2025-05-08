@@ -49,3 +49,64 @@
   register: fail_ss_value_and_password
   failed_when: >-
     fail_ss_value_and_password.msg != 'parameters are mutually exclusive: value, password found in sensitive_parameters'
+
+- name: expect failure when both script and path is set
+  win_powershell:
+    script: '"test"'
+    path: abc.ps1
+  ignore_errors: true
+  register: fail_both_script_and_path
+
+- name: assert expect failure when both script and path is set
+  assert:
+    that:
+    - fail_both_script_and_path is failed
+    - >-
+      fail_both_script_and_path.msg == 'parameters are mutually exclusive: path, script'
+
+- name: expect failure when both script and path is set with remote_src
+  win_powershell:
+    script: '"test"'
+    path: abc.ps1
+    remote_src: true
+  register: fail_both_script_and_path_remote
+  failed_when: >-
+    fail_both_script_and_path_remote.msg != 'parameters are mutually exclusive: path, script'
+
+- name: expect failure with a missing local script path
+  win_powershell:
+    path: missing.ps1
+  ignore_errors: true
+  register: fail_missing_local
+
+- name: assert expect failure with a missing local script path
+  assert:
+    that:
+    - fail_missing_local is failed
+    - >-
+      fail_missing_local.msg is search("Could not find or access 'missing\.ps1'")
+
+- name: expect failure with a missing remote script path
+  win_powershell:
+    path: missing.ps1
+    remote_src: true
+  register: fail_missing_remote
+  failed_when: >-
+    fail_missing_remote.msg is not search("Could not find or access 'missing\.ps1' on Windows host")
+
+- name: expected failure with script with invalid syntax
+  win_powershell:
+    script: '[- abc'
+  register: invalid_syntax_script
+  failed_when:
+  - invalid_syntax_script.error | count != 1
+  - invalid_syntax_script.error[0]['category_info']['category'] != 'ParserError'
+
+- name: expect failure with script path with invalid syntax
+  win_powershell:
+    path: '{{ remote_tmp_dir }}\syntax-error.ps1'
+    remote_src: true
+  register: invalid_syntax_path
+  failed_when:
+  - invalid_syntax_path.error | count != 1
+  - invalid_syntax_path.error[0]['category_info']['category'] != 'ParserError'

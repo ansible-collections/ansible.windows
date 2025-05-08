@@ -25,6 +25,17 @@
   register: dt_values
   changed_when: False
 
+- name: copy across test file
+  win_copy:
+    src: test-script.ps1
+    dest: '{{ remote_tmp_dir }}/test-script.ps1'
+
+- name: create script with syntax errors
+  win_copy:
+    content: |
+      [- abc
+    dest: '{{ remote_tmp_dir }}/syntax-error.ps1'
+
 - name: run failure tests
   import_tasks: failure.yml
 
