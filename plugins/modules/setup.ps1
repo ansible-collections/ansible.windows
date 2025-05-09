@@ -1129,7 +1129,7 @@ $factMeta = @(
             }
 
             $modelMap = @{
-                kvm = @('KVM', 'KVM Server', 'Bochs', 'AHV')
+                kvm = @('KVM', 'KVM Server', 'Bochs', 'AHV', 'CloudStack KVM Hypervisor')
                 RHEV = @('RHEV Hypervisor')
                 VMware = @('VMWare*')
                 openstack = @('OpenStack Compute', 'OpenStack Nova')
