@@ -151,7 +151,8 @@ namespace Ansible.Windows.Setup
             public byte ProductName;
             public byte Version;
             public byte SerialNumber;
-            // There are more fields but we only need up to SerialNumber.
+            public Guid UUID;
+            // There are more fields but we only need up to UUID.
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -373,6 +374,7 @@ namespace Ansible.Windows.Setup
         public string Manufacturer;
         public string Model;
         public string SerialNumber;
+        public string UUID;
         public bool ProcessorCountFound = false;
         public List<Tuple<int, int>> ProcessorInfo = new List<Tuple<int, int>>();
 
@@ -414,6 +416,7 @@ namespace Ansible.Windows.Setup
                         Manufacturer = ExtractFromStringTable(stringTable, systemInfo.Manufacturer);
                         Model = ExtractFromStringTable(stringTable, systemInfo.ProductName);
                         SerialNumber = ExtractFromStringTable(stringTable, systemInfo.SerialNumber);
+                        UUID = systemInfo.UUID.ToString().ToUpperInvariant();
                     }
                     else if (header.Type == 4)
                     {
@@ -596,11 +599,13 @@ $factMeta = @(
                 # than nothing
                 $win32CS = Get-CimInstance -ClassName Win32_ComputerSystem -Property Model
                 $win32Bios = Get-CimInstance -ClassName Win32_Bios -Property ReleaseDate, SMBIOSBIOSVersion, SerialNumber
+                $win32_csp = Get-CimInstance -ClassName Win32_ComputerSystemProduct -Property UUID
                 $bios = [PSCustomObject]@{
                     ReleaseDate = $win32Bios.ReleaseDate
                     SMBIOSBIOSVersion = $win32Bios.SMBIOSBIOSVersion
                     Model = $win32CS.Model.Trim()
                     SerialNumber = $win32Bios.SerialNumber
+                    UUID = $win32_csp.UUID
                 }
             }
 
@@ -611,6 +616,7 @@ $factMeta = @(
             $ansibleFacts.ansible_bios_version = $bios.SMBIOSBIOSVersion
             $ansibleFacts.ansible_product_name = $bios.Model
             $ansibleFacts.ansible_product_serial = $bios.SerialNumber
+            $ansibleFacts.ansible_product_uuid = $bios.UUID
         }
     },
     @{
