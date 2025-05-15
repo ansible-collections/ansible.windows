@@ -1,0 +1,4 @@
+minor_changes:
+  - >-
+    win_powershell - Added the ``path`` and ``remote_src`` options which can be used to specify a local or remote
+    PowerShell script to run.

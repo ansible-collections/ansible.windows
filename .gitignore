@@ -394,3 +394,7 @@ changelogs/.plugin-cache.yaml
 
 # ansible-test ignores
 tests/integration/inventory*
+
+# Ansible runtime/build metadata
+meta/powershell_signatures.psd1
+

@@ -1,0 +1,93 @@
+- name: test async task
+  win_ping:
+  async: 60
+  poll: 2
+  register: async_result
+
+- name: test win_reboot
+  win_reboot:
+
+- name: copy across test script
+  win_copy:
+    src: '{{ item.src }}'
+    dest: '{{ remote_tmp_dir }}/{{ item.dest }}'
+  loop:
+  - src: '{{ local_tmp.path }}/signed-script.ps1'
+    dest: signed-script.ps1
+  - src: test-script.ps1
+    dest: test-script.ps1
+
+- name: run win_powershell signed script through local path
+  win_powershell:
+    path: '{{ local_tmp.path ~ "/signed-script.ps1" }}'
+    parameters:
+      Value: café
+  register: pwsh_result_local_path
+
+- name: run win_powershell signed script through remote path
+  win_powershell:
+    path: '{{ remote_tmp_dir ~ "/signed-script.ps1" }}'
+    remote_src: true
+    parameters:
+      Value: café
+  register: pwsh_result_remote_path
+
+- name: run win_powershell signed script through string content
+  win_powershell:
+    script: '{{ lookup("file", local_tmp.path ~ "/signed-script.ps1", rstrip=False) }}'
+    parameters:
+      Value: café
+  register: pwsh_result_script
+
+- name: assert win_powershell signed script
+  assert:
+    that:
+    - pwsh_result_local_path.output[0].language_mode == 'FullLanguage'
+    - pwsh_result_local_path.output[0].ünicode == 'café'
+    - pwsh_result_remote_path.output[0].language_mode == 'FullLanguage'
+    - pwsh_result_remote_path.output[0].ünicode == 'café'
+    - pwsh_result_script.output[0].language_mode == 'FullLanguage'
+    - pwsh_result_script.output[0].ünicode == 'café'
+
+- name: run win_powershell unsigned script through local path
+  win_powershell:
+    path: test-script.ps1
+    parameters:
+      Value: café
+  register: pwsh_result_local_path
+
+- name: run win_powershell unsigned script through remote path
+  win_powershell:
+    path: '{{ remote_tmp_dir ~ "/test-script.ps1" }}'
+    remote_src: true
+    parameters:
+      Value: café
+  register: pwsh_result_remote_path
+
+- name: run win_powershell unsigned script through string content
+  win_powershell:
+    script: '{{ lookup("file", "test-script.ps1", rstrip=False) }}'
+    parameters:
+      Value: café
+  register: pwsh_result_script
+
+- name: assert win_powershell unsigned script
+  assert:
+    that:
+    - pwsh_result_local_path.output[0].language_mode == 'ConstrainedLanguage'
+    - pwsh_result_local_path.output[0].ünicode == 'café'
+    - pwsh_result_remote_path.output[0].language_mode == 'ConstrainedLanguage'
+    - pwsh_result_remote_path.output[0].ünicode == 'café'
+    - pwsh_result_script.output[0].language_mode == 'ConstrainedLanguage'
+    - pwsh_result_script.output[0].ünicode == 'café'
+
+- name: run win_shell script
+  win_shell: $ExecutionContext.SessionState.LanguageMode.ToString()
+  register: win_shell_result
+
+- name: assert win_shell script
+  assert:
+    that:
+    - win_shell_result.rc == 0
+    - win_shell_result.stdout | trim == 'ConstrainedLanguage'
+    - win_shell_result.stderr == ''
