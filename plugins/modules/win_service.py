@@ -7,9 +7,9 @@
 DOCUMENTATION = r'''
 ---
 module: win_service
-short_description: Manage and query Windows services
+short_description: Manage Windows services
 description:
-- Manage and query Windows services.
+- Manage Windows services.
 - For non-Windows targets, use the M(ansible.builtin.service) module instead.
 options:
   dependencies:
