@@ -1,0 +1,40 @@
+- name: remove local tmp
+  file:
+    path: '{{ local_tmp.path }}'
+    state: absent
+  delegate_to: localhost
+
+- name: remove OpenAuthenticode module
+  shell: Uninstall-PSResource -Name OpenAuthenticode -Version 0.6.1
+  args:
+    executable: pwsh
+  delegate_to: localhost
+
+- name: remove WDAC certificates
+  win_powershell:
+    parameters:
+      CAThumbprint: '{{ cert_info.output[0].ca_thumbprint }}'
+      CertThumbprint: '{{ cert_info.output[0].thumbprint }}'
+    script: |
+      [CmdletBinding()]
+      param (
+          [Parameter(Mandatory)]
+          [string]
+          $CAThumbprint,
+
+          [Parameter(Mandatory)]
+          [string]
+          $CertThumbprint
+      )
+
+      $ErrorActionPreference = 'Stop'
+
+      Remove-Item -LiteralPath "Cert:\LocalMachine\Root\$CAThumbprint" -Force
+      Remove-Item -LiteralPath "Cert:\LocalMachine\TrustedPublisher\$CertThumbprint" -Force
+
+- name: remove signed content
+  file:
+    path: '{{ item }}'
+    state: absent
+  delegate_to: localhost
+  loop: '{{ sign_result.stdout_lines }}'

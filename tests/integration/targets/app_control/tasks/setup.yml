@@ -1,0 +1,194 @@
+- name: create local temp directory
+  tempfile:
+    state: directory
+  register: local_tmp
+  notify: remove local tmp
+  delegate_to: localhost
+
+- name: install OpenAuthenticode
+  shell: |
+    if (-not (Get-Module -Name OpenAuthenticode -ListAvailable | Where-Object Version -ge '0.5.0')) {
+        $url = 'https://ansible-ci-files.s3.us-east-1.amazonaws.com/test/integration/targets/win_app_control/openauthenticode.0.6.1.nupkg'
+        Invoke-WebRequest -Uri $url -OutFile '{{ local_tmp.path }}/openauthenticode.0.6.1.nupkg'
+
+        Register-PSResourceRepository -Name AnsibleTemp -Trusted -Uri '{{ local_tmp.path }}'
+        try {
+            Install-PSResource -Name OpenAuthenticode -Repository AnsibleTemp
+        } finally {
+            Unregister-PSResourceRepository -Name AnsibleTemp
+        }
+
+        $true
+    } else {
+        $false
+    }
+  args:
+    executable: pwsh
+  register: open_auth_install
+  changed_when: open_auth_install.stdout | bool
+  notify: remove OpenAuthenticode module
+  delegate_to: localhost
+
+- name: generate cert password
+  set_fact:
+    cert_pw: "{{ 'password123!' + lookup('password', '/dev/null chars=ascii_letters,digits length=8') }}"
+
+- name: setup WDAC certificates
+  win_powershell:
+    parameters:
+      TempPath: '{{ remote_tmp_dir }}'
+    sensitive_parameters:
+    - name: CertPass
+      value: '{{ cert_pw }}'
+    script: |
+      [CmdletBinding()]
+      param (
+          [Parameter(Mandatory)]
+          [string]
+          $TempPath,
+
+          [Parameter(Mandatory)]
+          [SecureString]
+          $CertPass
+      )
+
+      $ErrorActionPreference = 'Stop'
+
+      $testPrefix = 'Ansible-WDAC'
+      $enhancedKeyUsage = [Security.Cryptography.OidCollection]::new()
+      $null = $enhancedKeyUsage.Add('1.3.6.1.5.5.7.3.3')  # Code Signing
+      $caParams = @{
+          Extension = @(
+              [Security.Cryptography.X509Certificates.X509BasicConstraintsExtension]::new($true, $false, 0, $true),
+              [Security.Cryptography.X509Certificates.X509KeyUsageExtension]::new('KeyCertSign', $false),
+              [Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension ]::new($enhancedKeyUsage, $false)
+          )
+          CertStoreLocation = 'Cert:\CurrentUser\My'
+          NotAfter = (Get-Date).AddDays(1)
+          Type = 'Custom'
+      }
+      $ca = New-SelfSignedCertificate @caParams -Subject "CN=$testPrefix-Root"
+
+      $certParams = @{
+          CertStoreLocation = 'Cert:\CurrentUser\My'
+          KeyUsage = 'DigitalSignature'
+          TextExtension = @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+          Type = 'Custom'
+      }
+      $cert = New-SelfSignedCertificate @certParams -Subject "CN=$testPrefix-Signed" -Signer $ca
+      $null = $cert | Export-PfxCertificate -Password $CertPass -FilePath "$TempPath\signing.pfx"
+      $cert.Export('Cert') | Set-Content -LiteralPath "$TempPath\signing.cer" -Encoding Byte
+
+      $caWithoutKey = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($ca.Export('Cert'))
+      $certWithoutKey = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($cert.Export('Cert'))
+
+      Remove-Item -LiteralPath "Cert:\CurrentUser\My\$($ca.Thumbprint)" -DeleteKey -Force
+      Remove-Item -LiteralPath "Cert:\CurrentUser\My\$($cert.Thumbprint)" -DeleteKey -Force
+
+      $root = Get-Item Cert:\LocalMachine\Root
+      $root.Open('ReadWrite')
+      $root.Add($caWithoutKey)
+      $root.Dispose()
+
+      $trustedPublisher = Get-Item Cert:\LocalMachine\TrustedPublisher
+      $trustedPublisher.Open('ReadWrite')
+      $trustedPublisher.Add($certWithoutKey)
+      $trustedPublisher.Dispose()
+
+      @{
+          ca_thumbprint = $caWithoutKey.Thumbprint
+          thumbprint = $certWithoutKey.Thumbprint
+      }
+  register: cert_info
+  notify: remove WDAC certificates
+  become: true
+  become_method: runas
+  vars:
+    ansible_become_user: '{{ ansible_user }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
+
+- name: fetch signing certificates
+  fetch:
+    src: '{{ remote_tmp_dir }}\signing.pfx'
+    dest: '{{ local_tmp.path }}/signing.pfx'
+    flat: yes
+
+- name: create script to sign
+  copy:
+    src: test-script.ps1
+    dest: '{{ local_tmp.path }}/signed-script.ps1'
+  delegate_to: localhost
+
+- name: sign Ansible content
+  script: >-
+    New-AnsiblePowerShellSignature.ps1
+    -ScriptPath {{ local_tmp.path | quote }}
+    -CertPath {{ local_tmp.path ~ "/signing.pfx" | quote }}
+    -CertPass {{ cert_pw | quote }}
+  args:
+    executable: pwsh
+  environment:
+    NO_COLOR: '1'
+  delegate_to: localhost
+  register: sign_result
+  notify: remove signed content
+
+- name: enable App Control
+  win_powershell:
+    parameters:
+      TempPath: '{{ remote_tmp_dir }}'
+    script: |
+      [CmdletBinding()]
+      param (
+          [Parameter(Mandatory)]
+          [string]
+          $TempPath
+      )
+
+      $ErrorActionPreference = 'Stop'
+      
+      $policyPath = Join-Path $TempPath policy.xml
+      $certPath = Join-Path $TempPath signing.cer
+      $policyName = 'Ansible_AppControl_Test'
+
+      Copy-Item "$env:windir\schemas\CodeIntegrity\ExamplePolicies\DefaultWindows_Enforced.xml" $policyPath
+      Set-CIPolicyIdInfo -FilePath $policyPath -PolicyName $policyName -PolicyId (New-Guid)
+      Set-CIPolicyVersion -FilePath $policyPath -Version "1.0.0.0"
+
+      Add-SignerRule -FilePath $policyPath -CertificatePath $certPath -User
+      Set-RuleOption -FilePath $policyPath -Option 0          # Enabled:UMCI
+      Set-RuleOption -FilePath $policyPath -Option 3 -Delete  # Enabled:Audit Mode
+      Set-RuleOption -FilePath $policyPath -Option 11 -Delete # Disabled:Script Enforcement
+      Set-RuleOption -FilePath $policyPath -Option 19         # Enabled:Dynamic Code Security
+
+      $policyBinPath = "$env:windir\System32\CodeIntegrity\SiPolicy.p7b"
+      $null = ConvertFrom-CIPolicy -XmlFilePath $policyPath -BinaryFilePath $policyBinPath
+
+      $ciTool = Get-Command -Name CiTool.exe -ErrorAction SilentlyContinue
+      $policyId = $null
+      if ($ciTool) {
+          $setInfo = & $ciTool --update-policy $policyBinPath *>&1
+          if ($LASTEXITCODE) {
+              throw "citool.exe --update-policy failed ${LASTEXITCODE}: $setInfo"
+          }
+
+          $policyId = & $ciTool --list-policies --json |
+              ConvertFrom-Json |
+              Select-Object -ExpandProperty Policies |
+              Where-Object FriendlyName -eq $policyName |
+              Select-Object -ExpandProperty PolicyID
+      }
+      else {
+          $rc = Invoke-CimMethod -Namespace root\Microsoft\Windows\CI -ClassName PS_UpdateAndCompareCIPolicy -MethodName Update -Arguments @{
+              FilePath = $policyBinPath
+          }
+          if ($rc.ReturnValue) {
+              throw "PS_UpdateAndCompareCIPolicy Update failed $($rc.ReturnValue)"
+          }
+      }
+
+      @{
+          policy_id = $policyId
+          path = $policyBinPath
+      }
+  register: policy_info
