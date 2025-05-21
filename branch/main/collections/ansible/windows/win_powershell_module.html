@@ -155,6 +155,10 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <li><p>Runs a PowerShell script and outputs the data in a structured format.</p></li>
 <li><p>Use <a class="reference internal" href="win_command_module.html#ansible-collections-ansible-windows-win-command-module"><span class="std std-ref">ansible.windows.win_command</span></a> or <a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a> to run a traditional PowerShell process with stdout, stderr, and rc results.</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module has a corresponding <a class="reference external" href="https://docs.ansible.com/ansible/devel/plugins/action.html#action-plugins" title="(in Ansible vdevel)"><span class="xref std std-ref">action plugin</span></a>.</p>
+</div>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
@@ -234,6 +238,32 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.1.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path to a PowerShell script to run.</p>
+<p>When <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-remote-src"><span class="std std-ref"><span class="pre">remote_src=False</span></span></a></code>, or unset, this path is searched on the Ansible host.</p>
+<p>When <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-remote-src"><span class="std std-ref"><span class="pre">remote_src=True</span></span></a></code>, or set, this path is searched on the target host.</p>
+<p>This option is mutually exclusive with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-script"><span class="std std-ref"><span class="pre">script</span></span></a></strong></code>.</p>
+<p>Scripts are expected to be saved with UTF-8 encoding, using a different encoding will result in non-ASCII characters being read as invalid characters.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-remote_src"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-remote-src"><strong>remote_src</strong></p>
+<a class="ansibleOptionLink" href="#parameter-remote_src" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.1.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>When <code class="ansible-value docutils literal notranslate"><span class="pre">false</span></code>, the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-path"><span class="std std-ref"><span class="pre">path</span></span></a></strong></code> specified will be searched on the Ansible host.</p>
+<p>When <code class="ansible-value docutils literal notranslate"><span class="pre">true</span></code>, the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-path"><span class="std std-ref"><span class="pre">path</span></span></a></strong></code> specified will be searched on the target host.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-removes"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-removes"><strong>removes</strong></p>
 <a class="ansibleOptionLink" href="#parameter-removes" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -242,9 +272,10 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-script"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-powershell-module-parameter-script"><strong>script</strong></p>
-<a class="ansibleOptionLink" href="#parameter-script" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+<a class="ansibleOptionLink" href="#parameter-script" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The PowerShell script to run.</p>
+<p>This option is mutually exclusive with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-powershell-module-parameter-path"><span class="std std-ref"><span class="pre">path</span></span></a></strong></code>.</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -332,6 +363,15 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">      </span><span class="no">echo &quot;Hello World&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run script located in the adjacent files directory</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-script.ps1</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run script located on the target Windows host</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\temp\my-script.ps1</span>
+<span class="w">    </span><span class="nt">remote_src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run PowerShell script with parameters</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
