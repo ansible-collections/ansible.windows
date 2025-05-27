@@ -1,3 +1,0 @@
-minor_changes:
-  - >-
-    setup - added ``ansible_product_uuid`` to align with Python facts - https://github.com/ansible-collections/ansible.windows/issues/789
