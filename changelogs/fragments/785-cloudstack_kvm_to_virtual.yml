@@ -1,2 +1,0 @@
-minor_changes:
-  - setup - add "CloudStack KVM Hypervisor" for Windows VM in virtual facts (https://github.com/ansible-collections/ansible.windows/pull/785).

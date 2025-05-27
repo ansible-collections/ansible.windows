@@ -1,3 +1,0 @@
----
-minor_changes:
-  - win_dns_client - add support for suffixsearchlist (https://github.com/ansible-collections/ansible.windows/issues/656).
