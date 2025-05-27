@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.16.3" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_dsc module – Invokes a PowerShell DSC configuration &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=41de9001" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=c5b67dd2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_environment module – Modify environment variables on windows hosts" href="win_environment_module.html" />
+    <link rel="prev" title="ansible.windows.win_dns_zone module – Manage Windows Server DNS Zones" href="win_dns_zone_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_dsc module – Invokes a PowerShell DSC configuration</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_dsc.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-dsc-module"></span><section id="ansible-windows-win-dsc-module-invokes-a-powershell-dsc-configuration">
+<h1>ansible.windows.win_dsc module – Invokes a PowerShell DSC configuration<a class="headerlink" href="#ansible-windows-win-dsc-module-invokes-a-powershell-dsc-configuration" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.1.0).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_dsc</span></code>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Configures a resource using PowerShell DSC.</p></li>
+<li><p>Requires PowerShell version 5.0 or newer.</p></li>
+<li><p>Most of the options for this module are dynamic and will vary depending on the DSC Resource specified in <em>resource_name</em>.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-free_form"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-parameter-free-form"><strong>free_form</strong></p>
+<a class="ansibleOptionLink" href="#parameter-free_form" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The <a class="reference internal" href="#ansible-collections-ansible-windows-win-dsc-module"><span class="std std-ref">ansible.windows.win_dsc</span></a> module takes in multiple free form options based on the DSC resource being invoked by <em>resource_name</em>.</p>
+<p>There is no option actually named <code class="docutils literal notranslate"><span class="pre">free_form</span></code> so see the examples.</p>
+<p>This module will try and convert the option to the correct type required by the DSC resource and throw a warning if it fails.</p>
+<p>If the type of the DSC resource option is a <code class="docutils literal notranslate"><span class="pre">CimInstance</span></code> or <code class="docutils literal notranslate"><span class="pre">CimInstance[]</span></code>, this means the value should be a dictionary or list of dictionaries based on the values required by that option.</p>
+<p>If the type of the DSC resource option is a <code class="docutils literal notranslate"><span class="pre">PSCredential</span></code> then there needs to be 2 options set in the Ansible task definition suffixed with <code class="docutils literal notranslate"><span class="pre">_username</span></code> and <code class="docutils literal notranslate"><span class="pre">_password</span></code>.</p>
+<p>If the type of the DSC resource option is an array, then a list should be provided but a comma separated string also work. Use a list where possible as no escaping is required and it works with more complex types list <code class="docutils literal notranslate"><span class="pre">CimInstance[]</span></code>.</p>
+<p>If the type of the DSC resource option is a <code class="docutils literal notranslate"><span class="pre">DateTime</span></code>, you should use a string in the form of an ISO 8901 string to ensure the exact date is used.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-module_version"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-parameter-module-version"><strong>module_version</strong></p>
+<a class="ansibleOptionLink" href="#parameter-module_version" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Can be used to configure the exact version of the DSC resource to be invoked.</p>
+<p>Useful if the target node has multiple versions installed of the module containing the DSC resource.</p>
+<p>If not specified, the module will follow standard PowerShell convention and use the highest version available.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;latest&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-resource_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-parameter-resource-name"><strong>resource_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-resource_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The name of the DSC Resource to use.</p>
+<p>Must be accessible to PowerShell using any of the default paths.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>By default there are a few builtin resources that come with PowerShell 5.0, See <a class="reference external" href="https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources">https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources</a> for more information on these resources.</p></li>
+<li><p>Custom DSC resources can be installed with <a class="reference external" href="https://docs.ansible.com/ansible/devel/collections/community/windows/win_psmodule_module.html#ansible-collections-community-windows-win-psmodule-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_psmodule</span></a> using the <em>name</em> option.</p></li>
+<li><p>The DSC engine run’s each task as the SYSTEM account, any resources that need to be accessed with a different account need to have <code class="docutils literal notranslate"><span class="pre">PsDscRunAsCredential</span></code> set.</p></li>
+<li><p>To see the valid options for a DSC resource, run the module with <code class="docutils literal notranslate"><span class="pre">-vvv</span></code> to show the possible module invocation. Default values are not shown in this output but are applied within the DSC engine.</p></li>
+<li><p>The DSC engine requires the HTTP WSMan listener to be online and its port configured as the default listener for HTTP. This is set up by default but if a custom HTTP port is used or only a HTTPS listener is present then the module will fail. See the examples for a way to check this out in PowerShell.</p></li>
+<li><p>The Local Configuration Manager <code class="docutils literal notranslate"><span class="pre">LCM</span></code> on the targeted host in question should be disabled to avoid any conflicts with resources being applied by this module. See <a class="reference external" href="https://devblogs.microsoft.com/powershell/invoking-powershell-dsc-resources-directly/">https://devblogs.microsoft.com/powershell/invoking-powershell-dsc-resources-directly/</a> for more information on hwo to disable <code class="docutils literal notranslate"><span class="pre">LCM</span></code>.</p></li>
+</ul>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Verify the WSMan HTTP listener is active and configured correctly</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">$port = (Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP).Value</span>
+<span class="w">    </span><span class="no">$onlinePorts = @(Get-ChildItem -LiteralPath WSMan:\localhost\Listener |</span>
+<span class="w">        </span><span class="no">Where-Object { &#39;Transport=HTTP&#39; -in $_.Keys } |</span>
+<span class="w">        </span><span class="no">Get-ChildItem |</span>
+<span class="w">        </span><span class="no">Where-Object Name -eq Port |</span>
+<span class="w">        </span><span class="no">Select-Object -ExpandProperty Value)</span>
+
+<span class="w">    </span><span class="no">if ($port -notin $onlinePorts) {</span>
+<span class="w">        </span><span class="no">&quot;The default client port $port is not set up as a WSMan HTTP listener, win_dsc will not work.&quot;</span>
+<span class="w">    </span><span class="no">}</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Extract zip file</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Archive</span>
+<span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
+<span class="w">    </span><span class="nt">Path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\zipfile.zip</span>
+<span class="w">    </span><span class="nt">Destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\Temp2</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install a Windows feature with the WindowsFeature resource</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WindowsFeature</span>
+<span class="w">    </span><span class="nt">Name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">telnet-client</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Edit HKCU reg key under specific user</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Registry</span>
+<span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
+<span class="w">    </span><span class="nt">Key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKEY_CURRENT_USER\ExampleKey</span>
+<span class="w">    </span><span class="nt">ValueName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestValue</span>
+<span class="w">    </span><span class="nt">ValueData</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestData</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">  </span><span class="nt">no_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create file with multiple attributes</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span>
+<span class="w">    </span><span class="nt">DestinationPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\ansible\dsc</span>
+<span class="w">    </span><span class="nt">Attributes</span><span class="p">:</span><span class="w"> </span><span class="c1"># can also be a comma separated string, e.g. &#39;Hidden, System&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hidden</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">System</span>
+<span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
+<span class="w">    </span><span class="nt">Type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Directory</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Call DSC resource with DateTime option</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DateTimeResource</span>
+<span class="w">    </span><span class="nt">DateTimeOption</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2019-02-22T13:57:31.2311892+00:00&#39;</span>
+
+<span class="c1"># more complex example using custom DSC resource and dict values</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Setup the xWebAdministration module</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_psmodule</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xWebAdministration</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create IIS Website with Binding and Authentication options</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xWebsite</span>
+<span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
+<span class="w">    </span><span class="nt">Name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DSC Website</span>
+<span class="w">    </span><span class="nt">State</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Started</span>
+<span class="w">    </span><span class="nt">PhysicalPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\inetpub\wwwroot</span>
+<span class="w">    </span><span class="nt">BindingInfo</span><span class="p">:</span><span class="w"> </span><span class="c1"># Example of a CimInstance[] DSC parameter (list of dicts)</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
+<span class="w">        </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1234</span>
+<span class="w">        </span><span class="nt">CertificateStoreName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MY</span>
+<span class="w">        </span><span class="nt">CertificateThumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C676A89018C4D5902353545343634F35E6B3A659</span>
+<span class="w">        </span><span class="nt">HostName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DSCTest</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">        </span><span class="nt">SSLFlags</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
+<span class="w">        </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4321</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">    </span><span class="nt">AuthenticationInfo</span><span class="p">:</span><span class="w"> </span><span class="c1"># Example of a CimInstance DSC parameter (dict)</span>
+<span class="w">      </span><span class="nt">Anonymous</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">Basic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">Digest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">Windows</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-module_version"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-return-module-version"><strong>module_version</strong></p>
+<a class="ansibleOptionLink" href="#return-module_version" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The version of the dsc resource/module used.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;1.0.1&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-return-reboot-required"><strong>reboot_required</strong></p>
+<a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Flag returned from the DSC engine indicating whether or not the machine requires a reboot for the invoked changes to take effect.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-verbose_set"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-return-verbose-set"><strong>verbose_set</strong></p>
+<a class="ansibleOptionLink" href="#return-verbose_set" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The verbose output as a list from executing the DSC Set method.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> Ansible verbosity is -vvv or greater and a change occurred</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Perform</span> <span class="pre">operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">parameters,</span> <span class="pre">&quot;,</span> <span class="pre">&quot;[SERVER]:</span> <span class="pre">LCM:</span> <span class="pre">[Start</span> <span class="pre">Set</span> <span class="pre">]</span> <span class="pre">[[File]DirectResourceAccess]&quot;,</span> <span class="pre">&quot;Operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">complete.&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-verbose_test"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dsc-module-return-verbose-test"><strong>verbose_test</strong></p>
+<a class="ansibleOptionLink" href="#return-verbose_test" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The verbose output as a list from executing the DSC test method.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> Ansible verbosity is -vvv or greater</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Perform</span> <span class="pre">operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">parameters,</span> <span class="pre">&quot;,</span> <span class="pre">&quot;[SERVER]:</span> <span class="pre">LCM:</span> <span class="pre">[Start</span> <span class="pre">Test</span> <span class="pre">]</span> <span class="pre">[[File]DirectResourceAccess]&quot;,</span> <span class="pre">&quot;Operation</span> <span class="pre">'Invoke</span> <span class="pre">CimMethod'</span> <span class="pre">complete.&quot;]</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Trond Hindenes (&#64;trondhindenes)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_dns_zone_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_dns_zone module – Manage Windows Server DNS Zones" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_environment_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_environment module – Modify environment variables on windows hosts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>

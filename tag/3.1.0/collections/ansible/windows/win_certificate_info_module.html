@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.16.3" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_certificate_info module – Get information on certificates from a Windows Certificate Store &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=41de9001" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=c5b67dd2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_certificate_store module – Manages the certificate store" href="win_certificate_store_module.html" />
+    <link rel="prev" title="ansible.windows.win_auto_logon module – Adds or Sets auto logon registry keys." href="win_auto_logon_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_certificate_info module – Get information on certificates from a Windows Certificate Store</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_certificate_info.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-certificate-info-module"></span><section id="ansible-windows-win-certificate-info-module-get-information-on-certificates-from-a-windows-certificate-store">
+<h1>ansible.windows.win_certificate_info module – Get information on certificates from a Windows Certificate Store<a class="headerlink" href="#ansible-windows-win-certificate-info-module-get-information-on-certificates-from-a-windows-certificate-store" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.1.0).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_certificate_info</span></code>.</p>
+</div>
+<p class="ansible-version-added">New in ansible.windows 2.6.0</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id3">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Returns information about certificates in a Windows Certificate Store.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-store_location"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-parameter-store-location"><strong>store_location</strong></p>
+<a class="ansibleOptionLink" href="#parameter-store_location" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The location of the store to search.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;CurrentUser&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;LocalMachine&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-store_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-parameter-store-name"><strong>store_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-store_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The name of the store to search.</p>
+<p>See <a class="reference external" href="https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.storename">https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.storename</a> for a list of built-in store names.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;My&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-thumbprint"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-parameter-thumbprint"><strong>thumbprint</strong></p>
+<a class="ansibleOptionLink" href="#parameter-thumbprint" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The thumbprint as a hex string of a certificate to find.</p>
+<p>When specified, filters the <em>certificates</em> return value to a single certificate</p>
+<p>See the examples for how to format the thumbprint.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="win_certificate_store_module.html#ansible-collections-ansible-windows-win-certificate-store-module"><span class="std std-ref">ansible.windows.win_certificate_store</span></a></dt><dd><p>Manages the certificate store.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Obtain information about a particular certificate in the computer&#39;s personal store</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_info</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">thumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BD7AF104CF1872BDB518D95C9534EA941665FD27</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mycert</span>
+
+<span class="c1"># thumbprint can also be lower case</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Obtain information about a particular certificate in the computer&#39;s personal store</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_info</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">thumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bd7af104cf1872bdb518d95c9534ea941665fd27</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mycert</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Obtain information about all certificates in the root store</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_info</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">store_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Root</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ca</span>
+
+<span class="c1"># Import a pfx and then get information on the certificates</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Import pfx certificate that is password protected</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_store</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\cert.pfx</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">VeryStrongPasswordHere!</span>
+<span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mycert</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Obtain information on each certificate that was touched</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_certificate_info</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">thumbprint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">item</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mycert_stats</span>
+<span class="w">  </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">mycert.thumbprints</span> <span class="cp">}}</span><span class="s">&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates"><strong>certificates</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of information about certificates found in the store, sorted by thumbprint.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/archived"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-archived"><strong>archived</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/archived" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Indicates that the certificate is archived.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/cert_data"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-cert-data"><strong>cert_data</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/cert_data" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The base64 encoded data of the entire certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/dns_names"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-dns-names"><strong>dns_names</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/dns_names" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Lists the registered dns names for the certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;*.m.wikiquote.org&quot;,</span> <span class="pre">&quot;*.wikipedia.org&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/extensions"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-extensions"><strong>extensions</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/extensions" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The collection of the certificates extensions.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[{&quot;critical&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">&quot;Subject</span> <span class="pre">Key</span> <span class="pre">Identifier&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;88</span> <span class="pre">27</span> <span class="pre">17</span> <span class="pre">09</span> <span class="pre">a9</span> <span class="pre">b6</span> <span class="pre">18</span> <span class="pre">60</span> <span class="pre">8b</span> <span class="pre">ec</span> <span class="pre">eb</span> <span class="pre">ba</span> <span class="pre">f6</span> <span class="pre">47</span> <span class="pre">59</span> <span class="pre">c5</span> <span class="pre">52</span> <span class="pre">54</span> <span class="pre">a3</span> <span class="pre">b7&quot;},</span> <span class="pre">{&quot;critical&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">&quot;Basic</span> <span class="pre">Constraints&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;Subject</span> <span class="pre">Type=CA,</span> <span class="pre">Path</span> <span class="pre">Length</span> <span class="pre">Constraint=None&quot;},</span> <span class="pre">{&quot;critical&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">&quot;Authority</span> <span class="pre">Key</span> <span class="pre">Identifier&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;KeyID=2b</span> <span class="pre">d0</span> <span class="pre">69</span> <span class="pre">47</span> <span class="pre">94</span> <span class="pre">76</span> <span class="pre">09</span> <span class="pre">fe</span> <span class="pre">f4</span> <span class="pre">6b</span> <span class="pre">8d</span> <span class="pre">2e</span> <span class="pre">40</span> <span class="pre">a6</span> <span class="pre">f7</span> <span class="pre">47</span> <span class="pre">4d</span> <span class="pre">7f</span> <span class="pre">08</span> <span class="pre">5e&quot;},</span> <span class="pre">{&quot;critical&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">&quot;CRL</span> <span class="pre">Distribution</span> <span class="pre">Points&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;[1]CRL</span> <span class="pre">Distribution</span> <span class="pre">Point:</span> <span class="pre">Distribution</span> <span class="pre">Point</span> <span class="pre">Name:Full</span> <span class="pre">Name:URL=http://crl.apple.com/root.crl&quot;},</span> <span class="pre">{&quot;critical&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">&quot;Key</span> <span class="pre">Usage&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;Digital</span> <span class="pre">Signature,</span> <span class="pre">Certificate</span> <span class="pre">Signing,</span> <span class="pre">Off-line</span> <span class="pre">CRL</span> <span class="pre">Signing,</span> <span class="pre">CRL</span> <span class="pre">Signing</span> <span class="pre">(86)&quot;},</span> <span class="pre">{&quot;critical&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;field&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;05</span> <span class="pre">00&quot;}]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/friendly_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-friendly-name"><strong>friendly_name</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/friendly_name" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The associated alias for the certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Microsoft</span> <span class="pre">Root</span> <span class="pre">Authority&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/has_private_key"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-has-private-key"><strong>has_private_key</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/has_private_key" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Indicates that the certificate contains a private key.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/intended_purposes"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-intended-purposes"><strong>intended_purposes</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/intended_purposes" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>lists the intended applications for the certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> enhanced key usages extension exists.</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;Server</span> <span class="pre">Authentication&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/is_ca"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-is-ca"><strong>is_ca</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/is_ca" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Indicates that the certificate is a certificate authority (CA) certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> basic constraints extension exists.</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/issued_by"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-issued-by"><strong>issued_by</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/issued_by" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The certificate issuer’s common name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Apple</span> <span class="pre">Root</span> <span class="pre">CA&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/issued_to"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-issued-to"><strong>issued_to</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/issued_to" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The certificate’s common name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;Apple</span> <span class="pre">Worldwide</span> <span class="pre">Developer</span> <span class="pre">Relations</span> <span class="pre">Certification</span> <span class="pre">Authority&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/issuer"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-issuer"><strong>issuer</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/issuer" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The certificate issuer’s distinguished name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CN=Apple</span> <span class="pre">Root</span> <span class="pre">CA,</span> <span class="pre">OU=Apple</span> <span class="pre">Certification</span> <span class="pre">Authority,</span> <span class="pre">O=Apple</span> <span class="pre">Inc.,</span> <span class="pre">C=US&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/key_usages"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-key-usages"><strong>key_usages</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/key_usages" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Defines how the certificate key can be used.</p>
+<p>If this value is not defined, the key can be used for any purpose.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> key usages extension exists.</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[&quot;CrlSign&quot;,</span> <span class="pre">&quot;KeyCertSign&quot;,</span> <span class="pre">&quot;DigitalSignature&quot;]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/path_length_constraint"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-path-length-constraint"><strong>path_length_constraint</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/path_length_constraint" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The number of levels allowed in a certificates path.</p>
+<p>If this value is 0, the certificate does not have a restriction.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> basic constraints extension exists</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/public_key"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-public-key"><strong>public_key</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/public_key" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The base64 encoded public key of the certificate.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/serial_number"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-serial-number"><strong>serial_number</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/serial_number" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The serial number of the certificate represented as a hexadecimal string</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;01DEBCC4396DA010&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/signature_algorithm"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-signature-algorithm"><strong>signature_algorithm</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/signature_algorithm" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The algorithm used to create the certificate’s signature</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;sha1RSA&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/ski"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-ski"><strong>ski</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/ski" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The certificate’s subject key identifier</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> subject key identifier extension exists.</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;88271709A9B618608BECEBBAF64759C55254A3B7&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/subject"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-subject"><strong>subject</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/subject" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The certificate’s distinguished name.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;CN=Apple</span> <span class="pre">Worldwide</span> <span class="pre">Developer</span> <span class="pre">Relations</span> <span class="pre">Certification</span> <span class="pre">Authority,</span> <span class="pre">OU=Apple</span> <span class="pre">Worldwide</span> <span class="pre">Developer</span> <span class="pre">Relations,</span> <span class="pre">O=Apple</span> <span class="pre">Inc.,</span> <span class="pre">C=US&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/thumbprint"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-thumbprint"><strong>thumbprint</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/thumbprint" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The thumbprint as a hex string of the certificate.</p>
+<p>The return format will always be upper case.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;FF6797793A3CD798DC5B2ABEF56F73EDC9F83A64&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/valid_from"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-valid-from"><strong>valid_from</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/valid_from" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">float</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The start date of the certificate represented in seconds since epoch.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">1360255727.0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/valid_from_iso8601"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-valid-from-iso8601"><strong>valid_from_iso8601</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/valid_from_iso8601" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The start date of the certificate represented as an iso8601 formatted date.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;2017-12-15T08:39:32Z&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/valid_to"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-valid-to"><strong>valid_to</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/valid_to" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">float</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The expiry date of the certificate represented in seconds since epoch.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">1675788527.0</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/valid_to_iso8601"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-valid-to-iso8601"><strong>valid_to_iso8601</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/valid_to_iso8601" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The expiry date of the certificate represented as an iso8601 formatted date.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;2086-01-02T08:39:32Z&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-certificates/version"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-certificates-version"><strong>version</strong></p>
+<a class="ansibleOptionLink" href="#return-certificates/version" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The x509 format version of the certificate</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">3</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-exists"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-certificate-info-module-return-exists"><strong>exists</strong></p>
+<a class="ansibleOptionLink" href="#return-exists" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether any certificates were found in the store.</p>
+<p>When <em>thumbprint</em> is specified, returns true only if the certificate mathing the thumbprint exists.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">true</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Micah Hunsberger (&#64;mhunsber)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_auto_logon_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_auto_logon module – Adds or Sets auto logon registry keys." accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_certificate_store_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_certificate_store module – Manages the certificate store" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
