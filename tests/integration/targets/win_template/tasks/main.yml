@@ -251,3 +251,43 @@
     that:
     - template_windows_1252 is changed
     - template_windows_1252_actual.content | b64decode(encoding='windows-1252') == expected_content + "\r\n"
+
+- name: verify ansible_managed default
+  win_template:
+    src: with_managed.j2
+    dest: '{{ remote_tmp_dir }}/with_managed_default.templated'
+  register: template_result_managed_default
+
+- set_fact:
+    expected_managed_default: "{{ lookup('template', 'with_managed.j2') }}"
+
+- name: run with overridden ansible_managed (no-op < 2.19)
+  vars:
+    ansible_managed: overridden
+  block:
+  - name: verify ansible_managed override
+    win_template:
+      src: with_managed.j2
+      dest: '{{ remote_tmp_dir }}/with_managed_override.templated'
+    register: template_result_managed_override
+
+  - set_fact:
+      expected_managed_override: "{{ lookup('template', 'with_managed.j2') }}"
+
+- name: fetch templated ansible_managed values
+  slurp:
+    src: '{{ item }}'
+  loop:
+    - '{{ template_result_managed_default.dest }}'
+    - '{{ template_result_managed_override.dest }}'
+  register: slurp_res
+
+- set_fact:
+    actual_managed_default: '{{ slurp_res.results[0].content | b64decode }}'
+    actual_managed_override: '{{ slurp_res.results[1].content | b64decode }}'
+
+- name: assert expected ansible_managed values
+  assert:
+    that:
+    - actual_managed_default is contains expected_managed_default
+    - actual_managed_override is contains expected_managed_override
