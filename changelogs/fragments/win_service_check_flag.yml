@@ -1,2 +1,2 @@
 bugfixes:
-  - win_service - Fix crash with --check flag.
+  - win_service - Fix crash when attempting to create a service with the ``--check`` flag.

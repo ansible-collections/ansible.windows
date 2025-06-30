@@ -689,6 +689,21 @@
     name: "{{test_win_service_name}}"
     path: "{{test_win_service_path}}"
 
+- name: create service with check mode
+  win_service:
+    name: TestServiceParent2
+    display_name: Test Service Parent 2
+    path: "{{test_win_service_path}}"
+  check_mode: true
+
+- name: check that creating a service with check mode does not change anything
+  win_powershell:
+    script: Get-Service -Name $args[0] -ErrorAction Ignore
+    parameters:
+      Name: TestServiceParent2
+  register: create_service_check
+  failed_when: create_service_check.output != []
+
 - name: create new second dependency parent service
   win_service:
     name: TestServiceParent2
