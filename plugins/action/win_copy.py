@@ -198,7 +198,7 @@ def _walk_dirs(topdir, loader, decrypt=True, base_path=None, local_follow=False,
         offset += 1
 
     if os.path.islink(topdir) and not local_follow:
-        r_files['symlinks'] = {"src": os.readlink(topdir), "dest": os.path.basename(topdir)}
+        r_files['symlinks'].append({"src": os.readlink(topdir), "dest": os.path.basename(topdir)})
         return r_files
 
     dir_stats = os.stat(topdir)
