@@ -46,6 +46,11 @@ EXAMPLES = r"""
     state: directory
     suffix: build
 
+- name: Create temporary file with custom prefix
+  ansible.windows.win_tempfile:
+    state: file
+    prefix: customlog_
+
 - name: Create temporary file
   ansible.windows.win_tempfile:
     state: file
