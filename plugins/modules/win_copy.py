@@ -126,6 +126,12 @@ EXAMPLES = r"""
     src: files/temp_files
     dest: C:\Temp
 
+- name: Copy file only if it does not exist on remote host
+  ansible.windows.win_copy:
+    src: files/config.ini
+    dest: C:\App\Config\config.ini
+    force: false
+
 - name: Copy folder contents recursively
   ansible.windows.win_copy:
     src: files/temp_files/
