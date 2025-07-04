@@ -125,6 +125,13 @@ EXAMPLES = r'''
     path: C:\temp\log.txt
     state: absent
 
+- name: Wait for port 8080 on 192.168.1.10 with a increased connect timeout
+  ansible.windows.win_wait_for:
+    host: 192.168.1.10
+    port: 8080
+    connect_timeout: 20
+    timeout: 60
+
 - name: Wait until port 1234 is offline but try every 10 seconds
   ansible.windows.win_wait_for:
     port: 1234
