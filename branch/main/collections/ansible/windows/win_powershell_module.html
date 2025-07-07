@@ -435,6 +435,12 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="no">}</span>
 <span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a file in a specific directory using chdir</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">New-Item -Path &#39;created_by_ansible.txt&#39; -ItemType File -Force</span>
+<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;C:\Temp&#39;</span>
+
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Return a failure back to Ansible</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
