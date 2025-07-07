@@ -241,7 +241,7 @@ EXAMPLES = r'''
   ansible.windows.win_powershell:
     script: |
       New-Item -Path 'created_by_ansible.txt' -ItemType File -Force
-    chdir: 'C:\Temp'  
+    chdir: 'C:\Temp'
 
 - name: Return a failure back to Ansible
   ansible.windows.win_powershell:
