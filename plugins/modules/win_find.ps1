@@ -11,7 +11,7 @@ $spec = @{
         paths = @{ type = "list"; elements = "str"; required = $true }
         age = @{ type = "str" }
         age_stamp = @{ type = "str"; default = "mtime"; choices = "mtime", "ctime", "atime" }
-        file_type = @{ type = "str"; default = "file"; choices = "file", "directory" }
+        file_type = @{ type = "str"; default = "file"; choices = "file", "directory", "any" }
         follow = @{ type = "bool"; default = $false }
         hidden = @{ type = "bool"; default = $false }
         patterns = @{ type = "list"; elements = "str"; aliases = "regex", "regexp" }
@@ -80,6 +80,9 @@ Function Assert-FileType {
         [System.String]$FileType
     )
 
+    if ($FileType -eq 'any') {
+        return $true
+    }
     $is_dir = $File.Attributes.HasFlag([System.IO.FileAttributes]::Directory)
     return ($FileType -eq 'directory' -and $is_dir) -or ($FileType -eq 'file' -and -not $is_dir)
 }
