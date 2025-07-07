@@ -617,8 +617,8 @@
   assert:
     that:
     - not actual is changed
-    - actual.examined == 40
-    - actual.matched == 18
+    - actual.examined == 45
+    - actual.matched == 21
     - actual.files[0].filename == 'broken-link'
     - actual.files[0].isjunction == False
     - actual.files[0].islnk == True
@@ -953,3 +953,18 @@
     - actual.files[0].exists == True
     - actual.files[0].extension == '.ps1'
     - actual.files[0].filename == 'FILE.ps1'
+
+- name: find using filetype as "any"
+  win_find:
+    paths: '{{ win_find_dir }}\zany'
+    patterns: dir_*
+    use_regex: true
+    file_type: 'any'
+  register: any_result
+
+- name: assert find file based on file_type is any
+  assert:
+    that:
+    - not any_result is changed
+    - any_result.examined == 4
+    - any_result.matched == 3

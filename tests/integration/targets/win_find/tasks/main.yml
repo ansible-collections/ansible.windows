@@ -21,7 +21,9 @@
         "hidden",
         "date",
         "emptynested\nest\dir1",
-        "emptynested\nest\dir2"
+        "emptynested\nest\dir2",
+        "zany\dir_one",
+        "zany\dir_two"
     )
 
     $tmp_dir = '{{ win_find_dir }}'
@@ -44,7 +46,9 @@
         "single\hidden.ps1",
         "single\out_20161101-091005.log",
         "hidden\out_20161101-091005.log",
-        "hard-link-dest\file-abc.log"
+        "hard-link-dest\file-abc.log",
+        "zany\dir_file_one",
+        "zany\sample_file_one"
     )
     foreach ($file in $normal_files) {
         New-Item -Path "$tmp_dir\$file" -ItemType File
