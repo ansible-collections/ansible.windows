@@ -237,6 +237,12 @@ EXAMPLES = r'''
       }
   check_mode: true
 
+- name: Create a file in a specific directory using chdir
+  ansible.windows.win_powershell:
+    script: |
+      New-Item -Path 'created_by_ansible.txt' -ItemType File -Force
+    chdir: 'C:\Temp'
+
 - name: Return a failure back to Ansible
   ansible.windows.win_powershell:
     script: |
