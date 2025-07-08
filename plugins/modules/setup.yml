@@ -57,4 +57,4 @@ EXAMPLES: |
 
   - name: Gather all facts with a custom timeout on Windows host
     ansible.windows.setup:
-      gather_timeout: 30 
+      gather_timeout: 30
