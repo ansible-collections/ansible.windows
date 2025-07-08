@@ -230,6 +230,10 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">run the setup facts</span>
 <span class="w">  </span><span class="nt">ansible.windows.setup</span><span class="p">:</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gather all facts with a custom timeout on Windows host</span>
+<span class="w">  </span><span class="nt">ansible.windows.setup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">gather_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
 </pre></div>
 </div>
 <section id="authors">
