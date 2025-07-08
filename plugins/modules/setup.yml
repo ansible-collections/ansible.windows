@@ -54,3 +54,7 @@ DOCUMENTATION:
 EXAMPLES: |
   - name: run the setup facts
     ansible.windows.setup:
+
+  - name: Gather all facts with a custom timeout on Windows host
+    ansible.windows.setup:
+      gather_timeout: 30
