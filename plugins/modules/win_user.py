@@ -154,6 +154,15 @@ EXAMPLES = r'''
     name: bob
     state: present
     account_expires: never
+
+- name: Create a local user with a login script
+  ansible.windows.win_user:
+    name: bob
+    password: B0bP4ssw0rd
+    state: present
+    groups:
+      - Users
+    login_script: logon-script.bat
 '''
 
 RETURN = r'''
