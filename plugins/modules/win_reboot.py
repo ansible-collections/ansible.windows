@@ -88,6 +88,13 @@ EXAMPLES = r'''
   ansible.windows.win_reboot:
   when: iis_install.reboot_required
 
+- name: Reboot with custom connect timeout for unreliable networks
+  ansible.windows.win_reboot:
+    msg: "Scheduled reboot for patching"
+    connect_timeout: 10.0
+    reboot_timeout: 900
+    post_reboot_delay: 60
+
 # One way to ensure the system is reliable, is to set WinRM to a delayed startup
 - name: Ensure WinRM starts when the system has settled and is ready to work reliably
   ansible.windows.win_service:
