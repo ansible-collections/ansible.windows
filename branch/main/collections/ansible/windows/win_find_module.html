@@ -170,7 +170,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 <td><div class="ansible-option-cell"><p>Select files or folders whose age is equal to or greater than the specified time.</p>
 <p>Use a negative age to find files equal to or less than the specified time.</p>
-<p>You can choose seconds, minutes, hours, days or weeks by specifying the first letter of an of those words (e.g., “2s”, “10d”, 1w”).</p>
+<p>You can choose seconds, minutes, hours, days or weeks by specifying the first letter of an of those words (for example, “2s”, “10d”, 1w”).</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -232,10 +232,12 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <a class="ansibleOptionLink" href="#parameter-file_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Type of file to search for.</p>
+<p>Specify <code class="ansible-value docutils literal notranslate"><span class="pre">any</span></code> to find both file and directory. Added in version 3.2.0.</p>
 <p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
 <ul class="simple">
 <li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;directory&quot;</span></code></p></li>
 <li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;file&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;any&quot;</span></code></p></li>
 </ul>
 </div></td>
 </tr>
