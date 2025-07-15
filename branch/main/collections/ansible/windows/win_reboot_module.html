@@ -280,6 +280,13 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iis_install.reboot_required</span>
 
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reboot with custom connect timeout for unreliable networks</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">msg</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Scheduled</span><span class="nv"> </span><span class="s">reboot</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">patching&quot;</span>
+<span class="w">    </span><span class="nt">connect_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0</span>
+<span class="w">    </span><span class="nt">reboot_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">900</span>
+<span class="w">    </span><span class="nt">post_reboot_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+
 <span class="c1"># One way to ensure the system is reliable, is to set WinRM to a delayed startup</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure WinRM starts when the system has settled and is ready to work reliably</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span>
