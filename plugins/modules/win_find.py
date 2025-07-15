@@ -21,7 +21,7 @@ options:
               the specified time.
             - You can choose seconds, minutes, hours, days or weeks
               by specifying the first letter of an of
-              those words (e.g., "2s", "10d", 1w").
+              those words (for example, "2s", "10d", 1w").
         type: str
     age_stamp:
         description:
@@ -45,9 +45,11 @@ options:
         type: int
         version_added: 2.0.0
     file_type:
-        description: Type of file to search for.
+        description:
+            - Type of file to search for.
+            - Specify V(any) to find both file and directory. Added in version 3.2.0.
         type: str
-        choices: [ directory, file ]
+        choices: [ directory, file, any ]
         default: file
     follow:
         description:
