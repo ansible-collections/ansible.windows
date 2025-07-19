@@ -142,6 +142,12 @@ EXAMPLES = r'''
     dest: C:\share\unix\config.conf
     newline_sequence: '\n'
     backup: true
+
+- name: Render template with trimmed newlines
+  ansible.windows.win_template:
+    src: unix/config.conf.j2
+    dest: C:\share\unix\config.conf
+    trim_blocks: true
 '''
 
 RETURN = r'''
