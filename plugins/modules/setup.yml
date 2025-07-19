@@ -58,3 +58,7 @@ EXAMPLES: |
   - name: Gather all facts with a custom timeout on Windows host
     ansible.windows.setup:
       gather_timeout: 30
+
+  - name: Gather Windows facts including custom local facts from C:\CustomFacts
+    ansible.windows.setup:
+      fact_path: C:\CustomFacts
