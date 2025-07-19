@@ -61,4 +61,4 @@ EXAMPLES: |
 
   - name: Gather Windows facts including custom local facts from C:\CustomFacts
     ansible.windows.setup:
-      fact_path: 'C:\\CustomFacts'
+      fact_path: C:\CustomFacts
