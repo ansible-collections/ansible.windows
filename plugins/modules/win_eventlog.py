@@ -113,6 +113,12 @@ EXAMPLES = r'''
   ansible.windows.win_eventlog:
     name: MyNewLog
     state: absent
+
+- name: Set retention policy for MyNewLog to 15 days
+  ansible.windows.win_eventlog:
+    name: MyNewLog
+    retention_days: 15
+    state: present
 '''
 
 RETURN = r'''
