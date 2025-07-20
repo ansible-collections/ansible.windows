@@ -234,6 +234,10 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gather all facts with a custom timeout on Windows host</span>
 <span class="w">  </span><span class="nt">ansible.windows.setup</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">gather_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gather Windows facts including custom local facts from C:\CustomFacts</span>
+<span class="w">  </span><span class="nt">ansible.windows.setup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fact_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\CustomFacts</span>
 </pre></div>
 </div>
 <section id="authors">
