@@ -1,3 +1,0 @@
----
-bugfixes:
-   - win_copy - report correct information about symlinks in action plugin.

@@ -4,6 +4,26 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.2.0
+======
+
+Release Summary
+---------------
+
+Release summary for v3.2.0
+
+Minor Changes
+-------------
+
+- win_find - add support for 'any' to find both directories and files (https://github.com/ansible-collections/ansible.windows/issues/797).
+- win_template - Preserve user-supplied value for ``ansible_managed`` when set on Ansible Core 2.19+.
+
+Bugfixes
+--------
+
+- win_copy - report correct information about symlinks in action plugin.
+- win_service - Fix crash when attempting to create a service with the ``--check`` flag.
+
 v3.1.0
 ======
 

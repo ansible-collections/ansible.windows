@@ -1,2 +1,0 @@
-minor_changes:
-  - win_template - Preserve user-supplied value for ``ansible_managed`` when set on Ansible Core 2.19+.
