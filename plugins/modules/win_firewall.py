@@ -68,6 +68,13 @@ EXAMPLES = r'''
     state: enabled
     outbound_action: block
   tags: block_connection
+
+- name: Allow inbound traffic on Private profile
+  ansible.windows.win_firewall:
+    state: enabled
+    profiles:
+      - Private
+    inbound_action: allow  
 '''
 
 RETURN = r'''
