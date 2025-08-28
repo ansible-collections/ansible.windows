@@ -70,7 +70,7 @@ notes:
   - One of three parameters (I(drive_letter), I(path) and I(label)) are mandatory to identify the target
     volume but more than one cannot be specified at the same time.
   - This module is idempotent if I(force) is not specified and file system labels remain preserved.
-  - For more information, see U(https://docs.microsoft.com/en-us/previous-versions/windows/desktop/stormgmt/format-msft-volume)
+  - For more information, see U(https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/format-msft-volume)
 seealso:
   - module: community.windows.win_disk_facts
   - module: community.windows.win_partition
