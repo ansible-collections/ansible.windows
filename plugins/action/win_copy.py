@@ -263,7 +263,7 @@ class ActionModule(ActionBase):
             os.remove(content_tempfile)
 
     def _copy_single_file(self, local_file, dest, source_rel, dest_rel, task_vars, tmp, backup):
-        if self._play_context.check_mode:
+        if self._task.check_mode:
             module_return = dict(changed=True)
             if backup:
                 module_return['backup_file'] = 'check-mode-backup-file.bak'
@@ -295,7 +295,7 @@ class ActionModule(ActionBase):
     def _copy_zip_file(self, dest, files, directories, task_vars, tmp, backup):
         # create local zip file containing all the files and directories that
         # need to be copied to the server
-        if self._play_context.check_mode:
+        if self._task.check_mode:
             module_return = dict(changed=True)
             return module_return
 

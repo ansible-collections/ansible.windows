@@ -1,0 +1,3 @@
+bugfixes:
+  - >-
+    Update various action plugin calls to avoid some deprecated or old methods.

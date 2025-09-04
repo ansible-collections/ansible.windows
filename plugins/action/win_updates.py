@@ -797,7 +797,7 @@ class ActionModule(ActionBase):
 
             if reboot_required and reboot:
                 display.v("Rebooting host after installing updates", host=task_vars.get('inventory_hostname', None))
-                if self._play_context.check_mode:
+                if self._task.check_mode:
                     reboot_res = {'failed': False}
 
                 else:
@@ -819,7 +819,7 @@ class ActionModule(ActionBase):
 
             if (
                 not reboot or
-                self._play_context.check_mode or
+                self._task.check_mode or
                 module_options.get('state', 'installed') != 'installed' or
                 (not reboot_required and len(update_result.selected_updates) == 0)
             ):
