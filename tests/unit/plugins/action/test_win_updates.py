@@ -160,11 +160,7 @@ def win_updates_init(task_args, async_val=0, check_mode=False, connection=None):
 
     connection = connection or MagicMock()
 
-    # Used for older Ansible versions
-    play_context = MagicMock()
-    play_context.check_mode = check_mode
-
-    plugin = win_updates.ActionModule(task, connection, play_context, loader=None, templar=None,
+    plugin = win_updates.ActionModule(task, connection, MagicMock(), loader=None, templar=None,
                                       shared_loader_obj=None)
     return plugin
 

@@ -14,6 +14,7 @@ interface is not final and count be subject to change.
 # See also: https://github.com/ansible/community/issues/539#issuecomment-780839686
 # Please open an issue if you have questions about this.
 
+import base64
 import datetime
 import json
 import random
@@ -443,7 +444,9 @@ def _execute_command(
     # Need to wrap the command in our PowerShell encoded wrapper. This is done to align the command input to a
     # common shell and to allow the psrp connection plugin to report the correct exit code without manually setting
     # $LASTEXITCODE for just that plugin.
-    command = connection._shell._encode_script(command)
+    pwsh_script = command + "; If (-not $?) { If (Get-Variable LASTEXITCODE -ErrorAction SilentlyContinue) { exit $LASTEXITCODE } Else { exit 1 } }"
+    encoded_command = base64.b64encode(pwsh_script.encode("utf-16-le")).decode()
+    command = f"PowerShell -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand {encoded_command}"
 
     try:
         rc, stdout, stderr = connection.exec_command(

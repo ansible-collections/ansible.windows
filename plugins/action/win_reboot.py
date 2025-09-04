@@ -46,7 +46,7 @@ class ActionModule(ActionBase):
         self._supports_check_mode = True
         self._supports_async = True
 
-        if self._play_context.check_mode:
+        if self._task.check_mode:
             return {'changed': True, 'elapsed': 0, 'rebooted': True}
 
         if task_vars is None:
