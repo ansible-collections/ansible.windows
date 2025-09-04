@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    win_reboot - Use full path to ``shutdown.exe`` to avoid relying on ``PATH`` lookups to find -
+    https://github.com/ansible-collections/ansible.windows/issues/826
