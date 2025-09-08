@@ -839,27 +839,9 @@ if ($PSVersionTable.PSVersion -lt '6.0') {
         [void]$ps.AddParameters($parameters)
     }
 
-    # We cannot natively call a generic function so need to resort to reflection to get the method we know is there
-    # and turn it into an invocable method. We do this so we can call the overload that takes in an IList for the
-    # output which means we don't loose anything from before a terminating exception was raised.
     $psOutput = [Collections.Generic.List[Object]]@()
-    $invokeMethod = $ps.GetType().GetMethods('Public, Instance, InvokeMethod') | Where-Object {
-        if ($_.Name -ne 'Invoke' -or $_.ReturnType -ne [void] -or -not $_.ContainsGenericParameters) {
-            return $false
-        }
-
-        $parameters = $_.GetParameters()
-        (
-            $parameters.Count -eq 2 -and
-            $parameters[0].ParameterType -eq [Collections.IEnumerable] -and
-            $parameters[1].ParameterType.Namespace -eq 'System.Collections.Generic' -and
-            $parameters[1].ParameterType.Name -eq 'IList`1'
-        )
-    }
-    $invoke = $invokeMethod.MakeGenericMethod([object])
-
     try {
-        $invoke.Invoke($ps, @(@(), $psOutput))
+        $ps.Invoke(@(), $psOutput)
     }
     catch [Management.Automation.RuntimeException] {
         # $ErrorActionPrefrence = 'Stop' and an error was raised
