@@ -1,0 +1,2 @@
+bugfixes:
+  - win_get_url - Fix force=no not doing HEAD request if checksum is not set

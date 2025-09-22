@@ -262,7 +262,7 @@ if ($checksum_url) {
 $dest_checksum = $null
 if (Test-Path -LiteralPath $dest) {
     $dest_checksum = Get-Checksum -Path $dest -Algorithm $checksum_algorithm
-    if ($dest_checksum -ne $checksum) {
+    if ($checksum -and $dest_checksum -ne $checksum) {
         # Destination does not match checksum, force fetching
         $force = $true
     }
