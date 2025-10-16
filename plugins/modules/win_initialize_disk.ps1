@@ -88,7 +88,7 @@ function Initialize-AnsibleDisk {
         PartitionStyle = $PartitionStyle
     }
 
-    if (-Not $module.CheckMode) {
+    if ((-Not $module.CheckMode) -And -Not ("Offline" -eq $AnsibleDisk.OperationalStatus)) {
         Initialize-Disk @parameters -Confirm:$false
     }
 
@@ -141,7 +141,7 @@ function Set-AnsibleDisk {
 $ansible_disk = Get-AnsibleDisk -DiskNumber $disk_number -UniqueId $uniqueid -Path $path
 $ansible_part_style = $ansible_disk.PartitionStyle
 
-if ("RAW" -eq $ansible_part_style) {
+if (("RAW" -eq $ansible_part_style) -Or ("Offline" -eq $ansible_disk.OperationalStatus)) {
     $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
     Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style
 }
