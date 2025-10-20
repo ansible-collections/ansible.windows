@@ -10,6 +10,6 @@ set -o pipefail -eux
 # https://github.com/ansible/galaxy-importer/blob/v${VERSION}/setup.cfg
 
 python -m pip install \
-    'ansible-lint==25.1.2'
+    'ansible-lint==25.5.0'
 
 ansible-lint
