@@ -1,0 +1,57 @@
+---
+- name: Dsc3 test flow
+  vars:
+    # Override test_dsc3_install_path with persistent path for local development to avoid repeated download and unzip
+    # test_dsc3_install_path: ...
+    test_dsc3_path_env: '{{ test_dsc3_install_path }};C:\Program Files\PowerShell\7\;C:\Windows\System32\WindowsPowerShell\v1.0'
+    test_dsc3_extra_resources_path: '{{ remote_tmp_dir }}\dsc_extra'
+    test_dsc3_config_docs_path: '{{ remote_tmp_dir }}\config_docs'
+  block:
+    - name: Check existing DSC3 install
+      ansible.windows.win_stat:
+        path: '{{ test_dsc3_install_path }}\dsc.exe'
+        get_checksum: false
+      register: dsc3_exec_stat
+
+    - name: Install DSC3
+      when: not dsc3_exec_stat.stat.exists
+      block:
+        - name: Check existing DSC3 archive
+          ansible.windows.win_stat:
+            path: '{{ test_dsc3_install_path }}\dsc3.zip'
+            get_checksum: false
+          register: dsc3_zip_stat
+
+        - name: Create install folder
+          ansible.windows.win_file:
+            path: '{{ test_dsc3_install_path }}'
+            state: directory
+          when: not dsc3_zip_stat.stat.exists
+
+        - name: Download DSC3 archive
+          ansible.windows.win_get_url:
+            url: '{{ win_dsc3_zip_url }}'
+            dest: '{{ test_dsc3_install_path }}\dsc3.zip'
+          when: not dsc3_zip_stat.stat.exists
+
+        - name: Extract DSC3 archive
+          ansible.windows.win_powershell:
+            script: Expand-Archive "{{ test_dsc3_install_path }}\dsc3.zip" -DestinationPath "{{ test_dsc3_install_path }}" -Force
+
+    - name: Intall DSC testing resource to remote temp dir
+      ansible.windows.win_copy:
+        src: files/fake/
+        dest: '{{ test_dsc3_install_path }}'
+
+    - name: Install additional DSC testing resources to remote tmep dir
+      ansible.windows.win_copy:
+        src: files/echo/
+        dest: '{{ test_dsc3_extra_resources_path }}'
+
+    - name: Install DSC config documents
+      ansible.windows.win_copy:
+        src: files/config_docs/
+        dest: '{{ test_dsc3_config_docs_path }}'
+
+    - name: Run tests
+      ansible.builtin.include_tasks: tests.yml

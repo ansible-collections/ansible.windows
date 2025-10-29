@@ -1,0 +1,318 @@
+---
+- name: Configure single resource
+  vars:
+    state:
+      output:
+        dict:
+          specialChars: >
+            " \ ' { } [ ]
+          bool: true
+        list:
+          - one
+          - two
+        text: Hello, world!
+  block:
+    - name: Echo single resource state
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: echo
+              type: Microsoft.DSC.Debug/Echo
+              properties: '{{ state }}'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_echo_result
+
+    - name: Check echo single resource state
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_echo_result is not failed
+          - win_dsc3_echo_result is not changed
+          - win_dsc3_echo_result.result.results | length == 1
+          - win_dsc3_echo_result.result.results[0].name == "echo"
+          - win_dsc3_echo_result.result.results[0].result.afterState == state
+          - win_dsc3_echo_result.rc == 0
+      when: not win_dsc3_echo_result is skipped
+
+- name: Configure multiple resources
+  vars:
+    state_a:
+      output: alice
+    state_b:
+      output: bob
+    state_c:
+      message: new state
+  block:
+    - name: Echo/fake multiple resource states
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: echo a
+              type: Microsoft.DSC.Debug/Echo
+              properties: '{{ state_a }}'
+            - name: echo b
+              type: Microsoft.DSC.Debug/Echo
+              properties: '{{ state_b }}'
+            - name: new c
+              type: Ansible.Windows.Debug/Fake
+              properties: '{{ state_c }}'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+        FAKE_AFTER_STATE: '{{ state_c | to_json }}'
+      diff: true
+      register: win_dsc3_echo_multiple_result
+
+    - name: Verify echo/fake multiple resource states
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_echo_multiple_result is not failed
+          - win_dsc3_echo_multiple_result is changed
+          - win_dsc3_echo_multiple_result.result.results | length == 3
+          - win_dsc3_echo_multiple_result.result.results[0].name == "echo a"
+          - win_dsc3_echo_multiple_result.result.results[0].result.afterState == state_a
+          - win_dsc3_echo_multiple_result.diff.after.resources[0].name == "echo a"
+          - win_dsc3_echo_multiple_result.result.results[1].name == "echo b"
+          - win_dsc3_echo_multiple_result.result.results[1].result.afterState == state_b
+          - win_dsc3_echo_multiple_result.diff.after.resources[1].name == "echo b"
+          - win_dsc3_echo_multiple_result.result.results[2].name == "new c"
+          - win_dsc3_echo_multiple_result.result.results[2].result.afterState == state_c
+          - win_dsc3_echo_multiple_result.diff.after.resources[2].name == "new c"
+          - win_dsc3_echo_multiple_result.diff.after.resources[2].type == "Ansible.Windows.Debug/Fake"
+          - win_dsc3_echo_multiple_result.diff.after.resources[2].properties == state_c
+          - win_dsc3_echo_multiple_result.rc == 0
+      when: not win_dsc3_echo_multiple_result is skipped
+
+- name: Check mode with no changes
+  vars:
+    state:
+      a: a
+      b: b
+  block:
+    - name: Check mode with no changes
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Check mode
+              type: Ansible.Windows.Debug/Fake
+              properties: '{{ state }}'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+        FAKE_BEFORE_STATE: '{{ state | to_json }}'
+        FAKE_AFTER_STATE: '{{ state | to_json }}'
+      check_mode: true
+      diff: true
+      register: win_dsc3_check_no_change_result
+
+    - name: Verify check mode with no changes
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_check_no_change_result is not failed
+          - win_dsc3_check_no_change_result is not changed
+      when: not win_dsc3_check_no_change_result is skipped
+
+- name: Check mode with changes
+  vars:
+    state_current:
+      a: a
+      b: null
+    state_wanted:
+      a: a
+      b: b
+    state_diff_after:
+      b: b
+  block:
+    - name: Check mode with changes
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Check mode
+              type: Ansible.Windows.Debug/Fake
+              properties: '{{ state_wanted }}'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+        FAKE_BEFORE_STATE: '{{ state_current | to_json }}'
+      check_mode: true
+      diff: true
+      register: win_dsc3_check_with_change_result
+
+    - name: Verify check mode with changes
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_check_with_change_result is not failed
+          - win_dsc3_check_with_change_result is changed
+          - win_dsc3_check_with_change_result.diff.before.resources[0].name == "Check mode"
+          - win_dsc3_check_with_change_result.diff.before.resources[0].type == "Ansible.Windows.Debug/Fake"
+          - win_dsc3_check_with_change_result.diff.after.resources[0].name == "Check mode"
+          - win_dsc3_check_with_change_result.diff.after.resources[0].type == "Ansible.Windows.Debug/Fake"
+          - win_dsc3_check_with_change_result.diff.after.resources[0].properties == state_diff_after
+      when: not win_dsc3_check_with_change_result is skipped
+
+- name: Configure new state
+  vars:
+    state:
+      number: 1
+      string: text
+  block:
+    - name: Configure new state
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: New state
+              type: Ansible.Windows.Debug/Fake
+              properties: '{{ state }}'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+        FAKE_BEFORE_STATE: '{}'
+        FAKE_AFTER_STATE: '{{ state | to_json }}'
+      register: win_dsc3_new_result
+      diff: true
+
+    - name: Verify configure new state result
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_new_result is not failed
+          - win_dsc3_new_result is changed
+          - win_dsc3_new_result.diff.before.resources[0].properties == {}
+          - win_dsc3_new_result.diff.after.resources[0].properties == state
+      when: not win_dsc3_new_result is skipped
+
+- name: Configure using parameters
+  block:
+    - name: Configure using parameters
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Echo parameter
+              type: Microsoft.DSC.Debug/Echo
+              properties:
+                output: "[parameters('message')]"
+          parameters:
+            message:
+              type: string
+        parameters:
+          message: Hello, world!
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_with_parameters_result
+
+    - name: Verify configure using parameters
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_with_parameters_result is not failed
+          - win_dsc3_with_parameters_result.result.results[0].result.afterState.output == "Hello, world!"
+      when: not win_dsc3_with_parameters_result is skipped
+
+- name: Configure using unknown resource
+  block:
+    - name: Configure using unknown resource
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Bad
+              type: Ansible.Windows.Debug/Unknown
+              properties: {}
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_unknown_resource_result
+      ignore_errors: true
+
+    - name: Verify configure using unknown resource result
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_unknown_resource_result is failed
+          - win_dsc3_unknown_resource_result.rc == 2
+      when: not win_dsc3_unknown_resource_result is skipped
+
+- name: Configure using invalid config doc
+  block:
+    - name: Configure using invalid config doc
+      ansible.windows.dsc3:
+        config:
+          notSupported: {}
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_bad_config_result
+      ignore_errors: true
+
+    - name: Verify configure using invalid config doc
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_bad_config_result is failed
+          - win_dsc3_bad_config_result.rc == 2
+      when: not win_dsc3_bad_config_result is skipped
+
+- name: Configure using resource that fails
+  block:
+    - name: Configure using resource that fails
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Force error
+              type: Ansible.Windows.Debug/Fake
+              properties: {}
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+        FAKE_EXIT_CODE: '1'
+      register: win_dsc3_resource_error_result
+      ignore_errors: true
+
+    - name: Verify configure using resource that fails
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_resource_error_result is failed
+          - win_dsc3_resource_error_result.rc == 2
+      when: not win_dsc3_resource_error_result is skipped
+
+- name: Configure with info logging
+  block:
+    - name: Configure with info logging
+      ansible.windows.dsc3:
+        config:
+          resources:
+            - name: Debug logging
+              type: Microsoft.DSC.Debug/Echo
+              properties:
+                output: Verbose
+        trace_level: info
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_debug_logging_result
+
+    - name: Verify configure with info logging
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_debug_logging_result is not failed
+          - win_dsc3_debug_logging_result.stderr_lines | length > 0
+      when: not win_dsc3_debug_logging_result is skipped
+
+- name: Configure using imported configuration document
+  block:
+    - name: Configure using imported config document
+      ansible.windows.dsc3:
+        config: "{{ lookup('ansible.builtin.file', 'config_docs/test.config.dsc.yml') | from_yaml }}"
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_import_yaml_result
+
+    - name: Verify configure using imported config document
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_import_yaml_result is not failed
+          - win_dsc3_import_yaml_result is not changed
+      when: not win_dsc3_import_yaml_result is skipped
+
+- name: Configure using target-local configuration document
+  block:
+    - name: Configure using target-local config document
+      ansible.windows.dsc3:
+        config_file: '{{ test_dsc3_config_docs_path }}\test.config.dsc.yml'
+      environment:
+        PATH: '{{ test_dsc3_path_env }}'
+      register: win_dsc3_local_config_result
+
+    - name: Verify configure using target-local config document
+      ansible.builtin.assert:
+        that:
+          - win_dsc3_local_config_result is not failed
+          - win_dsc3_local_config_result is not changed
+      when: not win_dsc3_local_config_result is skipped
