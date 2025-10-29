@@ -1,0 +1,14 @@
+---
+- name: Win_dsc3 test flow
+  vars:
+    test_resources_path: '{{ remote_tmp_dir }}\resources'
+  block:
+    # TODO: install DSC3 here
+
+    - name: Copy custom DSC resources to remote temp dir
+      ansible.windows.win_copy:
+        src: files/resources/
+        dest: '{{ test_resources_path }}'
+
+    - name: Run tests
+      ansible.builtin.include_tasks: tests.yml
