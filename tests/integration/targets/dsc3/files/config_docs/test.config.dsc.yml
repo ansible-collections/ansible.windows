@@ -1,0 +1,12 @@
+---
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: Simple echo
+    type: Microsoft.DSC.Debug/Echo
+    properties:
+      output:
+        message: Hello, world!
+        list:
+          - 1
+          - 2
+          - 3

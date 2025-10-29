@@ -1,0 +1,47 @@
+{
+    "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+    "type": "Ansible.Windows.Debug/Echo",
+    "version": "0.1.0",
+    "description": "Clone of DSC echo resource for testing and debugging purposes",
+    "get": {
+        "executable": "dscecho",
+        "args": [
+            {
+                "jsonInputArg": "--input",
+                "mandatory": true
+            }
+        ]
+    },
+    "set": {
+        "executable": "dscecho",
+        "args": [
+            {
+                "jsonInputArg": "--input",
+                "mandatory": true
+            }
+        ]
+    },
+    "test": {
+        "executable": "dscecho",
+        "args": [
+            {
+                "jsonInputArg": "--input",
+                "mandatory": true
+            }
+        ]
+    },
+    "export": {
+        "executable": "dscecho",
+        "args": [
+            {
+                "jsonInputArg": "--input",
+                "mandatory": true
+            }
+        ]
+    },
+    "schema": {
+        "command": {
+            "executable": "dscecho"
+        }
+    }
+}
