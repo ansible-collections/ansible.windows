@@ -134,7 +134,7 @@ if ($null -ne $records) {
                 $record_weight_old = $record.RecordData.Weight.ToString()
 
                 if ($record.TimeToLive -ne $ttl -or $port -ne $record_port_old -or $priority -ne $record_priority_old -or $weight -ne $record_weight_old) {
-                    $new_record = $record.Clone()
+                    $new_record = [CimInstance]::new($record)
                     $new_record.TimeToLive = $ttl
                     $new_record.RecordData.Port = $port
                     $new_record.RecordData.Priority = $priority
@@ -154,7 +154,7 @@ if ($null -ne $records) {
             else {
                 # This record matches one of the values; but does it match the TTL?
                 if ($record.TimeToLive -ne $ttl) {
-                    $new_record = $record.Clone()
+                    $new_record = [CimInstance]::new($record)
                     $new_record.TimeToLive = $ttl
                     Set-DnsServerResourceRecord -ZoneName $zone -OldInputObject $record -NewInputObject $new_record -WhatIf:$module.CheckMode @extra_args
                     $changes.before += "[$zone{0}] $($record.HostName) $($record.TimeToLive.TotalSeconds) IN $type $record_value`n" `

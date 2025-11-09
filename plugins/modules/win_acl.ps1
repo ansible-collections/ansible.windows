@@ -249,7 +249,15 @@ Try {
                     Set-ACL -LiteralPath $path -AclObject $objACL
                 }
                 Catch {
-                    (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+                    $fileObj = Get-Item -LiteralPath $path
+
+                    # Newer .NET versions use an extension method instead of an instance method.
+                    if ('System.IO.FileSystemAclExtensions' -as [Type]) {
+                        [System.IO.FileSystemAclExtensions]::SetAccessControl($fileObj, $objACL)
+                    }
+                    else {
+                        $fileObj.SetAccessControl($objACL)
+                    }
                 }
             }
             $result.changed = $true
@@ -268,7 +276,15 @@ Try {
                 $certSecurityHandle.Acl = $objACL
             }
             else {
-                (Get-Item -LiteralPath $path).SetAccessControl($objACL)
+                $fileObj = Get-Item -LiteralPath $path
+
+                # Newer .NET versions use an extension method instead of an instance method.
+                if ('System.IO.FileSystemAclExtensions' -as [Type]) {
+                    [System.IO.FileSystemAclExtensions]::SetAccessControl($fileObj, $objACL)
+                }
+                else {
+                    $fileObj.SetAccessControl($objACL)
+                }
             }
             $result.changed = $true
         }

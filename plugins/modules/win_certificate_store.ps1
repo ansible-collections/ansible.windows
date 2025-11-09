@@ -29,7 +29,9 @@ $spec = @{
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
 Add-CSharpType -AnsibleModule $module -References @'
+#if !CORECLR
 using Microsoft.Win32.SafeHandles;
+#endif
 using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -66,7 +68,7 @@ namespace ansible.windows.win_certificate_store
         protected SafeX509Store(bool ownsHandle): base(IntPtr.Zero, ownsHandle) {}
 
         public override bool IsInvalid {
-            get { return handle == null || handle == IntPtr.Zero; }
+            get { return handle == IntPtr.Zero; }
         }
 
         protected override bool ReleaseHandle()

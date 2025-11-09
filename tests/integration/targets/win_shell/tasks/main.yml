@@ -350,3 +350,36 @@
       - pwsh_7 is changed
       - pwsh_7.stdout|trim == '7'
       - pwsh_7.rc == 0
+
+- name: run PowerShell 7 interpreter tests
+  when: (ansible_pwsh_interpreter | default('')).endswith('pwsh.exe')
+  block:
+  # Verifies that PowerShell 7's PSModulePath does not interfere with WinPS modules
+  - name: run PowerShell that imports a builtin module
+    win_shell: Import-Module -Name Microsoft.PowerShell.Security -ErrorAction Stop
+
+  - name: create symbolic link that is a copy of the interpreter path
+    win_shell: mklink /d "C:\ansible test link" "{{ ansible_pwsh_interpreter | win_dirname }}"
+    args:
+      creates: C:\ansible test link
+      executable: cmd.exe
+
+  - name: run PowerShell script with custom PSModulePath
+    win_shell: '$env:PSModulePath'
+    environment:
+      PSModulePath: 'C:\custom\modules;{{ ansible_pwsh_interpreter | win_dirname }}\Modules;C:\ansible test link\Modules'
+    register: custom_psmodulepath
+
+  - name: assert PowerShell script with custom PSModulePath
+    assert:
+      that:
+      - custom_psmodulepath is successful
+      - custom_psmodulepath is changed
+      - custom_psmodulepath.rc == 0
+      - custom_psmodulepath.stdout | trim == 'C:\custom\modules'
+
+  always:
+  - name: remove test symbolic link
+    win_file:
+      path: C:\ansible test link
+      state: absent

@@ -7,6 +7,7 @@
 #AnsibleRequires -CSharpUtil Ansible.Basic
 
 #AnsibleRequires -PowerShell ..module_utils.Process
+#AnsibleRequires -PowerShell ..module_utils._PSModulePath
 
 using namespace System.IO
 using namespace System.Management.Automation.Language
@@ -619,6 +620,14 @@ try {
             $commandLine += " $($escapedArguments -join ' ')"
         }
 
+        $processEnv = $null
+        $exeName = [Path]::GetFileNameWithoutExtension($applicationName)
+        if ($exeName -eq "powershell" -and $IsCoreCLR) {
+            # when using pwsh, we need to adjust the PSModulePath to avoid loading incompatible modules
+            $processEnv = [Environment]::GetEnvironmentVariables()
+            $processEnv['PSModulePath'] = Get-WinPSModulePath
+        }
+
         # While we could attach the stdout/stderr pipes here we would capture the startup info and prompt that
         # powershell will output. Instead we set the console as part of the pipeline we run.
         $si = [Ansible.Windows.Process.StartupInfo]@{
@@ -631,7 +640,7 @@ try {
             $null,
             $true, # Required so the child process can inherit our anon pipes.
             'CreateNewConsole', # Ensures we don't mess with the current console output.
-            $null,
+            $processEnv,
             $null,
             $si
         )
@@ -650,7 +659,7 @@ try {
         $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, $connInfo)
     }
     else {
-        $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost)
+        $runspace = [RunspaceFactory]::CreateRunspace($runspaceHost, [InitialSessionState]::CreateDefault2())
     }
 
     $runspace.Open()

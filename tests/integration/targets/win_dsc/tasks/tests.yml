@@ -43,8 +43,8 @@
   register: fail_invalid_option
   failed_when: >
     fail_invalid_option.msg != "Unsupported parameters for (ansible.windows.win_dsc) module: OtherParam.
-    Supported parameters include: KeyParam, PsDscRunAsCredential_username, module_version,
-    Value, PsDscRunAsCredential_password, resource_name, DependsOn"
+    Supported parameters include: DependsOn, KeyParam, PsDscRunAsCredential_password,
+    PsDscRunAsCredential_username, Value, module_version, resource_name"
 
 - name: Fail invalid option in sub dict
   ansible.windows.win_dsc:
@@ -60,7 +60,7 @@
   failed_when: >
     fail_invalid_option_sub_dict.msg != "Unsupported parameters for (ansible.windows.win_dsc) module:
     InvalidKey found in NestedCimInstanceParam -> CimValue. Supported parameters include:
-    IntValue, KeyValue, StringArrayValue, Choice, StringValue"
+    Choice, IntValue, KeyValue, StringArrayValue, StringValue"
 
 - name: Fail invalid read only option
   ansible.windows.win_dsc:
@@ -118,7 +118,7 @@
   register: fail_invalid_option_old_sub_dict
   failed_when: >
     fail_invalid_option_old_sub_dict.msg != "Unsupported parameters for (ansible.windows.win_dsc) module:
-    Choice found in CimInstanceArrayParam. Supported parameters include: Key, IntValue,
+    Choice found in CimInstanceArrayParam. Supported parameters include: IntValue, Key,
     StringArrayValue, StringValue"
 
 # https://github.com/ansible-collections/ansible.windows/issues/32

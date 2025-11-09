@@ -184,6 +184,8 @@
     script: |
       param($Path)
 
+      Import-Module -Name Microsoft.PowerShell.Security
+
       $Ansible.Changed = $false
 
       "secure", "secure\folder 1", "secure\folder 1\folder 2" | ForEach-Object {

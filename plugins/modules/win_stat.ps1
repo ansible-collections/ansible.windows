@@ -7,6 +7,9 @@
 #Requires -Module Ansible.ModuleUtils.FileUtil
 #Requires -Module Ansible.ModuleUtils.LinkUtil
 
+# Required to access ACL ETS members on PowerShell 7
+Import-Module -Name Microsoft.PowerShell.Security
+
 function ConvertTo-Timestamp($start_date, $end_date) {
     if ($start_date -and $end_date) {
         return (New-TimeSpan -Start $start_date -End $end_date).TotalSeconds
@@ -120,7 +123,12 @@ If ($null -ne $info) {
         # checksum = a file and get_checksum: True
     }
     try {
-        $stat.owner = $info.GetAccessControl().Owner
+        $stat.owner = if ('System.IO.FileSystemAclExtensions' -as [Type]) {
+            [System.IO.FileSystemAclExtensions]::GetAccessControl($info).Owner
+        }
+        else {
+            $info.GetAccessControl().Owner
+        }
     }
     catch {
         # may not have rights, historical behaviour was to just set to $null

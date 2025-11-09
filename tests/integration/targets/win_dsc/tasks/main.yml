@@ -1,5 +1,13 @@
 ---
+# The existing DSC code only works for Windows PowerShell. PowerShell 7
+# requires DSC v3 which is not supported by this module.
+- name: check if running under Windows PowerShell
+  ansible.windows.win_powershell:
+    script: '$PSVersionTable.PSVersion.ToString()'
+  register: ps_version
+
 - name: Win_dsc test flow
+  when: ps_version.output[0] is version('6.0', '<')
   block:
     - name: Add remote temp dir to PSModulePath
       ansible.windows.win_path:

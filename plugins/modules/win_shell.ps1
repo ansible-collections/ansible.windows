@@ -6,6 +6,7 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 #Requires -Module Ansible.ModuleUtils.FileUtil
+#AnsibleRequires -PowerShell ..module_utils._PSModulePath
 
 # TODO: add check mode support
 

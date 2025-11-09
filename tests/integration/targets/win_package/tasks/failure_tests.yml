@@ -40,7 +40,9 @@
     product_id: 'id'
     state: present
   register: fail_invalid_url_path
-  failed_when: "\"The remote name could not be resolved: 'fakeurl'\" not in fail_invalid_url_path.msg"
+  failed_when: >-  # First is WinPS, Second is Pwsh 7
+    "The remote name could not be resolved: 'fakeurl'" not in fail_invalid_url_path.msg and
+    "No such host is known. (fakeurl:80)" not in fail_invalid_url_path.msg
 
 - name: fail uninstall when no product id is specified and path is URL
   win_package:

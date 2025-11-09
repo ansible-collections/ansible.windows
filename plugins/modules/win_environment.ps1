@@ -79,7 +79,10 @@ function Set-EnvironmentVariableState {
         }
         elseif ($State -eq "absent" -and $null -ne $before_value) {
             if ($PSCmdlet.ShouldProcess($Name, 'Remove environment variable')) {
-                [Environment]::SetEnvironmentVariable($Name, $null, $Level)
+                # It is important we use NullString as "" in newer .NET versions
+                # set the env var to an empty string and pwsh converts $null to
+                # "" rather than actually passing in $null.
+                [Environment]::SetEnvironmentVariable($Name, [NullString]::Value, $Level)
                 Register-EnvironmentChange -Module $Module
             }
             $ret.changed = $true

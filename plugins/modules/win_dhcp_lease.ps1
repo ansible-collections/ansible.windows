@@ -101,9 +101,20 @@ if ($dns_regtype) {
     }
 }
 
+$importParams = @{
+    Name = 'DhcpServer'
+}
+if ($IsCoreCLR) {
+    # The DhcpServer manifest hasn't marked itself as compatible with pwsh but
+    # it is a CDXML module that shouldn't have any issues so force the import
+    # and hope for the best.
+    # Check again in future Windows versions (post 2025).
+    $importParams.SkipEditionCheck = $true
+}
+
 Try {
     # Import DHCP Server PS Module
-    Import-Module DhcpServer
+    Import-Module @importParams
 }
 Catch {
     # Couldn't load the DhcpServer Module
@@ -270,7 +281,7 @@ if ($state -eq "present") {
                     Add-DhcpServerv4Lease @lease_params -WhatIf:$check_mode
                 }
                 Catch {
-                    $module.FailJson("Unable to convert the reservation to a lease", $_)
+                    $module.FailJson("Unable to convert the reservation to a lease: $_", $_)
                 }
 
                 # Get the lease we just created
@@ -279,7 +290,7 @@ if ($state -eq "present") {
                         $new_lease = Get-DhcpServerv4Lease -ClientId $lease_params.ClientId -ScopeId $lease_params.ScopeId
                     }
                     Catch {
-                        $module.FailJson("Unable to retreive the newly created lease", $_)
+                        $module.FailJson("Unable to retreive the newly created lease: $_", $_)
                     }
                 }
 
@@ -291,7 +302,7 @@ if ($state -eq "present") {
                 $module.ExitJson()
             }
             Catch {
-                $module.FailJson("Could not convert reservation to lease", $_)
+                $module.FailJson("Could not convert reservation to lease: $_", $_)
             }
         }
 

@@ -48,7 +48,7 @@ stages:
             fetchDepth: 1
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: "3.10"
+              versionSpec: "3.13"
           - bash: python -m pip install ansible-core
             displayName: Install Ansible
           - bash: ansible-galaxy collection install -r tests/requirements.yml -p collections
@@ -143,15 +143,15 @@ stages:
               test: sanity
             - name: Units
               test: units
-  - stage: Windows_1
-    displayName: Windows 1
+  - stage: Windows_1_WinPS
+    displayName: Windows 1 WinPS
     dependsOn:
       - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: devel/windows/{0}/1
+          testFormat: devel/windows/{0}/5.1/1
           targets:
             - name: 2016 WinRM HTTP
               test: 2016/winrm/http
@@ -167,15 +167,31 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
-  - stage: Windows_2
-    displayName: Windows 2
+  - stage: Windows_1_Pwsh_7_6
+    displayName: Windows 1 Pwsh 7.6
     dependsOn:
       - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: devel/windows/{0}/2
+          testFormat: devel/windows/{0}/7.6/1
+          targets:
+            - name: 2025 WinRM HTTP
+              test: 2025/winrm/http
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
+  - stage: Windows_2_WinPS
+    displayName: Windows 2 WinPS
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/5.1/2
           targets:
             - name: 2016 WinRM HTTP
               test: 2016/winrm/http
@@ -191,15 +207,31 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
-  - stage: Windows_3
-    displayName: Windows 3
+  - stage: Windows_2_Pwsh_7_6
+    displayName: Windows 2 Pwsh 7.6
     dependsOn:
       - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: devel/windows/{0}/3
+          testFormat: devel/windows/{0}/7.6/2
+          targets:
+            - name: 2025 WinRM HTTP
+              test: 2025/winrm/http
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
+  - stage: Windows_3_WinPS
+    displayName: Windows 3 WinPS
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/5.1/3
           targets:
             - name: 2016 WinRM HTTP
               test: 2016/winrm/http
@@ -215,15 +247,31 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
-  - stage: Windows_4
-    displayName: Windows 4
+  - stage: Windows_3_Pwsh_7_6
+    displayName: Windows 3 Pwsh 7.6
     dependsOn:
       - Dependencies
     jobs:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: devel/windows/{0}/4
+          testFormat: devel/windows/{0}/7.6/3
+          targets:
+            - name: 2025 WinRM HTTP
+              test: 2025/winrm/http
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
+  - stage: Windows_4_WinPS
+    displayName: Windows 4 WinPS
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/5.1/4
           targets:
             - name: 2016 WinRM HTTP
               test: 2016/winrm/http
@@ -235,6 +283,22 @@ stages:
               test: 2022/psrp/https
             - name: 2022 SSH Key
               test: 2022/ssh/key
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
+  - stage: Windows_4_Pwsh_7_6
+    displayName: Windows 4 Pwsh 7.6
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/7.6/4
+          targets:
+            - name: 2025 WinRM HTTP
+              test: 2025/winrm/http
             - name: 2025 PSRP HTTP
               test: 2025/psrp/http
             - name: 2025 SSH Key
@@ -248,9 +312,13 @@ stages:
       - Ansible_2_18
       - Ansible_2_17
       - Ansible_2_16
-      - Windows_1
-      - Windows_2
-      - Windows_3
-      - Windows_4
+      - Windows_1_WinPS
+      - Windows_1_Pwsh_7_6
+      - Windows_2_WinPS
+      - Windows_2_Pwsh_7_6
+      - Windows_3_WinPS
+      - Windows_3_Pwsh_7_6
+      - Windows_4_WinPS
+      - Windows_4_Pwsh_7_6
     jobs:
       - template: templates/coverage.yml

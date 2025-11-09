@@ -64,3 +64,11 @@
     that:
     - exe_with_arguments.output == ['Restricted']
   when: use_executable.stdout | trim | bool
+
+# Verifies that PowerShell 7's PSModulePath does not interfere with WinPS modules
+- name: run PowerShell that imports a builtin module
+  win_powershell:
+    executable: powershell.exe
+    error_action: stop
+    script: Import-Module -Name Microsoft.PowerShell.Security -ErrorAction Stop
+  when: (ansible_pwsh_interpreter | default('')).endswith('pwsh.exe')

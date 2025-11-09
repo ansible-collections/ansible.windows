@@ -20,9 +20,13 @@ $name = $module.Params.name
 $module.Result.exists = $false
 
 # Need to use Where-Object filter as Get-Service -Name doesn't work for wildcards chars in the service name.
-$services = Get-Service | Where-Object { $_.Name -eq $name }
+$services = Get-Service | Where-Object { if (-not $name -or $_.Name -eq $name) { $true } else { $false } }
 if (-not $services) {
-    $services = Get-Service -Name $name -ErrorAction SilentlyContinue
+    $getServiceParams = @{}
+    if ($name) {
+        $getServiceParams.Name = $name
+    }
+    $services = Get-Service @getServiceParams -ErrorAction SilentlyContinue
 }
 
 $module.Result.services = @(

@@ -407,7 +407,14 @@
   register: import_pfx_without_pass
 
 - name: get results of import pfx without password and non exportable
-  win_shell: (Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }).PrivateKey.CspKeyContainerInfo.Exportable
+  win_shell: |
+    $cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }
+    $key = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+    if ($key -is [System.Security.Cryptography.RSACryptoServiceProvider]) {
+        $key.CspKeyContainerInfo.Exportable
+    } else {
+        $key.Key.ExportPolicy -ne 'None'
+    }
   vars: *become_vars
   register: import_pfx_without_pass_result
 
@@ -473,7 +480,14 @@
   register: import_pfx_with_pass
 
 - name: get results of import pfx with password
-  win_shell: (Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }).PrivateKey.CspKeyContainerInfo.Exportable
+  win_shell: |
+    $cert = Get-ChildItem -Path Cert:\CurrentUser\TrustedPeople | Where-Object { $_.Thumbprint -eq "{{subj_thumbprint}}" }
+    $key = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+    if ($key -is [System.Security.Cryptography.RSACryptoServiceProvider]) {
+        $key.CspKeyContainerInfo.Exportable
+    } else {
+        $key.Key.ExportPolicy -ne 'None'
+    }
   vars: *become_vars
   register: import_pfx_with_pass_result
 

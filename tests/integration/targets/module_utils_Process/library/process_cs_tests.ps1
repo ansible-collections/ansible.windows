@@ -116,8 +116,9 @@ $tests = @{
             $failed = $true
             $_.Exception.InnerException.GetType().FullName |
                 Assert-Equal -Expected "ansible_collections.ansible.windows.plugins.module_utils.Process.Win32Exception"
-            $expected = 'Exception calling "CreateProcess" with "7" argument(s): "CreateProcessW() failed '
-            $expected += '(The system cannot find the file specified, Win32ErrorCode 2 - 0x00000002)"'
+            $expected = 'Exception calling "CreateProcess" with "7" argument(s): "CreateProcessW() failed ('
+            $expected += [System.ComponentModel.Win32Exception]::new(2).Message
+            $expected += ', Win32ErrorCode 2 - 0x00000002)"'
             $_.Exception.Message | Assert-Equal -Expected $expected
         }
         $failed | Assert-Equal -Expected $true

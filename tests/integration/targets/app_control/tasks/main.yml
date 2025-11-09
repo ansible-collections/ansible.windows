@@ -24,14 +24,14 @@
 
   always:
   - name: disable policy through CiTool if present
-    win_command: CiTool.exe --remove-policy {{ policy_info.output[0].policy_id }}
+    win_command: CiTool.exe --remove-policy {{ policy_info.policy_id }}
     when:
     - policy_info is defined
-    - policy_info.output[0].policy_id is truthy
+    - policy_info.policy_id is truthy
 
   - name: remove App Control policy
     win_file:
-      path: '{{ policy_info.output[0].path }}'
+      path: '{{ policy_info.path }}'
       state: absent
     register: policy_removal
     when:

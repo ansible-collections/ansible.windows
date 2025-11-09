@@ -407,7 +407,7 @@ elseif ($type -in @("dword", "qword")) {
         # below
         $data = [UInt64]$data
     }
-    elseif ($data -is [Decimal] -or $data -is [Single] -or $data -is [Float]) {
+    elseif ($data -is [Decimal] -or $data -is [Single] -or $data -is [Double]) {
         if ($data % 1 -ne 0) {
             $module.FailJson("data '$data' cannot be a decimal or float value with a remainder when type is dword or qword")
         }

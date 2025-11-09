@@ -21,6 +21,24 @@
     name: "{{ test_win_feature_name }}"
     state: absent
 
+- name: install feature in check mode
+  win_feature:
+    name: "{{ test_win_feature_name }}"
+    state: present
+    include_sub_features: yes
+    include_management_tools: yes
+  register: win_feature_install_result_check
+  check_mode: true
+
+- name: check result of installing feature in check mode
+  assert:
+    that:
+    - win_feature_install_result_check is changed
+    - win_feature_install_result_check.success
+    - win_feature_install_result_check.exitcode == 'Success'
+    - not win_feature_install_result_check.reboot_required
+    - win_feature_install_result_check.feature_result|length == 1
+
 - name: install feature
   win_feature:
     name: "{{ test_win_feature_name }}"
@@ -60,6 +78,22 @@
       - "win_feature_install_again_result.exitcode == 'NoChangeNeeded'"
       - "not win_feature_install_again_result.reboot_required"
       - "win_feature_install_again_result.feature_result == []"
+
+- name: remove feature in check mode
+  win_feature:
+    name: "{{ test_win_feature_name }}"
+    state: absent
+  register: win_feature_remove_result_check
+  check_mode: true
+
+- name: check result of removing feature in check mode
+  assert:
+    that:
+      - win_feature_remove_result_check is changed
+      - win_feature_remove_result_check.success
+      - win_feature_remove_result_check.exitcode == 'Success'
+      - not win_feature_remove_result_check.reboot_required
+      - win_feature_remove_result_check.feature_result|length == 1
 
 - name: remove feature
   win_feature:
