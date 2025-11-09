@@ -3,14 +3,15 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
-#Requires -Module Ansible.ModuleUtils.CommandUtil
+using namespace System.IO
+using namespace System.Management.Automation.Security
+using namespace System.Text
+
+#AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.FileUtil
 
-# TODO: add check mode support
-
-Set-StrictMode -Version 2
-$ErrorActionPreference = "Stop"
+#AnsibleRequires -PowerShell ..module_utils.Process
+#AnsibleRequires -PowerShell ..module_utils._PSModulePath
 
 # Cleanse CLIXML from stderr (sift out error stream data, discard others for now)
 Function Format-Stderr($raw_stderr) {
@@ -44,115 +45,143 @@ Function Format-Stderr($raw_stderr) {
     }
 }
 
-$params = Parse-Args $args -supports_check_mode $false
-
-$raw_command_line = Get-AnsibleParam -obj $params -name "_raw_params" -type "str" -failifempty $true
-$chdir = Get-AnsibleParam -obj $params -name "chdir" -type "path"
-$executable = Get-AnsibleParam -obj $params -name "executable" -type "path"
-$creates = Get-AnsibleParam -obj $params -name "creates" -type "path"
-$removes = Get-AnsibleParam -obj $params -name "removes" -type "path"
-$stdin = Get-AnsibleParam -obj $params -name "stdin" -type "str"
-$no_profile = Get-AnsibleParam -obj $params -name "no_profile" -type "bool" -default $false
-$output_encoding_override = Get-AnsibleParam -obj $params -name "output_encoding_override" -type "str"
-
-$raw_command_line = $raw_command_line.Trim()
-
-$result = @{
-    changed = $true
-    cmd = $raw_command_line
+$spec = @{
+    options = @{
+        chdir = @{ type = "path" }
+        cmd = @{
+            aliases = @('_raw_params')
+            required = $true
+            type = 'str'
+        }
+        creates = @{ type = "path" }
+        executable = @{ type = 'path' }
+        removes = @{ type = "path" }
+        stdin = @{ type = "str" }
+        no_profile = @{ type = "bool"; default = $false }
+        output_encoding_override = @{ type = "str" }
+    }
+    supports_check_mode = $false
 }
 
-if ($creates -and $(Test-AnsiblePath -Path $creates)) {
-    Exit-Json @{ msg = "skipped, since $creates exists"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
-}
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
-    Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
+$chdir = $module.Params.chdir
+$cmd = $module.Params.cmd.Trim()
+$creates = $module.Params.creates
+$executable = $module.Params.executable
+$removes = $module.Params.removes
+$stdin = $module.Params.stdin
+$noProfile = $module.Params.no_profile
+$outputEncodingOverride = $module.Params.output_encoding_override
+
+$module.Result.cmd = $cmd
+
+if ($creates -and (Test-AnsiblePath -Path $creates)) {
+    $module.Result.msg = "skipped, since $creates exists"
+    $module.Result.skipped = $true
+    $module.Result.rc = 0
+    $module.ExitJson()
+}
+if ($removes -and -not (Test-AnsiblePath -Path $removes)) {
+    $module.Result.msg = "skipped, since $removes does not exist"
+    $module.Result.skipped = $true
+    $module.Result.rc = 0
+    $module.ExitJson()
 }
 
 if (-not $executable) {
     $executable = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 }
-$executable_name = [IO.Path]::GetFileNameWithoutExtension($executable)
+elseif (-not $executable.EndsWith('.exe')) {
+    $executable = "$executable.exe"
+}
 
-$run_command_arg = @{}
-
-$exec_args = $null
-If ($executable_name -in @("powershell", "pwsh")) {
-    if (-not $executable.EndsWith('.exe')) {
-        $executable = "$executable.exe"
+$executableName = [Path]::GetFileNameWithoutExtension($executable)
+$newEnvironment = $null
+if ($executableName -in @("powershell", "pwsh")) {
+    # force input encoding to preamble-free UTF8 so PS sub-processes (eg, Start-Job) don't blow up
+    # We skip when running in CLM as it won't be able to call these APIs.
+    if ([SystemPolicy]::GetSystemLockdownPolicy() -eq 'None') {
+        $cmd = "[Console]::InputEncoding = New-Object Text.UTF8Encoding `$false; $cmd"
     }
 
-    $exec_application = $executable
-
-    # force input encoding to preamble-free UTF8 so PS sub-processes (eg, Start-Job) don't blow up
-    if ([System.Management.Automation.Security.SystemPolicy]::GetSystemLockdownPolicy() -eq 'None') {
-        $raw_command_line = "[Console]::InputEncoding = New-Object Text.UTF8Encoding `$false; " + $raw_command_line
+    if ($executableName -eq 'powershell' -and $IsCoreCLR) {
+        # when running on pwsh, we need to adjust the PSModulePath to avoid loading
+        # incompatible modules in the child powershell process.
+        $newEnvironment = [Environment]::GetEnvironmentVariables()
+        $newEnvironment['PSModulePath'] = Get-WinPSModulePath
     }
 
     # Base64 encode the command so we don't have to worry about the various levels of escaping
-    $encoded_command = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($raw_command_line))
+    $encodedCommand = [Convert]::ToBase64String([Encoding]::Unicode.GetBytes($cmd))
 
-    if ($stdin) {
-        $exec_args = "-encodedcommand $encoded_command"
-    }
-    else {
-        $exec_args = "-noninteractive -encodedcommand $encoded_command"
-    }
-
-    if ($no_profile) {
-        $exec_args = "-noprofile $exec_args"
-    }
+    $pwshArgs = @(
+        if ($noProfile) {
+            "-noprofile"
+        }
+        if (-not $stdin) {
+            # if not passing stdin, also set noninteractive to avoid any prompts hanging the module
+            "-noninteractive"
+        }
+        "-encodedcommand"
+        $encodedCommand
+    )
+    $command = "`"$executable`" $($pwshArgs -join " ")"
 }
-Else {
+else {
     # FUTURE: support arg translation from executable (or executable_args?) to process arguments for arbitrary interpreter?
-    $exec_application = $executable
-    if (-not ($exec_application.EndsWith(".exe"))) {
-        $exec_application = "$($exec_application).exe"
-    }
-    $exec_args = "/c $raw_command_line"
+    $command = "`"$executable`" /c $cmd"
 }
 
-$command = "`"$exec_application`" $exec_args"
-$run_command_arg['command'] = $command
+$commandParams = @{
+    FilePath = $executable
+    CommandLine = $command
+    Environment = $newEnvironment
+}
 
 if ($chdir) {
-    $run_command_arg['working_directory'] = $chdir
+    $commandParams.WorkingDirectory = $chdir
 }
 if ($stdin) {
-    $run_command_arg['stdin'] = $stdin
+    $commandParams.InputObject = $stdin
 }
-if ($output_encoding_override) {
-    $run_command_arg['output_encoding_override'] = $output_encoding_override
+if ($outputEncodingOverride) {
+    $commandParams.OutputEncoding = $outputEncodingOverride
 }
 
-$start_datetime = [DateTime]::UtcNow
+$startDatetime = [DateTime]::UtcNow
 try {
-    $command_result = Run-Command @run_command_arg
+    $cmdResult = Start-AnsibleWindowsProcess @commandParams
 }
 catch {
-    $result.changed = $false
-    try {
-        $result.rc = $_.Exception.NativeErrorCode
+    $module.Result.rc = 2
+
+    # Keep on checking inner exceptions to see if it has the NativeErrorCode to
+    # report back.
+    $exp = $_.Exception
+    while ($exp) {
+        if ($exp.PSObject.Properties.Name -contains 'NativeErrorCode') {
+            $module.Result.rc = $exp.NativeErrorCode
+            break
+        }
+        $exp = $exp.InnerException
     }
-    catch {
-        $result.rc = 2
-    }
-    Fail-Json -obj $result -message $_.Exception.Message
+
+    $module.FailJson("Failed to run: '$rawCmdLine': $($_.Exception.Message)", $_)
 }
 
-# TODO: decode CLIXML stderr output (and other streams?)
-$result.stdout = $command_result.stdout
-$result.stderr = Format-Stderr $command_result.stderr
-$result.rc = $command_result.rc
+$module.Result.changed = $true
+$module.Result.stdout = $cmdResult.Stdout
+$module.Result.stderr = Format-Stderr $cmdResult.Stderr
+$module.Result.rc = $cmdResult.ExitCode
 
-$end_datetime = [DateTime]::UtcNow
-$result.start = $start_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
-$result.end = $end_datetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
-$result.delta = $($end_datetime - $start_datetime).ToString("h\:mm\:ss\.ffffff")
+$endDatetime = [DateTime]::UtcNow
+$module.Result.start = $startDatetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
+$module.Result.end = $endDatetime.ToString("yyyy-MM-dd HH:mm:ss.ffffff")
+$module.Result.delta = $($endDatetime - $startDatetime).ToString("h\:mm\:ss\.ffffff")
 
-If ($result.rc -ne 0) {
-    Fail-Json -obj $result -message "non-zero return code"
+if ($module.Result.rc -ne 0) {
+    $module.FailJson("non-zero return code")
 }
 
-Exit-Json $result
+$module.ExitJson()

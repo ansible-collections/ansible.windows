@@ -14,6 +14,8 @@ description:
 - Requires PowerShell version 5.0 or newer.
 - Most of the options for this module are dynamic and will vary depending on
   the DSC Resource specified in I(resource_name).
+- This module does not support running on PowerShell 7.x, use the
+  M(ansible.windows.dsc3) module instead.
 options:
   resource_name:
     description:
@@ -53,6 +55,8 @@ options:
       used.
     type: str
     required: true
+seealso:
+- module: ansible.windows.dsc3
 notes:
 - By default there are a few builtin resources that come with PowerShell 5.0,
   See U(https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources) for

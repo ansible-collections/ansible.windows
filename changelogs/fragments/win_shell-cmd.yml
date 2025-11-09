@@ -1,0 +1,4 @@
+minor_changes:
+  - >-
+    win_shell - Add ``cmd`` module option that can be used instead of the free form input. This aligns the options to
+    the POSIX ``shell`` module.

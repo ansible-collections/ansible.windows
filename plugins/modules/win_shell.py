@@ -13,13 +13,20 @@ description:
        It is similar to the M(ansible.windows.win_command) module, but runs
        the command via a shell (defaults to PowerShell) on the target host.
      - For non-Windows targets, use the M(ansible.builtin.shell) module instead.
+     - Defaults to running with C(powershell.exe) as the shell and not the
+       C(ansible_pwsh_interpreter) shell. Use M(ansible.windows.win_powershell) or
+       set O(executable=pwsh.exe) to use PowerShell 7.x.
 options:
-  free_form:
+  cmd:
     description:
-      - The M(ansible.windows.win_shell) module takes a free form command to run.
-      - There is no parameter actually named 'free form'. See the examples!
+      - The shell command to run followed by optional arguments or additional statements.
+      - The O(cmd) option name was added in version V(3.4.0), previous versions of this
+        collection required the command to be passed as a free form parameter without a
+        parameter name. See the examples for details.
     type: str
     required: yes
+    aliases:
+      - _raw_params
   creates:
     description:
       - A path or path filter pattern; when the referenced path exists on the target host, the task will be skipped.
@@ -35,6 +42,7 @@ options:
   executable:
     description:
       - Change the shell used to execute the command (eg, C(cmd)).
+      - Defaults to V(powershell.exe) if not specified.
       - The target shell must accept a C(/c) parameter followed by the raw command line to be executed.
       - This can also be set to a path for V(pwsh.exe) to use PowerShell 7.x in the location specified.
       - The path used here should be the absolute path to the executable on the target host. If using a path
@@ -84,6 +92,10 @@ author:
 EXAMPLES = r'''
 - name: Execute a command in the remote shell, stdout goes to the specified file on the remote
   ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt
+
+- name: Execute a command using the cmd module option instead of the free form parameter
+  ansible.windows.win_shell:
+    cmd: C:\somescript.ps1 >> C:\somelog.txt
 
 - name: Change the working directory to somedir/ before executing the command
   ansible.windows.win_shell: C:\somescript.ps1 >> C:\somelog.txt

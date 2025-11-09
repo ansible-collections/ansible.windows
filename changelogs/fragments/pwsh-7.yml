@@ -1,0 +1,4 @@
+minor_changes:
+  - >-
+    PowerShell 7 - Add initial support for running modules against PowerShell 7 interpreters. Support for PowerShell 7
+    varies across each module, see module documentation for more information.

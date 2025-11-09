@@ -130,7 +130,9 @@
     win_shell: rmdir /S /Q {{profile_dir_out.stdout_lines[0]}}
     args:
       executable: cmd.exe
-    when: win_stat_user in profile_dir_out.stdout_lines[0]
+    when:
+    - profile_dir_out is defined
+    - win_stat_user in profile_dir_out.stdout_lines[0]
 
   - name: remove temp global file
     win_file:
