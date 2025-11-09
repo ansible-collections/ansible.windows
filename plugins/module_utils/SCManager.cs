@@ -540,7 +540,7 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.SCManager
                 case TriggerDataType.String:
                     string value = Encoding.Unicode.GetString(itemBytes, 0, itemBytes.Length);
 
-                    if (value.EndsWith("\0\0"))
+                    if (value.EndsWith("\0\0", StringComparison.OrdinalIgnoreCase))
                     {
                         // Multistring with a delimiter of \0 and terminated with \0\0.
                         Data = new List<string>(value.Split(new char[1] { '\0' }, StringSplitOptions.RemoveEmptyEntries));

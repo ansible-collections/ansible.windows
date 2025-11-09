@@ -23,7 +23,15 @@ function Get-AclEx {
     )
 
     $item = Get-Item -LiteralPath $LiteralPath
-    return $item.GetAccessControl()
+    if ($IsCoreCLR -and $item.PSProvider.Name -eq 'Registry') {
+        [Microsoft.Win32.RegistryAclExtensions]::GetAccessControl($item)
+    }
+    elseif ($IsCoreCLR -and $item.PSProvider.Name -eq 'FileSystem') {
+        [System.IO.FileSystemAclExtensions]::GetAccessControl($item)
+    }
+    else {
+        $item.GetAccessControl()
+    }
 }
 
 function Set-AclEx {
@@ -36,7 +44,29 @@ function Set-AclEx {
     $item = Get-Item -LiteralPath $LiteralPath
     if ($PSCmdlet.ShouldProcess($LiteralPath)) {
         if ($item.PSProvider.Name -eq 'Registry') {
-            Set-Acl -LiteralPath $LiteralPath -AclObject $AclObject
+            if ($IsCoreCLR) {
+                # Set-Acl sometimes fails for registry keys in Pwsh 7.x. et-Item
+                # Get-Item returns a read only object and it doesn't provide an
+                # easy way to get the RegistryHive from the name so we special
+                # case it here.
+                $hiveName, $subkey = $item.Name -split '\\', 2
+                $registryHive = [Microsoft.Win32.RegistryHive]$hiveName.Substring(5).Replace('_', '')
+                $registryBase = [Microsoft.Win32.RegistryKey]::OpenBaseKey($registryHive, $item.View)
+                $registryKey = $registryBase.OpenSubKey(
+                    $subkey,
+                    [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
+                    [System.Security.AccessControl.RegistryRights]::ChangePermissions)
+
+                [Microsoft.Win32.RegistryAclExtensions]::SetAccessControl($registryKey, $AclObject)
+                $registryKey.Dispose()
+                $registryBase.Dispose()
+            }
+            else {
+                Set-Acl -LiteralPath $LiteralPath -AclObject $AclObject
+            }
+        }
+        elseif ($IsCoreCLR) {
+            [System.IO.FileSystemAclExtensions]::SetAccessControl($item, $AclObject)
         }
         else {
             $item.SetAccessControl($AclObject)
@@ -87,6 +117,8 @@ $state = $module.Params.state
 $check_mode = $module.CheckMode
 
 $module.Result.changed = $false
+
+Import-Module -Name Microsoft.PowerShell.Security
 
 $regeditHives = @{
     'HKCR' = 'HKEY_CLASSES_ROOT'

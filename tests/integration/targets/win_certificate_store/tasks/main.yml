@@ -121,13 +121,14 @@
     win_certificate_store:
       thumbprint: '{{item}}'
       state: absent
+    when: item != ''
     with_items:
     - '{{subj_thumbprint}}'
     - '{{root_thumbprint}}'
-    - '{{certificat_using_cng_nonexportable.stdout_lines[0]}}'
-    - '{{certificat_using_cng_exportable.stdout_lines[0]}}'
-    - '{{certificat_using_capi_nonexportable.stdout_lines[0]}}'
-    - '{{certificat_using_capi_exportable.stdout_lines[0]}}'
+    - '{{certificat_using_cng_nonexportable.stdout_lines[0] | default("")}}'
+    - '{{certificat_using_cng_exportable.stdout_lines[0] | default("")}}'
+    - '{{certificat_using_capi_nonexportable.stdout_lines[0] | default("")}}'
+    - '{{certificat_using_capi_exportable.stdout_lines[0] | default("")}}'
 
   - name: ensure certificates are removed from custom store after test
     win_certificate_store:

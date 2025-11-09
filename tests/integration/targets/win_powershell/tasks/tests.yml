@@ -395,7 +395,8 @@
     that:
     - complex_error_record is changed
     - complex_error_record.error|length == 1
-    - complex_error_record.error[0]['category_info']['activity'] == 'Write-Error'
+    # WinPS uses Write-Error, Pwsh uses ran pipeline.
+    - complex_error_record.error[0]['category_info']['activity'] in ['Write-Error', 'ran pipeline']
     - complex_error_record.error[0]['category_info']['category'] == 'PermissionDenied'
     - complex_error_record.error[0]['category_info']['category_id'] == 18
     - complex_error_record.error[0]['category_info']['reason'] == 'touch luck'
@@ -406,7 +407,7 @@
     - complex_error_record.error[0]['exception']['help_link'] == None
     - complex_error_record.error[0]['exception']['hresult'] == -2147467259
     - complex_error_record.error[0]['exception']['inner_exception'] == None
-    - complex_error_record.error[0]['exception']['message'] == 'Access is denied'
+    - (complex_error_record.error[0]['exception']['message'] | regex_replace('\.$', ''))  == 'Access is denied'
     - complex_error_record.error[0]['exception']['source'] == None
     - complex_error_record.error[0]['exception']['type'] == 'System.ComponentModel.Win32Exception'
     - complex_error_record.error[0]['fully_qualified_error_id'] == 'error id,Test-Function'
@@ -1049,3 +1050,23 @@
     - script_from_remote_path is changed
     - script_from_remote_path.output[0]['Name'] == 'café'
     - script_from_remote_path.output[0]['Unicode'] == 'ü'
+
+# Tests that PowerShell/Runspace was created with
+# InitialSessionState.CreateDefault2() which ensures that any builtin modules
+# that have ETS definitions are imported correctly.
+- name: test builtin modules are imported correctly with ETS definitions
+  win_powershell:
+    executable: '{{ pwsh_executable | default(omit) }}'
+    script: |
+      $ErrorActionPreference = 'Stop'
+
+      Import-Module -Name Microsoft.PowerShell.Security
+
+      $typeData = Get-TypeData -TypeName System.Security.AccessControl.ObjectSecurity
+      $typeData.Members.Count
+  register: builtin_module_ets
+
+- name: assert builtin modules are imported correctly with ETS definitions
+  assert:
+    that:
+    - builtin_module_ets.output[0] > 0

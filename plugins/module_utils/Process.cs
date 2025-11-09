@@ -549,8 +549,8 @@ namespace ansible_collections.ansible.windows.plugins.module_utils.Process
             SecurityAttributes processAttributes, SecurityAttributes threadAttributes, bool inheritHandles,
             ProcessCreationFlags creationFlags, IDictionary environment, string currentDirectory, StartupInfo startupInfo)
         {
-            // We always have the extended version present.
-            creationFlags |= ProcessCreationFlags.ExtendedStartupInfoPresent;
+            // We always have the extended version present and use a unicode environmant.
+            creationFlags |= ProcessCreationFlags.ExtendedStartupInfoPresent | ProcessCreationFlags.CreateUnicodeEnvironment;
 
             // $null from PowerShell ends up as an empty string, we need to convert back as an empty string doesn't
             // make sense for these parameters

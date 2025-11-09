@@ -106,6 +106,8 @@
   vars:
     ansible_become_user: '{{ ansible_user }}'
     ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
+    # Uses cmdlets only available in Windows PowerShell
+    ansible_pwsh_interpreter: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
 
 - name: fetch signing certificates
   fetch:
@@ -134,61 +136,6 @@
   notify: remove signed content
 
 - name: enable App Control
-  win_powershell:
-    parameters:
-      TempPath: '{{ remote_tmp_dir }}'
-    script: |
-      [CmdletBinding()]
-      param (
-          [Parameter(Mandatory)]
-          [string]
-          $TempPath
-      )
-
-      $ErrorActionPreference = 'Stop'
-      
-      $policyPath = Join-Path $TempPath policy.xml
-      $certPath = Join-Path $TempPath signing.cer
-      $policyName = 'Ansible_AppControl_Test'
-
-      Copy-Item "$env:windir\schemas\CodeIntegrity\ExamplePolicies\DefaultWindows_Enforced.xml" $policyPath
-      Set-CIPolicyIdInfo -FilePath $policyPath -PolicyName $policyName -PolicyId (New-Guid)
-      Set-CIPolicyVersion -FilePath $policyPath -Version "1.0.0.0"
-
-      Add-SignerRule -FilePath $policyPath -CertificatePath $certPath -User
-      Set-RuleOption -FilePath $policyPath -Option 0          # Enabled:UMCI
-      Set-RuleOption -FilePath $policyPath -Option 3 -Delete  # Enabled:Audit Mode
-      Set-RuleOption -FilePath $policyPath -Option 11 -Delete # Disabled:Script Enforcement
-      Set-RuleOption -FilePath $policyPath -Option 19         # Enabled:Dynamic Code Security
-
-      $policyBinPath = "$env:windir\System32\CodeIntegrity\SiPolicy.p7b"
-      $null = ConvertFrom-CIPolicy -XmlFilePath $policyPath -BinaryFilePath $policyBinPath
-
-      $ciTool = Get-Command -Name CiTool.exe -ErrorAction SilentlyContinue
-      $policyId = $null
-      if ($ciTool) {
-          $setInfo = & $ciTool --update-policy $policyBinPath *>&1
-          if ($LASTEXITCODE) {
-              throw "citool.exe --update-policy failed ${LASTEXITCODE}: $setInfo"
-          }
-
-          $policyId = & $ciTool --list-policies --json |
-              ConvertFrom-Json |
-              Select-Object -ExpandProperty Policies |
-              Where-Object FriendlyName -eq $policyName |
-              Select-Object -ExpandProperty PolicyID
-      }
-      else {
-          $rc = Invoke-CimMethod -Namespace root\Microsoft\Windows\CI -ClassName PS_UpdateAndCompareCIPolicy -MethodName Update -Arguments @{
-              FilePath = $policyBinPath
-          }
-          if ($rc.ReturnValue) {
-              throw "PS_UpdateAndCompareCIPolicy Update failed $($rc.ReturnValue)"
-          }
-      }
-
-      @{
-          policy_id = $policyId
-          path = $policyBinPath
-      }
+  wdac_enable:
+    remote_tmp_dir: '{{ remote_tmp_dir }}'
   register: policy_info

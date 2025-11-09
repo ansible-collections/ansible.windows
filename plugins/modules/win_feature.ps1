@@ -3,113 +3,194 @@
 # Copyright: (c) 2014, Paul Durivage <paul.durivage@rackspace.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-#Requires -Module Ansible.ModuleUtils.Legacy
+#AnsibleRequires -CSharpUtil Ansible.Basic
 
-Import-Module -Name ServerManager
+using namespace Ansible.Basic
 
-$result = @{
-    changed = $false
+$spec = @{
+    options = @{
+        include_sub_features = @{ type = "bool"; default = $false }
+        include_management_tools = @{ type = "bool"; default = $false }
+        name = @{ type = "list"; elements = "str"; required = $true }
+        source = @{ type = "str" }
+        state = @{ type = "str"; choices = "present", "absent"; default = "present" }
+    }
+    supports_check_mode = $true
+}
+$module = [AnsibleModule]::Create($args, $spec)
+
+$name = $module.Params.name
+$state = $module.Params.state
+$includeSubFeatures = $module.Params.include_sub_features
+$includeManagementTools = $module.Params.include_management_tools
+$source = $module.Params.source
+
+$module.Result.exitcode = 'NoChangeNeeded'
+$module.Result.feature_result = @()
+$module.Result.reboot_required = $false
+$module.Result.success = $true
+$module.Result.failed = $false
+
+if ($source) {
+    if (-not (Test-Path -LiteralPath $source)) {
+        $module.FailJson("Failed to find source path $source for feature install")
+    }
 }
 
-$params = Parse-Args $args -supports_check_mode $true
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
+if ($IsCoreCLR) {
+    # ServerManager isn't natively supported in PowerShell 7 and the implicit
+    # remoting session that it uses for this module doesn't serialize the
+    # return results correctly. We wrap it in a WinPS job that serializes with
+    # an explicit depth to avoid this problem.
 
-$name = Get-AnsibleParam -obj $params -name "name" -type "list" -failifempty $true
-$state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
+    Function Install-WindowsFeature {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory)]
+            [string]
+            $Name,
 
-$include_sub_features = Get-AnsibleParam -obj $params -name "include_sub_features" -type "bool" -default $false
-$include_management_tools = Get-AnsibleParam -obj $params -name "include_management_tools" -type "bool" -default $false
-$source = Get-AnsibleParam -obj $params -name "source" -type "str"
+            [Parameter()]
+            [switch]
+            $IncludeAllSubFeature,
 
-$install_cmdlet = $false
-if (Get-Command -Name Install-WindowsFeature -ErrorAction SilentlyContinue) {
-    Set-Alias -Name Install-AnsibleWindowsFeature -Value Install-WindowsFeature
-    Set-Alias -Name Uninstall-AnsibleWindowsFeature -Value Uninstall-WindowsFeature
-    $install_cmdlet = $true
-}
-elseif (Get-Command -Name Add-WindowsFeature -ErrorAction SilentlyContinue) {
-    Set-Alias -Name Install-AnsibleWindowsFeature -Value Add-WindowsFeature
-    Set-Alias -Name Uninstall-AnsibleWindowsFeature -Value Remove-WindowsFeature
-}
-else {
-    Fail-Json -obj $result -message "This version of Windows does not support the cmdlets Install-WindowsFeature or Add-WindowsFeature"
+            [Parameter()]
+            [switch]
+            $IncludeManagementTools,
+
+            [Parameter()]
+            [string]
+            $Source,
+
+            [Parameter()]
+            [Alias('WhatIf')]
+            [switch]
+            $CheckMode
+        )
+
+        $serializedResult = Start-Job -PSVersion 5.1 -ScriptBlock {
+            $ErrorActionPreference = 'Stop'
+
+            Import-Module -Name ServerManager
+
+            $installParams = @{
+                Name = $args[0]
+                IncludeAllSubFeature = $args[1]
+                IncludeManagementTools = $args[2]
+                WhatIf = $args[3]
+                Restart = $false
+                Confirm = $false
+            }
+            if ($args[4]) {
+                $installParams.Source = $args[4]
+            }
+            $result = Install-WindowsFeature @installParams
+
+            [System.Management.Automation.PSSerializer]::Serialize($result, 4)
+        } -ArgumentList @(
+            $Name,
+            $IncludeAllSubFeature.IsPresent,
+            $IncludeManagementTools.IsPresent,
+            $CheckMode.IsPresent,
+            $Source
+        ) | Receive-Job -AutoRemoveJob -Wait
+
+        [System.Management.Automation.PSSerializer]::Deserialize($serializedResult)
+    }
+
+    Function Uninstall-WindowsFeature {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory)]
+            [string]
+            $Name,
+
+            [Parameter()]
+            [switch]
+            $IncludeManagementTools,
+
+            [Parameter()]
+            [Alias('WhatIf')]
+            [switch]
+            $CheckMode
+        )
+
+        $serializedResult = Start-Job -PSVersion 5.1 -ScriptBlock {
+            $ErrorActionPreference = 'Stop'
+
+            Import-Module -Name ServerManager
+
+            $uninstallParams = @{
+                Name = $args[0]
+                IncludeManagementTools = $args[1]
+                WhatIf = $args[2]
+                Restart = $false
+                Confirm = $false
+            }
+            $result = Uninstall-WindowsFeature @uninstallParams
+
+            [System.Management.Automation.PSSerializer]::Serialize($result, 4)
+        } -ArgumentList @(
+            $Name,
+            $IncludeManagementTools.IsPresent,
+            $CheckMode.IsPresent
+        ) | Receive-Job -AutoRemoveJob -Wait
+
+        [System.Management.Automation.PSSerializer]::Deserialize($serializedResult)
+    }
 }
 
 if ($state -eq "present") {
-    $install_args = @{
+    $installParams = @{
         Name = $name
-        IncludeAllSubFeature = $include_sub_features
-        Restart = $false
-        WhatIf = $check_mode
-        ErrorAction = "Stop"
+        IncludeAllSubFeature = $includeSubFeatures
+        IncludeManagementTools = $includeManagementTools
+        WhatIf = $module.CheckMode
+    }
+    if ($source) {
+        $installParams.Source = $source
     }
 
-    if ($install_cmdlet) {
-        $install_args.IncludeManagementTools = $include_management_tools
-        $install_args.Confirm = $false
-        if ($source) {
-            if (-not (Test-Path -LiteralPath $source)) {
-                Fail-Json -obj $result -message "Failed to find source path $source for feature install"
-            }
-            $install_args.Source = $source
-        }
-    }
-
-    try {
-        $action_results = Install-AnsibleWindowsFeature @install_args
-    }
-    catch {
-        Fail-Json -obj $result -message "Failed to install Windows Feature: $($_.Exception.Message)"
-    }
+    $result = Install-WindowsFeature @installParams
 }
 else {
-    $uninstall_args = @{
+    $uninstallParams = @{
         Name = $name
-        Restart = $false
-        WhatIf = $check_mode
-        ErrorAction = "Stop"
-    }
-    if ($install_cmdlet) {
-        $uninstall_args.IncludeManagementTools = $include_management_tools
+        IncludeManagementTools = $includeManagementTools
+        WhatIf = $module.CheckMode
     }
 
-    try {
-        $action_results = Uninstall-AnsibleWindowsFeature @uninstall_args
-    }
-    catch {
-        Fail-Json -obj $result -message "Failed to uninstall Windows Feature: $($_.Exception.Message)"
-    }
+    $result = Uninstall-WindowsFeature @uninstallParams
 }
 
-# Loop through results and create a hash containing details about
-# each role/feature that is installed/removed
-# $action_results.FeatureResult is not empty if anything was changed
-$feature_results = @()
-foreach ($action_result in $action_results.FeatureResult) {
-    $message = @()
-    foreach ($msg in $action_result.Message) {
-        $message += @{
-            message_type = $msg.MessageType.ToString()
-            error_code = $msg.ErrorCode
-            text = $msg.Text
+$module.Result.feature_result = @(
+    foreach ($entry in $result.FeatureResult) {
+        $message = @(
+            foreach ($msg in $entry.Message) {
+                @{
+                    message_type = [string]$msg.MessageType
+                    error_code = $msg.ErrorCode
+                    text = $msg.Text
+                }
+            }
+        )
+
+        @{
+            id = $entry.Id
+            display_name = $entry.DisplayName
+            message = $message
+            reboot_required = ([string]$entry.RestartNeeded -eq 'Yes')
+            skip_reason = [string]$entry.SkipReason
+            success = $entry.Success
         }
-    }
 
-    $feature_results += @{
-        id = $action_result.Id
-        display_name = $action_result.DisplayName
-        message = $message
-        reboot_required = ConvertTo-Bool -obj $action_result.RestartNeeded
-        skip_reason = $action_result.SkipReason.ToString()
-        success = ConvertTo-Bool -obj $action_result.Success
+        $module.Result.changed = $true
     }
-    $result.changed = $true
-}
-$result.feature_result = $feature_results
-$result.success = ConvertTo-Bool -obj $action_results.Success
-$result.exitcode = $action_results.ExitCode.ToString()
-$result.reboot_required = ConvertTo-Bool -obj $action_results.RestartNeeded
-# controls whether Ansible will fail or not
-$result.failed = (-not $action_results.Success)
+)
 
-Exit-Json -obj $result
+$module.Result.success = $result.Success
+$module.Result.exitcode = [string]$result.ExitCode
+$module.Result.reboot_required = ([string]$result.RestartNeeded -eq 'Yes')
+$module.Result.failed = -not $result.Success
+
+$module.ExitJson()

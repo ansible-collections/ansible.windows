@@ -284,7 +284,7 @@
     - no_profile is changed
     - no_profile.cmd == "[System.Environment]::CommandLine"
     - no_profile.rc == 0
-    - no_profile.stdout is match ('^"powershell.exe" -noninteractive -encodedcommand')
+    - no_profile.stdout is match ('.*powershell.exe" -noninteractive -encodedcommand')
 
 - name: execute powershell with no_profile
   win_shell: '[System.Environment]::CommandLine'
@@ -299,7 +299,7 @@
     - no_profile is changed
     - no_profile.cmd == "[System.Environment]::CommandLine"
     - no_profile.rc == 0
-    - no_profile.stdout is match ('^"powershell.exe" -noprofile -noninteractive -encodedcommand')
+    - no_profile.stdout is match ('.*powershell.exe" -noprofile -noninteractive -encodedcommand')
 
 - name: create symbolic link with space in the path
   win_command: cmd.exe /c mklink /d "C:\ansible test link" C:\Windows\System32\WindowsPowerShell\v1.0
@@ -323,7 +323,61 @@
       - space_exe is changed
       - space_exe.cmd == '[System.Environment]::CommandLine'
       - space_exe.rc == 0
-      - space_exe.stdout|trim == '"C:\\ansible test link\\powershell.exe" /c [System.Environment]::CommandLine'
+      - space_exe.stdout is match ('^"C:\\\\ansible test link\\\\powershell.exe" .*')
+  always:
+  - name: remove test symbolic link
+    win_file:
+      path: C:\ansible test link
+      state: absent
+
+- name: check if PowerShell 7 is available
+  win_shell: ([bool](Get-Command -Name pwsh.exe -CommandType Application -ErrorAction SilentlyContinue))
+  register: pwsh_check
+
+- name: run PowerShell 7 tests
+  when: pwsh_check.stdout_lines[0] | bool
+  block:
+  - name: run with PowerShell 7 executable
+    win_shell: '$PSVersionTable.PSVersion.Major'
+    args:
+      executable: pwsh.exe
+    register: pwsh_7
+
+  - name: assert PowerShell 7 run
+    assert:
+      that:
+      - pwsh_7 is successful
+      - pwsh_7 is changed
+      - pwsh_7.stdout|trim == '7'
+      - pwsh_7.rc == 0
+
+- name: run PowerShell 7 interpreter tests
+  when: (ansible_pwsh_interpreter | default('')).endswith('pwsh.exe')
+  block:
+  # Verifies that PowerShell 7's PSModulePath does not interfere with WinPS modules
+  - name: run PowerShell that imports a builtin module
+    win_shell: Import-Module -Name Microsoft.PowerShell.Security -ErrorAction Stop
+
+  - name: create symbolic link that is a copy of the interpreter path
+    win_shell: mklink /d "C:\ansible test link" "{{ ansible_pwsh_interpreter | win_dirname }}"
+    args:
+      creates: C:\ansible test link
+      executable: cmd.exe
+
+  - name: run PowerShell script with custom PSModulePath
+    win_shell: '$env:PSModulePath'
+    environment:
+      PSModulePath: 'C:\custom\modules;{{ ansible_pwsh_interpreter | win_dirname }}\Modules;C:\ansible test link\Modules'
+    register: custom_psmodulepath
+
+  - name: assert PowerShell script with custom PSModulePath
+    assert:
+      that:
+      - custom_psmodulepath is successful
+      - custom_psmodulepath is changed
+      - custom_psmodulepath.rc == 0
+      - custom_psmodulepath.stdout | trim == 'C:\custom\modules'
+
   always:
   - name: remove test symbolic link
     win_file:
