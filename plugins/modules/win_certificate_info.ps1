@@ -58,7 +58,7 @@ function Get-CertificateInfo ($cert) {
                 $cert_info.ski = $extension.SubjectKeyIdentifier
             }
             elseif ($extension.Oid.value -eq '2.5.29.17') {
-                $sans = $extension.Format($true).Split("`r`n", [System.StringSplitOptions]::RemoveEmptyEntries)
+                $sans = $extension.Format($true).Split([char[]]"`r`n", [System.StringSplitOptions]::RemoveEmptyEntries)
                 foreach ($san in $sans) {
                     $san_parts = $san.Split("=")
                     if ($san_parts.Length -ge 2 -and $san_parts[0].Trim() -eq 'DNS Name') {
