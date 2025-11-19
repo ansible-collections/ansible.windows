@@ -131,6 +131,78 @@
       - "not win_feature_remove_again_result.reboot_required"
       - "win_feature_remove_again_result.feature_result == []"
 
+- name: install multiple features
+  win_feature:
+    name:
+      - "{{ test_win_feature_name }}"
+      - "{{ test_win_feature_name2 }}"
+    state: present
+  register: win_feature_install_multiple_result
+
+- name: assert install multiple features
+  assert:
+    that:
+      - win_feature_install_multiple_result is changed
+      - win_feature_install_multiple_result.success
+      - win_feature_install_multiple_result.exitcode == 'Success'
+      - not win_feature_install_multiple_result.reboot_required
+      - win_feature_install_multiple_result.feature_result|length == 2
+      - win_feature_install_multiple_result.feature_result[0].id is defined
+      - win_feature_install_multiple_result.feature_result[1].id is defined
+
+- name: install multiple features again
+  win_feature:
+    name:
+      - "{{ test_win_feature_name }}"
+      - "{{ test_win_feature_name2 }}"
+    state: present
+  register: win_feature_install_multiple_again_result
+
+- name: assert install multiple features again
+  assert:
+    that:
+      - win_feature_install_multiple_again_result is not changed
+      - win_feature_install_multiple_again_result.success
+      - win_feature_install_multiple_again_result.exitcode == 'NoChangeNeeded'
+      - not win_feature_install_multiple_again_result.reboot_required
+      - win_feature_install_multiple_again_result.feature_result == []
+
+- name: remove multiple features
+  win_feature:
+    name:
+      - "{{ test_win_feature_name }}"
+      - "{{ test_win_feature_name2 }}"
+    state: absent
+  register: win_feature_remove_multiple_result
+
+- name: assert remove multiple features
+  assert:
+    that:
+      - win_feature_remove_multiple_result is changed
+      - win_feature_remove_multiple_result.success
+      - win_feature_remove_multiple_result.exitcode == 'Success'
+      - not win_feature_remove_multiple_result.reboot_required
+      - win_feature_remove_multiple_result.feature_result|length == 2
+      - win_feature_remove_multiple_result.feature_result[0].id is defined
+      - win_feature_remove_multiple_result.feature_result[1].id is defined
+
+- name: remove multiple features again
+  win_feature:
+    name:
+      - "{{ test_win_feature_name }}"
+      - "{{ test_win_feature_name2 }}"
+    state: absent
+  register: win_feature_remove_multiple_again_result
+
+- name: assert remove multiple features again
+  assert:
+    that:
+      - win_feature_remove_multiple_again_result is not changed
+      - win_feature_remove_multiple_again_result.success
+      - win_feature_remove_multiple_again_result.exitcode == 'NoChangeNeeded'
+      - not win_feature_remove_multiple_again_result.reboot_required
+      - win_feature_remove_multiple_again_result.feature_result == []
+
 - name: try to install an invalid feature name
   win_feature:
     name: "Microsoft-Bob"
