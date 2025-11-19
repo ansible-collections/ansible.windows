@@ -93,7 +93,8 @@ exitcode:
 feature_result:
     description: List of features that were installed or removed.
     returned: success
-    type: complex
+    type: list
+    elements: dict
     sample:
     contains:
         display_name:
@@ -110,8 +111,24 @@ feature_result:
             description: Any messages returned from the feature subsystem that occurred during installation or removal of this feature.
             returned: always
             type: list
-            elements: str
+            elements: dict
             sample: []
+            contains:
+                message_type:
+                    description: The type of message.
+                    returned: always
+                    type: str
+                    sample: Information
+                error_code:
+                    description: The error code associated with this message.
+                    returned: always
+                    type: int
+                    sample: 0
+                text:
+                    description: The message text.
+                    returned: always
+                    type: str
+                    sample: The operation completed successfully.
         reboot_required:
             description: True when the target server requires a reboot as a result of installing or removing this feature.
             returned: always
