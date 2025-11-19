@@ -1,0 +1,5 @@
+minor_changes:
+  - >-
+    win_environment - Add the return value ``env_values`` which is a copy of the existing ``values`` return value. The
+    documentation for ``values`` has been removed to discourage use of that version due to the inability to use
+    ``values`` with dot notation in a Jinja2 template due to the conflict with the Python ``values`` attribute.

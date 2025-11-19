@@ -52,7 +52,7 @@ function Set-EnvironmentVariableState {
         $State
     )
 
-    Process {
+    process {
         if (-not $State) {
             $State = if (-not $Value) {
                 'absent'
@@ -89,7 +89,7 @@ function Set-EnvironmentVariableState {
     }
 }
 
-Function Register-EnvironmentChange {
+function Register-EnvironmentChange {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -151,7 +151,11 @@ namespace Ansible.Windows.WinEnvironment
         5000)
 }
 
+# We use both values and env_values. We need to deprecate 'values' due to a new
+# linting rule that tries to stop us using something that doesn't work with dot
+# notation.
 $module.Result.values = @{}
+$module.Result.env_values = @{}
 
 $level = $module.Params.level
 $state = $module.Params.state
@@ -191,6 +195,7 @@ foreach ($kv in $envvars.GetEnumerator()) {
     }
 
     $module.Result.values.$name = $status
+    $module.Result.env_values.$name = $status
     $module.Result.changed = $module.Result.changed -or $status.changed
 
     $module.Result.before_value = $status.before

@@ -52,6 +52,7 @@
   assert:
     that:
     - create_machine_check is changed
+    - create_machine_check.env_values is defined
     - create_machine_check_actual.stdout == ""
 
 - name: create test environment value for machine
@@ -71,6 +72,7 @@
     that:
     - create_machine is changed
     - create_machine.before_value == None
+    - create_machine.env_values is defined
     - create_machine_actual.stdout | trim == test_machine_environment_value
 
 - name: create test environment value for machine again
@@ -90,6 +92,7 @@
     that:
     - create_machine_again is not changed
     - create_machine_again.before_value == test_machine_environment_value
+    - create_machine_again.env_values is defined
     - create_machine_actual_again.stdout | trim == test_machine_environment_value
 
 - name: change test environment value for machine check
@@ -110,6 +113,7 @@
     that:
     - change_machine_check is changed
     - change_machine_check.before_value == test_machine_environment_value
+    - change_machine_check.env_values is defined
     - change_machine_actual_check.stdout | trim == test_machine_environment_value
 
 - name: change test environment value for machine
@@ -129,6 +133,7 @@
     that:
     - change_machine is changed
     - change_machine.before_value == test_machine_environment_value
+    - change_machine.env_values is defined
     - change_machine_actual.stdout | trim == test_new_machine_environment_value
 
 - name: change test environment value for machine again
@@ -148,6 +153,7 @@
     that:
     - change_machine_again is not changed
     - change_machine_again.before_value == test_new_machine_environment_value
+    - change_machine_again.env_values is defined
     - change_machine_actual_again.stdout | trim == test_new_machine_environment_value
 
 - name: create test environment value for user check
