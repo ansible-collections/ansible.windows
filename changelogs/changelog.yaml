@@ -996,3 +996,29 @@ releases:
     - win_service_check_flag.yml
     - win_template_preserve_ansible_managed.yml
     release_date: '2025-07-22'
+  3.3.0:
+    changes:
+      bugfixes:
+      - Update various action plugin calls to avoid some deprecated or old methods.
+      - win_get_url - Fix force=no not doing HEAD request if checksum is not set
+      - win_powershell - Fix up async support for Ansible 2.19 when running ``win_powershell``
+        - https://github.com/ansible-collections/ansible.windows/issues/828
+      - win_reboot - Use full path to ``shutdown.exe`` to avoid relying on ``PATH``
+        lookups to find - https://github.com/ansible-collections/ansible.windows/issues/826
+      minor_changes:
+      - Add official support for Ansible 2.20
+      - win_environment - Add the return value ``env_values`` which is a copy of the
+        existing ``values`` return value. The documentation for ``values`` has been
+        removed to discourage use of that version due to the inability to use ``values``
+        with dot notation in a Jinja2 template due to the conflict with the Python
+        ``values`` attribute.
+      release_summary: Release summary for v3.3.0
+    fragments:
+    - ansible-2.20.yml
+    - code-cleanup.yml
+    - release-summary.yml
+    - win_environment-return.yml
+    - win_get_url-force-checksum.yml
+    - win_powershell-async-output.yml
+    - win_reboot-path.yml
+    release_date: '2025-11-20'

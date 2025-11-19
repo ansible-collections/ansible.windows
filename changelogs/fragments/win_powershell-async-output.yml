@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    win_powershell - Fix up async support for Ansible 2.19 when running ``win_powershell`` -
-    https://github.com/ansible-collections/ansible.windows/issues/828

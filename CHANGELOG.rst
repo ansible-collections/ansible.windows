@@ -4,6 +4,28 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.3.0
+======
+
+Release Summary
+---------------
+
+Release summary for v3.3.0
+
+Minor Changes
+-------------
+
+- Add official support for Ansible 2.20
+- win_environment - Add the return value ``env_values`` which is a copy of the existing ``values`` return value. The documentation for ``values`` has been removed to discourage use of that version due to the inability to use ``values`` with dot notation in a Jinja2 template due to the conflict with the Python ``values`` attribute.
+
+Bugfixes
+--------
+
+- Update various action plugin calls to avoid some deprecated or old methods.
+- win_get_url - Fix force=no not doing HEAD request if checksum is not set
+- win_powershell - Fix up async support for Ansible 2.19 when running ``win_powershell`` - https://github.com/ansible-collections/ansible.windows/issues/828
+- win_reboot - Use full path to ``shutdown.exe`` to avoid relying on ``PATH`` lookups to find - https://github.com/ansible-collections/ansible.windows/issues/826
+
 v3.2.0
 ======
 
