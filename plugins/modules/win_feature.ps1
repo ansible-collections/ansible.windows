@@ -47,7 +47,7 @@ if ($IsCoreCLR) {
         [CmdletBinding()]
         param (
             [Parameter(Mandatory)]
-            [string]
+            [string[]]
             $Name,
 
             [Parameter()]
@@ -102,7 +102,7 @@ if ($IsCoreCLR) {
         [CmdletBinding()]
         param (
             [Parameter(Mandatory)]
-            [string]
+            [string[]]
             $Name,
 
             [Parameter()]
