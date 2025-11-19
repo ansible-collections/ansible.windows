@@ -109,10 +109,11 @@ value:
   returned: always
   type: str
   sample: C:\Program Files\jdk1.8
-values:
-  description: "dictionary of before and after values; each key is a variable name, each value is
-  another dict with C(before), C(after), and C(changed) keys"
+env_values:
+  description:
+  - Dictionary of before and after values; each key is a variable name, each value is another dict with C(before), C(after), and C(changed) keys
+  - This is also returned under the C(values) key for backward compatibility, but that usage is deprecated.
   returned: always
   type: dict
-  version_added: '1.3.0'
+  version_added: '3.3.0'
 '''
