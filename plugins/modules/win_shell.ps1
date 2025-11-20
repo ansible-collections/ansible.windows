@@ -6,6 +6,7 @@
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.CommandUtil
 #Requires -Module Ansible.ModuleUtils.FileUtil
+#AnsibleRequires -PowerShell ..module_utils._PSModulePath
 
 # TODO: add check mode support
 
@@ -70,9 +71,27 @@ if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
     Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
+if (-not $executable) {
+    $executable = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+}
+$executable_name = [IO.Path]::GetFileNameWithoutExtension($executable)
+
+$run_command_arg = @{}
+
 $exec_args = $null
-If (-not $executable -or $executable -eq "powershell") {
-    $exec_application = "powershell.exe"
+If ($executable_name -in @("powershell", "pwsh")) {
+    if ($executable_name -eq "powershell" -and $PSVersionTable.PSVersion -ge '6.0') {
+        # when using pwsh, we need to adjust the PSModulePath to avoid loading incompatible modules
+        $new_environment = [Environment]::GetEnvironmentVariables()
+        $new_environment['PSModulePath'] = Get-WinPSModulePath
+        $run_command_arg['environment'] = $new_environment
+    }
+
+    if (-not $executable.EndsWith('.exe')) {
+        $executable = "$executable.exe"
+    }
+
+    $exec_application = $executable
 
     # force input encoding to preamble-free UTF8 so PS sub-processes (eg, Start-Job) don't blow up
     if ([System.Management.Automation.Security.SystemPolicy]::GetSystemLockdownPolicy() -eq 'None') {
@@ -103,9 +122,8 @@ Else {
 }
 
 $command = "`"$exec_application`" $exec_args"
-$run_command_arg = @{
-    command = $command
-}
+$run_command_arg['command'] = $command
+
 if ($chdir) {
     $run_command_arg['working_directory'] = $chdir
 }

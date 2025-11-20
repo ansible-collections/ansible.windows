@@ -15,10 +15,10 @@ namespace PrintArgv
             IntPtr cmdLinePtr = GetCommandLineW();
             string cmdLine = Marshal.PtrToStringUni(cmdLinePtr);
 
-            Dictionary<string, object> cmdInfo = new Dictionary<string, object>()
+            SortedDictionary<string, object> cmdInfo = new SortedDictionary<string, object>()
             {
-                {"command_line", cmdLine },
                 {"args", args},
+                {"command_line", cmdLine },
             };
 
             JavaScriptSerializer jss = new JavaScriptSerializer();

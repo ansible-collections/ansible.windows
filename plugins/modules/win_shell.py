@@ -36,6 +36,7 @@ options:
     description:
       - Change the shell used to execute the command (eg, C(cmd)).
       - The target shell must accept a C(/c) parameter followed by the raw command line to be executed.
+      - Defaults to Windows PowerShell C(powershell.exe), can be set to C(pwsh.exe) to use PowerShell 7.
     type: path
   stdin:
     description:

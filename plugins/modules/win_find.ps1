@@ -6,6 +6,9 @@
 #AnsibleRequires -CSharpUtil Ansible.Basic
 #Requires -Module Ansible.ModuleUtils.LinkUtil
 
+# Required to access ACL ETS members on PowerShell 7
+Import-Module -Name Microsoft.PowerShell.Security
+
 $spec = @{
     options = @{
         paths = @{ type = "list"; elements = "str"; required = $true }
@@ -316,7 +319,12 @@ Function Search-Path {
         }
 
         try {
-            $file_info.owner = $dir_child.GetAccessControl().Owner
+            $file_info.owner = if ('System.IO.FileSystemAclExtensions' -as [Type]) {
+                [System.IO.FileSystemAclExtensions]::GetAccessControl($dir_child).Owner
+            }
+            else {
+                $dir_child.GetAccessControl().Owner
+            }
         }
         catch {
             # May not have the rights to get the Owner, historical behaviour is to ignore but we will at least warn.

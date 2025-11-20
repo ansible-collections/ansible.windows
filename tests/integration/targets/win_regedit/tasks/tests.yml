@@ -35,6 +35,14 @@
   register: invalid_decimal
   failed_when: invalid_decimal.msg != 'data ' + "'" + '1.1' + "'" + ' cannot be a decimal or float value with a remainder when type is dword or qword'
 
+- name: ensure test key is set to a string for next test
+  win_regedit:
+    path: '{{test_win_regedit_local_key}}'
+    name: data_string
+    data: new hello world
+    type: string
+    state: present
+
 - name: change string to binary check
   win_regedit:
     path: '{{test_win_regedit_local_key}}'
@@ -165,6 +173,14 @@
     - create_specific_default is changed
     - create_specific_default_actual.properties[""].value == "default value"
     - create_specific_default_actual.properties["(Default)"].value == "custom default value"
+
+- name: ensure property exists for next test
+  win_regedit:
+    path: '{{test_win_regedit_local_key}}'
+    name: data_binary
+    data: hex:00,01
+    type: binary
+    state: present
 
 - name: delete property check
   win_regedit:

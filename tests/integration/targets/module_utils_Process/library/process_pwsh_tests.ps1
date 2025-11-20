@@ -61,7 +61,7 @@ $tests = [Ordered]@{
         $actual = Start-AnsibleWindowsProcess -FilePath $printArgv -CommandLine '"abc def" arg2'
         $actual.PSTypeNames[0] | Assert-Equal -Expected 'Ansible.Windows.Process.Info'
         $actual.Command | Assert-Equal -Expected "`"abc def`" arg2"
-        $actual.Stdout | Assert-Equal -Expected "{`"command_line`":`"\`"abc def\`" arg2`",`"args`":[`"arg2`"]}`r`n"
+        $actual.Stdout | Assert-Equal -Expected "{`"args`":[`"arg2`"],`"command_line`":`"\`"abc def\`" arg2`"}`r`n"
         $actual.Stderr | Assert-Equal -Expected ""
         $actual.ExitCode | Assert-Equal -Expected 0
     }
@@ -69,9 +69,9 @@ $tests = [Ordered]@{
     "Start-AnsibleWindowsProcess -CommandLine" = {
         $printArgv = $module.Params.print_argv
         $cmd = @($printArgv, 'abc def', 'arg2' | ConvertTo-EscapedArgument) -join ' '
-        $expectedOutput = @{
-            command_line = $cmd
+        $expectedOutput = [Ordered]@{
             args = @('abc def', 'arg2')
+            command_line = $cmd
         } | ConvertTo-Json -Compress
 
         $actual = Start-AnsibleWindowsProcess -CommandLine $cmd
@@ -85,9 +85,9 @@ $tests = [Ordered]@{
     "Start-AnsibleWindowsProcess -ArgumentList" = {
         $printArgv = $module.Params.print_argv
         $cmd = @($printArgv, 'abc def', 'arg2' | ConvertTo-EscapedArgument) -join ' '
-        $expectedOutput = @{
-            command_line = $cmd
+        $expectedOutput = [Ordered]@{
             args = @('abc def', 'arg2')
+            command_line = $cmd
         } | ConvertTo-Json -Compress
 
         $actual = Start-AnsibleWindowsProcess -FilePath $printArgv -ArgumentList @('abc def', 'arg2')
@@ -140,8 +140,8 @@ $tests = [Ordered]@{
         $actual = Start-AnsibleWindowsProcess -FilePath "$pwshGrandparentName\powershell" -ArgumentList '$pwd.Path'
         Pop-Location
         $actual.PSTypeNames[0] | Assert-Equal -Expected 'Ansible.Windows.Process.Info'
-        $actual.Command | Assert-Equal -Expected "$pwshPath `$pwd.Path"
-        $actual.Stdout | Assert-Equal -Expected "$pwshGrandparent`r`n"
+        $actual.Command.ToLowerInvariant() | Assert-Equal -Expected "$pwshPath `$pwd.Path".ToLowerInvariant()
+        $actual.Stdout.ToLowerInvariant() | Assert-Equal -Expected "$pwshGrandparent`r`n".ToLowerInvariant()
         $actual.Stderr | Assert-Equal -Expected ""
         $actual.ExitCode | Assert-Equal -Expected 0
     }

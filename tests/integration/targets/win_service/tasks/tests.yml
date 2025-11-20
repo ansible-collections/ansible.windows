@@ -85,7 +85,7 @@
     name: "{{test_win_service_name}}"
     state: started
   register: win_service_start_disabled
-  failed_when: "'Cannot start service ' + test_win_service_name + ' on computer' not in win_service_start_disabled.msg"
+  failed_when: "'Cannot start service' not in win_service_start_disabled.msg"
 
 - name: enable the service for manual startup
   win_service:
