@@ -1,0 +1,66 @@
+---
+- name: Can call Echo
+  ansible.windows.win_dsc3:
+    resources:
+      - name: echo
+        type: Microsoft.DSC.Debug/Echo
+        properties:
+          output: echo
+  register: win_dsc3_echo_result
+
+- name: Check win_dsc3 Echo result
+  ansible.builtin.assert:
+    that:
+      - win_dsc3_echo_result is not failed
+      - win_dsc3_echo_result is not changed
+      - win_dsc3_echo_result.config_results[0].state.output == 'echo'
+      - win_dsc3_echo_result.rc == 0
+  when: not win_dsc3_echo_result is skipped
+
+- name: Apply new state
+  ansible.windows.win_dsc3:
+    resources:
+      - name: New state
+        type: Ansible.Windows.Debug/Mock
+        properties:
+          __changed:
+            string: text
+            number: 1
+    extra_paths:
+      - '{{ test_resources_path }}'
+    raw_results: true
+  register: win_dsc3_new_result
+  diff: true
+
+- name: Check apply new state result
+  ansible.builtin.assert:
+    that:
+      - win_dsc3_new_result is not failed
+      - win_dsc3_new_result is changed
+      - win_dsc3_new_result.config_results | length == 1
+      - win_dsc3_new_result.config_results[0].state.number == 1
+      - win_dsc3_new_result.config_results[0].state.string == 'text'
+      - win_dsc3_new_result.diff is defined
+      - win_dsc3_new_result.diff.before.config_results | length == 1
+      - win_dsc3_new_result.diff.before.config_results[0].state == {}
+      - win_dsc3_new_result.diff.after.config_results | length == 1
+      - win_dsc3_new_result.diff.after.config_results[0].state.number == 1
+      - win_dsc3_new_result.diff.after.config_results[0].state.string == 'text'
+      - win_dsc3_new_result.config_results[0].result | default | length > 0
+  when: not win_dsc3_new_result is skipped
+
+- name: Call with unknown resource
+  ansible.windows.win_dsc3:
+    resources:
+      - name: Bad
+        type: Ansible.Windows.Debug/Unknown
+        properties: {}
+    raw_results: true
+  register: win_dsc3_unknown_resource
+  ignore_errors: true
+
+- name: Check unknown resource error
+  ansible.builtin.assert:
+    that:
+      - win_dsc3_unknown_resource is failed
+      - win_dsc3_unknown_resource.rc == 2

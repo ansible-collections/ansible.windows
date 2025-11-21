@@ -1,0 +1,61 @@
+{
+    "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+    "type": "Ansible.Windows.Debug/Mock",
+    "description": "Use PowerShell to echo arbitrary state data",
+    "version": "0.1.0",
+    "get": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./mock.resource.ps1",
+            "get"
+        ]
+    },
+    "set": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./mock.resource.ps1",
+            "set"
+        ],
+        "return": "stateAndDiff"
+    },
+    "test": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./mock.resource.ps1",
+            "test"
+        ],
+        "return": "stateAndDiff"
+    },
+    "schema": {
+        "embedded": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+                "__changed": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}
