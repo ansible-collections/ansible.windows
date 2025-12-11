@@ -184,6 +184,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 <td><div class="ansible-option-cell"><p>Change the shell used to execute the command (eg, <code class="docutils literal notranslate"><span class="pre">cmd</span></code>).</p>
 <p>The target shell must accept a <code class="docutils literal notranslate"><span class="pre">/c</span></code> parameter followed by the raw command line to be executed.</p>
+<p>This can also be set to a path for <code class="ansible-value docutils literal notranslate"><span class="pre">pwsh.exe</span></code> to use PowerShell 7.x in the location specified.</p>
+<p>The path used here should be the absolute path to the executable on the target host. If using a path that is not absolute, it will be found in the <code class="ansible-value docutils literal notranslate"><span class="pre">PATH</span></code> environment variable which could be suceptible to path hijacking.</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -284,7 +286,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run a command under a non-Powershell interpreter (cmd in this case)</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo %HOMEDIR%</span>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd</span>
+<span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\System32\cmd.exe</span>
 <span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homedir_out</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run multi-lined shell commands</span>
