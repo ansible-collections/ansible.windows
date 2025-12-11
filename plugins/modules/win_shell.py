@@ -36,6 +36,10 @@ options:
     description:
       - Change the shell used to execute the command (eg, C(cmd)).
       - The target shell must accept a C(/c) parameter followed by the raw command line to be executed.
+      - This can also be set to a path for V(pwsh.exe) to use PowerShell 7.x in the location specified.
+      - The path used here should be the absolute path to the executable on the target host. If using a path
+        that is not absolute, it will be found in the V(PATH) environment variable which could be suceptible
+        to path hijacking.
     type: path
   stdin:
     description:
@@ -95,7 +99,7 @@ EXAMPLES = r'''
 - name: Run a command under a non-Powershell interpreter (cmd in this case)
   ansible.windows.win_shell: echo %HOMEDIR%
   args:
-    executable: cmd
+    executable: C:\Windows\System32\cmd.exe
   register: homedir_out
 
 - name: Run multi-lined shell commands
