@@ -1,0 +1,8 @@
+bugfixes:
+  - >-
+    win_shell - Ensure the default ``executable`` uses the absolute path to ``powershell.exe`` rather than looking it
+    up in the ``PATH`` environment.
+
+minor_changes:
+  - >-
+    win_shell - Support using ``pwsh.exe`` as the executable in a mode similar to how ``powershell.exe`` is run.

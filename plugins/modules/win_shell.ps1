@@ -70,9 +70,20 @@ if ($removes -and -not $(Test-AnsiblePath -Path $removes)) {
     Exit-Json @{ msg = "skipped, since $removes does not exist"; cmd = $raw_command_line; changed = $false; skipped = $true; rc = 0 }
 }
 
+if (-not $executable) {
+    $executable = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+}
+$executable_name = [IO.Path]::GetFileNameWithoutExtension($executable)
+
+$run_command_arg = @{}
+
 $exec_args = $null
-If (-not $executable -or $executable -eq "powershell") {
-    $exec_application = "powershell.exe"
+If ($executable_name -in @("powershell", "pwsh")) {
+    if (-not $executable.EndsWith('.exe')) {
+        $executable = "$executable.exe"
+    }
+
+    $exec_application = $executable
 
     # force input encoding to preamble-free UTF8 so PS sub-processes (eg, Start-Job) don't blow up
     if ([System.Management.Automation.Security.SystemPolicy]::GetSystemLockdownPolicy() -eq 'None') {
@@ -103,9 +114,8 @@ Else {
 }
 
 $command = "`"$exec_application`" $exec_args"
-$run_command_arg = @{
-    command = $command
-}
+$run_command_arg['command'] = $command
+
 if ($chdir) {
     $run_command_arg['working_directory'] = $chdir
 }
