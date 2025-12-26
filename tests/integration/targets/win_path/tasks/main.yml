@@ -182,6 +182,12 @@
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
 
+- name: Seed path before prepend tests
+  win_path:
+    name: "{{ varname }}"
+    elements:
+      - C:\PathA
+
 - name: Test prepend single path
   win_path:
     name: "{{ varname }}"
@@ -274,3 +280,6 @@
     - check_prepend is changed
     - check_prepend.path_value == "C:\CheckModePath;C:\PathA"
     - check_prepend_varout.stdout_lines[0] == "C:\PathA" # shouldn't have actually changed the value
+
+- name: Remove {{ varname }} vars from user and machine scope
+  win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
