@@ -41,6 +41,11 @@ options:
     type: str
     choices: [ machine, user ]
     default: machine
+  prepend:
+    description:
+      - Whether the path elements specified in C(elements) should be prepended to the path.
+    type: bool
+    default: false
 notes:
    - This module is for modifying individual elements of path-like
      environment variables. For general-purpose management of other
@@ -70,4 +75,10 @@ EXAMPLES = r'''
     elements: C:\Program Files\MyJavaThing
     scope: user
     state: absent
+
+- name: Prepend C:\My\Custom\Bin to the system PATH
+  ansible.windows.win_path:
+    name: PATH
+    elements: C:\My\Custom\Bin
+    prepend: yes
 '''
