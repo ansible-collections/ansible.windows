@@ -199,7 +199,7 @@ If ($state -eq "absent") {
     $module.Result.changed = Remove-Element $existing_elements $elements
 }
 ElseIf ($state -eq "present") {
-    $module.Result.changed = Add-Element $existing_elements $elements $prepend
+    $module.Result.changed = Add-Element -existing_elements $existing_elements -elements_to_add $elements -prepend_elements $prepend
 }
 
 # calculate the new path value from the existing elements
