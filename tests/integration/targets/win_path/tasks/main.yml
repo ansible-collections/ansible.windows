@@ -181,3 +181,96 @@
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
+
+- name: Test prepend single path
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\PrependPath
+    prepend: yes
+  register: prepend_single
+
+- name: Verify prepend single path
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: prepend_single_varout
+
+- name: Ensure prepend single path output
+  assert:
+    that:
+    - prepend_single is changed
+    - prepend_single.path_value == "C:\PrependPath;C:\PathA"
+    - prepend_single_varout.stdout_lines[0] == "C:\PrependPath;C:\PathA"
+
+- name: Test prepend multiple paths
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\PrependPath1
+    - C:\PrependPath2
+    prepend: yes
+  register: prepend_multiple
+
+- name: Verify prepend multiple paths
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: prepend_multiple_varout
+
+- name: Ensure prepend multiple paths output
+  assert:
+    that:
+    - prepend_multiple is changed
+    - prepend_multiple.path_value == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
+    - prepend_multiple_varout.stdout_lines[0] == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
+
+- name: Test idempotence for prepend
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\PrependPath1
+    - C:\PrependPath2
+    prepend: yes
+  register: prepend_idempotence
+
+- name: Ensure idempotence for prepend
+  assert:
+    that:
+    - prepend_idempotence is not changed
+    - prepend_idempotence.path_value == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
+
+- name: Test prepend existing path
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\PathA
+    prepend: yes
+  register: prepend_existing
+
+- name: Verify prepend existing path
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: prepend_existing_varout
+
+- name: Ensure prepend existing path output
+  assert:
+    that:
+    - prepend_existing is changed
+    - prepend_existing.path_value == "C:\PathA;C:\PrependPath2;C:\PrependPath1;C:\PrependPath"
+    - prepend_existing_varout.stdout_lines[0] == "C:\PathA;C:\PrependPath2;C:\PrependPath1;C:\PrependPath"
+
+- name: Test check mode for prepend
+  check_mode: yes
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\CheckModePath
+    prepend: yes
+  register: check_prepend
+
+- name: Verify check mode for prepend
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: check_prepend_varout
+
+- name: Ensure check mode for prepend output
+  assert:
+    that:
+    - check_prepend is changed
+    - check_prepend.path_value == "C:\CheckModePath;C:\PathA"
+    - check_prepend_varout.stdout_lines[0] == "C:\PathA" # shouldn't have actually changed the value
