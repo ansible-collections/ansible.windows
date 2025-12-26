@@ -11,6 +11,7 @@ $spec = @{
         elements = @{ type = "list"; elements = "str"; required = $true }
         state = @{ type = "str"; choices = "absent", "present"; default = "present" }
         scope = @{ type = "str"; choices = "machine", "user"; default = "machine" }
+        prepend = @{ type = "bool"; default = $false }
     }
     supports_check_mode = $true
 }
@@ -20,6 +21,7 @@ $var_name = $module.Params.name
 $elements = $module.Params.elements
 $state = $module.Params.state
 $scope = $module.Params.scope
+$prepend = $module.Params.prepend
 
 $check_mode = $module.CheckMode
 
@@ -42,8 +44,7 @@ Function Get-IndexOfPathElement ($list, [string]$value) {
 }
 
 # alters list in place, returns true if at least one element was added
-Function Add-Element ($existing_elements, $elements_to_add) {
-    $last_idx = -1
+Function Add-Element ($existing_elements, $elements_to_add, $prepend) {
     $changed = $false
 
     ForEach ($el in $elements_to_add) {
@@ -51,17 +52,20 @@ Function Add-Element ($existing_elements, $elements_to_add) {
 
         # add missing elements at the end
         If ($idx -eq -1) {
-            $last_idx = $existing_elements.Add($el)
+            # prepend the element if requested
+            If ($prepend) {
+                $existing_elements.Insert(0, $el) | Out-Null
+            }
+            Else {
+                $existing_elements.Add($el) | Out-Null
+            }
             $changed = $true
         }
-        ElseIf ($idx -lt $last_idx) {
+        ElseIf ($prepend -and $idx -ne 0) {
+            # element exists but is not at the top, move it to the top
             $existing_elements.RemoveAt($idx) | Out-Null
-            $existing_elements.Add($el) | Out-Null
-            $last_idx = $existing_elements.Count - 1
+            $existing_elements.Insert(0, $el) | Out-Null
             $changed = $true
-        }
-        Else {
-            $last_idx = $idx
         }
     }
 
@@ -195,7 +199,7 @@ If ($state -eq "absent") {
     $module.Result.changed = Remove-Element $existing_elements $elements
 }
 ElseIf ($state -eq "present") {
-    $module.Result.changed = Add-Element $existing_elements $elements
+    $module.Result.changed = Add-Element $existing_elements $elements $prepend
 }
 
 # calculate the new path value from the existing elements
