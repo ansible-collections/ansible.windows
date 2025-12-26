@@ -224,8 +224,8 @@
   assert:
     that:
     - prepend_multiple is changed
-    - prepend_multiple.path_value == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
-    - prepend_multiple_varout.stdout_lines[0] == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
+    - prepend_multiple.path_value == "C:\PrependPath1;C:\PrependPath2;C:\PrependPath;C:\PathA"
+    - prepend_multiple_varout.stdout_lines[0] == "C:\PrependPath1;C:\PrependPath2;C:\PrependPath;C:\PathA"
 
 - name: Test idempotence for prepend
   win_path:
@@ -240,7 +240,7 @@
   assert:
     that:
     - prepend_idempotence is not changed
-    - prepend_idempotence.path_value == "C:\PrependPath2;C:\PrependPath1;C:\PrependPath;C:\PathA"
+    - prepend_idempotence.path_value == "C:\PrependPath1;C:\PrependPath2;C:\PrependPath;C:\PathA"
 
 - name: Test prepend existing path
   win_path:
@@ -258,8 +258,8 @@
   assert:
     that:
     - prepend_existing is changed
-    - prepend_existing.path_value == "C:\PathA;C:\PrependPath2;C:\PrependPath1;C:\PrependPath"
-    - prepend_existing_varout.stdout_lines[0] == "C:\PathA;C:\PrependPath2;C:\PrependPath1;C:\PrependPath"
+    - prepend_existing.path_value == "C:\PathA;C:\PrependPath1;C:\PrependPath2;C:\PrependPath"
+    - prepend_existing_varout.stdout_lines[0] == "C:\PathA;C:\PrependPath1;C:\PrependPath2;C:\PrependPath"
 
 - name: Test check mode for prepend
   check_mode: yes
@@ -278,8 +278,8 @@
   assert:
     that:
     - check_prepend is changed
-    - check_prepend.path_value == "C:\CheckModePath;C:\PathA"
-    - check_prepend_varout.stdout_lines[0] == "C:\PathA" # shouldn't have actually changed the value
+    - check_prepend.path_value == "C:\CheckModePath;C:\PathA;C:\PrependPath1;C:\PrependPath2;C:\PrependPath"
+    - check_prepend_varout.stdout_lines[0] == "C:\PathA;C:\PrependPath1;C:\PrependPath2;C:\PrependPath" # shouldn't have actually changed the value
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'

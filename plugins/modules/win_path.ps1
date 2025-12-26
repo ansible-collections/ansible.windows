@@ -46,6 +46,7 @@ Function Get-IndexOfPathElement ($list, [string]$value) {
 # alters list in place, returns true if at least one element was added
 Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
     $last_idx = -1
+    $prepend_idx = 0
     $changed = $false
 
     ForEach ($el in $elements_to_add) {
@@ -55,27 +56,34 @@ Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
         If ($idx -eq -1) {
             # prepend the element if requested
             If ($prepend_elements) {
-                $existing_elements.Insert(0, $el) | Out-Null
+                $existing_elements.Insert($prepend_idx, $el) | Out-Null
+                $prepend_idx++
             }
             Else {
                 $last_idx = $existing_elements.Add($el)
             }
             $changed = $true
         }
-        ElseIf ($prepend_elements -and $idx -ne 0) {
+        ElseIf ($prepend_elements -and $idx -ne $prepend_idx) {
             # element exists but is not at the top, move it to the top
             $existing_elements.RemoveAt($idx) | Out-Null
-            $existing_elements.Insert(0, $el) | Out-Null
+            $existing_elements.Insert($prepend_idx, $el) | Out-Null
+            $prepend_idx++
             $changed = $true
         }
-        ElseIf ($idx -lt $last_idx) {
+        ElseIf (-not $prepend_elements -and $idx -lt $last_idx) {
             $existing_elements.RemoveAt($idx) | Out-Null
             $existing_elements.Add($el) | Out-Null
             $last_idx = $existing_elements.Count - 1
             $changed = $true
         }
         Else {
-            $last_idx = $idx
+            If ($prepend_elements) {
+                $prepend_idx++
+            }
+            Else {
+                $last_idx = $idx
+            }
         }
     }
 
