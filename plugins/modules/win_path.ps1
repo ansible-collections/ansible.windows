@@ -55,7 +55,7 @@ Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
         If ($idx -eq -1) {
             # prepend the element if requested
             If ($prepend_elements) {
-                $last_idx = $existing_elements.Insert(0, $el)
+                $existing_elements.Insert(0, $el) | Out-Null
             }
             Else {
                 $last_idx = $existing_elements.Add($el)
@@ -66,6 +66,12 @@ Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
             # element exists but is not at the top, move it to the top
             $existing_elements.RemoveAt($idx) | Out-Null
             $existing_elements.Insert(0, $el) | Out-Null
+            $changed = $true
+        }
+        ElseIf ($idx -lt $last_idx) {
+            $existing_elements.RemoveAt($idx) | Out-Null
+            $existing_elements.Add($el) | Out-Null
+            $last_idx = $existing_elements.Count - 1
             $changed = $true
         }
         Else {
