@@ -1,6 +1,6 @@
 ---
 features:
-  - |
+  - >-
     The ``ansible.windows.win_path`` module now supports a ``prepend`` parameter.
     When set, the specified path elements are enforced as an ordered block at the
     beginning of the target environment variable. Existing matching elements are
