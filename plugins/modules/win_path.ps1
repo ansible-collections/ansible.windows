@@ -45,6 +45,7 @@ Function Get-IndexOfPathElement ($list, [string]$value) {
 
 # alters list in place, returns true if at least one element was added
 Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
+    $last_idx = -1
     $changed = $false
 
     ForEach ($el in $elements_to_add) {
@@ -54,10 +55,10 @@ Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
         If ($idx -eq -1) {
             # prepend the element if requested
             If ($prepend_elements) {
-                $existing_elements.Insert(0, $el) | Out-Null
+                $last_idx = $existing_elements.Insert(0, $el)
             }
             Else {
-                $existing_elements.Add($el) | Out-Null
+                $last_idx = $existing_elements.Add($el)
             }
             $changed = $true
         }
@@ -66,6 +67,9 @@ Function Add-Element ($existing_elements, $elements_to_add, $prepend_elements) {
             $existing_elements.RemoveAt($idx) | Out-Null
             $existing_elements.Insert(0, $el) | Out-Null
             $changed = $true
+        }
+        Else {
+            $last_idx = $idx
         }
     }
 
