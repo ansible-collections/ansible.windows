@@ -29,6 +29,11 @@ options:
     type: list
     elements: str
     required: yes
+  prepend:
+    description:
+      - Whether the path elements specified in C(elements) should be prepended to the path.
+    type: bool
+    default: false
   state:
     description:
       - Whether the path elements specified in C(elements) should be present or absent.
@@ -41,11 +46,6 @@ options:
     type: str
     choices: [ machine, user ]
     default: machine
-  prepend:
-    description:
-      - Whether the path elements specified in C(elements) should be prepended to the path.
-    type: bool
-    default: false
 notes:
    - This module is for modifying individual elements of path-like
      environment variables. For general-purpose management of other
