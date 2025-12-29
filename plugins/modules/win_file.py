@@ -32,6 +32,30 @@ options:
         modification times (similar to the way C(touch) works from the command line).
     type: str
     choices: [ absent, directory, file, touch ]
+  modification_time:
+    description:
+      - The desired modification time for the file or directory.
+      - Should be V(preserve) when no modification is required, C(yyyyMMddHHmm.ss) when using default time format, or V(now).
+      - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
+    type: str
+  modification_time_format:
+    description:
+      - The format to use when parsing C(modification_time).
+      - Defaults to C(yyyyMMddHHmm.ss).
+    type: str
+    default: yyyyMMddHHmm.ss
+  access_time:
+    description:
+      - The desired access time for the file or directory.
+      - Should be V(preserve) when no modification is required, C(yyyyMMddHHmm.ss) when using default time format, or V(now).
+      - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
+    type: str
+  access_time_format:
+    description:
+      - The format to use when parsing C(access_time).
+      - Defaults to C(yyyyMMddHHmm.ss).
+    type: str
+    default: yyyyMMddHHmm.ss
 seealso:
 - module: ansible.builtin.file
 - module: ansible.windows.win_acl
@@ -62,4 +86,25 @@ EXAMPLES = r'''
   ansible.windows.win_file:
     path: C:\Temp
     state: absent
+
+- name: Touch a file and set modification and access times to now
+  ansible.windows.win_file:
+    path: C:\Temp\foo.conf
+    state: touch
+    modification_time: now
+    access_time: now
+
+- name: Set specific modification and access times for a file
+  ansible.windows.win_file:
+    path: C:\Temp\foo.conf
+    state: touch
+    modification_time: 20251229T123456
+    access_time: 20251229T123456
+
+- name: Create a directory and set timestamps
+  ansible.windows.win_file:
+    path: C:\Temp\folder
+    state: directory
+    modification_time: now
+    access_time: now
 '''
