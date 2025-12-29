@@ -13,6 +13,10 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
 
+$access_time = Get-AnsibleParam -obj $params -name "access_time" -type "str"
+$access_time_format = Get-AnsibleParam -obj $params -name "access_time_format" -type "str" -default "yyyyMMddHHmm.ss"
+$modification_time = Get-AnsibleParam -obj $params -name "modification_time" -type "str"
+$modification_time_format = Get-AnsibleParam -obj $params -name "modification_time_format" -type "str" -default "yyyyMMddHHmm.ss"
 $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest", "name"
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch"
 
@@ -24,6 +28,45 @@ if ((Test-Path -LiteralPath $path -PathType Container) -and ($null -ne $original
 
 $result = @{
     changed = $false
+}
+
+# Normalize the defaults for access_time and modification_time based on state
+if ($state -eq "touch") {
+    if ($null -eq $modification_time) {
+        $modification_time = "now"
+    }
+    if ($null -eq $access_time) {
+        $access_time = "now"
+    }
+}
+else {
+    if ($null -eq $modification_time) {
+        $modification_time = "preserve"
+    }
+    if ($null -eq $access_time) {
+        $access_time = "preserve"
+    }
+}
+
+# validate correct values of mtime and atime
+$validSpecial = @("now", "preserve")
+
+if ($access_time -notin $validSpecial) {
+    try {
+        [datetime]::ParseExact($access_time, $access_time_format, $null) | Out-Null
+    }
+    catch {
+        Fail-Json $result "Invalid access_time '$($access_time)'"
+    }
+}
+
+if ($modification_time -notin $validSpecial) {
+    try {
+        [datetime]::ParseExact($modification_time, $modification_time_format, $null) | Out-Null
+    }
+    catch {
+        Fail-Json $result "Invalid modification_time '$($modification_time)'"
+    }
 }
 
 # Used to delete symlinks as powershell cannot delete broken symlinks
@@ -66,7 +109,7 @@ function Remove-File($file, $checkmode) {
             }
             else {
                 if (-not $checkmode) {
-                    [Ansible.Command.SymlinkHelper]::DeleteFile($file.FullName)
+                    [Ansible.Command.SymLinkHelper]::DeleteFile($file.FullName)
                 }
             }
         }
@@ -89,16 +132,67 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
+function Update-Timestamps {
+    param (
+        [string]$Path,
+        [string]$ModificationTime,
+        [string]$ModificationTimeFormat,
+        [string]$AccessTime,
+        [string]$AccessTimeFormat,
+        [bool]$CheckMode
+    )
+    $changed = $false
+    $file = Get-Item -LiteralPath $Path -Force
+    try {
+        if ($ModificationTime -ne "preserve") {
+            if ($ModificationTime -eq "now") {
+                $newMTime = Get-Date
+            }
+            else {
+                $newMTime = [datetime]::ParseExact($ModificationTime, $ModificationTimeFormat, $null)
+            }
+
+            if ($file.LastWriteTime -ne $newMTime) {
+                if (-not $CheckMode) {
+                    $file.LastWriteTime = $newMTime
+                }
+                $changed = $true
+            }
+        }
+
+        if ($AccessTime -ne "preserve") {
+            if ($AccessTime -eq "now") {
+                $newATime = Get-Date
+            }
+            else {
+                $newATime = [datetime]::ParseExact($AccessTime, $AccessTimeFormat, $null)
+            }
+
+            if ($file.LastAccessTime -ne $newATime) {
+                if (-not $CheckMode) {
+                    $file.LastAccessTime = $newATime
+                }
+                $changed = $true
+            }
+        }
+    }
+    catch [Exception] {
+        Fail-Json $result "Failed to update timestamps on $Path: $($_.Exception.Message)"
+    }
+    return $changed
+}
 
 if ($state -eq "touch") {
     if (Test-Path -LiteralPath $path) {
-        if (-not $check_mode) {
-            (Get-ChildItem -LiteralPath $path).LastWriteTime = Get-Date
-        }
-        $result.changed = $true
+        $result.changed = Update-Timestamps -Path $path -ModificationTime $modification_time `
+        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
+        -AccessTimeFormat $access_time_format -CheckMode $check_mode
     }
     else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
+        Update-Timestamps -Path $path -ModificationTime $modification_time `
+        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
+        -AccessTimeFormat $access_time_format -CheckMode $check_mode
         $result.changed = $true
     }
 }
@@ -149,7 +243,9 @@ else {
                 Fail-Json $result $_.Exception.Message
             }
         }
-        $result.changed = $true
+        $result.changed = Update-Timestamps -Path $path -ModificationTime $modification_time `
+        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
+        -AccessTimeFormat $access_time_format -CheckMode $check_mode
     }
     elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"
