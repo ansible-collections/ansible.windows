@@ -69,6 +69,16 @@ if ($modification_time -notin $validSpecial) {
     }
 }
 
+# var for Update-Timestamp function
+$updateTimestamp = @{
+    Path = $path
+    ModificationTime = $modification_time
+    ModificationTimeFormat = $modification_time_format
+    AccessTime = $access_time
+    AccessTimeFormat = $access_time_format
+    CheckMode = $check_mode
+}
+
 # Used to delete symlinks as powershell cannot delete broken symlinks
 Add-CSharpType -TempPath $_remote_tmp -References @'
 using System;
@@ -132,7 +142,7 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
-function Update-Timestamps {
+function Update-Timestamp {
     param (
         [string]$Path,
         [string]$ModificationTime,
@@ -177,22 +187,18 @@ function Update-Timestamps {
         }
     }
     catch [Exception] {
-        Fail-Json $result "Failed to update timestamps on $Path: $($_.Exception.Message)"
+        Fail-Json $result "Failed to update timestamps on $($Path): $($_.Exception.Message)"
     }
     return $changed
 }
 
 if ($state -eq "touch") {
     if (Test-Path -LiteralPath $path) {
-        $result.changed = Update-Timestamps -Path $path -ModificationTime $modification_time `
-        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
-        -AccessTimeFormat $access_time_format -CheckMode $check_mode
+        $result.changed = Update-Timestamp @updateTimestamp
     }
     else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
-        Update-Timestamps -Path $path -ModificationTime $modification_time `
-        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
-        -AccessTimeFormat $access_time_format -CheckMode $check_mode
+        Update-Timestamp @updateTimestamp
         $result.changed = $true
     }
 }
@@ -243,9 +249,7 @@ else {
                 Fail-Json $result $_.Exception.Message
             }
         }
-        $result.changed = Update-Timestamps -Path $path -ModificationTime $modification_time `
-        -ModificationTimeFormat $modification_time_format -AccessTime $access_time `
-        -AccessTimeFormat $access_time_format -CheckMode $check_mode
+        $result.changed = Update-Timestamp @updateTimestamp
     }
     elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"
