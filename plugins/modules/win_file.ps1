@@ -200,8 +200,8 @@ if ($state -eq "touch") {
     }
     else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
-        Update-Timestamp @updateTimestamp
         $result.changed = $true
+        $result.changed = ($result.changed -or (Update-Timestamp @updateTimestamp))
     }
 }
 
@@ -251,7 +251,8 @@ else {
                 Fail-Json $result $_.Exception.Message
             }
         }
-        $result.changed = Update-Timestamp @updateTimestamp
+        $result.changed = $true
+        $result.changed = ($result.changed -or (Update-Timestamp @updateTimestamp))
     }
     elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"
