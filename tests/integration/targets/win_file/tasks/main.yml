@@ -650,7 +650,7 @@
 
 - name: create directory and set modification and access times
   win_file:
-    path: "{{ remote_tmp_dir }}\test_directory"
+    path: '{{ remote_tmp_dir }}\test_directory'
     state: directory
     modification_time: "2025-12-30 12:00:00"
     access_time: "2025-12-29 13:00:00"
@@ -658,7 +658,7 @@
 
 - name: verify directory exists
   win_stat:
-    path: "{{ remote_tmp_dir }}\test_directory"
+    path: '{{ remote_tmp_dir }}\test_directory'
   register: stat_result
 
 - name: get directory timestamp
