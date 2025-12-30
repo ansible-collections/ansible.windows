@@ -628,7 +628,7 @@
 
 - name: get file timestamp
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -663,7 +663,7 @@
 
 - name: get directory timestamp
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_directory"
+    $file = Get-Item "{{ remote_tmp_dir }}\test_directory";
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -704,7 +704,7 @@
 
 - name: get file timestamp before preserve
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -732,7 +732,7 @@
 
 - name: get file timestamp after preserve (preserve mode)
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
