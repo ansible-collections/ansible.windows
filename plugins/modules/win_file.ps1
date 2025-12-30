@@ -14,9 +14,9 @@ $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
 
 $access_time = Get-AnsibleParam -obj $params -name "access_time" -type "str"
-$access_time_format = Get-AnsibleParam -obj $params -name "access_time_format" -type "str" -default "yyyyMMddHHmm.ss"
+$access_time_format = Get-AnsibleParam -obj $params -name "access_time_format" -type "str" -default "yyyy-MM-dd HH:mm:ss"
 $modification_time = Get-AnsibleParam -obj $params -name "modification_time" -type "str"
-$modification_time_format = Get-AnsibleParam -obj $params -name "modification_time_format" -type "str" -default "yyyyMMddHHmm.ss"
+$modification_time_format = Get-AnsibleParam -obj $params -name "modification_time_format" -type "str" -default "yyyy-MM-dd HH:mm:ss"
 $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest", "name"
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch"
 

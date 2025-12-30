@@ -35,27 +35,27 @@ options:
   modification_time:
     description:
       - The desired modification time for the file or directory.
-      - Should be V(preserve) when no modification is required, C(yyyyMMddHHmm.ss) when using default time format, or V(now).
+      - Should be V(preserve) when no modification is required, C(yyyy-MM-dd HH:mm:ss) when using default time format, or V(now).
       - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
     type: str
   modification_time_format:
     description:
       - The format to use when parsing C(modification_time).
-      - Defaults to C(yyyyMMddHHmm.ss).
+      - Defaults to C(yyyy-MM-dd HH:mm:ss).
     type: str
-    default: yyyyMMddHHmm.ss
+    default: yyyy-MM-dd HH:mm:ss
   access_time:
     description:
       - The desired access time for the file or directory.
-      - Should be V(preserve) when no modification is required, C(yyyyMMddHHmm.ss) when using default time format, or V(now).
+      - Should be V(preserve) when no modification is required, C(yyyy-MM-dd HH:mm:ss) when using default time format, or V(now).
       - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
     type: str
   access_time_format:
     description:
       - The format to use when parsing C(access_time).
-      - Defaults to C(yyyyMMddHHmm.ss).
+      - Defaults to C(yyyy-MM-dd HH:mm:ss).
     type: str
-    default: yyyyMMddHHmm.ss
+    default: yyyy-MM-dd HH:mm:ss
 seealso:
 - module: ansible.builtin.file
 - module: ansible.windows.win_acl
