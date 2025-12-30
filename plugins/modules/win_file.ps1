@@ -152,7 +152,9 @@ function Update-Timestamp {
         [bool]$CheckMode
     )
     $changed = $false
-    $file = Get-Item -LiteralPath $Path -Force
+    if (Test-Path -LiteralPath $Path) {
+        $file = Get-Item -LiteralPath $Path -Force
+    }
     try {
         if ($ModificationTime -ne "preserve") {
             if ($ModificationTime -eq "now") {
