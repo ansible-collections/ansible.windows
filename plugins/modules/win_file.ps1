@@ -195,13 +195,19 @@ function Update-Timestamp {
 }
 
 if ($state -eq "touch") {
+    $newCreation = $false
     if (Test-Path -LiteralPath $path) {
         $result.changed = Update-Timestamp @updateTimestamp
     }
     else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
+        $newCreation = $true
         $result.changed = $true
-        $result.changed = ($result.changed -or (Update-Timestamp @updateTimestamp))
+    }
+    # Bug with powershell, if you try to update the timestamp in same filesystem operation as
+    # in creation it will fail to do so, so we have to do it in two steps
+    if ($newCreation) {
+        $result.changed = Update-Timestamp @updateTimestamp
     }
 }
 

@@ -1,0 +1,12 @@
+---
+bugfixes:
+  - >-
+    win_file - Fix idempotency issues when using ``state: touch``
+    (https://github.com/ansible-collections/ansible.windows/issues/798)
+
+minor_changes:
+  - >-
+    win_file - is aligned with ``ansible.builtin.file`` and now supports options
+    ``access_time``, ``access_time_format``, ``modification_time``,
+    and ``modification_time_format``.
+    (https://github.com/ansible-collections/ansible.windows/issues/798)
