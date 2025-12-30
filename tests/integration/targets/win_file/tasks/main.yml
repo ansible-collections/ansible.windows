@@ -615,7 +615,7 @@
 
 - name: create file and set modification and access times
   win_file:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
     state: touch
     modification_time: "2025-12-30 12:00:00"
     access_time: "2025-12-29 13:00:00"
@@ -623,12 +623,12 @@
 
 - name: verify file exists
   win_stat:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
   register: stat_result
 
 - name: get file timestamp
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}/test_file.txt"
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -645,12 +645,12 @@
 
 - name: clean up test file
   win_file:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
     state: absent
 
 - name: create directory and set modification and access times
   win_file:
-    path: '{{ remote_tmp_dir }}\test_directory'
+    path: '{{ remote_tmp_dir }}/test_directory'
     state: directory
     modification_time: "2025-12-30 12:00:00"
     access_time: "2025-12-29 13:00:00"
@@ -658,12 +658,12 @@
 
 - name: verify directory exists
   win_stat:
-    path: '{{ remote_tmp_dir }}\test_directory'
+    path: '{{ remote_tmp_dir }}/test_directory'
   register: stat_result
 
 - name: get directory timestamp
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_directory"
+    $file = Get-Item "{{ remote_tmp_dir }}/test_directory"
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -680,12 +680,12 @@
 
 - name: clean up test directory
   win_file:
-    path: '{{ remote_tmp_dir }}\test_directory'
+    path: '{{ remote_tmp_dir }}/test_directory'
     state: absent
 
 - name: touch a file with known timestamp
   win_file:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
     state: touch
     modification_time: "2025-12-30 12:00:00"
     access_time: "2025-12-29 13:00:00"
@@ -693,7 +693,7 @@
 
 - name: verify file exists
   win_stat:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
   register: stat_result
 
 - name: check file exists
@@ -704,7 +704,7 @@
 
 - name: get file timestamp before preserve
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}/test_file.txt"
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -713,7 +713,7 @@
 
 - name: touch the file again (preserve mode)
   win_file:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
     state: touch
     modification_time: "preserve"
     access_time: "preserve"
@@ -721,7 +721,7 @@
 
 - name: verify file exists (preserve mode)
   win_stat:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
   register: stat_result
 
 - name: check file exists (preserve mode)
@@ -732,7 +732,7 @@
 
 - name: get file timestamp after preserve (preserve mode)
   win_shell: >-
-    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt"
+    $file = Get-Item "{{ remote_tmp_dir }}/test_file.txt"
     @{
       mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
       aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -747,5 +747,5 @@
 
 - name: clean up test file
   win_file:
-    path: '{{ remote_tmp_dir }}\test_file.txt'
+    path: '{{ remote_tmp_dir }}/test_file.txt'
     state: absent
