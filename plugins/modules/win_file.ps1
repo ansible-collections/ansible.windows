@@ -205,7 +205,7 @@ if ($state -eq "touch") {
         $result.changed = $true
     }
     # Bug with powershell, if you try to update the timestamp in same filesystem operation as
-    # in creation it will fail to do so, so we have to do it in two steps
+    # in creation it will be unable to do so, reason we have to do it in two steps
     if ($newCreation) {
         $result.changed = Update-Timestamp @updateTimestamp
     }
@@ -243,22 +243,33 @@ else {
     }
 
     if ($state -eq "directory") {
-        try {
-            New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
-        }
-        catch {
-            if ($_.CategoryInfo.Category -eq "ResourceExists") {
-                $fileinfo = Get-Item -LiteralPath $_.CategoryInfo.TargetName
-                if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
-                    Fail-Json $result "path $path is not a directory"
+        $newCreation = $false
+        if (-not $newCreation) {
+            try {
+                New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
+                $newCreation = $true
+            }
+            catch {
+                if ($_.CategoryInfo.Category -eq "ResourceExists") {
+                    $fileinfo = Get-Item -LiteralPath $_.CategoryInfo.TargetName
+                    if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
+                        Fail-Json $result "path $path is not a directory"
+                    }
+                }
+                else {
+                    Fail-Json $result $_.Exception.Message
                 }
             }
-            else {
-                Fail-Json $result $_.Exception.Message
-            }
+            $result.changed = $true
         }
-        $result.changed = $true
-        $result.changed = ($result.changed -or (Update-Timestamp @updateTimestamp))
+        # Bug with powershell, if you try to update the timestamp in same filesystem operation as
+        # in creation it will be unable to do so, reason we have to do it in two steps
+        if ($newCreation) {
+            $timestamp = Update-Timestamp @updateTimestamp
+            # or logic as Update-Timestamp may return false if no timestamps were changed
+            # (default preserve) and we still want to report changed = true due to creation
+            $result.changed = ($result.changed -or $timestamp)
+        }
     }
     elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"
