@@ -265,12 +265,8 @@ else {
             }
             $result.changed = $true
         }
-        # Bug with powershell, if you try to update the timestamp in same filesystem operation as
-        # in creation it will be unable to do so, reason we have to do it in two steps
         if ($newCreation) {
             $timestamp = Update-Timestamp @updateTimestamp
-            # OR condition as Update-Timestamp may return false if no timestamps were changed
-            # (default preserve) and we still want to report changed = true due to creation
             $result.changed = ($result.changed -or $timestamp)
         }
     }
