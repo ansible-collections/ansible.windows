@@ -266,6 +266,7 @@ else {
             $result.changed = $true
         }
         if ($newCreation) {
+            # similar logic as with state: touch, need to do in two steps
             $timestamp = Update-Timestamp @updateTimestamp
             $result.changed = ($result.changed -or $timestamp)
         }
