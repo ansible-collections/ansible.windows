@@ -26,6 +26,9 @@ jobs:
             sudo chown -R "$(whoami)" "${PWD}/../../../ansible_collections"
             cp -R "$(Agent.TempDirectory)/ansible_collections"/. "${PWD}/../../../ansible_collections"
           displayName: Set up dependencies
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: "3.10"
         - bash: .azure-pipelines/scripts/run-tests.sh "$(entryPoint)" "${{ job.test }}" "$(coverageBranches)"
           displayName: Run Tests
         - bash: .azure-pipelines/scripts/process-results.sh
