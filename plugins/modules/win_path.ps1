@@ -81,18 +81,18 @@ Function Add-Element ($existing_elements, $elements_to_add, $insert_at) {
                 # if new element then add and reorder in place
                 If ($idx -eq -1) {
                     $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
-                    $insert_anchor_idx++;
+                    $insert_anchor_idx++
                     $changed = $true
                 }
                 ElseIf ($idx -ne $insert_anchor_idx) {
                     # element exists, but a relative reorder is needed
                     $existing_elements.RemoveAt($idx) | Out-Null
                     $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
-                    $insert_anchor_idx++;
+                    $insert_anchor_idx++
                     $changed = $true
                 }
                 Else {
-                    $insert_anchor_idx++;
+                    $insert_anchor_idx++
                 }
             }
         }
