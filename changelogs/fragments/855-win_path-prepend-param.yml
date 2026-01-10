@@ -1,8 +1,7 @@
 ---
 minor_changes:
   - >-
-    The ``ansible.windows.win_path`` module now supports ``prepend`` parameter.
-    When set, the specified path elements are enforced as an ordered block at
-    the beginning of the target environment variable. Existing matching elements
-    are moved to the front while preserving the user-defined order, and repeated
-    runs are idempotent when the desired order is already satisfied.
+    The ``ansible.windows.win_path`` module now supports ``insert_at`` parameter.
+    This parameter allows users to specify whether the provided path elements
+    should be inserted at the start or end of the system PATH variable. The
+    default behavior is to insert at the end.

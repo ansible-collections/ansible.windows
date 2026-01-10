@@ -29,11 +29,12 @@ options:
     type: list
     elements: str
     required: yes
-  prepend:
+  insert_at:
     description:
-      - Whether the path elements specified in C(elements) should be prepended to the path.
-    type: bool
-    default: false
+      - Whether the path elements specified in C(elements) should be inserted at start or at end to the path.
+    type: str
+    choices: [ start, end ]
+    default: end
   state:
     description:
       - Whether the path elements specified in C(elements) should be present or absent.
@@ -76,9 +77,9 @@ EXAMPLES = r'''
     scope: user
     state: absent
 
-- name: Prepend C:\My\Custom\Bin to the system PATH
+- name: Insert C:\My\Custom\Bin to the system PATH at the start
   ansible.windows.win_path:
     name: PATH
     elements: C:\My\Custom\Bin
-    prepend: yes
+    insert_at: start
 '''
