@@ -33,7 +33,7 @@ options:
     description:
       - Whether the path elements specified in C(elements) should be inserted at start or at end to the path.
     type: str
-    choices: [ start, end ]
+    choices: [ end, start ]
     default: end
   state:
     description:

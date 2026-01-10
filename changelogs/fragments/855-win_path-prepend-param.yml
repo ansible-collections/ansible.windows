@@ -3,5 +3,5 @@ minor_changes:
   - >-
     The ``ansible.windows.win_path`` module now supports ``insert_at`` parameter.
     This parameter allows users to specify whether the provided path elements
-    should be inserted at the start or end of the system PATH variable. The
-    default behavior is to insert at the end.
+    should be inserted at the start or end of the specified environment variable.
+    The default behavior is to insert at the end.

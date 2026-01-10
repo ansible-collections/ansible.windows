@@ -11,7 +11,7 @@ $spec = @{
         elements = @{ type = "list"; elements = "str"; required = $true }
         state = @{ type = "str"; choices = "absent", "present"; default = "present" }
         scope = @{ type = "str"; choices = "machine", "user"; default = "machine" }
-        insert_at = @{ type = "str"; choices = "start", "end"; default = "end" }
+        insert_at = @{ type = "str"; choices = "end", "start"; default = "end" }
     }
     supports_check_mode = $true
 }
@@ -69,7 +69,7 @@ Function Add-Element ($existing_elements, $elements_to_add, $insert_at) {
                 If ($idx -ne -1) {
                     $existing_elements.RemoveAt($idx) | Out-Null
                     $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
-                    $insert_anchor_idx--;
+                    $insert_anchor_idx--
                     $changed = $true
                 }
             }

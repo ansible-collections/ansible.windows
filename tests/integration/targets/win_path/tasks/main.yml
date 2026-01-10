@@ -278,8 +278,8 @@
   assert:
     that:
     - check_insert is changed
-    - check_insert.path_value == "C:\CheckModePath;C:\PathA;C:\InsertPath1;C:\InsertPath2;C:\InsertPath"
-    - check_insert_varout.stdout_lines[0] == "C:\PathA;C:\InsertPath1;C:\InsertPath2;C:\InsertPath" # shouldn't have actually changed the value
+    - check_insert.path_value == "C:\CheckModePath;C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1"
+    - check_insert_varout.stdout_lines[0] == "C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1" # shouldn't have actually changed the value
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
