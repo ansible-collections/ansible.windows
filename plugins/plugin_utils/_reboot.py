@@ -186,10 +186,16 @@ if ($%s) {
 $stdout = $null
 $stderr = . { C:\Windows\System32\shutdown.exe /r /t %s /c %s | Set-Variable stdout } 2>&1 | ForEach-Object ToString
 
+If (Get-Variable LASTEXITCODE -ErrorAction SilentlyContinue) {
+    $rc = $LASTEXITCODE
+} Else {
+    $rc=1
+}
+
 ConvertTo-Json -Compress -InputObject @{
     stdout = (@($stdout) -join "`n")
     stderr = (@($stderr) -join "`n")
-    rc = $LASTEXITCODE
+    rc = $rc
 }
 """ % (
         str(not test_command),
