@@ -18,8 +18,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ansible.windows.win_environment module – Modify environment variables on windows hosts" href="win_environment_module.html" />
@@ -204,7 +204,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>By default there are a few builtin resources that come with PowerShell 5.0, See <a class="reference external" href="https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources">https://docs.microsoft.com/en-us/powershell/scripting/dsc/resources/resources</a> for more information on these resources.</p></li>
-<li><p>Custom DSC resources can be installed with <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/community/windows/win_psmodule_module.html#ansible-collections-community-windows-win-psmodule-module" title="(in Ansible vdevel)"><span class="xref std std-ref">community.windows.win_psmodule</span></a> using the <em>name</em> option.</p></li>
+<li><p>Custom DSC resources can be installed with <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/community/windows/win_psmodule_module.html#ansible-collections-community-windows-win-psmodule-module" title="(in Ansible devel)"><span class="xref std std-ref">community.windows.win_psmodule</span></a> using the <em>name</em> option.</p></li>
 <li><p>The DSC engine run’s each task as the SYSTEM account, any resources that need to be accessed with a different account need to have <code class="docutils literal notranslate"><span class="pre">PsDscRunAsCredential</span></code> set.</p></li>
 <li><p>To see the valid options for a DSC resource, run the module with <code class="docutils literal notranslate"><span class="pre">-vvv</span></code> to show the possible module invocation. Default values are not shown in this output but are applied within the DSC engine.</p></li>
 <li><p>The DSC engine requires the HTTP WSMan listener to be online and its port configured as the default listener for HTTP. This is set up by default but if a custom HTTP port is used or only a HTTPS listener is present then the module will fail. See the examples for a way to check this out in PowerShell.</p></li>
@@ -299,7 +299,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </section>
 <section id="return-values">
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
-<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible vdevel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible devel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
 <table class="longtable ansible-option-table docutils align-default" style="width: 100%">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
