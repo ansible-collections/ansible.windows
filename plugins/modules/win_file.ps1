@@ -48,35 +48,41 @@ else {
     }
 }
 
-# validate correct values of mtime and atime
-$validSpecial = @("now", "preserve")
+# var for Update-Timestamp function
+$updateTimestamp = @{
+    Path = $path
+    ModificationTime = $null
+    AccessTime = $null
+    CheckMode = $check_mode
+}
 
-if ($access_time -notin $validSpecial) {
+# validate correct values of mtime and atime
+if ($access_time -eq "now") {
+    $updateTimestamp.AccessTime = [datetime]::SpecifyKind((Get-Date), [System.DateTimeKind]::Local)
+}
+elseif ($access_time -ne "preserve") {
     try {
-        [datetime]::ParseExact($access_time, $access_time_format, $null) | Out-Null
+        $updateTimestamp.AccessTime = [datetime]::ParseExact($access_time, $access_time_format, $null)
+        # normalize parsed timestamp as local time
+        $updateTimestamp.AccessTime = [datetime]::SpecifyKind($updateTimestamp.AccessTime, [System.DateTimeKind]::Local)
     }
     catch {
         Fail-Json $result "Invalid access_time '$($access_time)'"
     }
 }
 
-if ($modification_time -notin $validSpecial) {
+if ($modification_time -eq "now") {
+    $updateTimestamp.ModificationTime = [datetime]::SpecifyKind((Get-Date), [System.DateTimeKind]::Local)
+}
+elseif ($modification_time -ne "preserve") {
     try {
-        [datetime]::ParseExact($modification_time, $modification_time_format, $null) | Out-Null
+        $updateTimestamp.ModificationTime = [datetime]::ParseExact($modification_time, $modification_time_format, $null)
+        # normalize parsed timestamp as local time
+        $updateTimestamp.ModificationTime = [datetime]::SpecifyKind($updateTimestamp.ModificationTime, [System.DateTimeKind]::Local)
     }
     catch {
         Fail-Json $result "Invalid modification_time '$($modification_time)'"
     }
-}
-
-# var for Update-Timestamp function
-$updateTimestamp = @{
-    Path = $path
-    ModificationTime = $modification_time
-    ModificationTimeFormat = $modification_time_format
-    AccessTime = $access_time
-    AccessTimeFormat = $access_time_format
-    CheckMode = $check_mode
 }
 
 # Used to delete symlinks as powershell cannot delete broken symlinks
@@ -142,13 +148,12 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
+# TODO: capability to support parsing in different timezones for atime/mtime
 function Update-Timestamp {
     param (
         [string]$Path,
-        [string]$ModificationTime,
-        [string]$ModificationTimeFormat,
-        [string]$AccessTime,
-        [string]$AccessTimeFormat,
+        [Nullable[DateTime]]$ModificationTime,
+        [Nullable[DateTime]]$AccessTime,
         [bool]$CheckMode
     )
     $changed = $false
@@ -156,36 +161,18 @@ function Update-Timestamp {
         $file = Get-Item -LiteralPath $Path -Force
     }
     try {
-        if ($ModificationTime -ne "preserve") {
-            if ($ModificationTime -eq "now") {
-                $newMTime = Get-Date
+        if ($ModificationTime -and $ModificationTime -ne $file.LastWriteTime) {
+            if (-not $CheckMode) {
+                $file.LastWriteTime = $ModificationTime
             }
-            else {
-                $newMTime = [datetime]::ParseExact($ModificationTime, $ModificationTimeFormat, $null)
-            }
-
-            if ($file.LastWriteTime -ne $newMTime) {
-                if (-not $CheckMode) {
-                    $file.LastWriteTime = $newMTime
-                }
-                $changed = $true
-            }
+            $changed = $true
         }
 
-        if ($AccessTime -ne "preserve") {
-            if ($AccessTime -eq "now") {
-                $newATime = Get-Date
+        if ($AccessTime -and $AccessTime -ne $file.LastAccessTime) {
+            if (-not $CheckMode) {
+                $file.LastAccessTime = $AccessTime
             }
-            else {
-                $newATime = [datetime]::ParseExact($AccessTime, $AccessTimeFormat, $null)
-            }
-
-            if ($file.LastAccessTime -ne $newATime) {
-                if (-not $CheckMode) {
-                    $file.LastAccessTime = $newATime
-                }
-                $changed = $true
-            }
+            $changed = $true
         }
     }
     catch [Exception] {
