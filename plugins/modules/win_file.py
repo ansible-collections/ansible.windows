@@ -11,6 +11,9 @@ short_description: Creates, touches or removes files or directories
 description:
      - Creates (empty) files, updates file modification stamps of existing files,
        and can create or remove directories.
+     - Timestamp values are interpreted as local time on the target Windows system.
+     - Internally, Windows stores file timestamps in UTC, but this module operates exclusively using
+       local time semantics.
      - Unlike M(ansible.builtin.file), does not modify ownership, permissions or manipulate links.
      - For non-Windows targets, use the M(ansible.builtin.file) module instead.
 options:
@@ -35,27 +38,35 @@ options:
   modification_time:
     description:
       - The desired modification time for the file or directory.
-      - Should be V(preserve) when no modification is required, C(yyyy-MM-dd HH:mm:ss) when using default time format, or V(now).
-      - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
+      - A DateTime string in the format specified by O(modification_time_format).
+      - The timestamp is interpreted as **local time no the target system**.
+      - Timezone offsets are not supported.
+      - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
+    version_added: 3.4.0
   modification_time_format:
     description:
       - The format to use when parsing C(modification_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
     type: str
     default: yyyy-MM-dd HH:mm:ss
+    version_added: 3.4.0
   access_time:
     description:
       - The desired access time for the file or directory.
-      - Should be V(preserve) when no modification is required, C(yyyy-MM-dd HH:mm:ss) when using default time format, or V(now).
-      - Default is Null meaning that V(preserve) is the default for O(state=[file,directory]) and V(now) is default for O(state=touch).
+      - A DateTime string in the format specified by O(access_time_format).
+      - The timestamp is interpreted as **local time no the target system**.
+      - Timezone offsets are not supported.
+      - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
+    version_added: 3.4.0
   access_time_format:
     description:
       - The format to use when parsing C(access_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
     type: str
     default: yyyy-MM-dd HH:mm:ss
+    version_added: 3.4.0
 seealso:
 - module: ansible.builtin.file
 - module: ansible.windows.win_acl
@@ -98,10 +109,10 @@ EXAMPLES = r'''
   ansible.windows.win_file:
     path: C:\Temp\foo.conf
     state: touch
-    modification_time: 20251229T123456
-    access_time: 20251229T123456
+    modification_time: "2025-12-29 12:34:56"
+    access_time: "2025-12-29 12:34:56"
 
-- name: Create a directory and set timestamps
+- name: Create a directory and set the timestamps to now
   ansible.windows.win_file:
     path: C:\Temp\folder
     state: directory
