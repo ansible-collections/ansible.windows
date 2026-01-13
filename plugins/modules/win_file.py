@@ -39,7 +39,7 @@ options:
     description:
       - The desired modification time for the file or directory.
       - A DateTime string in the format specified by O(modification_time_format).
-      - The timestamp is interpreted as **local time no the target system**.
+      - The timestamp is interpreted as local time on the target system.
       - Timezone offsets are not supported.
       - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
@@ -55,7 +55,7 @@ options:
     description:
       - The desired access time for the file or directory.
       - A DateTime string in the format specified by O(access_time_format).
-      - The timestamp is interpreted as **local time no the target system**.
+      - The timestamp is interpreted as local time on the target system.
       - Timezone offsets are not supported.
       - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
@@ -75,6 +75,7 @@ seealso:
 - module: ansible.windows.win_stat
 author:
 - Jon Hawkesworth (@jhawkesworth)
+- Bishal Prasad (@bishalprasad321)
 '''
 
 EXAMPLES = r'''
