@@ -13,6 +13,10 @@ $params = Parse-Args $args -supports_check_mode $true
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
 
+$access_time = Get-AnsibleParam -obj $params -name "access_time" -type "str"
+$access_time_format = Get-AnsibleParam -obj $params -name "access_time_format" -type "str" -default "yyyy-MM-dd HH:mm:ss"
+$modification_time = Get-AnsibleParam -obj $params -name "modification_time" -type "str"
+$modification_time_format = Get-AnsibleParam -obj $params -name "modification_time_format" -type "str" -default "yyyy-MM-dd HH:mm:ss"
 $path = Get-AnsibleParam -obj $params -name "path" -type "path" -failifempty $true -aliases "dest", "name"
 $state = Get-AnsibleParam -obj $params -name "state" -type "str" -validateset "absent", "directory", "file", "touch"
 
@@ -24,6 +28,61 @@ if ((Test-Path -LiteralPath $path -PathType Container) -and ($null -ne $original
 
 $result = @{
     changed = $false
+}
+
+# Normalize the defaults for access_time and modification_time based on state
+if ($state -eq "touch") {
+    if ($null -eq $modification_time) {
+        $modification_time = "now"
+    }
+    if ($null -eq $access_time) {
+        $access_time = "now"
+    }
+}
+else {
+    if ($null -eq $modification_time) {
+        $modification_time = "preserve"
+    }
+    if ($null -eq $access_time) {
+        $access_time = "preserve"
+    }
+}
+
+# var for Update-Timestamp function
+$updateTimestamp = @{
+    Path = $path
+    ModificationTime = $null
+    AccessTime = $null
+    CheckMode = $check_mode
+}
+
+# validate correct values of mtime and atime
+if ($access_time -eq "now") {
+    $updateTimestamp.AccessTime = [datetime]::SpecifyKind((Get-Date), [System.DateTimeKind]::Local)
+}
+elseif ($access_time -ne "preserve") {
+    try {
+        $updateTimestamp.AccessTime = [datetime]::ParseExact($access_time, $access_time_format, $null)
+        # normalize parsed timestamp as local time
+        $updateTimestamp.AccessTime = [datetime]::SpecifyKind($updateTimestamp.AccessTime, [System.DateTimeKind]::Local)
+    }
+    catch {
+        Fail-Json $result "Invalid access_time '$($access_time)'"
+    }
+}
+
+if ($modification_time -eq "now") {
+    $updateTimestamp.ModificationTime = [datetime]::SpecifyKind((Get-Date), [System.DateTimeKind]::Local)
+}
+elseif ($modification_time -ne "preserve") {
+    try {
+        $updateTimestamp.ModificationTime = [datetime]::ParseExact($modification_time, $modification_time_format, $null)
+        # normalize parsed timestamp as local time
+        $updateTimestamp.ModificationTime = [datetime]::SpecifyKind($updateTimestamp.ModificationTime, [System.DateTimeKind]::Local)
+    }
+    catch {
+        Fail-Json $result "Invalid modification_time '$($modification_time)'"
+    }
 }
 
 # Used to delete symlinks as powershell cannot delete broken symlinks
@@ -66,7 +125,7 @@ function Remove-File($file, $checkmode) {
             }
             else {
                 if (-not $checkmode) {
-                    [Ansible.Command.SymlinkHelper]::DeleteFile($file.FullName)
+                    [Ansible.Command.SymLinkHelper]::DeleteFile($file.FullName)
                 }
             }
         }
@@ -89,17 +148,55 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
+function Update-Timestamp {
+    param (
+        [string]$Path,
+        [Nullable[DateTime]]$ModificationTime,
+        [Nullable[DateTime]]$AccessTime,
+        [bool]$CheckMode
+    )
+    $changed = $false
+    if (Test-Path -LiteralPath $Path) {
+        $file = Get-Item -LiteralPath $Path -Force
+    }
+    try {
+        if ($ModificationTime -and $ModificationTime -ne $file.LastWriteTime) {
+            if (-not $CheckMode) {
+                $file.LastWriteTime = $ModificationTime
+            }
+            $changed = $true
+        }
+
+        if ($AccessTime -and $AccessTime -ne $file.LastAccessTime) {
+            if (-not $CheckMode) {
+                $file.LastAccessTime = $AccessTime
+            }
+            $changed = $true
+        }
+    }
+    catch [Exception] {
+        Fail-Json $result "Failed to update timestamps on $($Path): $($_.Exception.Message)"
+    }
+    return $changed
+}
 
 if ($state -eq "touch") {
+    $newCreation = $false
     if (Test-Path -LiteralPath $path) {
-        if (-not $check_mode) {
-            (Get-ChildItem -LiteralPath $path).LastWriteTime = Get-Date
-        }
-        $result.changed = $true
+        $result.changed = Update-Timestamp @updateTimestamp
     }
     else {
         Write-Output $null | Out-File -LiteralPath $path -Encoding ASCII -WhatIf:$check_mode
+        $newCreation = $true
         $result.changed = $true
+    }
+    # Bug with powershell, if you try to update the timestamp in same filesystem operation as
+    # in creation it will be unable to do so, reason we have to do it in two steps
+    if ($newCreation) {
+        $timestamp = Update-Timestamp @updateTimestamp
+        # OR condition as Update-Timestamp may return false if no timestamps were changed
+        # (default now) and we still want to report changed = true due to creation
+        $result.changed = ($result.changed -or $timestamp)
     }
 }
 
@@ -135,21 +232,30 @@ else {
     }
 
     if ($state -eq "directory") {
-        try {
-            New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
-        }
-        catch {
-            if ($_.CategoryInfo.Category -eq "ResourceExists") {
-                $fileinfo = Get-Item -LiteralPath $_.CategoryInfo.TargetName
-                if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
-                    Fail-Json $result "path $path is not a directory"
+        $newCreation = $false
+        if (-not $newCreation) {
+            try {
+                New-Item -Path $path -ItemType Directory -WhatIf:$check_mode | Out-Null
+                $newCreation = $true
+            }
+            catch {
+                if ($_.CategoryInfo.Category -eq "ResourceExists") {
+                    $fileinfo = Get-Item -LiteralPath $_.CategoryInfo.TargetName
+                    if ($state -eq "directory" -and -not $fileinfo.PsIsContainer) {
+                        Fail-Json $result "path $path is not a directory"
+                    }
+                }
+                else {
+                    Fail-Json $result $_.Exception.Message
                 }
             }
-            else {
-                Fail-Json $result $_.Exception.Message
-            }
+            $result.changed = $true
         }
-        $result.changed = $true
+        if ($newCreation) {
+            # similar logic as with state: touch, need to do in two steps
+            $timestamp = Update-Timestamp @updateTimestamp
+            $result.changed = ($result.changed -or $timestamp)
+        }
     }
     elseif ($state -eq "file") {
         Fail-Json $result "path $path will not be created"

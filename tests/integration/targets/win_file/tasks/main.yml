@@ -612,3 +612,140 @@
 
 - name: clean up sub2
   win_file: path={{ remote_tmp_dir }}/sub2 state=absent
+
+- name: create file and set modification and access times
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+    state: touch
+    modification_time: "2025-12-30 12:00:00"
+    access_time: "2025-12-29 13:00:00"
+  register: file_result
+
+- name: verify file exists
+  win_stat:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+  register: stat_result
+
+- name: get file timestamp
+  win_shell: >-
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
+    @{
+      mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+      aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
+    } | ConvertTo-Json
+  register: file_timestamp
+
+- name: check file exists and their modification and access times
+  assert:
+    that:
+      - file_result.changed
+      - stat_result.stat.exists
+      - (file_timestamp.stdout | from_json).mTime == "2025-12-30 12:00:00"
+      - (file_timestamp.stdout | from_json).aTime == "2025-12-29 13:00:00"
+
+- name: clean up test file
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+    state: absent
+
+- name: create directory and set modification and access times
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_directory'
+    state: directory
+    modification_time: "2025-12-30 12:00:00"
+    access_time: "2025-12-29 13:00:00"
+  register: file_result
+
+- name: verify directory exists
+  win_stat:
+    path: '{{ remote_tmp_dir }}\test_directory'
+  register: stat_result
+
+- name: get directory timestamp
+  win_shell: >-
+    $file = Get-Item "{{ remote_tmp_dir }}\test_directory";
+    @{
+      mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+      aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
+    } | ConvertTo-Json
+  register: file_timestamp
+
+- name: check directory exists and their modification and access times
+  assert:
+    that:
+      - file_result.changed
+      - stat_result.stat.exists
+      - (file_timestamp.stdout | from_json).mTime == "2025-12-30 12:00:00"
+      - (file_timestamp.stdout | from_json).aTime == "2025-12-29 13:00:00"
+
+- name: clean up test directory
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_directory'
+    state: absent
+
+- name: touch a file with known timestamp
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+    state: touch
+    modification_time: "2025-12-30 12:00:00"
+    access_time: "2025-12-29 13:00:00"
+  register: file_result
+
+- name: verify file exists
+  win_stat:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+  register: stat_result
+
+- name: check file exists
+  assert:
+    that:
+      - file_result.changed
+      - stat_result.stat.exists
+
+- name: get file timestamp before preserve
+  win_shell: >-
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
+    @{
+      mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+      aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
+    } | ConvertTo-Json
+  register: file_timestamp_before
+
+- name: touch the file again (preserve mode)
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+    state: touch
+    modification_time: "preserve"
+    access_time: "preserve"
+  register: file_result
+
+- name: verify file exists (preserve mode)
+  win_stat:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+  register: stat_result
+
+- name: check file exists (preserve mode)
+  assert:
+    that:
+      - "file_result.changed == False"
+      - stat_result.stat.exists
+
+- name: get file timestamp after preserve (preserve mode)
+  win_shell: >-
+    $file = Get-Item "{{ remote_tmp_dir }}\test_file.txt";
+    @{
+      mTime = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+      aTime = $file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
+    } | ConvertTo-Json
+  register: file_timestamp_after
+
+- name: check file timestamps are preserved
+  assert:
+    that:
+      - (file_timestamp_before.stdout | from_json).mTime == (file_timestamp_after.stdout | from_json).mTime
+      - (file_timestamp_before.stdout | from_json).aTime == (file_timestamp_after.stdout | from_json).aTime      
+
+- name: clean up test file
+  win_file:
+    path: '{{ remote_tmp_dir }}\test_file.txt'
+    state: absent
