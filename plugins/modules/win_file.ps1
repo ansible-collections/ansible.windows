@@ -148,7 +148,6 @@ function Remove-Directory($directory, $checkmode) {
     Remove-Item -LiteralPath $directory.FullName -Force -Recurse -WhatIf:$checkmode
 }
 
-# TODO: capability to support parsing in different timezones for atime/mtime
 function Update-Timestamp {
     param (
         [string]$Path,

@@ -11,9 +11,7 @@ short_description: Creates, touches or removes files or directories
 description:
      - Creates (empty) files, updates file modification stamps of existing files,
        and can create or remove directories.
-     - Timestamp values are interpreted as local time on the target Windows system.
-     - Internally, Windows stores file timestamps in UTC, but this module operates exclusively using
-       local time semantics.
+     - Timestamp values are interpreted as local time on the target Windows system if no time zone offset is specified.
      - Unlike M(ansible.builtin.file), does not modify ownership, permissions or manipulate links.
      - For non-Windows targets, use the M(ansible.builtin.file) module instead.
 options:
@@ -40,7 +38,8 @@ options:
       - The desired modification time for the file or directory.
       - A DateTime string in the format specified by O(modification_time_format).
       - The timestamp is interpreted as local time on the target system.
-      - Timezone offsets are not supported.
+      - Timezone offsets are supported when included in the timestamp format.
+        (for example, using C(z), C(zz) or C(zzz) format specifiers).
       - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
     version_added: 3.4.0
@@ -48,6 +47,7 @@ options:
     description:
       - The format to use when parsing C(modification_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
+      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings) for more information.
     type: str
     default: yyyy-MM-dd HH:mm:ss
     version_added: 3.4.0
@@ -56,7 +56,8 @@ options:
       - The desired access time for the file or directory.
       - A DateTime string in the format specified by O(access_time_format).
       - The timestamp is interpreted as local time on the target system.
-      - Timezone offsets are not supported.
+      - Timezone offsets are supported when included in the timestamp format.
+        (for example, using C(z), C(zz) or C(zzz) format specifiers).
       - When unset, the default is V(preserve) when O(state=[file, directory]) and V(now) when O(state=touch).
     type: str
     version_added: 3.4.0
@@ -64,6 +65,7 @@ options:
     description:
       - The format to use when parsing C(access_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
+      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings) for more information.
     type: str
     default: yyyy-MM-dd HH:mm:ss
     version_added: 3.4.0
@@ -112,6 +114,13 @@ EXAMPLES = r'''
     state: touch
     modification_time: "2025-12-29 12:34:56"
     access_time: "2025-12-29 12:34:56"
+
+- name: Set specific modification as UTC datetime
+  ansible.windows.win_file:
+    path: C:\Temp\foo.conf
+    state: touch
+    modification_time: "2025-12-29 12:34:56 +0"
+    modification_time_format: "yyyy-MM-dd HH:mm:ss z"
 
 - name: Create a directory and set the timestamps to now
   ansible.windows.win_file:
