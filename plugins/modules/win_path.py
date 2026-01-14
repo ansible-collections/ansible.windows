@@ -29,6 +29,12 @@ options:
     type: list
     elements: str
     required: yes
+  insert_at:
+    description:
+      - Whether the path elements specified in C(elements) should be inserted at start or at end to the path.
+    type: str
+    choices: [ end, start ]
+    default: end
   state:
     description:
       - Whether the path elements specified in C(elements) should be present or absent.
@@ -70,4 +76,10 @@ EXAMPLES = r'''
     elements: C:\Program Files\MyJavaThing
     scope: user
     state: absent
+
+- name: Insert C:\My\Custom\Bin to the system PATH at the start
+  ansible.windows.win_path:
+    name: PATH
+    elements: C:\My\Custom\Bin
+    insert_at: start
 '''

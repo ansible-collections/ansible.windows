@@ -11,6 +11,7 @@ $spec = @{
         elements = @{ type = "list"; elements = "str"; required = $true }
         state = @{ type = "str"; choices = "absent", "present"; default = "present" }
         scope = @{ type = "str"; choices = "machine", "user"; default = "machine" }
+        insert_at = @{ type = "str"; choices = "end", "start"; default = "end" }
     }
     supports_check_mode = $true
 }
@@ -20,6 +21,7 @@ $var_name = $module.Params.name
 $elements = $module.Params.elements
 $state = $module.Params.state
 $scope = $module.Params.scope
+$insert_at = $module.Params.insert_at
 
 $check_mode = $module.CheckMode
 
@@ -42,30 +44,81 @@ Function Get-IndexOfPathElement ($list, [string]$value) {
 }
 
 # alters list in place, returns true if at least one element was added
-Function Add-Element ($existing_elements, $elements_to_add) {
+Function Add-Element ($existing_elements, $elements_to_add, $insert_at) {
     $last_idx = -1
+    $insert_anchor_idx = -1
     $changed = $false
 
-    ForEach ($el in $elements_to_add) {
+    # interate to find the first anchor index for inserting of new element
+    # only needed for insert_at=start
+    For ($i = 0; $i -lt $elements_to_add.Count; $i++) {
+        $el = $elements_to_add[$i]
         $idx = Get-IndexOfPathElement $existing_elements $el
-
-        # add missing elements at the end
         If ($idx -eq -1) {
-            $last_idx = $existing_elements.Add($el)
-            $changed = $true
-        }
-        ElseIf ($idx -lt $last_idx) {
-            $existing_elements.RemoveAt($idx) | Out-Null
-            $existing_elements.Add($el) | Out-Null
-            $last_idx = $existing_elements.Count - 1
-            $changed = $true
-        }
-        Else {
-            $last_idx = $idx
+            $insert_anchor_idx = $i
+            break
         }
     }
+    If (($insert_at -eq "start") -and ($insert_anchor_idx -gt -1)) {
+        If ($insert_anchor_idx -gt -1) {
+            # iterate left of anchor to insert defined elements before it
+            # to maintain relative order
+            For ($i = $insert_anchor_idx - 1; $i -ge 0; $i--) {
+                $el = $elements_to_add[$i]
+                $idx = Get-IndexOfPathElement $existing_elements $el
+                If ($idx -ne -1) {
+                    $existing_elements.RemoveAt($idx) | Out-Null
+                    $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
+                    $insert_anchor_idx--
+                    $changed = $true
+                }
+            }
+            # iterate right of anchor to insert defined elements after it
+            # to maintain relative order
+            For ($i = $insert_anchor_idx; $i -lt $elements_to_add.Count; $i++) {
+                $el = $elements_to_add[$i]
+                $idx = Get-IndexOfPathElement $existing_elements $el
+                # if new element then add and reorder in place
+                If ($idx -eq -1) {
+                    $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
+                    $insert_anchor_idx++
+                    $changed = $true
+                }
+                ElseIf ($idx -ne $insert_anchor_idx) {
+                    # element exists, but a relative reorder is needed
+                    $existing_elements.RemoveAt($idx) | Out-Null
+                    $existing_elements.Insert($insert_anchor_idx, $el) | Out-Null
+                    $insert_anchor_idx++
+                    $changed = $true
+                }
+                Else {
+                    $insert_anchor_idx++
+                }
+            }
+        }
+        return $changed
+    }
+    Else {
+        ForEach ($el in $elements_to_add) {
+            $idx = Get-IndexOfPathElement $existing_elements $el
 
-    return $changed
+            # add missing elements at the end
+            If ($idx -eq -1) {
+                $last_idx = $existing_elements.Add($el)
+                $changed = $true
+            }
+            ElseIf ($idx -lt $last_idx) {
+                $existing_elements.RemoveAt($idx) | Out-Null
+                $existing_elements.Add($el) | Out-Null
+                $last_idx = $existing_elements.Count - 1
+                $changed = $true
+            }
+            Else {
+                $last_idx = $idx
+            }
+        }
+        return $changed
+    }
 }
 
 # alters list in place, returns true if at least one element was removed
@@ -195,7 +248,7 @@ If ($state -eq "absent") {
     $module.Result.changed = Remove-Element $existing_elements $elements
 }
 ElseIf ($state -eq "present") {
-    $module.Result.changed = Add-Element $existing_elements $elements
+    $module.Result.changed = Add-Element -existing_elements $existing_elements -elements_to_add $elements -insert_at $insert_at
 }
 
 # calculate the new path value from the existing elements

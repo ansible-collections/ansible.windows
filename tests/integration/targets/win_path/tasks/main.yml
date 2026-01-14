@@ -181,3 +181,105 @@
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
+
+- name: Seed path before insert tests
+  win_path:
+    name: "{{ varname }}"
+    elements:
+      - C:\PathA
+
+- name: Test insert single path at start
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\InsertPath
+    insert_at: start
+  register: insert_single
+
+- name: Verify insert single path at start
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: insert_single_varout
+- name: Ensure insert single path output
+  assert:
+    that:
+    - insert_single is changed
+    - insert_single.path_value == "C:\InsertPath;C:\PathA"
+    - insert_single_varout.stdout_lines[0] == "C:\InsertPath;C:\PathA"
+
+- name: Test insert multiple paths at start
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\InsertPath1
+    - C:\InsertPath2
+    insert_at: start
+  register: insert_multiple
+
+- name: Verify insert multiple paths at start
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: insert_multiple_varout
+
+- name: Ensure insert multiple paths output
+  assert:
+    that:
+    - insert_multiple is changed
+    - insert_multiple.path_value == "C:\InsertPath1;C:\InsertPath2;C:\InsertPath;C:\PathA"
+    - insert_multiple_varout.stdout_lines[0] == "C:\InsertPath1;C:\InsertPath2;C:\InsertPath;C:\PathA"
+
+- name: Test idempotence for insert at start
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\InsertPath1
+    - C:\InsertPath2
+    insert_at: start
+  register: insert_start_idempotence
+
+- name: Ensure idempotence for insert at start
+  assert:
+    that:
+    - insert_start_idempotence is not changed
+    - insert_start_idempotence.path_value == "C:\InsertPath1;C:\InsertPath2;C:\InsertPath;C:\PathA"
+
+- name: Test insert existing path(s)
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\PathA
+    - C:\InsertPath1
+    insert_at: start
+  register: insert_existing
+
+- name: Verify insert existing path(s)
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: insert_existing_varout
+
+- name: Ensure insert existing path(s) output
+  assert:
+    that:
+    - insert_existing is changed
+    - insert_existing.path_value == "C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1"
+    - insert_existing_varout.stdout_lines[0] == "C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1" # should reflect the new order
+
+- name: Test check mode for insert
+  check_mode: yes
+  win_path:
+    name: "{{ varname }}"
+    elements:
+    - C:\CheckModePath
+    insert_at: start
+  register: check_insert
+
+- name: Verify check mode for insert
+  win_shell: (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue('{{ varname }}', '')
+  register: check_insert_varout
+
+- name: Ensure check mode for insert output
+  assert:
+    that:
+    - check_insert is changed
+    - check_insert.path_value == "C:\CheckModePath;C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1"
+    - check_insert_varout.stdout_lines[0] == "C:\InsertPath2;C:\InsertPath;C:\PathA;C:\InsertPath1" # shouldn't have actually changed the value
+
+- name: Remove {{ varname }} vars from user and machine scope
+  win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
