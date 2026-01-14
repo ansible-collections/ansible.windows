@@ -150,6 +150,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Creates (empty) files, updates file modification stamps of existing files, and can create or remove directories.</p></li>
+<li><p>Timestamp values are interpreted as local time on the target Windows system if no time zone offset is specified.</p></li>
 <li><p>Unlike <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/file_module.html#ansible-collections-ansible-builtin-file-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.file</span></a>, does not modify ownership, permissions or manipulate links.</p></li>
 <li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/file_module.html#ansible-collections-ansible-builtin-file-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.file</span></a> module instead.</p></li>
 </ul>
@@ -163,6 +164,52 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-access_time"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-file-module-parameter-access-time"><strong>access_time</strong></p>
+<a class="ansibleOptionLink" href="#parameter-access_time" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The desired access time for the file or directory.</p>
+<p>A DateTime string in the format specified by <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-access-time-format"><span class="std std-ref"><span class="pre">access_time_format</span></span></a></strong></code>.</p>
+<p>The timestamp is interpreted as local time on the target system.</p>
+<p>Timezone offsets are supported when included in the timestamp format. (for example, using <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">zz</span></code> or <code class="docutils literal notranslate"><span class="pre">zzz</span></code> format specifiers).</p>
+<p>When unset, the default is <code class="ansible-value docutils literal notranslate"><span class="pre">preserve</span></code> when <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-state"><span class="std std-ref"><span class="pre">state=[file,</span> <span class="pre">directory]</span></span></a></code> and <code class="ansible-value docutils literal notranslate"><span class="pre">now</span></code> when <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-state"><span class="std std-ref"><span class="pre">state=touch</span></span></a></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-access_time_format"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-file-module-parameter-access-time-format"><strong>access_time_format</strong></p>
+<a class="ansibleOptionLink" href="#parameter-access_time_format" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The format to use when parsing <code class="docutils literal notranslate"><span class="pre">access_time</span></code>.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">yyyy-MM-dd</span> <span class="pre">HH:mm:ss</span></code>.</p>
+<p>See <a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings">.NET DateTime format strings</a>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;yyyy-MM-dd</span> <span class="pre">HH:mm:ss&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-modification_time"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-file-module-parameter-modification-time"><strong>modification_time</strong></p>
+<a class="ansibleOptionLink" href="#parameter-modification_time" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The desired modification time for the file or directory.</p>
+<p>A DateTime string in the format specified by <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-modification-time-format"><span class="std std-ref"><span class="pre">modification_time_format</span></span></a></strong></code>.</p>
+<p>The timestamp is interpreted as local time on the target system.</p>
+<p>Timezone offsets are supported when included in the timestamp format. (for example, using <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">zz</span></code> or <code class="docutils literal notranslate"><span class="pre">zzz</span></code> format specifiers).</p>
+<p>When unset, the default is <code class="ansible-value docutils literal notranslate"><span class="pre">preserve</span></code> when <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-state"><span class="std std-ref"><span class="pre">state=[file,</span> <span class="pre">directory]</span></span></a></code> and <code class="ansible-value docutils literal notranslate"><span class="pre">now</span></code> when <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-file-module-parameter-state"><span class="std std-ref"><span class="pre">state=touch</span></span></a></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-modification_time_format"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-file-module-parameter-modification-time-format"><strong>modification_time_format</strong></p>
+<a class="ansibleOptionLink" href="#parameter-modification_time_format" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.4.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The format to use when parsing <code class="docutils literal notranslate"><span class="pre">modification_time</span></code>.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">yyyy-MM-dd</span> <span class="pre">HH:mm:ss</span></code>.</p>
+<p>See <a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings">.NET DateTime format strings</a>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;yyyy-MM-dd</span> <span class="pre">HH:mm:ss&quot;</span></code></p>
+</div></td>
+</tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-path"></div>
 <div class="ansibleOptionAnchor" id="parameter-dest"></div>
@@ -232,12 +279,41 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_file</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Touch a file and set modification and access times to now</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_file</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\foo.conf</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">touch</span>
+<span class="w">    </span><span class="nt">modification_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">now</span>
+<span class="w">    </span><span class="nt">access_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">now</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set specific modification and access times for a file</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_file</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\foo.conf</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">touch</span>
+<span class="w">    </span><span class="nt">modification_time</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-12-29</span><span class="nv"> </span><span class="s">12:34:56&quot;</span>
+<span class="w">    </span><span class="nt">access_time</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-12-29</span><span class="nv"> </span><span class="s">12:34:56&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set specific modification as UTC datetime</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_file</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\foo.conf</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">touch</span>
+<span class="w">    </span><span class="nt">modification_time</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-12-29</span><span class="nv"> </span><span class="s">12:34:56</span><span class="nv"> </span><span class="s">+0&quot;</span>
+<span class="w">    </span><span class="nt">modification_time_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yyyy-MM-dd</span><span class="nv"> </span><span class="s">HH:mm:ss</span><span class="nv"> </span><span class="s">z&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a directory and set the timestamps to now</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_file</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\folder</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">directory</span>
+<span class="w">    </span><span class="nt">modification_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">now</span>
+<span class="w">    </span><span class="nt">access_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">now</span>
 </pre></div>
 </div>
 <section id="authors">
 <h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Jon Hawkesworth (&#64;jhawkesworth)</p></li>
+<li><p>Bishal Prasad (&#64;bishalprasad321)</p></li>
 </ul>
 </section>
 <section id="collection-links">
