@@ -47,7 +47,7 @@ options:
     description:
       - The format to use when parsing C(modification_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
-      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings) for more information.
+      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings).
     type: str
     default: yyyy-MM-dd HH:mm:ss
     version_added: 3.4.0
@@ -65,7 +65,7 @@ options:
     description:
       - The format to use when parsing C(access_time).
       - Defaults to C(yyyy-MM-dd HH:mm:ss).
-      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings) for more information.
+      - See L(.NET DateTime format strings,https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings).
     type: str
     default: yyyy-MM-dd HH:mm:ss
     version_added: 3.4.0
