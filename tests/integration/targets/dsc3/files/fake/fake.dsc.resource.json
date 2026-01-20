@@ -1,0 +1,62 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/v3/resource/manifest.json",
+    "type": "Ansible.Windows.Debug/Fake",
+    "description": "Fake arbitrary before and after states using environment variables as input",
+    "version": "0.1.0",
+    "get": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./fake.resource.ps1",
+            "get"
+        ]
+    },
+    "set": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./fake.resource.ps1",
+            "set"
+        ],
+        "return": "stateAndDiff"
+    },
+    "test": {
+        "executable": "pwsh",
+        "input": "stdin",
+        "args": [
+            "-NoLogo",
+            "-NonInteractive",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "./fake.resource.ps1",
+            "test"
+        ],
+        "return": "stateAndDiff"
+    },
+    "schema": {
+        "embedded": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+                "_": {
+                    "type": ["string", "integer", "boolean"]
+                }
+            },
+            "additionalProperties": true
+        }
+    }
+}
