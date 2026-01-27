@@ -9,3 +9,8 @@
     that:
     - ansible_os_product_id is defined
     - ansible_os_product_key is defined
+    - ansible_os_license_channel is string
+    - ansible_os_license_edition is string
+    - ansible_os_license_status is string
+    - ansible_os_product_id is string
+    - ansible_os_product_key is string

@@ -1,0 +1,3 @@
+---
+bugfixes:
+    - win_products_facts - return string for all the license related facts (https://github.com/ansible-collections/community.windows/issues/661).
