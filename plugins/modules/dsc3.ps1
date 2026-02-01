@@ -82,7 +82,6 @@ if ($dscReturn.ExitCode -ne 0) {
         default { "Error: ExitCode=$_" }
     }
     $module.FailJson($reason)
-    $module.ExitJson()
 }
 
 $module.Result.result = ConvertFrom-Json $dscReturn.Stdout
@@ -108,7 +107,6 @@ switch ($module.Result.result.metadata."Microsoft.DSC".operation) {
     }
     default {
         $module.FailJson("Unexpected operation result of type '$_'")
-        $module.ExitJson()
     }
 }
 

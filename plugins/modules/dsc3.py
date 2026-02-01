@@ -8,6 +8,7 @@ DOCUMENTATION = r"""
 ---
 module: dsc3
 short_description: Sets or checks DSC v3 configuration state
+version_added: '3.4.0'
 description:
     - Calls C(dsc config set) or C(dsc config test) using O(config) as the configuration document.
     - This module assumes that C(dsc) can be found using E(PATH) environment variable, and C(dsc)
