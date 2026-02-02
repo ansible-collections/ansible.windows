@@ -15,7 +15,7 @@ class ActionModule(ActionBase):
     def run(
         self,
         tmp: str | None = None,
-        task_vars: dict[str, object] | None =None,
+        task_vars: dict[str, object] | None = None,
     ) -> dict[str, object]:
         self._supports_async = True
         self._supports_check_mode = True
