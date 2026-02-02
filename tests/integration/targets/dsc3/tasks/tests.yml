@@ -1,4 +1,34 @@
 ---
+- name: expect failure when specifying config and config_file together
+  ansible.windows.dsc3:
+    config:
+      resources:
+        - name: Bad
+          type: Ansible.Windows.Debug/Unknown
+          properties: {}
+    config_file: config_docs/test.config.dsc.yml
+  register: win_dsc3_both_config_file_result
+  ignore_errors: true
+
+- name: assert failure message when specifying config and config_file together
+  assert:
+    that:
+      - >-
+        win_dsc3_both_config_file_result.msg == "parameters are mutually exclusive: config, config_file"
+
+- name: expect failure if using async and controller config_file
+  ansible.windows.dsc3:
+    config_file: config_docs/test.config.dsc.yml
+  async: 60
+  register: win_dsc3_async_controller_file_result
+  ignore_errors: true
+
+- name: assert failure message when using async and controller config_file
+  assert:
+    that:
+      - >-
+        win_dsc3_async_controller_file_result.msg == "async operations are not supported with local config_file"
+
 - name: Configure single resource
   vars:
     state:
@@ -301,11 +331,26 @@
           - win_dsc3_import_yaml_result is not changed
       when: not win_dsc3_import_yaml_result is skipped
 
+- name: Configure using local config document
+  ansible.windows.dsc3:
+    config_file: config_docs/test.config.dsc.yml
+  environment:
+    PATH: '{{ test_dsc3_path_env }}'
+  register: win_dsc3_config_result
+
+- name: Verify configure using local config document
+  ansible.builtin.assert:
+    that:
+      - win_dsc3_config_result is not failed
+      - win_dsc3_config_result is not changed
+  when: not win_dsc3_config_result is skipped
+
 - name: Configure using target-local configuration document
   block:
     - name: Configure using target-local config document
       ansible.windows.dsc3:
         config_file: '{{ test_dsc3_config_docs_path }}\test.config.dsc.yml'
+        remote_config_file: true
       environment:
         PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_local_config_result

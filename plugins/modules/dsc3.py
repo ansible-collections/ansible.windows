@@ -28,21 +28,30 @@ options:
         type: dict
     config_file:
         description:
-            - Path to DSC configuration document on the target host.
-            - This corresponds to the C(--file) commandline option.
+            - Path to DSC configuration document either on the control node or the target host.
+            - The O(remote_config_file) parameter controls whether the file is located on the control node
+              (V(false)) or the target host (V(true)).
+            - This corresponds to the C(--file) DSC commandline option.
             - One of O(config) or O(config_file) must be specified.
         type: path
-
     parameters:
         description:
             - Runtime parameter values.
             - This corresponds to the C(--parameters) commandline option.
         type: dict
-
+    remote_config_file:
+        description:
+            - Whether the provided O(config_file) is already on the target host.
+            - If V(false), the file will be transferred from the control node to the target host
+              and removed after the module is done.
+            - A local O(config_file) cannot be used with async tasks, the file will need to be
+              pre-transferred to the target host.
+        type: bool
+        default: true
     trace_level:
         description:
             - Specify level of tracing output, which are returned in RV(stderr_lines).
-            - This corresponds to the C(--trave-level) commandline option.
+            - This corresponds to the C(--trace-level) DSC commandline option.
         type: str
         choices: [ error, warn, info, debug, trace ]
         default: warn

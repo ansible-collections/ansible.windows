@@ -12,6 +12,10 @@ $spec = @{
         config_file = @{ type = "path" }
 
         parameters = @{ type = "dict" }
+        remote_config_file = @{
+            default = $true
+            type = "bool"
+        }
 
         trace_level = @{
             choices = ("error", "warn", "info", "debug", "trace" )
