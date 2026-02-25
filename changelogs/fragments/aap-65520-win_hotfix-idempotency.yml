@@ -1,0 +1,5 @@
+---
+bugfixes:
+  - win_hotfix - Fix idempotency issue where some multi-package MSUs (e.g. SSU + CU) were incorrectly reported as installed by DISM even if the CU
+    was missing. Added a secondary check using Get-Hotfix to verify installation.
+  - win_hotfix - Fix a bug in Get-HotfixMetadataFromKB fallback logic where it would fail to return metadata even if the hotfix was found.

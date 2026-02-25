@@ -142,7 +142,7 @@ Function Get-HotfixMetadataFromKB($kb) {
         foreach ($package in $packages) {
             $raw_metadata = Get-HotfixMetadataFromName -name $package.PackageName
             if ($raw_metadata.kb -eq $kb) {
-                $identifier = $raw_metadata
+                $metadata = $raw_metadata
                 break
             }
         }
@@ -241,11 +241,26 @@ else {
         $result.kb = $result.kbs[0]
 
         # how do we want to deal with other states
-        if ($hotfix_metadata.state -eq "InstallPending") {
-            # return the reboot required flag, should we fail here instead
-            $result.reboot_required = $true
+        $any_pending = $false
+        $any_not_installed = $false
+        foreach ($package in $hotfix_metadata) {
+            if ($package.state -eq "InstallPending") {
+                $any_pending = $true
+            }
+            elseif ($package.state -ne "Installed") {
+                $any_not_installed = $true
+            }
         }
-        elseif ($hotfix_metadata.state -ne "Installed") {
+
+        # If DISM reports everything as installed, double check with Get-Hotfix if we have a KB identifier.
+        # This addresses cases where DISM falsely reports 'Installed' for meta-packages (e.g. Multiple_Packages~~~~0.0.0.0).
+        if (-not $any_not_installed -and $result.kb -ne "UNKNOWN") {
+            if (-not (Get-Hotfix -Id $result.kb -ErrorAction SilentlyContinue)) {
+                $any_not_installed = $true
+            }
+        }
+
+        if ($any_not_installed) {
             if (-not $check_mode) {
                 try {
                     $install_result = @(
@@ -257,9 +272,12 @@ else {
                 catch {
                     Fail-Json $result "failed to add windows package from path $($hotfix_metadata.path): $($_.Exception.Message)"
                 }
-                $result.reboot_required = [bool]($install_result.RestartNeeded -eq $true)
+                $result.reboot_required = [bool]($install_result.RestartNeeded -contains $true)
             }
             $result.changed = $true
+        }
+        elseif ($any_pending) {
+            $result.reboot_required = $true
         }
     }
     finally {
