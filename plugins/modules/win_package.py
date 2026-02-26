@@ -59,6 +59,14 @@ options:
       - sha512
     default: sha1
     version_added: 2.8.0
+  verify_signature:
+    description:
+    - When set to V(True), validates the Authenticode signature of the installer file before executing it.
+    - The task will fail if the signature status returned by Get-AuthenticodeSignature is not Valid.
+    - When set to V(False), no Authenticode validation is performed.
+    type: bool
+    default: false
+    version_added: '3.4.0'
   creates_path:
     description:
     - Will check the existence of the path specified and use the result to
@@ -212,6 +220,7 @@ seealso:
 author:
 - Trond Hindenes (@trondhindenes)
 - Jordan Borean (@jborean93)
+- Aleksei Funtikov (@afuntikov)
 '''
 
 EXAMPLES = r'''
@@ -288,7 +297,6 @@ EXAMPLES = r'''
     path: C:\temp\rdcman.msi
     state: absent
 
-# 7-Zip exe doesn't use a guid for the Product ID
 - name: Install 7zip from a network share with specific credentials
   ansible.windows.win_package:
     path: \\domain\programs\7z.exe
@@ -357,6 +365,13 @@ EXAMPLES = r'''
   ansible.windows.win_package:
     product_id: InputApp
     state: absent
+
+- name: Install 7-Zip with Authenticode signature validation
+  ansible.windows.win_package:
+    path: C:\temp\7z.exe
+    arguments: /S
+    state: present
+    verify_signature: true
 '''
 
 RETURN = r'''

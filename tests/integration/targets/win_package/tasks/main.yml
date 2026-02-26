@@ -55,6 +55,9 @@
     register: can_run_msix
     changed_when: False
 
+  - name: run tests for authenticode
+    include_tasks: authenticode_tests.yml
+
   - name: run tests for msix packages
     include_tasks: msix_tests.yml
     when: can_run_msix.stdout | trim | bool

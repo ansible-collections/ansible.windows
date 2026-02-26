@@ -1,0 +1,33 @@
+---
+- name: create unsigned "exe" file
+  ansible.windows.win_copy:
+    dest: '{{ test_path }}\unsigned.exe'
+    content: 'not a real exe'
+
+- name: fail when verify_signature is enabled and file is unsigned
+  win_package:
+    path: '{{ test_path }}\unsigned.exe'
+    state: present
+    arguments: '/S'
+    verify_signature: true
+  register: authenticode_fail_unsigned
+  ignore_errors: true
+
+- name: assert unsigned file fails
+  assert:
+    that:
+    - authenticode_fail_unsigned is failed
+    - '"Authenticode check failed" in authenticode_fail_unsigned.msg'
+
+- name: pass when verify_signature is enabled and file is signed (cmd.exe)
+  win_package:
+    path: 'C:\Windows\System32\cmd.exe'
+    state: present
+    arguments: '/c exit 0'
+    verify_signature: true
+  register: authenticode_pass_signed
+
+- name: assert signed file passes and returns signature status
+  assert:
+    that:
+    - authenticode_pass_signed.rc == 0

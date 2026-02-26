@@ -1,0 +1,2 @@
+minor_changes:
+  - ansible.windows.win_package - Add optional Authenticode signature validation for installer files via the new ``verify_signature`` parameter.

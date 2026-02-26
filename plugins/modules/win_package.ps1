@@ -1284,6 +1284,7 @@ $spec = @{
         chdir = @{ type = "path" }
         checksum = @{ type = 'str' }
         checksum_algorithm = @{ type = 'str'; default = 'sha1'; choices = @("md5", "sha1", "sha256", "sha384", "sha512") }
+        verify_signature = @{ type = "bool"; default = $false }
         product_id = @{ type = "str" }
         state = @{
             type = "str"
@@ -1314,6 +1315,7 @@ $path = $module.Params.path
 $chdir = $module.Params.chdir
 $checksum = $module.Params.checksum
 $checksum_algorithm = $module.Params.checksum_algorithm
+$verify_signature = $module.Params.verify_signature
 $productId = $module.Params.product_id
 $state = $module.Params.state
 $createsPath = $module.Params.creates_path
@@ -1397,6 +1399,17 @@ try {
             }
         }
 
+        if ($verify_signature -and $state -eq 'present' -and $path) {
+            try {
+                $sig = Get-AuthenticodeSignature -FilePath $path
+                if ($sig.Status.ToString() -ne 'Valid') {
+                    throw "File '$path': signature status is '$($sig.Status)', expected 'Valid'"
+                }
+            }
+            catch {
+                $module.FailJson("Authenticode check failed: $($_.Exception.Message)")
+            }
+        }
         $setParams = @{
             Arguments = $arguments
             ReturnCodes = $expectedReturnCode
