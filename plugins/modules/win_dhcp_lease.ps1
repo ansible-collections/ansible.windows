@@ -216,7 +216,12 @@ if ($state -eq "present") {
                     $params.Name = $reservation_name
                 }
                 else {
-                    $params.Name = "reservation-" + $params.ClientId
+                    if ($params.HostName) {
+                        $params.Name = $params.HostName
+                    }
+                    else {
+                        $params.Name = "reservation-" + $params.ClientId
+                    }
                 }
 
                 # Desired type is reservation
@@ -408,7 +413,17 @@ if ($state -eq "present") {
                     $params.Name = $reservation_name
                 }
                 else {
-                    $params.Name = "reservation-" + $mac
+                    if ($params.HostName) {
+                        $params.Name = $params.HostName
+                    }
+                    else {
+                        $params.Name = "reservation-" + $mac
+                    }
+                }
+
+                # Add-DhcpServerv4Reservation does not support a "HostName" parameter
+                if ($params.HostName) {
+                    $params.Remove('HostName')
                 }
 
                 Try {
