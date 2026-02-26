@@ -1,0 +1,4 @@
+bugfixes:
+  - win_dhcp_lease - when creating a reservation, the dns_name will be used as reservation_name in case that is not provided;
+    will be discarded otherwise as the parameter HostName is not supported by Add-DhcpServerv4Reservation
+    (https://github.com/ansible-collections/ansible.windows/issues/813)
