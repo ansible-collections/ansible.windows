@@ -1,5 +1,6 @@
 # Ansible Collection: ansible.windows
 
+
 [![Build Status](https://dev.azure.com/ansible/ansible.windows/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ansible/ansible.windows/_build/latest?definitionId=24&branchName=main)
 [![codecov](https://codecov.io/gh/ansible-collections/ansible.windows/branch/main/graph/badge.svg)](https://codecov.io/gh/ansible-collections/ansible.windows)
 
