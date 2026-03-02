@@ -1,2 +1,0 @@
-bugfixes:
-  - win_reboot - fix unhandled error when ``.exe`` not present in ``PATHEXT`` environment variable
