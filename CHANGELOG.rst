@@ -4,6 +4,40 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.4.0
+======
+
+Release Summary
+---------------
+
+Release summary for v3.4.0
+
+Minor Changes
+-------------
+
+- PowerShell 7 - Add initial support for running modules against PowerShell 7 interpreters. Support for PowerShell 7 varies across each module, see module documentation for more information.
+- ansible.windows.win_package - Add optional Authenticode signature validation for installer files via the new ``verify_signature`` parameter.
+- win_file - is aligned with ``ansible.builtin.file`` and now supports options ``access_time``, ``access_time_format``, ``modification_time``, and ``modification_time_format``. (https://github.com/ansible-collections/ansible.windows/issues/798)
+- win_shell - Add ``cmd`` module option that can be used instead of the free form input. This aligns the options to the POSIX ``shell`` module.
+- win_shell - Support using ``pwsh.exe`` as the executable in a mode similar to how ``powershell.exe`` is run.
+
+Bugfixes
+--------
+
+- Stop using the deprecated text module_utils in Ansible that will be removed in Ansible ``2.24``.
+- win_dhcp_lease - when creating a reservation, the dns_name will be used as reservation_name in case that is not provided; will be discarded otherwise as the parameter HostName is not supported by Add-DhcpServerv4Reservation (https://github.com/ansible-collections/ansible.windows/issues/813)
+- win_file - Fix idempotency issues when using ``state: touch`` (https://github.com/ansible-collections/ansible.windows/issues/798)
+- win_hotfix - Fix a bug in Get-HotfixMetadataFromKB fallback logic where it would fail to return metadata even if the hotfix was found.
+- win_hotfix - Fix idempotency issue where some multi-package MSUs (e.g. SSU + CU) were incorrectly reported as installed by DISM even if the CU was missing. Added a secondary check using Get-Hotfix to verify installation.
+- win_products_facts - return string for all the license related facts (https://github.com/ansible-collections/community.windows/issues/661).
+- win_reboot - fix unhandled error when ``.exe`` not present in ``PATHEXT`` environment variable
+- win_shell - Ensure the default ``executable`` uses the absolute path to ``powershell.exe`` rather than looking it up in the ``PATH`` environment.
+
+New Modules
+-----------
+
+- dsc3 - Sets or checks DSC v3 configuration state
+
 v3.3.0
 ======
 

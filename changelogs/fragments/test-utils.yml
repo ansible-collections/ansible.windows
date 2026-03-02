@@ -1,3 +1,0 @@
-bugfixes:
-  - >-
-    Stop using the deprecated text module_utils in Ansible that will be removed in Ansible ``2.24``.
