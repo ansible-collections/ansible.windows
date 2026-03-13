@@ -57,6 +57,17 @@ options:
     - If set to C(false), the record will be static.
     default: false
     type: bool
+  allow_update_any:
+    description:
+    - Specifies if any authenticated user can update the record.
+    - If set to C(true), any authenticated user can update the record.
+    - If set to C(false), only the account that created the record or accounts
+      with appropriate permissions can update it.
+    - For non-SRV records, this was previously hardcoded to C(true). Since C(ansible.windows>=3.5.0) it now
+      defaults to C(false) to ensure records are secure by default.
+    default: false
+    type: bool
+    version_added: '3.5.0'
   type:
     description:
     - The type of DNS record to manage.
