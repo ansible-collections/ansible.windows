@@ -30,6 +30,7 @@
     that:
       - cmd_result is changed
       - cmd_result_actual.stdout == '1.2.3.4\r\n'
+      - cmd_result.allow_update_any == False
 
 - name: 'TYPE=A - creation (idempotent)'
   win_dns_record:
@@ -326,4 +327,50 @@
     that:
       - cmd_result is changed
       - cmd_result_actual.stdout == 'absent\r\n'
+# -----------------------------------------------------------------------------
+
+# tests for allow_update_any
+# -----------------------------------------------------------------------------
+- name: 'TYPE=A - add record with allow_update_any: true'
+  win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: testallowupdateany
+    value: 1.2.3.4
+    allow_update_any: true
+    type: A
+    state: present
+  register: cmd_result
+
+- name: 'TYPE=A - check add record with allow_update_any: true results'
+  ansible.builtin.assert:
+    that:
+      - cmd_result is changed
+
+- name: 'TYPE=A - check record with allow_update_any: true (idempotency)'
+  win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: testallowupdateany
+    value: 1.2.3.4
+    allow_update_any: true
+    type: A
+    state: present
+  register: cmd_result
+
+- name: 'TYPE=A - check record with allow_update_any: true (idempotency) results'
+  ansible.builtin.assert:
+    that:
+      - cmd_result is not changed
+
+- name: 'TYPE=A - remove record with allow_update_any'
+  win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: testallowupdateany
+    type: A
+    state: absent
+  register: cmd_result
+
+- name: 'TYPE=A - check remove record with allow_update_any results'
+  ansible.builtin.assert:
+    that:
+      - cmd_result is changed
 # -----------------------------------------------------------------------------
