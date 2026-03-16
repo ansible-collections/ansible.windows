@@ -1,4 +1,0 @@
-security_fixes:
-  - win_dns_record - Fixed a security risk where ``AllowUpdateAny`` was hardcoded for non-SRV records,
-    allowing any authenticated user to update DNS records. Added a new parameter ``allow_update_any``
-    which defaults to ``false`` (https://issues.redhat.com/browse/ACA-5193).
