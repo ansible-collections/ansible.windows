@@ -185,6 +185,22 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-allow_update_any"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-allow-update-any"><strong>allow_update_any</strong></p>
+<a class="ansibleOptionLink" href="#parameter-allow_update_any" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.5.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies if any authenticated user can update the record.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, any authenticated user can update the record.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, only the account that created the record or accounts with appropriate permissions can update it.</p>
+<p>For non-SRV records, this was previously hardcoded to <code class="docutils literal notranslate"><span class="pre">true</span></code>. Since <code class="docutils literal notranslate"><span class="pre">ansible.windows&gt;=3.5.0</span></code> it now defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code> to ensure records are secure by default.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-computer_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-computer-name"><strong>computer_name</strong></p>
 <a class="ansibleOptionLink" href="#parameter-computer_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -192,14 +208,14 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>You can specify an IP address or any value that resolves to an IP address, such as a fully qualified domain name (FQDN), host name, or NETBIOS name.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-name"><strong>name</strong></p>
 <a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The name of the record.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-port"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-port"><strong>port</strong></p>
 <a class="ansibleOptionLink" href="#parameter-port" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -208,7 +224,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Supported only for <code class="docutils literal notranslate"><span class="pre">type=SRV</span></code>.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-priority"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-priority"><strong>priority</strong></p>
 <a class="ansibleOptionLink" href="#parameter-priority" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -217,7 +233,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Supported only for <code class="docutils literal notranslate"><span class="pre">type=SRV</span></code>.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-state"><strong>state</strong></p>
 <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -229,7 +245,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-ttl"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-ttl"><strong>ttl</strong></p>
 <a class="ansibleOptionLink" href="#parameter-ttl" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -240,7 +256,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">3600</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-type"><strong>type</strong></p>
 <a class="ansibleOptionLink" href="#parameter-type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
@@ -262,7 +278,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-value"></div>
 <div class="ansibleOptionAnchor" id="parameter-values"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-values"><span id="ansible-collections-ansible-windows-win-dns-record-module-parameter-value"></span><strong>value</strong></p>
 <a class="ansibleOptionLink" href="#parameter-value" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: values</span></p>
@@ -274,7 +290,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">[]</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-weight"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-weight"><strong>weight</strong></p>
 <a class="ansibleOptionLink" href="#parameter-weight" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -283,7 +299,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Supported only for <code class="docutils literal notranslate"><span class="pre">type=SRV</span></code>.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-zone"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-zone"><strong>zone</strong></p>
 <a class="ansibleOptionLink" href="#parameter-zone" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
@@ -291,7 +307,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>The zone must already exist.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-zone_scope"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-record-module-parameter-zone-scope"><strong>zone_scope</strong></p>
 <a class="ansibleOptionLink" href="#parameter-zone_scope" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
