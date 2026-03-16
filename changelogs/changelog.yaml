@@ -1073,3 +1073,14 @@ releases:
       name: dsc3
       namespace: ''
     release_date: '2026-03-03'
+  3.5.0:
+    changes:
+      release_summary: Release summary for v3.5.0
+      security_fixes:
+      - win_dns_record - Fixed a security risk where ``AllowUpdateAny`` was hardcoded
+        for non-SRV records, allowing any authenticated user to update DNS records.
+        Added a new parameter ``allow_update_any`` which defaults to ``false`` (https://issues.redhat.com/browse/ACA-5193).
+    fragments:
+    - ACA-5193-dns-allow-update-any.yaml
+    - release-summary.yml
+    release_date: '2026-03-16'
