@@ -1,0 +1,2 @@
+minor_changes:
+  - windows - Validated that the collection works correctly with Python 3.12 (https://issues.redhat.com/browse/ACA-5197).
