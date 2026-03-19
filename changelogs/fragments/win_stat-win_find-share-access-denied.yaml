@@ -1,0 +1,3 @@
+bugfixes:
+  - win_stat - Gracefully handle ``Access denied`` errors when querying ``Win32_Share`` for share information on directories. Non-administrator users will now receive a warning instead of a module failure (https://github.com/ansible-collections/ansible.windows/issues/809).
+  - win_find - Gracefully handle ``Access denied`` errors when querying ``Win32_Share`` for share information on directories. Non-administrator users will now receive a warning instead of a module failure (https://github.com/ansible-collections/ansible.windows/issues/809).
