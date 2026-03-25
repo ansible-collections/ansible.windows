@@ -747,68 +747,89 @@ $factMeta = @(
     @{
         Subsets = 'interfaces'
         Code = {
-            $interfaces = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()
+            $interfaces = Get-NetAdapter -IncludeHidden
+            $allAddresses = @(Get-NetIPAddress -ErrorAction SilentlyContinue)
+            $allDnsClients = @(Get-DnsClient -ErrorAction SilentlyContinue)
+            $allRoutes = @(Get-NetRoute -ErrorAction SilentlyContinue)
 
             $formattedNetCfg = @(foreach ($interface in $interfaces) {
-                    $ipProps = $interface.GetIPProperties()
+                if ($interface.MacAddress -eq "") {
+                    continue
+                }
 
-                    try {
-                        $ipv4 = $ipProps.GetIPv4Properties()
-                    }
-                    catch [System.Net.NetworkInformation.NetworkInformationException] {
-                        $ipv4 = $null
-                    }
-                    try {
-                        $ipv6 = $ipProps.GetIPv6Properties()
-                    }
-                    catch [System.Net.NetworkInformation.NetworkInformationException] {
-                        $ipv6 = $null
-                    }
+                $interfaceType = [System.Net.NetworkInformation.NetworkInterfaceType]($interface.InterfaceType)
 
-                    # Do not repo on either the loopback interface or any interfaces that did not have an IP address.
-                    if (-not ($ipv4 -or $ipv6) -or $interface.NetworkInterfaceType -in @('Loopback', 'Tunnel')) {
-                        continue
-                    }
+                $addresses = @($allAddresses | Where-Object InterfaceIndex -eq $interface.InterfaceIndex)
 
-                    $defaultGateway = if ($ipProps.GatewayAddresses) {
-                        $ipProps.GatewayAddresses[0].Address.IPAddressToString
-                    }
-                    $dnsDomain = $null
-                    if ($ipProps.DnsSuffix) {
-                        $dnsDomain = $ipProps.DnsSuffix
-                    }
-                    $index = if ($ipv4) {
-                        $ipv4.Index
-                    }
-                    elseif ($ipv6) {
-                        $ipv6.Index
-                    }
+                $ipv4_addresses = $addresses | Where-Object AddressFamily -eq "IPv4" |
+                        Select-Object @{ N = 'address'; E = { $_.IPAddress.ToString() } },
+                                    @{ N = 'prefix';  E = { $_.PrefixLength.ToString() } }
 
-                    $ipv4_address = $ipProps.UnicastAddresses | Where-Object {
-                        $_.Address.AddressFamily -eq 2
-                    } | Select-Object @{ N = 'address'; E = { $_.Address.ToString() } }, @{ N = 'prefix'; E = { $_.PrefixLength.ToString() } }
+                $ipv6_addresses = $addresses | Where-Object AddressFamily -eq "IPv6" |
+                        Select-Object @{ N = 'address'; E = { $_.IPAddress.ToString() } },
+                                    @{ N = 'prefix';  E = { $_.PrefixLength.ToString() } }
 
-                    $ipv6_address = $ipProps.UnicastAddresses | Where-Object {
-                        $_.Address.AddressFamily -eq 23
-                    } | Select-Object @{ N = 'address'; E = { $_.Address.ToString() } }, @{ N = 'prefix'; E = { $_.PrefixLength.ToString() } }
+                $defaultGateway = $null
 
-                    $mac = ($interface.GetPhysicalAddress() -replace '(..)', '$1:').ToUpperInvariant().Trim(':')
+                $ipv4Default = $allRoutes |
+                    Where-Object {
+                        $_.InterfaceIndex -eq $interface.InterfaceIndex -and
+                        $_.DestinationPrefix -eq '0.0.0.0/0' -and
+                        $_.NextHop -ne '0.0.0.0'
+                    } |
+                    Sort-Object RouteMetric, ifMetric |
+                    Select-Object -First 1
 
-                    @{
-                        connection_name = $interface.Name
-                        default_gateway = $defaultGateway
-                        dns_domain = $dnsDomain
-                        interface_index = $index
-                        interface_name = $interface.Description
-                        ipv4 = $ipv4_address
-                        ipv6 = $ipv6_address
-                        macaddress = $mac
-                        mtu = $ipv4.Mtu
-                        speed = $interface.Speed / 1000 / 1000
+                if ($ipv4Default) {
+                    $defaultGateway = $ipv4Default.NextHop.ToString()
+                }
+                else {
+                    $ipv6Default = $allRoutes |
+                        Where-Object {
+                            $_.InterfaceIndex -eq $interface.InterfaceIndex -and
+                            $_.DestinationPrefix -eq '::/0' -and
+                            $_.NextHop -ne '::'
+                        } |
+                        Sort-Object RouteMetric, ifMetric |
+                        Select-Object -First 1
+
+                    if ($ipv6Default) {
+                        $defaultGateway = $ipv6Default.NextHop.ToString()
                     }
-                })
+                }
+
+                $dnsClient = $allDnsClients | Where-Object InterfaceIndex -eq $interface.InterfaceIndex | Select-Object -First 1
+                $dnsDomain = if ($dnsClient -and $dnsClient.ConnectionSpecificSuffix) {
+                    $dnsClient.ConnectionSpecificSuffix
+                }
+                else {
+                    $null
+                }
+
+                @{
+                    active = ($interface.Status -eq 'Up')
+                    connection_name = $interface.Name
+                    default_gateway = $defaultGateway
+                    device = $interface.ifName
+                    device_id = $interface.DeviceId.ToString()
+                    dns_domain = $dnsDomain
+                    interface_index = $interface.InterfaceIndex
+                    interface_name = $interface.InterfaceDescription
+                    ipv4 = if ($ipv4_addresses -ne @{}) {$ipv4_addresses} else { $null }
+                    ipv6 = if ($ipv6_addresses -ne @{}) {$ipv6_addresses} else { $null }
+                    macaddress = $interface.MacAddress -replace '-', ':'
+                    mtu = $interface.MtuSize
+                    promisc = $interface.PromiscuousMode
+                    speed = if ($null -ne $interface.Speed) { [int64]($interface.Speed / 1000 / 1000) } else { $null }
+                    type = $interfaceType.ToString()
+                }
+            })
 
             $ansibleFacts.ansible_interfaces = $formattedNetCfg
+
+            foreach ($iface in $formattedNetCfg) {
+                $ansibleFacts[$iface.device] = $iface
+            }
         }
     },
     @{
