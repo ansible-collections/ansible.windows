@@ -1,6 +1,6 @@
 ---
 major_changes:
-  - ansible.windows.setup - Changed interface discovery command from `[System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()` to `Get-NetAdapter -IncludeHidden`
+  - ansible.windows.setup - Changed interface discovery command to report on disabled interfaces
 minor_changes:
   - ansible.windows.setup - Added `active` attribute to interface facts to determine whether an interface is enabled
   - ansible.windows.setup - Added `device` attribute derived from the CIM_NetworkAdapater `ifName` attribute
