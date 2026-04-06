@@ -18,8 +18,8 @@ options:
     type: str
   follow_redirects:
     description:
-    - Whether or the module should follow redirects.
-    - C(all) will follow all redirect.
+    - Whether the module should follow redirects.
+    - C(all) will follow all redirects.
     - C(none) will not follow any redirect.
     - C(safe) will follow only "safe" redirects, where "safe" means that the
       client is only doing a C(GET) or C(HEAD) on the URI to which it is being
