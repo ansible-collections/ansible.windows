@@ -20,7 +20,7 @@
       - create_check.diff.before == create_do.diff.before
       - create_check.diff.before == ''
       - create_check.diff.after == create_do.diff.after
-      - create_check.diff.after == "[{{ win_dns_record_zone }}] diff_host 3600 IN A 1.2.3.4\n"
+      - create_check.diff.after == "[" ~ win_dns_record_zone ~ "] diff_host 3600 IN A 1.2.3.4\n"
 
 
 - name: 'Diff test - update TTL (check mode)'
@@ -38,9 +38,9 @@
   assert:
     that:
       - update_check.diff.before == update_do.diff.before
-      - update_check.diff.before == "[{{ win_dns_record_zone }}] diff_host 3600 IN A 1.2.3.4\n"
+      - update_check.diff.before == "[" ~ win_dns_record_zone ~ "] diff_host 3600 IN A 1.2.3.4\n"
       - update_check.diff.after == update_do.diff.after
-      - update_check.diff.after == "[{{ win_dns_record_zone }}] diff_host 7200 IN A 1.2.3.4\n"
+      - update_check.diff.after == "[" ~ win_dns_record_zone ~ "] diff_host 7200 IN A 1.2.3.4\n"
 
 
 - name: 'Diff test - deletion (check mode)'
@@ -58,6 +58,6 @@
   assert:
     that:
       - delete_check.diff.before == delete_do.diff.before
-      - delete_check.diff.before == "[{{ win_dns_record_zone }}] diff_host 7200 IN A 1.2.3.4\n"
+      - delete_check.diff.before == "[" ~ win_dns_record_zone ~ "] diff_host 7200 IN A 1.2.3.4\n"
       - delete_check.diff.after == delete_do.diff.after
       - delete_check.diff.after == ''

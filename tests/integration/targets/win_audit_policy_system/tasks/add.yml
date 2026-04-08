@@ -25,7 +25,9 @@
   assert:
     that:
       - item == "no auditing"
-  with_items:
+  loop: '{{ items | flatten(levels=1) }}'
+  vars:
+    items:
     - "{{ subcategory.current_audit_policy.values() | list }}"
     - "{{ category.current_audit_policy.values() | list | unique }}"
 

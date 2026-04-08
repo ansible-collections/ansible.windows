@@ -15,19 +15,20 @@
   register: pathout
 
 - name: Get path value from machine and user levels
-  win_shell: '[Environment]::GetEnvironmentVariable("{{ varname }}","{{ item.item }}")'
-  with_items: "{{ pathout.results }}"
+  win_shell: '[Environment]::GetEnvironmentVariable("{{ varname }}","{{ item }}")'
+  with_items:
+  - machine
+  - user
   register: varout
 
 - name: Ensure output
   assert:
     that:
-    - item.0 is changed
-    - item.0.path_value == "C:\\" + item.0.item + "Path"
-    - item.1.stdout_lines[0] == 'C:\\' + item.0.item + 'Path'
-  with_together:
-  - "{{ pathout.results }}"
-  - "{{ varout.results }}"
+    - pathout is changed
+    - pathout.results[0].path_value == 'C:\MachinePath'
+    - pathout.results[1].path_value == 'C:\UserPath'
+    - varout.results[0].stdout_lines[0] == 'C:\MachinePath'
+    - varout.results[1].stdout_lines[0] == 'C:\UserPath'
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
