@@ -58,14 +58,14 @@
   assert:
     that:
       - item == "success"
-  with_items:
+  loop:
     - "{{ category.current_audit_policy.values() | list | unique }}"
 
 - name: enable assert that audit_type is "success and failure" for subcategory
   assert:
     that:
       - item == "success and failure"
-  with_items:
+  loop:
     - "{{ subcategory.current_audit_policy.values() | list }}"
 
 ###############################
@@ -94,12 +94,12 @@
   assert:
     that:
       - item == "success"
-  with_items:
+  loop:
     - "{{ category.current_audit_policy.values() | list | unique }}"
 
 - name: idem assert that audit_type is "success and failure" for subcategory
   assert:
     that:
       - item == "success and failure"
-  with_items:
+  loop:
     - "{{ subcategory.current_audit_policy.values() | list }}"

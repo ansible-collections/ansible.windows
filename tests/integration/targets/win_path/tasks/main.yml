@@ -25,10 +25,10 @@
   assert:
     that:
     - pathout is changed
-    - pathout.results[0].path_value == 'C:\MachinePath'
-    - pathout.results[1].path_value == 'C:\UserPath'
-    - varout.results[0].stdout_lines[0] == 'C:\MachinePath'
-    - varout.results[1].stdout_lines[0] == 'C:\UserPath'
+    - pathout.results[0].path_value == 'C:\machinePath'
+    - pathout.results[1].path_value == 'C:\userPath'
+    - varout.results[0].stdout_lines[0] == 'C:\machinePath'
+    - varout.results[1].stdout_lines[0] == 'C:\userPath'
 
 - name: Remove {{ varname }} vars from user and machine scope
   win_shell: '[Environment]::SetEnvironmentVariable("{{ varname }}", $null, "User"); [Environment]::SetEnvironmentVariable("{{ varname }}", $null, "Machine")'
