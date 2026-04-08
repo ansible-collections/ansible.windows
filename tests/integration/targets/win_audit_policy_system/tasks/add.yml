@@ -59,14 +59,14 @@
     that:
       - item == "success"
   loop:
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+    - "{{ category.current_audit_policy.values() | list | unique | flatten }}"
 
 - name: enable assert that audit_type is "success and failure" for subcategory
   assert:
     that:
       - item == "success and failure"
   loop:
-    - "{{ subcategory.current_audit_policy.values() | list }}"
+    - "{{ subcategory.current_audit_policy.values() | list | flatten }}"
 
 ###############################
 ### idempotent apply change ###
@@ -95,11 +95,11 @@
     that:
       - item == "success"
   loop:
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+    - "{{ category.current_audit_policy.values() | list | unique | flatten }}"
 
 - name: idem assert that audit_type is "success and failure" for subcategory
   assert:
     that:
       - item == "success and failure"
   loop:
-    - "{{ subcategory.current_audit_policy.values() | list }}"
+    - "{{ subcategory.current_audit_policy.values() | list | flatten }}"
