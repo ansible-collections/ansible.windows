@@ -29,7 +29,7 @@
   vars:
     items:
     - "{{ subcategory.current_audit_policy.values() | list }}"
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+    - "{{ category.current_audit_policy.values() | list }}"
 
 
 ####################

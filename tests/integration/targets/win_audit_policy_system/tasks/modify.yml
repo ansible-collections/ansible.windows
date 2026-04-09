@@ -25,15 +25,14 @@
   assert:
     that:
       - item == "success"
-  with_items:
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+  loop: "{{ category.current_audit_policy.values() | flatten }}"
 
 - name: modify assert that audit_type is "success and failure" for subcategory
   assert:
     that:
       - item == "success and failure"
-  with_items:
-    - "{{ subcategory.current_audit_policy.values() | list }}"
+  loop: "{{ subcategory.current_audit_policy.values() | flatten }}"
+
 
 
 ####################
@@ -62,8 +61,10 @@
   assert:
     that:
       - item == "failure"
-  with_items:
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+  loop: '{{ items | flatten(levels=1) }}'
+  vars:
+    items:
+    - "{{ category.current_audit_policy.values() | list }}"
     - "{{ subcategory.current_audit_policy.values() | list }}"
 
 
@@ -93,6 +94,8 @@
   assert:
     that:
       - item == "failure"
-  with_items:
-    - "{{ category.current_audit_policy.values() | list | unique }}"
+  loop: '{{ items | flatten(levels=1) }}'
+  vars:
+    items:
+    - "{{ category.current_audit_policy.values() | list }}"
     - "{{ subcategory.current_audit_policy.values() | list }}"
