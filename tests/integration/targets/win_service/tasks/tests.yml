@@ -552,8 +552,8 @@
   assert:
     that:
     - win_service_nt_account is changed
-    - win_service_nt_account.username == 'NT SERVICE\{{ test_win_service_name }}'
-    - win_service_nt_account_actual.services[0].username == 'NT SERVICE\{{ test_win_service_name }}'
+    - win_service_nt_account.username == "NT SERVICE\\" ~ test_win_service_name
+    - win_service_nt_account_actual.services[0].username == "NT SERVICE\\" ~ test_win_service_name
 
 - name: set service display name
   win_service:
@@ -722,7 +722,7 @@
   assert:
     that:
     - win_service_dependency_string is changed
-    - win_service_dependency_string.dependencies == ['{{test_win_service_name}}']
+    - win_service_dependency_string.dependencies == [test_win_service_name]
 
 - name: create new dependencys service again
   win_service:
@@ -734,7 +734,7 @@
   assert:
     that:
     - win_service_dependency_string_again is not changed
-    - win_service_dependency_string_again.dependencies == ['{{test_win_service_name}}']
+    - win_service_dependency_string_again.dependencies == [test_win_service_name]
 
 - name: add another dependency to service
   win_service:
