@@ -332,10 +332,15 @@ Function Search-Path {
         }
 
         if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory)) {
-            $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($dir_child.FullName -replace "(\\|')", '\$1')'"
-            if ($null -ne $share_info) {
-                $file_info.isshared = $true
-                $file_info.sharename = $share_info.Name
+            try {
+                $share_info = Get-CimInstance -ClassName Win32_Share -Filter "Path='$($dir_child.FullName -replace "(\\|')", '\$1')'"
+                if ($null -ne $share_info) {
+                    $file_info.isshared = $true
+                    $file_info.sharename = $share_info.Name
+                }
+            }
+            catch {
+                $module.Warn("Failed to check share info for '$($dir_child.FullName)': $($_.Exception.Message)")
             }
         }
         else {

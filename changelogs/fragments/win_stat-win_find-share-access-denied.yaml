@@ -1,0 +1,2 @@
+bugfixes:
+  - win_stat / win_find - try/catch Access Denied when querying Win32_Share for share info. Non-admin users now get warning instead of failure. Fixes 809.
