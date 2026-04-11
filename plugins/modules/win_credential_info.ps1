@@ -356,15 +356,37 @@ try {
             $module.Result.credentials = @(ConvertTo-CredentialInfo -Credential $credential)
         }
     }
+    elseif ($null -ne $name -and $name -notlike '*`**') {
+        # Name specified without wildcard and no type — CredEnumerateW requires
+        # a wildcard in the filter, so try CredReadW across all credential types
+        $all_types = @(
+            [Ansible.CredentialManagerInfo.CredentialType]::Generic,
+            [Ansible.CredentialManagerInfo.CredentialType]::DomainPassword,
+            [Ansible.CredentialManagerInfo.CredentialType]::DomainCertificate,
+            [Ansible.CredentialManagerInfo.CredentialType]::GenericCertificate
+        )
+        $found = [System.Collections.Generic.List[object]]::new()
+        foreach ($cred_type in $all_types) {
+            $credential = [Ansible.CredentialManagerInfo.Credential]::ReadCredential($name, $cred_type)
+            if ($null -ne $credential) {
+                $found.Add((ConvertTo-CredentialInfo -Credential $credential))
+            }
+        }
+
+        if ($found.Count -gt 0) {
+            $module.Result.exists = $true
+            [array]$module.Result.credentials = $found | Sort-Object -Property { $_.name }
+        }
+    }
     else {
-        # Use CredEnumerateW to list credentials with optional wildcard filter
+        # Use CredEnumerateW — filter is either null (all) or contains a wildcard
         $filter = $name  # null filter returns all credentials
         $credentials = [Ansible.CredentialManagerInfo.Credential]::EnumerateCredentials($filter)
 
         # Filter by type if specified
         if ($null -ne $type) {
             $mapped_type = $type_map[$type]
-            $credentials = $credentials | Where-Object { $_.Type -eq $mapped_type }
+            $credentials = @($credentials | Where-Object { $_.Type -eq $mapped_type })
         }
 
         if ($credentials.Count -gt 0) {

@@ -40,7 +40,7 @@ notes:
 seealso:
 - module: ansible.windows.win_credential
 author:
-- Ansible Project
+- Ansible Project (@ansible)
 '''
 
 EXAMPLES = r'''
