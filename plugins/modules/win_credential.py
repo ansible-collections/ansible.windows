@@ -142,7 +142,15 @@ notes:
 - There can only be one credential per host and type. if a second credential is
   defined that uses the same host and type, then the original credential is
   overwritten.
+- Credentials are stored per-user in Windows. Each user account, including
+  the SYSTEM account, has its own isolated credential store. Credentials
+  created under the SYSTEM account (via C(become_user=System)) will not
+  appear in the Credential Manager UI (C(control keymgr.dll)) because that
+  UI only shows credentials for the currently logged-in interactive user.
+  Use M(ansible.windows.win_credential_info) to verify credentials
+  regardless of which user context they were stored under.
 seealso:
+- module: ansible.windows.win_credential_info
 - module: ansible.windows.win_user_right
 - module: ansible.windows.win_whoami
 author:
