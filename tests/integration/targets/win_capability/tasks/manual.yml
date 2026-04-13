@@ -1,0 +1,93 @@
+- name: start with baseline feature uninstalled
+  win_capability:
+    name: XPS.Viewer
+    state: absent
+
+- name: install capability
+  win_capability:
+    name: XPS.Viewer
+    state: present
+  register: install
+  until: install is not failed
+  retries: 2
+  delay: 0
+
+- name: get result of install capability
+  win_capability_info:
+    name: XPS.Viewer*
+  register: install_actual
+
+- name: assert capability is installed
+  assert:
+    that:
+      - install is changed
+      - not install.reboot_required
+      - install.capabilities == ['XPS.Viewer~~~~0.0.1.0']
+      - install_actual.capabilities[0].name == 'XPS.Viewer~~~~0.0.1.0'
+      - install_actual.capabilities[0].state == 'Installed'
+
+- name: install capability - idempotence
+  win_capability:
+    name: XPS.Viewer
+    state: present
+  register: install_again
+
+- name: assert capability is not changed when already installed
+  assert:
+    that:
+      - install_again is not changed
+      - not install_again.reboot_required
+      - install_again.capabilities == []
+
+- name: remove capability
+  win_capability:
+    name: XPS.Viewer
+    state: absent
+  register: remove
+
+- name: get result of remove capability
+  win_capability_info:
+    name: XPS.Viewer*
+  register: remove_actual
+
+- name: assert capability is removed
+  assert:
+    that:
+      - remove is changed
+      - not remove.reboot_required
+      - remove.capabilities == ['XPS.Viewer~~~~0.0.1.0']
+      - remove_actual.capabilities[0].name == 'XPS.Viewer~~~~0.0.1.0'
+      - remove_actual.capabilities[0].state == 'NotPresent'
+
+- name: remove capability - idempotence
+  win_capability:
+    name: XPS.Viewer
+    state: absent
+  register: remove_again
+
+- name: assert capability is not changed when already removed
+  assert:
+    that:
+      - remove_again is not changed
+      - not remove_again.reboot_required
+      - remove_again.capabilities == []
+
+- name: install capability with full name
+  win_capability:
+    name: XPS.Viewer~~~~0.0.1.0
+    state: present
+  register: install_full
+
+- name: get result of install capability with full name
+  win_capability_info:
+    name: XPS.Viewer*
+  register: install_full_actual
+
+- name: assert capability is installed using full name
+  assert:
+    that:
+      - install_full is changed
+      - not install_full.reboot_required
+      - install_full.capabilities == ['XPS.Viewer~~~~0.0.1.0']
+      - install_full_actual.capabilities[0].name == 'XPS.Viewer~~~~0.0.1.0'
+      - install_full_actual.capabilities[0].state == 'Installed'

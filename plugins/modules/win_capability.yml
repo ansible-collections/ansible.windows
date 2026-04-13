@@ -1,0 +1,117 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_capability
+  short_description: Manage Windows capabilities
+  description:
+    - Add or remove Windows capabilities from a Windows target.
+    - A Windows capability is an optional feature that can be added to Windows.
+  version_added: 3.6.0
+  requirements:
+    - PowerShell 5.1 for all Windows versions, or PowerShell 7.x on Windows
+      Server 2022/Windows 10 build 1903 or newer.
+  options:
+    disable_windows_update:
+      description:
+        - If V(true), prevents DISM from contacting Windows Update for the source files.
+      type: bool
+      default: false
+    log_level:
+      description:
+        - Sets the maximum output level for DISM logging.
+        - V(0) logs errors only
+        - V(1) logs errors and warnings
+        - V(2) logs errors, warnings, and information
+        - V(3) logs all of the previous plus debug output.
+        - This log is managed by DISM itself, the values allowed may change
+          with different versions of Windows.
+      type: int
+    log_path:
+      description:
+        - Specifies the full path and file name to log to.
+        - If not specified the logging uses the default DISM log file location
+          which is V(%WINDIR%\Logs\Dism\dism.log).
+      type: path
+    name:
+      description:
+        - A list of capability names to add or remove.
+        - Supports wildcard patterns like V(?) for single character matching
+          and V(*) for multiple character matching.
+      required: true
+      type: list
+      elements: str
+    source:
+      description:
+        - Use the specified locations as capability sources.
+      type: list
+      elements: str
+    state:
+      description:
+        - Whether the capability should be present or absent.
+        - If V(present), the capability will be added if it is not already present.
+        - If V(absent), the capability will be removed if it is present.
+      type: str
+      default: present
+      choices:
+        - absent
+        - present
+  notes:
+    - Adding a capability requires the target user to have the
+      V(SeBatchLogonRight) user right. Use M(ansible.windows.win_user_right) to
+      manage this user right.
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: none
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_capability_info
+  author:
+    - Jordan Borean (@jborean93)
+
+EXAMPLES: |
+  - name: Install OpenSSH Client capability using short name
+    ansible.windows.win_capability:
+      name: OpenSSH.Client
+      state: present
+
+  - name: Install OpenSSH Client capability using full name
+    ansible.windows.win_capability:
+      name: OpenSSH.Client~~~~0.0.1.0
+      state: present
+
+  - name: Install both OpenSSH Client and OpenSSH Server capabilities using list
+    ansible.windows.win_capability:
+      name:
+        - OpenSSH.Client
+        - OpenSSH.Server
+      state: present
+
+  - name: Install both OpenSSH Client and OpenSSH Server capabilities using wildcard pattern
+    ansible.windows.win_capability:
+      name: OpenSSH.*
+      state: present
+
+  - name: Remove OpenSSH Client capability
+    ansible.windows.win_capability:
+      name: OpenSSH.Client
+      state: absent
+
+RETURN:
+  reboot_required:
+    description:
+      - Whether a reboot is required to complete the operation.
+    returned: always
+    type: bool
+  capabilities:
+    description:
+      - A list of capabilities that were added or removed.
+    returned: always
+    type: list
+    elements: str

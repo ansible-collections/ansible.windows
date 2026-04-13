@@ -1,0 +1,25 @@
+- name: run task scheduler runner tests
+  task_scheduler_runner_tests:
+    username: '{{ ansible_user }}'
+    password: '{{ ansible_password | default(ansible_test_connection_password) }}'
+
+# We need to store these as the tests will change the vars thus breaking
+# the when condition on the block or original interpreter value in the template
+- name: store interpreter in variable for tests
+  set_fact:
+    pwsh_7_interpreter: '{{ ansible_pwsh_interpreter | default("") }}'
+    pwsh_7_available: '{{ ansible_pwsh_interpreter is defined and ansible_pwsh_interpreter.endswith("pwsh.exe") }}'
+
+
+- name: run multiple path tests when pwsh is available
+  when: pwsh_7_available
+  block:
+    - name: test running powershell in pwsh parent
+      task_scheduler_runner_path_tests:
+        pwsh_path: powershell.exe
+
+    - name: test running pwsh in powershell parent
+      task_scheduler_runner_path_tests:
+        pwsh_path: '{{ pwsh_7_interpreter }}'
+      vars:
+        ansible_pwsh_interpreter: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe

@@ -1,0 +1,122 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_capability_info
+  short_description: Get information about Windows capabilities
+  description:
+    - Gather information about Windows capabilities.
+    - A Windows capability is an optional feature that can be added to Windows.
+  requirements:
+    - PowerShell 5.1 for all Windows versions, or PowerShell 7.x on Windows
+      Server 2022/Windows 10 build 1903 or newer.
+  version_added: 3.6.0
+  options:
+    disable_windows_update:
+      description:
+        - If V(true), prevents DISM from contacting Windows Update for the source files.
+      type: bool
+      default: false
+    log_level:
+      description:
+        - Sets the maximum output level for DISM logging.
+        - V(0) logs errors only
+        - V(1) logs errors and warnings
+        - V(2) logs errors, warnings, and information
+        - V(3) logs all of the previous plus debug output.
+        - This log is managed by DISM itself, the values allowed may change
+          with different versions of Windows.
+      type: int
+    log_path:
+      description:
+        - Specifies the full path and file name to log to.
+        - If not specified the logging uses the default DISM log file location
+          which is V(%WINDIR%\Logs\Dism\dism.log).
+      type: path
+    name:
+      description:
+        - A list of capability names to filter by.
+        - Supports wildcard patterns like V(?) for single character matching
+          and V(*) for multiple character matching.
+        - If not specified, all capabilities will be returned.
+      type: list
+      elements: str
+    source:
+      description:
+        - Finds capabilities that are available in the specified source locations.
+      type: list
+      elements: str
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: N/A
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_capability
+  author:
+    - Jordan Borean (@jborean93)
+
+EXAMPLES: |
+  - name: Get all capabilities
+    ansible.windows.win_capability_info:
+    register: capability_info
+
+  - name: Get specific capability using full name
+    ansible.windows.win_capability_info:
+      name: OpenSSH.Client~~~~0.0.1.0
+    register: ssh_client_info
+
+  - name: Get capabilities matching a pattern
+    ansible.windows.win_capability_info:
+      name:
+        - OpenSSH.*
+        - Language.Basic*
+    register: filtered_capabilities
+
+RETURN:
+  capabilities:
+    description:
+      - A list of capabilities found.
+    returned: always
+    type: list
+    elements: dict
+    contains:
+      description:
+        description: The description of the capability.
+        returned: always
+        type: str
+        sample: OpenSSH-based secure shell (SSH) client, for secure key management and access to remote machines.
+      display_name:
+        description: The display name of the capability.
+        returned: always
+        type: str
+        sample: OpenSSH Client
+      download_size:
+        description: The download size of the capability in bytes.
+        returned: always
+        type: int
+        sample: 1048576
+      install_size:
+        description: The installation size of the capability in bytes.
+        returned: always
+        type: int
+        sample: 2097152
+      name:
+        description: The name of the capability.
+        returned: always
+        type: str
+        sample: OpenSSH.Client~~~~0.0.1.0
+      state:
+        description:
+          - The installation state of the capability.
+          - Known values are V(NotPresent), V(UninstallPending), V(Staged),
+            V(Resolved), V(Installed), V(InstallPending), V(Superseded), and
+            V(PartiallyInstalled).
+        returned: always
+        type: str
+        sample: Installed

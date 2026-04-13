@@ -1,0 +1,102 @@
+# These tests are build around CI environment expectations, it expects the following:
+#   - The XPS.Viewer capability is already installed
+#   - The NetFX3 capability is not installed
+
+- name: install capability - check mode
+  win_capability:
+    name: NetFX3
+    state: present
+    disable_windows_update: true
+  register: install_check
+  check_mode: true
+
+- name: get result of install capability in check mode
+  win_capability_info:
+    name: NetFX3*
+    disable_windows_update: true
+  register: install_actual_check
+
+- name: assert capability is not changed in check mode
+  assert:
+    that:
+      - install_check is changed
+      - not install_check.reboot_required
+      - install_check.capabilities == ['NetFX3~~~~']
+      - install_actual_check.capabilities[0].name == 'NetFX3~~~~'
+      - install_actual_check.capabilities[0].state == 'NotPresent'
+
+- name: install capability that is already installed
+  win_capability:
+    name: XPS.Viewer
+    state: present
+    disable_windows_update: true
+  register: install_again
+
+- name: assert capability is not changed when already installed
+  assert:
+    that:
+      - install_again is not changed
+      - not install_again.reboot_required
+      - install_again.capabilities == []
+
+- name: remove capability in check mode
+  win_capability:
+    name: XPS.Viewer
+    state: absent
+    disable_windows_update: true
+  register: remove_check
+  check_mode: true
+
+- name: get result of remove capability in check mode
+  win_capability_info:
+    name: XPS.Viewer*
+    disable_windows_update: true
+  register: remove_actual_check
+
+- name: assert capability is not changed in check mode
+  assert:
+    that:
+      - remove_check is changed
+      - not remove_check.reboot_required
+      - remove_check.capabilities == ['XPS.Viewer~~~~0.0.1.0']
+      - remove_actual_check.capabilities[0].name == 'XPS.Viewer~~~~0.0.1.0'
+      - remove_actual_check.capabilities[0].state == 'Installed'
+
+- name: remove capability that is not installed
+  win_capability:
+    name: NetFX3
+    state: absent
+    disable_windows_update: true
+  register: remove_again
+
+- name: assert capability is not changed when already removed
+  assert:
+    that:
+      - remove_again is not changed
+      - not remove_again.reboot_required
+      - remove_again.capabilities == []
+
+- name: install capability with full name and log path
+  win_capability:
+    name: NetFX3~~~~
+    state: present
+    disable_windows_update: true
+    log_level: 3
+    log_path: '{{ remote_tmp_dir }}\capability_info.log'
+  register: install_full
+  check_mode: true
+
+# While we ran in check mode Get-WindowsCapability uses this so the file should
+# exist.
+- name: get log file stat
+  win_stat:
+    path: '{{ remote_tmp_dir }}\capability_info.log'
+  register: log_stat_full
+
+- name: assert capability is installed using full name
+  assert:
+    that:
+      - install_full is changed
+      - not install_full.reboot_required
+      - install_full.capabilities == ['NetFX3~~~~']
+      - log_stat_full.stat.exists

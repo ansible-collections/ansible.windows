@@ -1,0 +1,24 @@
+# Testing actual capabilities in CI is difficult because it is reliant on the
+# Microsoft Update servers. Using MU is unreliable as sometimes the hosts fail
+# to reach the servers and it takes 10+ minutes for the task to actually
+# retrieve the metadata and files. We cannot reliably create the Features on
+# Demand files due to the dynamic nature of the CI images. Instead in CI we
+# just test the logic in check mode and disable all interaction with the
+# Microsoft Update servers. For manual testing we can run the full tests by
+# uncommenting the manual.yml import at the bottom of this file.
+
+- name: expect failure when installing non-existent capability
+  win_capability:
+    name: Not.A.Real.Capability
+    state: present
+    disable_windows_update: true
+  register: install_nonexistent
+  failed_when:
+    - install_nonexistent is not failed
+    - install_nonexistent.msg is not search("Failed to find capability 'Not.A.Real.Capability'")
+
+- name: run tests
+  import_tasks: ci.yml
+
+# - name: run manual tests
+#   import_tasks: manual.yml
