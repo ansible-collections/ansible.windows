@@ -1,0 +1,340 @@
+---
+# =====================================================================
+# Test: fail without become
+# =====================================================================
+- name: fail to run the module without become
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: domain_password
+  register: fail_no_become
+  failed_when: '"Failed to access the user''s credential store, run the module with become" not in fail_no_become.msg'
+
+# =====================================================================
+# Test: query when no credentials exist
+# =====================================================================
+- name: get credential that does not exist by name and type
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: domain_password
+  register: no_cred_result
+  vars: &become_vars
+    ansible_become: True
+    ansible_become_method: runas
+    ansible_become_user: '{{ ansible_user }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
+
+- name: assert credential does not exist
+  assert:
+    that:
+    - not no_cred_result.exists
+    - no_cred_result.credentials | length == 0
+
+- name: get credential that does not exist by name only
+  win_credential_info:
+    name: '{{ test_hostname }}'
+  register: no_cred_name_only
+  vars: *become_vars
+
+- name: assert credential does not exist by name only
+  assert:
+    that:
+    - not no_cred_name_only.exists
+    - no_cred_name_only.credentials | length == 0
+
+# =====================================================================
+# Setup: create test credentials
+# =====================================================================
+- name: create domain password credential
+  win_credential:
+    name: '{{ test_hostname }}'
+    type: domain_password
+    username: DOMAIN\username
+    secret: MyPassword123
+    comment: Test domain password
+    state: present
+  vars: *become_vars
+
+- name: create generic password credential
+  win_credential:
+    name: '{{ test_hostname }}'
+    type: generic_password
+    username: genericuser
+    secret: GenericPass456
+    persistence: enterprise
+    attributes:
+    - name: source
+      data: ansible
+    - name: version
+      data: '{{ "1.0" | b64encode }}'
+      data_format: base64
+    comment: Test generic password
+    state: present
+  vars: *become_vars
+
+- name: create domain certificate credential
+  win_credential:
+    name: '{{ test_hostname }}'
+    type: domain_certificate
+    username: '{{ cert_thumbprint }}'
+    state: present
+  vars: *become_vars
+
+- name: create generic certificate credential
+  win_credential:
+    name: '{{ test_hostname }}'
+    type: generic_certificate
+    username: '{{ cert_thumbprint }}'
+    secret: '{{ "pin code" | b64encode }}'
+    secret_format: base64
+    state: present
+  vars: *become_vars
+
+- name: create alternate credential for wildcard/enumeration tests
+  win_credential:
+    name: '{{ test_hostname_alt }}'
+    type: domain_password
+    username: DOMAIN\altuser
+    secret: AltPassword789
+    comment: Test alternate credential
+    state: present
+  vars: *become_vars
+
+# =====================================================================
+# Test: query by exact name and type
+# =====================================================================
+- name: get domain password credential by name and type
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: domain_password
+  register: domain_pw_result
+  vars: *become_vars
+
+- name: assert domain password credential returned correctly
+  assert:
+    that:
+    - domain_pw_result.exists
+    - domain_pw_result.credentials | length == 1
+    - domain_pw_result.credentials[0].name == test_hostname
+    - domain_pw_result.credentials[0].type == "DomainPassword"
+    - domain_pw_result.credentials[0].username == "DOMAIN\\username"
+    - domain_pw_result.credentials[0].comment == "Test domain password"
+    - domain_pw_result.credentials[0].persistence == "LocalMachine"
+    - domain_pw_result.credentials[0].attributes | length == 0
+
+- name: get generic password credential by name and type
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: generic_password
+  register: generic_pw_result
+  vars: *become_vars
+
+- name: assert generic password credential returned correctly
+  assert:
+    that:
+    - generic_pw_result.exists
+    - generic_pw_result.credentials | length == 1
+    - generic_pw_result.credentials[0].name == test_hostname
+    - generic_pw_result.credentials[0].type == "Generic"
+    - generic_pw_result.credentials[0].username == "genericuser"
+    - generic_pw_result.credentials[0].comment == "Test generic password"
+    - generic_pw_result.credentials[0].persistence == "Enterprise"
+    - generic_pw_result.credentials[0].attributes | length == 2
+    - generic_pw_result.credentials[0].attributes[0].name == "source"
+    - generic_pw_result.credentials[0].attributes[0].data == "ansible" | b64encode
+    - generic_pw_result.credentials[0].attributes[1].name == "version"
+    - generic_pw_result.credentials[0].attributes[1].data == "1.0" | b64encode
+
+- name: get domain certificate credential by name and type
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: domain_certificate
+  register: domain_cert_result
+  vars: *become_vars
+
+- name: assert domain certificate credential returned correctly
+  assert:
+    that:
+    - domain_cert_result.exists
+    - domain_cert_result.credentials | length == 1
+    - domain_cert_result.credentials[0].name == test_hostname
+    - domain_cert_result.credentials[0].type == "DomainCertificate"
+    - domain_cert_result.credentials[0].username == cert_thumbprint
+    - domain_cert_result.credentials[0].persistence == "LocalMachine"
+
+- name: get generic certificate credential by name and type
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: generic_certificate
+  register: generic_cert_result
+  vars: *become_vars
+
+- name: assert generic certificate credential returned correctly
+  assert:
+    that:
+    - generic_cert_result.exists
+    - generic_cert_result.credentials | length == 1
+    - generic_cert_result.credentials[0].name == test_hostname
+    - generic_cert_result.credentials[0].type == "GenericCertificate"
+    - generic_cert_result.credentials[0].username == cert_thumbprint
+    - generic_cert_result.credentials[0].persistence == "LocalMachine"
+
+# =====================================================================
+# Test: query by name only (no type) - should return all types for name
+# =====================================================================
+- name: get all credentials by name only
+  win_credential_info:
+    name: '{{ test_hostname }}'
+  register: name_only_result
+  vars: *become_vars
+
+- name: assert all credential types returned for name
+  assert:
+    that:
+    - name_only_result.exists
+    - name_only_result.credentials | length == 4
+
+# =====================================================================
+# Test: query non-existent name and type returns empty
+# =====================================================================
+- name: get non-existent credential by name and type
+  win_credential_info:
+    name: nonexistent.host.com
+    type: domain_password
+  register: nonexistent_result
+  vars: *become_vars
+
+- name: assert non-existent credential not found
+  assert:
+    that:
+    - not nonexistent_result.exists
+    - nonexistent_result.credentials | length == 0
+
+# =====================================================================
+# Test: query with wildcard name
+# =====================================================================
+- name: get credentials matching wildcard pattern
+  win_credential_info:
+    name: '*.domain.com'
+  register: wildcard_result
+  vars: *become_vars
+
+- name: assert wildcard returns matching credentials
+  assert:
+    that:
+    - wildcard_result.exists
+    - wildcard_result.credentials | length >= 5
+
+- name: get credentials matching wildcard with type filter
+  win_credential_info:
+    name: '*.domain.com'
+    type: domain_password
+  register: wildcard_type_result
+  vars: *become_vars
+
+- name: assert wildcard with type filter returns correct credentials
+  assert:
+    that:
+    - wildcard_type_result.exists
+    - wildcard_type_result.credentials | length >= 2
+    - wildcard_type_result.credentials | map(attribute='type') | unique | list == ["DomainPassword"]
+
+# =====================================================================
+# Test: query all credentials (no name, no type)
+# =====================================================================
+- name: get all credentials in the store
+  win_credential_info:
+  register: all_creds_result
+  vars: *become_vars
+
+- name: assert all credentials returned
+  assert:
+    that:
+    - all_creds_result.exists
+    - all_creds_result.credentials | length >= 5
+
+# =====================================================================
+# Test: query all credentials filtered by type only
+# =====================================================================
+- name: get all domain_password credentials
+  win_credential_info:
+    type: domain_password
+  register: all_domain_pw_result
+  vars: *become_vars
+
+- name: assert all domain_password credentials returned
+  assert:
+    that:
+    - all_domain_pw_result.exists
+    - all_domain_pw_result.credentials | length >= 2
+    - all_domain_pw_result.credentials | map(attribute='type') | unique | list == ["DomainPassword"]
+
+# =====================================================================
+# Test: credentials are sorted by name
+# =====================================================================
+- name: verify credentials are sorted by name
+  assert:
+    that:
+    - all_creds_result.credentials | map(attribute='name') | list == all_creds_result.credentials | map(attribute='name') | sort | list
+
+# =====================================================================
+# Test: check_mode does not affect results
+# =====================================================================
+- name: get credentials in check mode
+  win_credential_info:
+    name: '{{ test_hostname }}'
+    type: domain_password
+  register: check_mode_result
+  check_mode: True
+  vars: *become_vars
+
+- name: assert check mode returns same results
+  assert:
+    that:
+    - check_mode_result.exists
+    - check_mode_result.credentials | length == 1
+    - check_mode_result.credentials[0].name == test_hostname
+    - check_mode_result.credentials[0].type == "DomainPassword"
+    - check_mode_result.credentials[0].username == "DOMAIN\\username"
+
+# =====================================================================
+# Test: secrets are not returned
+# =====================================================================
+- name: verify no secret field in credential results
+  assert:
+    that:
+    - "'secret' not in domain_pw_result.credentials[0]"
+    - "'secret' not in generic_pw_result.credentials[0]"
+    - "'secret' not in domain_cert_result.credentials[0]"
+    - "'secret' not in generic_cert_result.credentials[0]"
+
+# =====================================================================
+# Test: credential removed externally reflects in results
+# =====================================================================
+- name: remove a credential
+  win_credential:
+    name: '{{ test_hostname_alt }}'
+    type: domain_password
+    state: absent
+  vars: *become_vars
+
+- name: get removed credential
+  win_credential_info:
+    name: '{{ test_hostname_alt }}'
+    type: domain_password
+  register: removed_result
+  vars: *become_vars
+
+- name: assert removed credential is not found
+  assert:
+    that:
+    - not removed_result.exists
+    - removed_result.credentials | length == 0
+
+- name: recreate alternate credential for cleanup
+  win_credential:
+    name: '{{ test_hostname_alt }}'
+    type: domain_password
+    username: DOMAIN\altuser
+    secret: AltPassword789
+    state: present
+  vars: *become_vars
