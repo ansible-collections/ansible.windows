@@ -14,6 +14,10 @@ description:
   this module queries the credential store of that user. When run as SYSTEM,
   it queries the SYSTEM account's credential store, which is separate from any
   interactive user's store and not visible in the Credential Manager UI.
+- This module only returns metadata about credentials (name, type, username,
+  persistence, etc.). It does not return the secret/password value of a
+  credential for security reasons.
+version_added: 3.6.0
 options:
   name:
     description:
