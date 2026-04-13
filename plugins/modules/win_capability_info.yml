@@ -8,8 +8,8 @@ DOCUMENTATION:
     - Gather information about Windows capabilities.
     - A Windows capability is an optional feature that can be added to Windows.
   requirements:
-    - PowerShell 5.1 for all Windows versions, or PowerShell 7.x on Windows
-      Server 2022/Windows 10 build 1903 or newer.
+    - Windows Server 2019/Windows 10 build 1809 or newer for PowerShell 5.1
+    - Windows Server 2022/Windows 10 build 1903 or newer for PowerShell 7.x
   version_added: 3.6.0
   options:
     disable_windows_update:
@@ -31,7 +31,7 @@ DOCUMENTATION:
       description:
         - Specifies the full path and file name to log to.
         - If not specified the logging uses the default DISM log file location
-          which is V(%WINDIR%\Logs\Dism\dism.log).
+          which is V(%WINDIR%\\Logs\\Dism\\dism.log).
       type: path
     name:
       description:
@@ -46,6 +46,8 @@ DOCUMENTATION:
         - Finds capabilities that are available in the specified source locations.
       type: list
       elements: str
+  notes:
+    - This module does not support Server 2016.
   extends_documentation_fragment:
     - ansible.builtin.action_common_attributes
   attributes:

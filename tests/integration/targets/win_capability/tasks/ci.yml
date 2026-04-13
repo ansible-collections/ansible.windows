@@ -81,7 +81,7 @@
     name: NetFX3~~~~
     state: present
     disable_windows_update: true
-    log_level: 3
+    log_level: 1
     log_path: '{{ remote_tmp_dir }}\capability_info.log'
   register: install_full
   check_mode: true

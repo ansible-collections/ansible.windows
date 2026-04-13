@@ -1,0 +1,84 @@
+- name: get capability with wildcard pattern
+  win_capability_info:
+    name: XPS.Viewer*
+    disable_windows_update: true
+  register: capability_info
+
+- name: assert capability information is correct
+  assert:
+    that:
+      - not capability_info is changed
+      - capability_info.capabilities | length == 1
+      - capability_info.capabilities[0].name == 'XPS.Viewer~~~~0.0.1.0'
+      - capability_info.capabilities[0].state in ['NotPresent', 'Installed']
+      - capability_info.capabilities[0].display_name == 'XPS Viewer'
+      - capability_info.capabilities[0].description is string
+      - capability_info.capabilities[0].download_size is number
+      - capability_info.capabilities[0].install_size is number
+
+- name: get capability with full name and in check mode
+  win_capability_info:
+    name: '{{ capability_info.capabilities[0].name }}'
+    disable_windows_update: true
+  register: capability_info_full
+  check_mode: true
+
+- name: assert capability information from full name is correct
+  assert:
+    that:
+      - not capability_info_full is changed
+      - capability_info_full.capabilities | length == 1
+      - capability_info_full.capabilities[0].name == capability_info.capabilities[0].name
+      - capability_info_full.capabilities[0].state == capability_info.capabilities[0].state
+      - capability_info_full.capabilities[0].display_name == capability_info.capabilities[0].display_name
+      - capability_info_full.capabilities[0].description == capability_info.capabilities[0].description
+      - capability_info_full.capabilities[0].download_size == capability_info.capabilities[0].download_size
+      - capability_info_full.capabilities[0].install_size == capability_info.capabilities[0].install_size
+
+- name: get capabilities with pattern that doesn't match any capabilities
+  win_capability_info:
+    name: 'This.Is.Not.A.Capability'
+    disable_windows_update: true
+  register: no_capabilities
+
+- name: assert no capabilities are found with non-matching pattern
+  assert:
+    that:
+      - not no_capabilities is changed
+      - no_capabilities.capabilities | length == 0
+
+- name: get capabilities with multiple patterns
+  win_capability_info:
+    name:
+      - XPS.Viewer*
+      - NetFX3*
+    disable_windows_update: true
+  register: multiple_capabilities
+
+- name: assert capabilities are found with multiple patterns
+  assert:
+    that:
+      - not multiple_capabilities is changed
+      - multiple_capabilities.capabilities | length >= 2
+      - multiple_capabilities.capabilities | selectattr('name', 'match', '^XPS.Viewer') | list | length == 1
+      - multiple_capabilities.capabilities | selectattr('name', 'match', '^NetFX3') | list | length == 1
+
+- name: get capabilities with logging enabled
+  win_capability_info:
+    name: XPS.Viewer*
+    log_level: 1
+    log_path: '{{ remote_tmp_dir }}\capability_info.log'
+    disable_windows_update: true
+  register: capability_info_logged
+
+- name: get log file stat
+  win_stat:
+    path: '{{ remote_tmp_dir }}\capability_info.log'
+  register: log_stat
+
+- name: assert capability information is correct with logging enabled
+  assert:
+    that:
+      - not capability_info_logged is changed
+      - capability_info_logged.capabilities | length == 1
+      - log_stat.stat.exists

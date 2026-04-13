@@ -45,6 +45,18 @@ if ($module.Params.disable_windows_update) {
 
 $changedFeatures = @(
     foreach ($featureName in $name) {
+        if (
+            [Environment]::OSVersion.Version -lt '10.0.17764' -and
+            -not [WildcardPattern]::ContainsWildcardCharacters($featureName) -and
+            -not $featureName.Contains('~')
+        ) {
+            # Server 2019 does not support finding a capability with just the
+            # name. If the provided name doesn't contain a `~` we assume it's
+            # just the base name of the capability and try to find it using a
+            # wildcard pattern.
+            $featureName = "$featureName~*"
+        }
+
         $feature = Get-WindowsCapability @commonParams @sourceParams -Name $featureName | ForEach-Object {
             # Get-WindowsCapability returns an object with empty Name property when the
             # feature is not found.
