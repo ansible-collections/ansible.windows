@@ -1,0 +1,5 @@
+bugfixes:
+  - >-
+    setup - Fix failure when attempting to retrieve ``ansible_processor_cores`` and
+    ``ansible_processor_threads_per_core`` on a host without the required SMBIOS data. Admin users can still retrieve
+    this through WMI but non-admin users will set these facts as null and avoid the lengthy timeout and failure.

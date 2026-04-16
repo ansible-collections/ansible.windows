@@ -62,6 +62,9 @@ if ($osversion -lt [version]"10.0") {
     $module.Warn("The Windows version '$versionString' is no longer supported or tested by Ansible.")
 }
 
+$currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+$isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
 Add-CSharpType -AnsibleModule $module -References @'
 using Microsoft.Win32.SafeHandles;
 using System;
@@ -686,8 +689,7 @@ $factMeta = @(
             }
 
             # We cannot call WMI if we aren't an admin (on a network logon), conditionally set these facts.
-            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            if ($isAdmin) {
                 # These values are localized and I cannot find where they are sourced, we just need to continue
                 # returning them for backwards compatibility.
                 $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property Caption, Name
@@ -851,8 +853,7 @@ $factMeta = @(
 
             # Cannot figure out how to get this info outside of WMI. That means we can only run this when we are an
             # an admin to avoid a 5 second execution time hit on a standard user logon.
-            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            if ($isAdmin) {
                 $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property @(
                     'FreeSpaceInPagingFiles', 'SizeStoredInPagingFiles'
                 )
@@ -976,8 +977,7 @@ $factMeta = @(
 
             # Cannot run Get-CimInstance on non-admin account as it takes 5 seconds to come back with an access denied
             # error. Set the original value to $null and use 'ansible_architecture2' instead.
-            $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-            if ($currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            if ($isAdmin) {
                 $win32CS = Get-CimInstance -ClassName Win32_ComputerSystem -Property PrimaryOwnerContact
                 $win32OS = Get-CimInstance -ClassName Win32_OperatingSystem -Property OSArchitecture
 
@@ -1050,13 +1050,17 @@ $factMeta = @(
                 $ansibleFacts.ansible_processor_cores = $coresPerProcessor
                 $ansibleFacts.ansible_processor_threads_per_core = $threadsPerProcessor / $coresPerProcessor
             }
-            else {
+            elseif ($isAdmin) {
                 # SMBIOS version is too old to get this information. Fallback
                 # to using CIM for this case.
                 $win32Proc = Get-CimInstance -ClassName Win32_Processor -Property NumberOfCores, NumberOfLogicalProcessors |
                     Select-Object -First 1
                 $ansibleFacts.ansible_processor_cores = $win32Proc.NumberOfCores
                 $ansibleFacts.ansible_processor_threads_per_core = $win32Proc.NumberOfLogicalProcessors / $win32Proc.NumberOfCores
+            }
+            else {
+                $ansibleFacts.ansible_processor_cores = $null
+                $ansibleFacts.ansible_processor_threads_per_core = $null
             }
         }
     },
