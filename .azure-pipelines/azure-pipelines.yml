@@ -167,10 +167,8 @@ stages:
           nameFormat: Server {0}
           testFormat: devel/windows/{0}/5.1/1
           targets:
-            - name: 2016 WinRM HTTP
-              test: 2016/winrm/http
-            - name: 2019 WinRM HTTPS
-              test: 2019/winrm/https
+            - name: 2019 WinRM HTTP
+              test: 2019/winrm/http
             - name: 2022 WinRM HTTPS
               test: 2022/winrm/https
             - name: 2022 PSRP HTTPS
@@ -207,10 +205,8 @@ stages:
           nameFormat: Server {0}
           testFormat: devel/windows/{0}/5.1/2
           targets:
-            - name: 2016 WinRM HTTP
-              test: 2016/winrm/http
-            - name: 2019 WinRM HTTPS
-              test: 2019/winrm/https
+            - name: 2019 WinRM HTTP
+              test: 2019/winrm/http
             - name: 2022 WinRM HTTPS
               test: 2022/winrm/https
             - name: 2022 PSRP HTTPS
@@ -247,10 +243,8 @@ stages:
           nameFormat: Server {0}
           testFormat: devel/windows/{0}/5.1/3
           targets:
-            - name: 2016 WinRM HTTP
-              test: 2016/winrm/http
-            - name: 2019 WinRM HTTPS
-              test: 2019/winrm/https
+            - name: 2019 WinRM HTTP
+              test: 2019/winrm/http
             - name: 2022 WinRM HTTPS
               test: 2022/winrm/https
             - name: 2022 PSRP HTTPS
@@ -287,10 +281,8 @@ stages:
           nameFormat: Server {0}
           testFormat: devel/windows/{0}/5.1/4
           targets:
-            - name: 2016 WinRM HTTP
-              test: 2016/winrm/http
-            - name: 2019 WinRM HTTPS
-              test: 2019/winrm/https
+            - name: 2019 WinRM HTTP
+              test: 2019/winrm/http
             - name: 2022 WinRM HTTPS
               test: 2022/winrm/https
             - name: 2022 PSRP HTTPS
