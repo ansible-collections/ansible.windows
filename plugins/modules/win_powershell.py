@@ -128,7 +128,7 @@ seealso:
 - module: ansible.windows.win_command
 - module: ansible.windows.win_shell
 notes:
-- The module is set as failed when a terminating exception is throw, or C(error_action=stop) and a normal error record
+- The module is set as failed when a terminating exception is thrown, or C(error_action=stop) and a normal error record
   is raised.
 - The output values are processed using a custom filter and while it mostly matches the C(ConvertTo-Json) result the
   following value types are different.
