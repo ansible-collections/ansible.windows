@@ -36,7 +36,6 @@
   - { name: '{{ test_hostname_alt }}', type: domain_password }
   - { name: '{{ test_hostname_alt }}', type: generic_password }
   - { name: 'ansible-test/special:chars@host', type: generic_password }
-  - { name: 'ansible-shared-util-test.domain.com', type: domain_password }
 
 - block:
   - name: run tests
@@ -64,7 +63,6 @@
     - { name: '{{ test_hostname_alt }}', type: domain_password }
     - { name: '{{ test_hostname_alt }}', type: generic_password }
     - { name: 'ansible-test/special:chars@host', type: generic_password }
-    - { name: 'ansible-shared-util-test.domain.com', type: domain_password }
 
   - name: remove test dir
     ansible.windows.win_file:

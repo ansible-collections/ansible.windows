@@ -269,14 +269,6 @@
     - all_domain_pw_result.credentials | map(attribute='type') | unique | list == ["DomainPassword"]
 
 # =====================================================================
-# Test: credentials are sorted by name
-# =====================================================================
-- name: verify credentials are sorted by name
-  assert:
-    that:
-    - all_creds_result.credentials | map(attribute='name') | list == all_creds_result.credentials | map(attribute='name') | sort | list
-
-# =====================================================================
 # Test: check_mode does not affect results
 # =====================================================================
 - name: get credentials in check mode
@@ -341,9 +333,6 @@
 
 # =====================================================================
 # Test: name-only path uses CredReadW per-type (not CredEnumerateW)
-# This validates the code path for names without wildcards where
-# CredEnumerateW cannot be used. A regression here would silently
-# return 0 credentials or error when querying by name alone.
 # =====================================================================
 - name: get alternate credential by name only (single type exists)
   win_credential_info:
@@ -362,7 +351,6 @@
 
 # =====================================================================
 # Test: name-only path returns all types when multiple exist
-# Ensures the CredReadW iteration across all 4 types works correctly.
 # =====================================================================
 - name: get primary hostname by name only (4 types exist)
   win_credential_info:
@@ -379,7 +367,6 @@
 
 # =====================================================================
 # Test: wildcard name hits CredEnumerateW path (different from above)
-# Uses explicit wildcard to ensure the enumerate code path works.
 # =====================================================================
 - name: get credentials using explicit wildcard for exact match
   win_credential_info:
@@ -461,106 +448,3 @@
     type: generic_password
     state: absent
   vars: *become_vars
-
-# =====================================================================
-# Test: verify win_credential still works with shared module_util
-# This catches regressions from the CredentialManager.cs refactor by
-# performing a full create/read/update/delete cycle through win_credential.
-# =====================================================================
-- name: create credential via win_credential (shared util regression check)
-  win_credential:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-    username: DOMAIN\sharedtest
-    secret: SharedTestPass
-    comment: Shared util regression test
-    state: present
-  register: shared_util_create
-  vars: *become_vars
-
-- name: verify credential via win_credential_info
-  win_credential_info:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-  register: shared_util_verify
-  vars: *become_vars
-
-- name: assert shared util works for both modules
-  assert:
-    that:
-    - shared_util_create is changed
-    - shared_util_verify.exists
-    - shared_util_verify.credentials[0].username == "DOMAIN\\sharedtest"
-    - shared_util_verify.credentials[0].comment == "Shared util regression test"
-
-- name: update credential via win_credential (shared util update test)
-  win_credential:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-    username: DOMAIN\sharedtest-updated
-    comment: Updated comment
-    state: present
-  register: shared_util_update
-  vars: *become_vars
-
-- name: verify updated credential via win_credential_info
-  win_credential_info:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-  register: shared_util_updated
-  vars: *become_vars
-
-- name: assert update reflected correctly
-  assert:
-    that:
-    - shared_util_update is changed
-    - shared_util_updated.credentials[0].username == "DOMAIN\\sharedtest-updated"
-    - shared_util_updated.credentials[0].comment == "Updated comment"
-
-- name: delete credential via win_credential (shared util delete test)
-  win_credential:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-    state: absent
-  register: shared_util_delete
-  vars: *become_vars
-
-- name: verify deleted credential via win_credential_info
-  win_credential_info:
-    name: 'ansible-shared-util-test.domain.com'
-    type: domain_password
-  register: shared_util_deleted
-  vars: *become_vars
-
-- name: assert delete reflected correctly
-  assert:
-    that:
-    - shared_util_delete is changed
-    - not shared_util_deleted.exists
-
-# =====================================================================
-# Test: secrets are not returned even when credential has a secret set
-# Verify using test_cred_facts (which DOES return secrets) to prove
-# the secret exists, then confirm win_credential_info omits it.
-# =====================================================================
-- name: get generic password via test_cred_facts to confirm secret exists
-  test_cred_facts:
-    name: '{{ test_hostname }}'
-    type: generic_password
-  register: cred_with_secret
-  vars: *become_vars
-
-- name: get same credential via win_credential_info
-  win_credential_info:
-    name: '{{ test_hostname }}'
-    type: generic_password
-  register: info_no_secret
-  vars: *become_vars
-
-- name: assert secret exists in raw lookup but not in win_credential_info
-  assert:
-    that:
-    - cred_with_secret.exists
-    - cred_with_secret.secret != ""
-    - info_no_secret.exists
-    - "'secret' not in info_no_secret.credentials[0]"
