@@ -36,7 +36,6 @@ $spec = @{
                 , @('value', 'username')
                 , @('value', 'password')
             )
-            required_one_of = @(, @('username', 'value'))
             required_together = @(, @('username', 'password'))
         }
         remote_src = @{ type = 'bool'; default = $false }
@@ -828,11 +827,11 @@ if ($PSVersionTable.PSVersion -lt '6.0') {
                 }
                 New-Object System.Management.Automation.PSCredential ($paramDetails.username, $credPass)
             }
-            elseif ($paramDetails.value) {
+            elseif ($null -ne $paramDetails.value) {
                 $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
             }
             else {
-                New-Object -TypeName System.Security.SecureString
+                $null
             }
 
             $parameters[$paramDetails.name] = $value
