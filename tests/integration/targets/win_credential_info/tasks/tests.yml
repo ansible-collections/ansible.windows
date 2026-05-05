@@ -59,7 +59,7 @@
     name: '{{ test_hostname }}'
     type: generic_password
     username: genericuser
-    secret: GenericPass456
+    secret: GenericPass456  # notsecret
     persistence: enterprise
     attributes:
     - name: source
