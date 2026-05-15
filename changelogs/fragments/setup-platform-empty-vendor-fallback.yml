@@ -1,0 +1,6 @@
+bugfixes:
+  - >-
+    setup - Fix empty ``ansible_system_vendor`` on hosts where the SMBIOS Type 1 Manufacturer
+    string is blank (e.g. some Windows guests after a V2V migration). Falls back to
+    ``Win32_ComputerSystem.Manufacturer`` when SMBIOSInfo returns an empty Manufacturer,
+    matching the existing fallback path for `Win32Exception`.

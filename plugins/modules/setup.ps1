@@ -871,6 +871,9 @@ $factMeta = @(
         Code = {
             try {
                 $bios = New-Object -TypeName Ansible.Windows.Setup.SMBIOSInfo
+                if ([string]::IsNullOrWhiteSpace($bios.Manufacturer)) {
+                    $bios = Get-CimInstance -ClassName Win32_ComputerSystem -Property Manufacturer
+                }
             }
             catch [System.ComponentModel.Win32Exception] {
                 $bios = Get-CimInstance -ClassName Win32_ComputerSystem -Property Manufacturer
