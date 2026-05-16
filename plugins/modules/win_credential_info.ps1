@@ -31,19 +31,19 @@ $type_map = @{
 }
 
 Function ConvertTo-CredentialInfo {
-    param($Credential)
+    param($InputObject)
 
     $info = @{
-        name = $Credential.TargetName
-        type = $Credential.Type.ToString()
-        username = $Credential.UserName
-        alias = $Credential.TargetAlias
-        comment = $Credential.Comment
-        persistence = $Credential.Persist.ToString()
+        name = $InputObject.TargetName
+        type = $InputObject.Type.ToString()
+        username = $InputObject.UserName
+        alias = $InputObject.TargetAlias
+        comment = $InputObject.Comment
+        persistence = $InputObject.Persist.ToString()
         attributes = @()
     }
 
-    foreach ($attribute in $Credential.Attributes) {
+    foreach ($attribute in $InputObject.Attributes) {
         $attr_info = @{
             name = $attribute.Keyword
             data = $null
@@ -71,7 +71,7 @@ if ($null -ne $name -and $null -ne $type) {
     }
 }
 elseif ($null -ne $name -and $name -notlike '*`**') {
-    # Name specified without wildcard and no type — CredEnumerateW requires
+    # Name specified without wildcard and no type - CredEnumerateW requires
     # a wildcard in the filter, so try CredReadW across all credential types
     $all_types = @(
         [Ansible.CredentialManager.CredentialType]::Generic,
@@ -93,7 +93,7 @@ elseif ($null -ne $name -and $name -notlike '*`**') {
     }
 }
 else {
-    # Use CredEnumerateW — filter is either null (all) or contains a wildcard
+    # Use CredEnumerateW - filter is either null (all) or contains a wildcard
     $filter = $name  # null filter returns all credentials
     $credentials = [Ansible.CredentialManager.Credential]::EnumerateCredentials($filter)
 
