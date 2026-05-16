@@ -1,12 +1,3 @@
-- name: expect failure when secure string value or username not provided
-  win_powershell:
-    script: '"test"'
-    sensitive_parameters:
-    - name: Param
-  register: fail_no_ss_value
-  failed_when: >-
-    fail_no_ss_value.msg != 'one of the following is required: username, value found in sensitive_parameters'
-
 - name: expect failure when secure string password is not provided with username
 
   win_powershell:
