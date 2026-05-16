@@ -6,7 +6,7 @@
 
 - name: copy the pfx certificate
   ansible.windows.win_copy:
-    src: '{{ role_path }}/../win_credential/files/cert.pfx'
+    src: '{{ role_path }}/files/cert.pfx'
     dest: '{{ test_credential_dir }}\cert.pfx'
 
 - name: import the pfx into the personal store
