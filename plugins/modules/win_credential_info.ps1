@@ -288,7 +288,8 @@ Function ConvertTo-CredentialOutput {
 $module.Result.exists = $false
 $module.Result.credentials = @()
 
-if ($null -ne $name -and $null -ne $type) {
+if ($null -ne $name -and $null -ne $type -and $name -notlike '*`**') {
+    # Exact name + type: use CredReadW for single lookup
     $mapped_type = $type_map[$type]
     $credential = [Ansible.CredentialManagerInfo.CredentialHelper]::GetCredential($name, $mapped_type)
 
