@@ -827,11 +827,11 @@ if ($PSVersionTable.PSVersion -lt '6.0') {
                 }
                 New-Object System.Management.Automation.PSCredential ($paramDetails.username, $credPass)
             }
-            elseif ($null -ne $paramDetails.value) {
+            elseif ($paramDetails.value) {
                 $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
             }
-            else {
-                $null
+            elseif ($null -ne $paramDetails.value) {
+                New-Object -TypeName System.Security.SecureString
             }
 
             if ($null -ne $value) {
