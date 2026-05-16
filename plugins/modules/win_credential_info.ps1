@@ -11,7 +11,7 @@ $spec = @{
         name = @{ type = "str" }
         type = @{
             type = "str"
-            choices = @("domain_password", "domain_certificate", "generic_password", "generic_certificate")
+            choices = @("domain_certificate", "domain_password", "generic_certificate", "generic_password")
         }
     }
     supports_check_mode = $true
