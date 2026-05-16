@@ -950,7 +950,7 @@
     - secure_string.output[0].SecureString1 == ''
     - secure_string.output[0].SecureString2 == 'secret'
 
-- name: run script with null SecureString (omit value to pass $null)
+- name: run script with omitted sensitive parameter (not bound)
   win_powershell:
     executable: '{{ pwsh_executable | default(omit) }}'
     script: |
@@ -971,11 +971,11 @@
       value: secret
   register: null_secure_string
 
-- name: assert run script with null SecureString (omit value to pass $null)
+- name: assert run script with omitted sensitive parameter (not bound)
   assert:
     that:
     - null_secure_string.output[0].PasswordIsNull == true
-    - null_secure_string.output[0].PasswordBound == true
+    - null_secure_string.output[0].PasswordBound == false
     - null_secure_string.output[0].OtherIsNull == false
     - null_secure_string.output[0].OtherBound == true
 

@@ -834,7 +834,9 @@ if ($PSVersionTable.PSVersion -lt '6.0') {
                 $null
             }
 
-            $parameters[$paramDetails.name] = $value
+            if ($null -ne $value) {
+                $parameters[$paramDetails.name] = $value
+            }
         }
     }
     if ($supportsShouldProcess) {
