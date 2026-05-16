@@ -4,7 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#AnsibleRequires -CSharpUtil ansible_collections.ansible.windows.plugins.module_utils.CredentialManager
+#Requires -Module Ansible.ModuleUtils.AddType
 
 $spec = @{
     options = @{
@@ -19,18 +19,205 @@ $spec = @{
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
+Add-CSharpType -AnsibleModule $module -References @'
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
+namespace Ansible.CredentialManagerInfo
+{
+    internal class NativeMethods
+    {
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool CredEnumerateW(
+            [MarshalAs(UnmanagedType.LPWStr)] string Filter,
+            UInt32 Flags,
+            out UInt32 Count,
+            out IntPtr Credentials);
+
+        [DllImport("advapi32.dll")]
+        public static extern void CredFree(IntPtr Buffer);
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool CredReadW(
+            [MarshalAs(UnmanagedType.LPWStr)] string TargetName,
+            CredentialType Type,
+            UInt32 Flags,
+            out IntPtr Credential);
+    }
+
+    public enum CredentialType
+    {
+        Generic = 1,
+        DomainPassword = 2,
+        DomainCertificate = 3,
+        DomainVisiblePassword = 4,
+        GenericCertificate = 5,
+        DomainExtended = 6,
+    }
+
+    public enum CredentialPersist
+    {
+        Session = 1,
+        LocalMachine = 2,
+        Enterprise = 3,
+    }
+
+    [Flags]
+    public enum CredentialFlags
+    {
+        None = 0,
+        PromptNow = 2,
+        UsernameTarget = 4,
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal class CREDENTIAL
+    {
+        public CredentialFlags Flags;
+        public CredentialType Type;
+        [MarshalAs(UnmanagedType.LPWStr)] public string TargetName;
+        [MarshalAs(UnmanagedType.LPWStr)] public string Comment;
+        public long LastWritten;
+        public UInt32 CredentialBlobSize;
+        public IntPtr CredentialBlob;
+        public CredentialPersist Persist;
+        public UInt32 AttributeCount;
+        public IntPtr Attributes;
+        [MarshalAs(UnmanagedType.LPWStr)] public string TargetAlias;
+        [MarshalAs(UnmanagedType.LPWStr)] public string UserName;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct CREDENTIAL_ATTRIBUTE
+    {
+        [MarshalAs(UnmanagedType.LPWStr)] public string Keyword;
+        public UInt32 Flags;
+        public UInt32 ValueSize;
+        public IntPtr Value;
+    }
+
+    public class CredentialAttribute
+    {
+        public string Keyword;
+        public byte[] Value;
+    }
+
+    public class CredentialInfo
+    {
+        public CredentialType Type;
+        public string TargetName;
+        public string Comment;
+        public CredentialPersist Persist;
+        public List<CredentialAttribute> Attributes;
+        public string TargetAlias;
+        public string UserName;
+    }
+
+    public static class CredentialHelper
+    {
+        public static CredentialInfo GetCredential(string target, CredentialType type)
+        {
+            IntPtr pCredential;
+            if (!NativeMethods.CredReadW(target, type, 0, out pCredential))
+            {
+                int err = Marshal.GetLastWin32Error();
+                if (err == 0x00000520)
+                    throw new InvalidOperationException("Failed to access the user's credential store, run the module with become");
+                if (err == 0x00000490)
+                    return null;
+                throw new System.ComponentModel.Win32Exception(err);
+            }
+
+            try
+            {
+                return ParseCredential(pCredential);
+            }
+            finally
+            {
+                NativeMethods.CredFree(pCredential);
+            }
+        }
+
+        public static List<CredentialInfo> EnumerateCredentials(string filter)
+        {
+            UInt32 count;
+            IntPtr pCredentials;
+            var results = new List<CredentialInfo>();
+
+            if (!NativeMethods.CredEnumerateW(filter, 0, out count, out pCredentials))
+            {
+                int err = Marshal.GetLastWin32Error();
+                if (err == 0x00000520)
+                    throw new InvalidOperationException("Failed to access the user's credential store, run the module with become");
+                if (err == 0x00000490)
+                    return results;
+                throw new System.ComponentModel.Win32Exception(err);
+            }
+
+            try
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    IntPtr pCred = Marshal.ReadIntPtr(pCredentials, i * IntPtr.Size);
+                    results.Add(ParseCredential(pCred));
+                }
+            }
+            finally
+            {
+                NativeMethods.CredFree(pCredentials);
+            }
+
+            return results;
+        }
+
+        private static CredentialInfo ParseCredential(IntPtr pCredential)
+        {
+            CREDENTIAL raw = (CREDENTIAL)Marshal.PtrToStructure(pCredential, typeof(CREDENTIAL));
+
+            var attributes = new List<CredentialAttribute>();
+            if (raw.AttributeCount > 0)
+            {
+                IntPtr pAttr = raw.Attributes;
+                int attrSize = Marshal.SizeOf(typeof(CREDENTIAL_ATTRIBUTE));
+                for (int i = 0; i < raw.AttributeCount; i++)
+                {
+                    CREDENTIAL_ATTRIBUTE attr = (CREDENTIAL_ATTRIBUTE)Marshal.PtrToStructure(
+                        IntPtr.Add(pAttr, i * attrSize), typeof(CREDENTIAL_ATTRIBUTE));
+                    byte[] value = new byte[attr.ValueSize];
+                    if (attr.Value != IntPtr.Zero && attr.ValueSize > 0)
+                        Marshal.Copy(attr.Value, value, 0, (int)attr.ValueSize);
+                    attributes.Add(new CredentialAttribute { Keyword = attr.Keyword, Value = value });
+                }
+            }
+
+            return new CredentialInfo
+            {
+                Type = raw.Type,
+                TargetName = raw.TargetName,
+                Comment = raw.Comment,
+                Persist = raw.Persist,
+                Attributes = attributes,
+                TargetAlias = raw.TargetAlias,
+                UserName = raw.UserName,
+            };
+        }
+    }
+}
+'@
+
 $name = $module.Params.name
 $type = $module.Params.type
 
-# Map user-friendly type names to enum values
 $type_map = @{
-    "domain_password" = [Ansible.CredentialManager.CredentialType]::DomainPassword
-    "domain_certificate" = [Ansible.CredentialManager.CredentialType]::DomainCertificate
-    "generic_password" = [Ansible.CredentialManager.CredentialType]::Generic
-    "generic_certificate" = [Ansible.CredentialManager.CredentialType]::GenericCertificate
+    "domain_password" = [Ansible.CredentialManagerInfo.CredentialType]::DomainPassword
+    "domain_certificate" = [Ansible.CredentialManagerInfo.CredentialType]::DomainCertificate
+    "generic_password" = [Ansible.CredentialManagerInfo.CredentialType]::Generic
+    "generic_certificate" = [Ansible.CredentialManagerInfo.CredentialType]::GenericCertificate
 }
 
-Function ConvertTo-CredentialInfo {
+Function ConvertTo-CredentialOutput {
     param($InputObject)
 
     $info = @{
@@ -61,29 +248,28 @@ $module.Result.exists = $false
 $module.Result.credentials = @()
 
 if ($null -ne $name -and $null -ne $type) {
-    # When both name and type are specified, use CredReadW for exact lookup
     $mapped_type = $type_map[$type]
-    $credential = [Ansible.CredentialManager.Credential]::GetCredential($name, $mapped_type)
+    $credential = [Ansible.CredentialManagerInfo.CredentialHelper]::GetCredential($name, $mapped_type)
 
     if ($null -ne $credential) {
         $module.Result.exists = $true
-        $module.Result.credentials = @(ConvertTo-CredentialInfo -Credential $credential)
+        $module.Result.credentials = @(ConvertTo-CredentialOutput -InputObject $credential)
     }
 }
 elseif ($null -ne $name -and $name -notlike '*`**') {
-    # Name specified without wildcard and no type - CredEnumerateW requires
-    # a wildcard in the filter, so try CredReadW across all credential types
+    # Name without wildcard - CredEnumerateW requires a wildcard in the filter,
+    # so try CredReadW across all credential types
     $all_types = @(
-        [Ansible.CredentialManager.CredentialType]::Generic,
-        [Ansible.CredentialManager.CredentialType]::DomainPassword,
-        [Ansible.CredentialManager.CredentialType]::DomainCertificate,
-        [Ansible.CredentialManager.CredentialType]::GenericCertificate
+        [Ansible.CredentialManagerInfo.CredentialType]::Generic,
+        [Ansible.CredentialManagerInfo.CredentialType]::DomainPassword,
+        [Ansible.CredentialManagerInfo.CredentialType]::DomainCertificate,
+        [Ansible.CredentialManagerInfo.CredentialType]::GenericCertificate
     )
     $found = [System.Collections.Generic.List[object]]::new()
     foreach ($cred_type in $all_types) {
-        $credential = [Ansible.CredentialManager.Credential]::GetCredential($name, $cred_type)
+        $credential = [Ansible.CredentialManagerInfo.CredentialHelper]::GetCredential($name, $cred_type)
         if ($null -ne $credential) {
-            $found.Add((ConvertTo-CredentialInfo -Credential $credential))
+            $found.Add((ConvertTo-CredentialOutput -InputObject $credential))
         }
     }
 
@@ -94,10 +280,9 @@ elseif ($null -ne $name -and $name -notlike '*`**') {
 }
 else {
     # Use CredEnumerateW - filter is either null (all) or contains a wildcard
-    $filter = $name  # null filter returns all credentials
-    $credentials = [Ansible.CredentialManager.Credential]::EnumerateCredentials($filter)
+    $filter = $name
+    $credentials = [Ansible.CredentialManagerInfo.CredentialHelper]::EnumerateCredentials($filter)
 
-    # Filter by type if specified
     if ($null -ne $type) {
         $mapped_type = $type_map[$type]
         $credentials = @($credentials | Where-Object { $_.Type -eq $mapped_type })
@@ -106,7 +291,7 @@ else {
     if ($credentials.Count -gt 0) {
         $module.Result.exists = $true
         [array]$module.Result.credentials = $credentials | ForEach-Object {
-            ConvertTo-CredentialInfo -Credential $_
+            ConvertTo-CredentialOutput -InputObject $_
         } | Sort-Object -Property { $_.name }
     }
 }
