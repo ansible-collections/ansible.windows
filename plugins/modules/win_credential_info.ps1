@@ -148,6 +148,9 @@ namespace Ansible.CredentialManagerInfo
 
         public static List<CredentialInfo> EnumerateCredentials(string filter)
         {
+            if (filter != null && filter.Length == 0)
+                filter = null;
+
             UInt32 count;
             IntPtr pCredentials;
             var results = new List<CredentialInfo>();
