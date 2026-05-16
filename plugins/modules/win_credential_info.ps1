@@ -45,6 +45,12 @@ namespace Ansible.CredentialManagerInfo
             CredentialType Type,
             UInt32 Flags,
             out IntPtr Credential);
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool CredUnmarshalCredentialW(
+            [MarshalAs(UnmanagedType.LPWStr)] string MarshaledCredential,
+            out uint CredType,
+            out IntPtr Credential);
     }
 
     public enum CredentialType
@@ -192,6 +198,13 @@ namespace Ansible.CredentialManagerInfo
                 }
             }
 
+            string userName = raw.UserName;
+            if ((raw.Type == CredentialType.DomainCertificate || raw.Type == CredentialType.GenericCertificate)
+                && !string.IsNullOrEmpty(userName))
+            {
+                userName = UnmarshalCertificateCredential(userName);
+            }
+
             return new CredentialInfo
             {
                 Type = raw.Type,
@@ -200,8 +213,36 @@ namespace Ansible.CredentialManagerInfo
                 Persist = raw.Persist,
                 Attributes = attributes,
                 TargetAlias = raw.TargetAlias,
-                UserName = raw.UserName,
+                UserName = userName,
             };
+        }
+
+        private static string UnmarshalCertificateCredential(string marshaledValue)
+        {
+            uint credType;
+            IntPtr pCredInfo;
+            if (!NativeMethods.CredUnmarshalCredentialW(marshaledValue, out credType, out pCredInfo))
+                return marshaledValue;
+
+            try
+            {
+                byte[] sizeBytes = new byte[sizeof(uint)];
+                Marshal.Copy(pCredInfo, sizeBytes, 0, sizeof(uint));
+                uint structSize = BitConverter.ToUInt32(sizeBytes, 0);
+
+                byte[] certInfo = new byte[structSize];
+                Marshal.Copy(pCredInfo, certInfo, 0, certInfo.Length);
+
+                var hex = new System.Text.StringBuilder((certInfo.Length - sizeof(uint)) * 2);
+                for (int i = sizeof(uint); i < certInfo.Length; i++)
+                    hex.AppendFormat("{0:x2}", certInfo[i]);
+
+                return hex.ToString().ToUpperInvariant();
+            }
+            finally
+            {
+                NativeMethods.CredFree(pCredInfo);
+            }
         }
     }
 }
