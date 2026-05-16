@@ -950,7 +950,7 @@
     - secure_string.output[0].SecureString1 == ''
     - secure_string.output[0].SecureString2 == 'secret'
 
-- name: run script with null SecureString value
+- name: run script with null SecureString (omit value to pass $null)
   win_powershell:
     executable: '{{ pwsh_executable | default(omit) }}'
     script: |
@@ -967,40 +967,17 @@
       }
     sensitive_parameters:
     - name: Password
-      value: null
     - name: Other
       value: secret
   register: null_secure_string
 
-- name: assert run script with null SecureString value
+- name: assert run script with null SecureString (omit value to pass $null)
   assert:
     that:
     - null_secure_string.output[0].PasswordIsNull == true
     - null_secure_string.output[0].PasswordBound == true
     - null_secure_string.output[0].OtherIsNull == false
     - null_secure_string.output[0].OtherBound == true
-
-- name: run script with omitted sensitive parameter
-  win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
-    script: |
-      param (
-          [SecureString]$Password
-      )
-
-      @{
-          PasswordIsNull = $null -eq $Password
-          PasswordBound = $PSBoundParameters.ContainsKey('Password')
-      }
-    sensitive_parameters:
-    - name: Password
-  register: omitted_secure_string
-
-- name: assert run script with omitted sensitive parameter
-  assert:
-    that:
-    - omitted_secure_string.output[0].PasswordIsNull == true
-    - omitted_secure_string.output[0].PasswordBound == true
 
 - name: run script with PSCredential value
   win_powershell:

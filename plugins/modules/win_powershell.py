@@ -112,10 +112,10 @@ options:
         description:
         - The string to pass as a SecureString of the parameter specified by
           I(name).
-        - Set to V(null) to pass C($null) as the parameter value, allowing the
-          script to use its default value for that parameter.
+        - Omit both I(value) and I(username)/I(password) to pass C($null)
+          as the parameter value, allowing the script to use its default.
         - This is mutually exclusive with I(username) and I(password).
-        type: raw
+        type: str
       username:
         description:
         - The C(UserName) for the PSCredential value.
