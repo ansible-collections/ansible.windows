@@ -115,7 +115,7 @@ options:
         - Set to V(null) to pass C($null) as the parameter value, allowing the
           script to use its default value for that parameter.
         - This is mutually exclusive with I(username) and I(password).
-        type: str
+        type: raw
       username:
         description:
         - The C(UserName) for the PSCredential value.

@@ -30,7 +30,7 @@ $spec = @{
                 name = @{ type = 'str'; required = $true }
                 username = @{ type = 'str' }
                 password = @{ type = 'str'; no_log = $true }
-                value = @{ type = 'str'; no_log = $true }
+                value = @{ type = 'raw'; no_log = $true }
             }
             mutually_exclusive = @(
                 , @('value', 'username')
