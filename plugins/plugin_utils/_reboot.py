@@ -534,8 +534,28 @@ def _perform_reboot(
         )
 
         return _perform_reboot(
-            task_action, connection, reboot_command, handle_abort=False
+            task_action,
+            connection,
+            reboot_command,
+            handle_abort=False,
         )
+
+    elif rc == 1115:
+        # "A system shutdown is in progress."
+        # This means the system is already rebooting but not from something
+        # we've initiated. The best we can do is wait for it to come back
+        # online and hope it was a reboot and not a shutdown.
+        msg = (
+            "The target has reported that a reboot or shutdown is already in progress. "
+            "This has been triggered by something other than Ansible but Ansible will "
+            "attempt to wait for the system to come back online. If the system is "
+            "shutting down instead of rebooting then this will timeout waiting for "
+            "the system to come back online and report a failure. If you see this "
+            "message then you should investigate the target event logs to determine "
+            "what is causing the reboot/shutdown outside of Ansible."
+        )
+        display.warning(msg)
+        return
 
     if rc != 0:
         msg = f"{task_action}: Reboot command failed"
