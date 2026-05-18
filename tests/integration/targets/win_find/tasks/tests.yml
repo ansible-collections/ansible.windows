@@ -968,3 +968,27 @@
     - not any_result is changed
     - any_result.examined == 4
     - any_result.matched == 3
+
+# Verifies the depth logic does not impact multiple sibling directories.
+# This test ensures two things:
+# 1. All sibling folders at the same depth are searched correctly (bug would cause
+#    folder_2 to be skipped (Depth = 1) due to depth value mutation)
+# 2. Files beyond depth 3 are correctly excluded (deep_file_3.txt should NOT be found)
+# https://github.com/ansible-collections/ansible.windows/issues/839
+- name: find files with recurse and custom depth
+  win_find:
+    paths: '{{ win_base_dir }}\nested-depth'
+    recurse: true
+    depth: 3
+  register: actual
+
+- name: assert find files with recurse and custom depth
+  assert:
+    that:
+    - not actual is changed
+    - actual.examined == 10
+    - actual.matched == 3
+    - actual.files | length == 3
+    - actual.files[0].path == win_base_dir + '\\nested-depth\\folder_1\\sub_folder_1\\file_1.txt'
+    - actual.files[1].path == win_base_dir + '\\nested-depth\\folder_2\\sub_folder_2\\file_2.txt'
+    - actual.files[2].path == win_base_dir + '\\nested-depth\\folder_3\\sub_folder_3\\file_3.txt'

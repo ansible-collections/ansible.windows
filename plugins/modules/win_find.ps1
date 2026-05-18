@@ -252,7 +252,7 @@ Function Search-Path {
         if ($dir_child.Attributes.HasFlag([System.IO.FileAttributes]::Directory) -and $Recurse -and $Depth -ne 1) {
             if ($Follow -or -not $dir_child.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint)) {
                 $PSBoundParameters.Remove('Path') > $null
-                $PSBoundParameters['Depth'] = ($PSBoundParameters['Depth']) - 1
+                $PSBoundParameters['Depth'] = $Depth - 1
                 Search-Path -Path $dir_child.FullName @PSBoundParameters
             }
         }

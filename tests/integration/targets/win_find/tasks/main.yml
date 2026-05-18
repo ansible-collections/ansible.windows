@@ -8,6 +8,24 @@
 # all in bulk than with with_items to save each round trip over WinRM
 - name: set test files and folders
   win_shell: |
+    $base_tmp_dir = '{{ win_base_dir }}'
+    @(
+        "nested-depth\folder_1\sub_folder_1",
+        "nested-depth\folder_2\sub_folder_2"
+        "nested-depth\folder_3\sub_folder_3\deep_sub_folder_3"
+    ) | ForEach-Object {
+        New-Item -Path "$base_tmp_dir\$_" -ItemType Directory -Force
+    }
+
+    @(
+        "nested-depth\folder_1\sub_folder_1\file_1.txt",
+        "nested-depth\folder_2\sub_folder_2\file_2.txt"
+        "nested-depth\folder_3\sub_folder_3\file_3.txt"
+        "nested-depth\folder_3\sub_folder_3\deep_sub_folder_3\deep_file_3.txt"
+    ) | ForEach-Object {
+        New-Item -Path "$base_tmp_dir\$_" -ItemType File -Value ""
+    }
+
     $directories = @(
         "nested",
         "single",
@@ -117,5 +135,5 @@
 
   - name: remove testing folder
     win_file:
-      path: '{{win_find_dir}}'
+      path: '{{win_base_dir}}'
       state: absent
