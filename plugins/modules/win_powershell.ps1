@@ -36,7 +36,6 @@ $spec = @{
                 , @('value', 'username')
                 , @('value', 'password')
             )
-            required_one_of = @(, @('username', 'value'))
             required_together = @(, @('username', 'password'))
         }
         remote_src = @{ type = 'bool'; default = $false }
@@ -831,11 +830,13 @@ if ($PSVersionTable.PSVersion -lt '6.0') {
             elseif ($paramDetails.value) {
                 $paramDetails.value | ConvertTo-SecureString -AsPlainText -Force
             }
-            else {
+            elseif ($null -ne $paramDetails.value) {
                 New-Object -TypeName System.Security.SecureString
             }
 
-            $parameters[$paramDetails.name] = $value
+            if ($null -ne $value) {
+                $parameters[$paramDetails.name] = $value
+            }
         }
     }
     if ($supportsShouldProcess) {

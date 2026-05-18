@@ -98,6 +98,8 @@ options:
       not exposed in the module invocation args logs.
     - The I(value) suboption can be used to create a SecureString value while
       I(username) and I(password) can be used to create a PSCredential value.
+    - If neither I(value) nor I(username)/I(password) is specified, C($null)
+      is passed as the parameter value.
     type: list
     elements: dict
     suboptions:
@@ -110,6 +112,8 @@ options:
         description:
         - The string to pass as a SecureString of the parameter specified by
           I(name).
+        - Omit both I(value) and I(username)/I(password) to pass C($null)
+          as the parameter value, allowing the script to use its default.
         - This is mutually exclusive with I(username) and I(password).
         type: str
       username:
