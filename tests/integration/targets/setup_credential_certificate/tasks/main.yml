@@ -1,0 +1,19 @@
+---
+- name: copy the pfx certificate
+  ansible.windows.win_copy:
+    src: cert.pfx
+    dest: '{{ remote_tmp_dir }}\cert.pfx'
+
+- name: import the pfx into the personal store
+  ansible.windows.win_certificate_store:
+    path: '{{ remote_tmp_dir }}\cert.pfx'
+    state: present
+    store_location: CurrentUser
+    store_name: My
+    password: '{{ credential_cert_password }}'
+  vars:
+    ansible_become: True
+    ansible_become_method: runas
+    ansible_become_user: '{{ ansible_user }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
+  notify: remove credential certificate
