@@ -43,7 +43,7 @@ Function New-TempFile {
 
 $spec = @{
     options = @{
-        path = @{ type = 'path'; default = '%TEMP%'; aliases = @( 'dest' ) }
+        path = @{ type = 'path'; aliases = @( 'dest' ) }
         state = @{ type = 'str'; default = 'file'; choices = @( 'directory', 'file') }
         prefix = @{ type = 'str'; default = 'ansible.' }
         suffix = @{ type = 'str' }
@@ -57,6 +57,10 @@ $path = $module.Params.path
 $state = $module.Params.state
 $prefix = $module.Params.prefix
 $suffix = $module.Params.suffix
+
+if (-not $path) {
+    $path = [System.IO.Path]::GetTempPath()
+}
 
 # Expand environment variables on non-path types
 if ($null -ne $prefix) {

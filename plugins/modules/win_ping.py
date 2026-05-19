@@ -11,7 +11,10 @@ short_description: A windows version of the classic ping module
 description:
   - Checks management connectivity of a windows host.
   - This is NOT ICMP ping, this is just a trivial test module.
-  - For non-Windows targets, use the M(ansible.builtin.ping) module instead.
+  - Since C(ansible.windows 3.6.0) this module can also run on non-Windows
+    targets with PowerShell 7 present. Targeting non-Windows hosts requires
+    Ansible C(2.22.0) or newer. Otherwise use the M(ansible.builtin.ping)
+    module instead.
 options:
   data:
     description:

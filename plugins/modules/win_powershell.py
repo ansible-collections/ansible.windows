@@ -14,6 +14,8 @@ description:
 - Runs a PowerShell script and outputs the data in a structured format.
 - Use M(ansible.windows.win_command) or M(ansible.windows.win_shell) to run a traditional PowerShell process with
   stdout, stderr, and rc results.
+- Since C(ansible.windows 3.6.0) this module can also run on non-Windows targets with PowerShell 7 present. Targeting
+  non-Windows hosts requires Ansible C(2.22.0) or newer.
 options:
   arguments:
     description:
@@ -58,6 +60,7 @@ options:
     - Both the remote PowerShell and the one specified by I(executable) must be running on PowerShell v5.1 or newer.
     - Setting this value may change the values returned in the C(output) return value depending on the underlying .NET
       type.
+    - This option is only supported on Windows hosts.
     type: str
   parameters:
     description:

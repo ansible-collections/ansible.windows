@@ -309,6 +309,18 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
+  - stage: Posix_Pwsh_7_6
+    displayName: Posix Pwsh 7.6
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: PowerShell {0}
+          testFormat: devel/powershell/{0}/1
+          targets:
+            - name: 7.6
+
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:
@@ -327,5 +339,6 @@ stages:
       - Windows_3_Pwsh_7_6
       - Windows_4_WinPS
       - Windows_4_Pwsh_7_6
+      - Posix_Pwsh_7_6
     jobs:
       - template: templates/coverage.yml

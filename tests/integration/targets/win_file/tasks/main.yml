@@ -743,7 +743,7 @@
   assert:
     that:
       - (file_timestamp_before.stdout | from_json).mTime == (file_timestamp_after.stdout | from_json).mTime
-      - (file_timestamp_before.stdout | from_json).aTime == (file_timestamp_after.stdout | from_json).aTime      
+      - (file_timestamp_before.stdout | from_json).aTime == (file_timestamp_after.stdout | from_json).aTime
 
 - name: clean up test file
   win_file:

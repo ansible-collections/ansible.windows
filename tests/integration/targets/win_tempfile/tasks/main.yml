@@ -1,16 +1,13 @@
 ---
-- name: get the current %TEMP% value
-  win_shell: '[System.IO.Path]::GetFullPath($env:TEMP)'
-  register: temp_value
-
-- name: register temp path value
-  set_fact:
-    temp_value: '{{ temp_value.stdout | trim }}'
-
-
-- name: get raw %TEMP% value
-  win_shell: '$env:TEMP'
-  register: raw_temp_value
+- name: get baseline test information
+  win_powershell:
+    script: |
+      [System.IO.Path]::GetTempPath()
+      $IsWindows -or $PSVersionTable.PSVersion -lt '6.0'
+  register:
+    temp_value: _task.result.output[0]
+    is_windows: _task.result.output[1]
+  changed_when: False
 
 - name: create temp file defaults check
   win_tempfile:
@@ -27,7 +24,7 @@
     that:
     - create_tmp_file_defaults_check is changed
     - create_tmp_file_defaults_check.state == 'file'
-    - create_tmp_file_defaults_check.path.startswith(temp_value + '\\ansible.')
+    - create_tmp_file_defaults_check.path.startswith(temp_value ~ "ansible.")
     - actual_create_tmp_file_defaults_check.stat.exists == False
 
 - name: create temp file defaults
@@ -44,7 +41,7 @@
     that:
     - create_tmp_file_defaults is changed
     - create_tmp_file_defaults.state == 'file'
-    - create_tmp_file_defaults.path.startswith(temp_value + '\\ansible.')
+    - create_tmp_file_defaults.path.startswith(temp_value ~ 'ansible.')
     - actual_create_tmp_file_defaults.stat.exists == True
     - actual_create_tmp_file_defaults.stat.isdir == False
 
@@ -62,7 +59,7 @@
     that:
     - create_tmp_file_defaults_again is changed
     - create_tmp_file_defaults_again.state == 'file'
-    - create_tmp_file_defaults_again.path.startswith(temp_value + '\\ansible.')
+    - create_tmp_file_defaults_again.path.startswith(temp_value ~ 'ansible.')
     - create_tmp_file_defaults_again.path != create_tmp_file_defaults.path
     - actual_create_tmp_file_defaults_again.stat.exists == True
     - actual_create_tmp_file_defaults_again.stat.isdir == False
@@ -83,7 +80,7 @@
     that:
     - create_tmp_folder_check is changed
     - create_tmp_folder_check.state == 'directory'
-    - create_tmp_folder_check.path.startswith(temp_value  + '\\ansible.')
+    - create_tmp_folder_check.path.startswith(temp_value  ~ 'ansible.')
     - actual_create_tmp_folder_check.stat.exists == False
 
 - name: create temp folder
@@ -101,7 +98,7 @@
     that:
     - create_tmp_folder is changed
     - create_tmp_folder.state == 'directory'
-    - create_tmp_folder.path.startswith(temp_value + '\\ansible.')
+    - create_tmp_folder.path.startswith(temp_value ~ 'ansible.')
     - actual_create_tmp_folder.stat.exists == True
     - actual_create_tmp_folder.stat.isdir == True
 
@@ -120,7 +117,7 @@
     that:
     - create_tmp_file_suffix is changed
     - create_tmp_file_suffix.state == 'file'
-    - create_tmp_file_suffix.path.startswith(temp_value + '\\ansible.')
+    - create_tmp_file_suffix.path.startswith(temp_value ~ 'ansible.')
     - create_tmp_file_suffix.path.endswith('test-suffix')
     - actual_creat_tmp_file_suffix.stat.exists == True
     - actual_creat_tmp_file_suffix.stat.isdir == False
@@ -140,67 +137,72 @@
     that:
     - create_tmp_file_prefix is changed
     - create_tmp_file_prefix.state == 'file'
-    - create_tmp_file_prefix.path.startswith(temp_value + '\\test-prefix')
+    - create_tmp_file_prefix.path.startswith(temp_value ~ 'test-prefix')
     - actual_creat_tmp_file_prefix.stat.exists == True
     - actual_creat_tmp_file_prefix.stat.isdir == False
 
 - name: create new temp file folder
   win_file:
-    path: '{{test_tempfile_path}}\testing folder'
+    path: '{{ temp_value }}/{{ test_tempfile_name }}/testing folder'
     state: directory
 
 - block:
   - name: create temp file with different path
     win_tempfile:
-      path: '{{test_tempfile_path}}\testing folder'
+      path: '{{ temp_value }}/{{ test_tempfile_name }}/testing folder'
     register: create_tmp_file_difference_path
 
   - name: get stat of temp file with different path
     win_stat:
       path: "{{create_tmp_file_difference_path.path}}"
-    register: actual_creat_tmp_file_different_path
+    register: actual_create_tmp_file_different_path
 
   - name: assert create temp file with different path
     assert:
       that:
       - create_tmp_file_difference_path is changed
       - create_tmp_file_difference_path.state == 'file'
-      - create_tmp_file_difference_path.path.startswith(test_tempfile_path + '\\testing folder\\ansible.')
-      - actual_creat_tmp_file_different_path.stat.exists == True
-      - actual_creat_tmp_file_different_path.stat.isdir == False
+      - create_tmp_file_difference_path.path is search('^' ~ (temp_value | regex_escape) ~ (test_tempfile_name | regex_escape) ~ '[\\\\|/]testing folder[\\\\|/]ansible\\.')
+      - actual_create_tmp_file_different_path.stat.exists == True
+      - actual_create_tmp_file_different_path.stat.isdir == False
 
   - name: create temp file with DOS 8.3 short name
     win_tempfile:
-      path: '{{ test_tempfile_path }}\TESTIN~1'
+      path: '{{ temp_value }}\{{ test_tempfile_name }}\TESTIN~1'
     register: create_tmp_file_dos_path
+    when: is_windows
 
   - name: get stat of temp file with different path
     win_stat:
       path: '{{ create_tmp_file_dos_path.path }}'
     register: actual_create_tmp_file_dos_path
+    when: is_windows
 
   - name: assert create temp file with different path
     assert:
       that:
       - create_tmp_file_dos_path is changed
       - create_tmp_file_dos_path.state == 'file'
-      - create_tmp_file_dos_path.path.startswith(test_tempfile_path + '\\testing folder\\ansible.')
+      - create_tmp_file_dos_path.path.startswith(temp_value ~ test_tempfile_name ~ '\\testing folder\\ansible.')
       - actual_create_tmp_file_dos_path.stat.exists == True
       - actual_create_tmp_file_dos_path.stat.isdir == False
+    when: is_windows
 
   always:
   - name: delete temp file folder
     win_file:
-      path: "{{test_tempfile_path}}"
+      path: "{{ temp_value }}/{{ test_tempfile_name }}"
       state: absent
 
 - name: get current working directory
-  win_shell: $pwd.Path
-  register: current_dir
+  win_powershell:
+    script: $pwd.Path
+  register:
+    current_dir: _task.result.output[0]
 
 - name: create directory for relative dir tests
   win_file:
-    path: '{{ current_dir.stdout | trim }}\win_tempfile'
+    path: '{{ current_dir }}/win_tempfile'
     state: directory
 
 - block:
@@ -220,12 +222,12 @@
       that:
       - create_relative is changed
       - create_relative.state == 'directory'
-      - create_relative.path.startswith((current_dir.stdout | trim) + '\\win_tempfile\\ansible.')
+      - create_relative.path is search('^' ~ (current_dir | regex_escape) ~ '[\\\\|/]win_tempfile[\\\\|/]ansible\\.')
       - actual_create_relative.stat.exists == True
       - actual_create_relative.stat.isdir == True
 
   always:
   - name: remove relative directory tests
     win_file:
-      path: '{{ current_dir.stdout | trim }}\win_tempfile'
+      path: '{{ current_dir }}/win_tempfile'
       state: absent

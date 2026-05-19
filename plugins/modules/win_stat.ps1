@@ -43,11 +43,13 @@ function Get-FileInfo {
     $info = Get-AnsibleItem -Path $Path -ErrorAction SilentlyContinue
     $link_info = $null
     if ($null -ne $info) {
-        try {
-            $link_info = Get-Link -link_path $info.FullName
-        }
-        catch {
-            $module.Warn("Failed to check/get link info for file: $($_.Exception.Message)")
+        if ($IsWindows -or $PSVersionTable.PSVersion -lt '6.0') {
+            try {
+                $link_info = Get-Link -link_path $info.FullName
+            }
+            catch {
+                $module.Warn("Failed to check/get link info for file: $($_.Exception.Message)")
+            }
         }
 
         # If follow=true we want to follow the link all the way back to root object
@@ -81,10 +83,12 @@ $follow = $module.Params.follow
 $module.Result.stat = @{ exists = $false }
 
 # https://github.com/ansible-collections/ansible.windows/issues/297
-$oldLib = $env:LIB
-$env:LIB = $null
-Load-LinkUtils
-$env:LIB = $oldLib
+if ($IsWindows -or $PSVersionTable.PSVersion -lt '6.0') {
+    $oldLib = $env:LIB
+    $env:LIB = $null
+    Load-LinkUtils
+    $env:LIB = $oldLib
+}
 
 $info, $link_info = Get-FileInfo -Path $path -Follow:$follow
 If ($null -ne $info) {

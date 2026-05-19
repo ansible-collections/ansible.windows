@@ -51,7 +51,7 @@
           @($null),
           @{
               key = 'value'
-              exceed = Get-Item $env:SystemRoot
+              exceed = Get-Item ([IO.Path]::GetTempPath())
           }
       )
 
@@ -94,7 +94,7 @@
           }
       }
 
-      Get-Item $env:SystemRoot
+      Get-Item ([IO.Path]::GetTempPath())
 
   register: output_types
 
@@ -146,19 +146,19 @@
     - output_types.output[8]['StackTrace'] == None
     - output_types.output[8]['TargetSite'] == None
 
-    - output_types.output[9] == dt_values.stdout_lines[0]
-    - output_types.output[10] == dt_values.stdout_lines[1]
-    - output_types.output[11] == dt_values.stdout_lines[2]
+    - output_types.output[9] == dt_values.output[0]
+    - output_types.output[10] == dt_values.output[1]
+    - output_types.output[11] == dt_values.output[2]
 
-    - output_types.output[12] == dt_values.stdout_lines[3]
-    - output_types.output[13] == dt_values.stdout_lines[4]
-    - output_types.output[14] == dt_values.stdout_lines[5]
+    - output_types.output[12] == dt_values.output[3]
+    - output_types.output[13] == dt_values.output[4]
+    - output_types.output[14] == dt_values.output[5]
 
-    - output_types.output[15] == dt_values.stdout_lines[6]
-    - output_types.output[16] == dt_values.stdout_lines[7]
-    - output_types.output[17] == dt_values.stdout_lines[8]
+    - output_types.output[15] == dt_values.output[6]
+    - output_types.output[16] == dt_values.output[7]
+    - output_types.output[17] == dt_values.output[8]
 
-    - output_types.output[18] == dt_values.stdout_lines[9]
+    - output_types.output[18] == dt_values.output[9]
 
     - output_types.output[19] == []
 
@@ -175,7 +175,7 @@
     - output_types.output[22][5] == [1]
     - output_types.output[22][6] == [None]
     - output_types.output[22][7]['key'] == 'value'
-    - output_types.output[22][7]['exceed'] |lower == 'c:\windows'
+    - output_types.output[22][7]['exceed'] | lower == test_tmpdir
 
     - output_types.output[23] == {}
 
@@ -200,12 +200,11 @@
     - output_types.output[26]['Nested']['Exceed'] == 'System.Collections.Hashtable'
     - output_types.output[26]['Nested']['Key'] == 'value'
 
-    - output_types.output[27]['BaseName'] | lower == 'windows'
+    - output_types.output[27]['BaseName'] | lower is string
     - output_types.output[27]['Exists'] == True
-    - output_types.output[27]['FullName'] | lower == 'c:\windows'
-    - output_types.output[27]['PSDrive']['Name'] == 'C'
+    - output_types.output[27]['FullName'] | lower == test_tmpdir
+    - output_types.output[27]['PSDrive']['Name'] is string
     - output_types.output[27]['PSDrive']['Provider'] == 'Microsoft.PowerShell.Core\FileSystem'
-    # - output_types.output[27]['PSProvider']['Drives'] == 'C' # Flaky if host has multiple drives
     - output_types.output[27]['PSProvider']['ImplementingType'] == 'Microsoft.PowerShell.Commands.FileSystemProvider'
     - output_types.output[27]['PSProvider']['Name'] == 'FileSystem'
 
@@ -292,15 +291,17 @@
   register: tmpdir
 
 - name: check that tmpdir doesn't exist anymore
-  win_stat:
-    path: '{{ tmpdir.output[0] }}'
+  win_powershell:
+    script: Test-Path -LiteralPath $args[0]
+    parameters:
+      Path: '{{ tmpdir.output[0] }}'
   register: tmpdir_actual
 
 - name: assert get temporary directory
   assert:
     that:
     - tmpdir is changed
-    - not tmpdir_actual.stat.exists
+    - not tmpdir_actual.output[0]
 
 - name: dont fail with error record
   win_powershell:
@@ -407,13 +408,16 @@
     - complex_error_record.error[0]['exception']['help_link'] == None
     - complex_error_record.error[0]['exception']['hresult'] == -2147467259
     - complex_error_record.error[0]['exception']['inner_exception'] == None
-    - (complex_error_record.error[0]['exception']['message'] | regex_replace('\.$', ''))  == 'Access is denied'
+    - complex_error_record.error[0]['exception']['message'] is string
     - complex_error_record.error[0]['exception']['source'] == None
     - complex_error_record.error[0]['exception']['type'] == 'System.ComponentModel.Win32Exception'
     - complex_error_record.error[0]['fully_qualified_error_id'] == 'error id,Test-Function'
     - complex_error_record.error[0]['output'] is defined
     - complex_error_record.error[0]['pipeline_iteration_info'] == [2, 2]
-    - "complex_error_record.error[0]['script_stack_trace'] == 'at Test-Function<Process>, <No file>: line 23\\r\\nat <ScriptBlock>, <No file>: line 28'"
+    - >-
+        complex_error_record.error[0]['script_stack_trace'] is search('at Test-Function<Process>, <No file>: line 23')
+    - >-
+        complex_error_record.error[0]['script_stack_trace'] is search('at <ScriptBlock>, <No file>: line 28')
     - complex_error_record.error[0]['target_object'] == 'some object'
 
 - name: failure with terminating exception
@@ -558,7 +562,8 @@
   assert:
     that:
     - extra_streams is changed
-    - "extra_streams.host_out == 'DEBUG: debug\\r\\nVERBOSE: verbose\\r\\nWARNING: warning\\r\\n'"
+    - >-
+        extra_streams.host_out.splitlines() == ['DEBUG: debug', 'VERBOSE: verbose', 'WARNING: warning']
     - extra_streams.debug == ['debug']
     - extra_streams.verbose == ['verbose']
     - extra_streams.warning == ['warning']
@@ -569,7 +574,6 @@
       $epoch = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
       Write-Information -MessageData $epoch -Tags tag1
   register: info_record
-  when: use_executable.stdout | trim | bool  # Information records were only added in v5
 
 - name: assert output information record
   assert:
@@ -581,7 +585,6 @@
     - info_record.information[0]['tags'] == ['tag1']
     - info_record.information[0]['time_generated'].endswith('Z')
     - info_record.output == []
-  when: use_executable.stdout | trim | bool
 
 - name: verify confirmation prompts aren't called
   win_powershell:
@@ -638,12 +641,14 @@
     script: $pwd.Path
     chdir: Cert:\LocalMachine\My
   register: cert_chdir
+  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
 - name: assert run script with non-filesystem location
   assert:
     that:
     - cert_chdir is changed
     - cert_chdir.output == ['Cert:\LocalMachine\My']
+  when: is_windows
 
 - name: skip execution when not in check mode
   win_powershell:
@@ -762,6 +767,7 @@
     script: '"output"'
     creates: cert:\LocalMachine\*
   register: creates_non_fs
+  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
 - name: assert skip for creates non-filesystem
   assert:
@@ -769,6 +775,7 @@
     - not creates_non_fs is changed
     - creates_non_fs.msg == 'skipped, since cert:\LocalMachine\* exists'
     - creates_non_fs.output == []
+  when: is_windows
 
 - name: skip if removes does not exist
   win_powershell:
@@ -803,12 +810,14 @@
     script: '"output"'
     removes: cert:\LocalMachine\*
   register: removes_exists_non_fs
+  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
 - name: assert do not skip if removes exists non-filesystem
   assert:
     that:
     - removes_exists_non_fs is changed
     - removes_exists_non_fs.output == ['output']
+  when: is_windows
 
 - name: script changed status
   win_powershell:
@@ -839,7 +848,7 @@
       # Calling a process directly goes to the output/error stream. Calling it with Start-Process with -NoNewWindow
       # means the sub process will inherit the current console handles and should be captured in the host output.
       $processParams = @{
-          FilePath = 'powershell.exe'
+          FilePath = if ($IsCoreCLR) { 'pwsh' } else { 'powershell' }
           ArgumentList = "-EncodedCommand $subProcessCommand"
           Wait = $true
           NoNewWindow = $true
@@ -854,8 +863,8 @@
   assert:
     that:
     - host_output is changed
-    - host_output.host_err == 'error café 💩\r\nsub stderr café 💩\r\nstderr café 💩\r\n'
-    - host_output.host_out == 'host café 💩\r\nsub stdout café 💩\r\nstdout café 💩\r\n'
+    - host_output.host_err.splitlines() == ['error café 💩', 'sub stderr café 💩', 'stderr café 💩']
+    - host_output.host_out.splitlines() == ['host café 💩', 'sub stdout café 💩', 'stdout café 💩']
     - host_output.error == []
     - host_output.output == []
 
@@ -1039,7 +1048,9 @@
     script: |
       Get-WmiObject -Class Win32_Service -Filter 'Name="WinRM"'
   register: wmi_object
-  when: pwsh_executable is not defined
+  when:
+  - is_windows
+  - pwsh_executable is not defined
 
 - name: assert get WMI object
   assert:
@@ -1047,7 +1058,9 @@
     - wmi_object.output | length == 1
     - wmi_object.output[0]['Name'] == 'WinRM'
     - wmi_object.output[0]['__RELPATH'] == 'Win32_Service.Name="WinRM"'
-  when: pwsh_executable is not defined
+  when:
+  - is_windows
+  - pwsh_executable is not defined
 
 - name: execute script from local path
   win_powershell:
@@ -1094,8 +1107,10 @@
       $typeData = Get-TypeData -TypeName System.Security.AccessControl.ObjectSecurity
       $typeData.Members.Count
   register: builtin_module_ets
+  when: is_windows  # This ETS definition is only present on Windows
 
 - name: assert builtin modules are imported correctly with ETS definitions
   assert:
     that:
     - builtin_module_ets.output[0] > 0
+  when: is_windows

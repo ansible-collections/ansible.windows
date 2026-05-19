@@ -1,0 +1,8 @@
+minor_changes:
+  - win_ping - Added support for running on non-Windows targets
+  - win_powershell - Added support for running on non-Windows targets
+  - win_tempfile - Added support for running on non-Windows targets
+  - >-
+      win_tempfile - Changed the default for ``path`` to be ``None`` rather than ``%TEMP%``. The module will instead
+      use the result of ``[System.IO.Path]::GetTempPath()`` to determine the temporary directory to use which on
+      Windows will typically be the same as ``%TEMP%``.

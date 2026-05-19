@@ -101,3 +101,13 @@
   failed_when:
   - invalid_syntax_path.error | count != 1
   - invalid_syntax_path.error[0]['category_info']['category'] != 'ParserError'
+
+- name: expect failure when using executable on non-Windows target
+  win_powershell:
+    executable: failure
+    script: '"test"'
+  register: invalid_executable_posix
+  when:
+  - not is_windows
+  failed_when: >-
+    invalid_executable_posix.msg != 'executable cannot be used on a non-Windows target, set ansible_pwsh_interpreter instead.'

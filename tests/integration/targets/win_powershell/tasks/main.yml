@@ -1,10 +1,18 @@
-- name: check if executable is supported
-  win_shell: '[Version]$PSVersionTable.PSVersion -gt [Version]"5.0"'
-  register: use_executable
+- name: get baseline information for tests
+  win_powershell:
+    script: |
+      @{
+          IsWindows = $IsWindows -or $PSVersionTable.PSVersion -lt "6.0"
+          Tmpdir = (([IO.Path]::GetTempPath())).ToLowerInvariant()
+      }
+  register:
+    is_windows: _task.result.output[0].IsWindows
+    test_tmpdir: _task.result.output[0].Tmpdir
   changed_when: False
 
 - name: get datetimes used for tests
-  win_shell: |
+  win_powershell:
+    script: |
       $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
       $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
       $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
@@ -44,9 +52,10 @@
 
 - name: run tests using executable
   import_tasks: tests.yml
-  when: use_executable.stdout | trim | bool
+  when:
+  - is_windows
   vars:
-    pwsh_executable: powershell.exe
+    pwsh_executable: '{{ ansible_pwsh_interpreter | default("powershell.exe") }}'
 
 - name: run executable with arguments
   win_powershell:
@@ -57,13 +66,13 @@
     script: |
       $env:PSExecutionPolicyPreference
   register: exe_with_arguments
-  when: use_executable.stdout | trim | bool
+  when: is_windows
 
 - name: assert run executable with arguments
   assert:
     that:
     - exe_with_arguments.output == ['Restricted']
-  when: use_executable.stdout | trim | bool
+  when: is_windows
 
 # Verifies that PowerShell 7's PSModulePath does not interfere with WinPS modules
 - name: run PowerShell that imports a builtin module
@@ -71,4 +80,6 @@
     executable: powershell.exe
     error_action: stop
     script: Import-Module -Name Microsoft.PowerShell.Security -ErrorAction Stop
-  when: (ansible_pwsh_interpreter | default('')).endswith('pwsh.exe')
+  when:
+  - is_windows
+  - (ansible_pwsh_interpreter | default('')).endswith('pwsh.exe')

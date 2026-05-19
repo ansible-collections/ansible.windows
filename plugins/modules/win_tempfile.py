@@ -10,7 +10,10 @@ module: win_tempfile
 short_description: Creates temporary files and directories
 description:
   - Creates temporary files and directories.
-  - For non-Windows targets, please use the M(ansible.builtin.tempfile) module instead.
+  - Since C(ansible.windows 3.6.0) this module can also run on non-Windows
+    targets with PowerShell 7 present. Targeting non-Windows hosts requires
+    Ansible C(2.22.0) or newer. Otherwise use the M(ansible.builtin.tempfile)
+    module instead.
 options:
   state:
     description:
@@ -21,9 +24,8 @@ options:
   path:
     description:
       - Location where temporary file or directory should be created.
-      - If path is not specified default system temporary directory (%TEMP%) will be used.
+      - If path is not specified default temporary directory for the user will be used.
     type: path
-    default: '%TEMP%'
     aliases: [ dest ]
   prefix:
     description:
