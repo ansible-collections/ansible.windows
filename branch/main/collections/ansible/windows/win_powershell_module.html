@@ -154,6 +154,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <ul class="simple">
 <li><p>Runs a PowerShell script and outputs the data in a structured format.</p></li>
 <li><p>Use <a class="reference internal" href="win_command_module.html#ansible-collections-ansible-windows-win-command-module"><span class="std std-ref">ansible.windows.win_command</span></a> or <a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a> to run a traditional PowerShell process with stdout, stderr, and rc results.</p></li>
+<li><p>Since <code class="docutils literal notranslate"><span class="pre">ansible.windows</span> <span class="pre">3.6.0</span></code> this module can also run on non-Windows targets with PowerShell 7 present. Targeting non-Windows hosts requires Ansible <code class="docutils literal notranslate"><span class="pre">2.22.0</span></code> or newer.</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -227,6 +228,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>When not defined the script will run in the current module PowerShell interpreter.</p>
 <p>Both the remote PowerShell and the one specified by <em>executable</em> must be running on PowerShell v5.1 or newer.</p>
 <p>Setting this value may change the values returned in the <code class="docutils literal notranslate"><span class="pre">output</span></code> return value depending on the underlying .NET type.</p>
+<p>This option is only supported on Windows hosts.</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">

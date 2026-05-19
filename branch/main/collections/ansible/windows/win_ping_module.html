@@ -152,7 +152,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <ul class="simple">
 <li><p>Checks management connectivity of a windows host.</p></li>
 <li><p>This is NOT ICMP ping, this is just a trivial test module.</p></li>
-<li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/ping_module.html#ansible-collections-ansible-builtin-ping-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.ping</span></a> module instead.</p></li>
+<li><p>Since <code class="docutils literal notranslate"><span class="pre">ansible.windows</span> <span class="pre">3.6.0</span></code> this module can also run on non-Windows targets with PowerShell 7 present. Targeting non-Windows hosts requires Ansible <code class="docutils literal notranslate"><span class="pre">2.22.0</span></code> or newer. Otherwise use the <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/ping_module.html#ansible-collections-ansible-builtin-ping-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.ping</span></a> module instead.</p></li>
 </ul>
 </section>
 <section id="parameters">
