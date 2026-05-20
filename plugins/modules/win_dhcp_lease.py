@@ -87,6 +87,14 @@ options:
       - Specifies the description for reservation being created.
       - Only applicable to l(type=reservation).
     type: str
+  computer_name:
+    description:
+      - Specifies a DHCP server.
+      - You can specify an IP address or any value that resolves to an IP
+        address, such as a fully qualified domain name (FQDN), host name, or
+        NETBIOS name.
+    type: str
+
 '''
 
 EXAMPLES = r'''
