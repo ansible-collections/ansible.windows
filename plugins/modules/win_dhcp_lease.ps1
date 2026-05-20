@@ -410,7 +410,7 @@ if ($state -eq "present") {
                 }
                 $params.AddressState = 'Active'
                 # Create lease based on parameters
-                Add-DhcpServerv4Lease @lease_params -WhatIf:$check_mode @extra_args
+                Add-DhcpServerv4Lease @params -WhatIf:$check_mode @extra_args
 
                 # Retreive the lease
                 if (-not $check_mode) {
