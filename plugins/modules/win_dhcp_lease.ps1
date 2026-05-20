@@ -46,6 +46,13 @@ if ($null -ne $dhcp_computer_name) {
     $extra_args.ComputerName = $dhcp_computer_name
 }
 
+# filter to the scope if it was provided 
+#Ensure we get the desired lease if mac address is present more than once in all the scopes
+$scope_filter = @{ }
+if ($scope_id) {
+    $scope_filter.ScopeId = $scope_id
+}
+
 Function Convert-MacAddress {
     Param(
         [string]$mac
@@ -135,13 +142,13 @@ if ($mac) {
         $module.FailJson("The MAC Address is not properly formatted")
     }
     else {
-        $current_lease = Get-DhcpServerv4Scope @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object ClientId -eq $mac
+        $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object ClientId -eq $mac
     }
 }
 
 # Find existing lease by IP address
 if ($ip -and (-not $current_lease)) {
-    $current_lease = Get-DhcpServerv4Scope @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object IPAddress -eq $ip
+    $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object IPAddress -eq $ip
 }
 
 # Did we find a lease/reservation
