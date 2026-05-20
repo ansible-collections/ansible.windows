@@ -18,7 +18,7 @@ $spec = @{
         reservation_name = @{ type = "str"; }
         description = @{ type = "str"; }
         state = @{ type = "str"; choices = "absent", "present"; default = "present" }
-		computer_name = @{ type = "str" }
+        computer_name = @{ type = "str" }
     }
     required_if = @(
         @("state", "present", @("mac", "ip"), $true),
@@ -46,7 +46,7 @@ if ($null -ne $dhcp_computer_name) {
     $extra_args.ComputerName = $dhcp_computer_name
 }
 
-# filter to the scope if it was provided 
+# filter to the scope if it was provided
 #Ensure we get the desired lease if mac address is present more than once in all the scopes
 $scope_filter = @{ }
 if ($scope_id) {
