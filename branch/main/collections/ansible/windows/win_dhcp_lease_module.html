@@ -175,6 +175,15 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-computer_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-computer-name"><strong>computer_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-computer_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.6.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies a DHCP server.</p>
+<p>You can specify an IP address or any value that resolves to an IP address, such as a fully qualified domain name (FQDN), host name, or NETBIOS name.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-description"><strong>description</strong></p>
 <a class="ansibleOptionLink" href="#parameter-description" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -182,14 +191,14 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Only applicable to l(type=reservation).</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-dns_hostname"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-dns-hostname"><strong>dns_hostname</strong></p>
 <a class="ansibleOptionLink" href="#parameter-dns_hostname" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Specifies the DNS hostname of the client for which the IP address lease is to be added.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-dns_regtype"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-dns-regtype"><strong>dns_regtype</strong></p>
 <a class="ansibleOptionLink" href="#parameter-dns_regtype" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -205,7 +214,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-duration"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-duration"><strong>duration</strong></p>
 <a class="ansibleOptionLink" href="#parameter-duration" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -215,7 +224,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Only applicable to l(type=lease).</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-ip"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-ip"><strong>ip</strong></p>
 <a class="ansibleOptionLink" href="#parameter-ip" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -224,7 +233,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Can be used to identify an existing lease/reservation, instead of l(mac).</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-mac"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-mac"><strong>mac</strong></p>
 <a class="ansibleOptionLink" href="#parameter-mac" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -235,7 +244,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Can be used to identify an existing lease/reservation, instead of l(ip).</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-reservation_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-reservation-name"><strong>reservation_name</strong></p>
 <a class="ansibleOptionLink" href="#parameter-reservation_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -243,7 +252,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>Only applicable to l(type=reservation).</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-scope_id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-scope-id"><strong>scope_id</strong></p>
 <a class="ansibleOptionLink" href="#parameter-scope_id" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -251,7 +260,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>This is a required parameter, if l(state=present) and the reservation or lease doesn’t already exist. Not required if updating an existing lease or reservation.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-state"><strong>state</strong></p>
 <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -263,7 +272,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dhcp-lease-module-parameter-type"><strong>type</strong></p>
 <a class="ansibleOptionLink" href="#parameter-type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
