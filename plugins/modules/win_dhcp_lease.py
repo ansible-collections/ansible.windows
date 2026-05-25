@@ -94,6 +94,7 @@ options:
         address, such as a fully qualified domain name (FQDN), host name, or
         NETBIOS name.
     type: str
+    version_added: 3.6.0
 
 '''
 
