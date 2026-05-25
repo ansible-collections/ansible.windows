@@ -1,0 +1,9 @@
+bugfixes:
+  - >-
+    win_dhcp_lease - Fix scope filtering when searching for existing leases or reservations:
+    ensure the query is limited to the specified scope. This prevents ambiguity
+    when the same MAC address exists in multiple scopes (e.g. a device with
+    reservations in different scopes).
+
+minor_changes:
+  - win_dhcp_lease - add support for computername parameter.
