@@ -1,5 +1,0 @@
-minor_changes:
-  - >-
-    win_powershell - Allow sensitive_parameters entries with neither ``value``
-    nor ``username``/``password`` specified, passing ``$null`` as the parameter
-    value instead of an empty SecureString.
