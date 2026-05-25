@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    win_find - Fix depth and recursion logic that resulted in directories being skipped or depth being ignored -
-    https://github.com/ansible-collections/ansible.windows/issues/839

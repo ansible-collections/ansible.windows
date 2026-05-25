@@ -4,6 +4,40 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.6.0
+======
+
+Release Summary
+---------------
+
+Release summary for v3.6.0
+
+Minor Changes
+-------------
+
+- win_dhcp_lease - add support for computername parameter.
+- win_ping - Added support for running on non-Windows targets
+- win_powershell - Added support for running on non-Windows targets
+- win_powershell - Allow sensitive_parameters entries with neither ``value`` nor ``username``/``password`` specified, passing ``$null`` as the parameter value instead of an empty SecureString.
+- win_tempfile - Added support for running on non-Windows targets
+- win_tempfile - Changed the default for ``path`` to be ``None`` rather than ``%TEMP%``. The module will instead use the result of ``[System.IO.Path]::GetTempPath()`` to determine the temporary directory to use which on Windows will typically be the same as ``%TEMP%``.
+- windows - Validated that the collection works correctly with Python 3.12 (https://issues.redhat.com/browse/ACA-5197).
+
+Bugfixes
+--------
+
+- setup - Fix failure when attempting to retrieve ``ansible_processor_cores`` and ``ansible_processor_threads_per_core`` on a host without the required SMBIOS data. Admin users can still retrieve this through WMI but non-admin users will set these facts as null and avoid the lengthy timeout and failure.
+- win_dhcp_lease - Fix scope filtering when searching for existing leases or reservations: ensure the query is limited to the specified scope. This prevents ambiguity when the same MAC address exists in multiple scopes (e.g. a device with reservations in different scopes).
+- win_find - Fix depth and recursion logic that resulted in directories being skipped or depth being ignored - https://github.com/ansible-collections/ansible.windows/issues/839
+- win_reboot - Display warning if the reboot command returned ``A system shutdown is in progress. (1115)``. This can be triggered by a service external to Ansible triggers the shutdown and Ansible attempts to reboot by running ``shutdown.exe``.
+- win_stat / win_find - try/catch Access Denied when querying Win32_Share for share info. Non-admin users now get warning instead of failure. Fixes 809.
+
+New Modules
+-----------
+
+- win_capability - Manage Windows capabilities
+- win_capability_info - Get information about Windows capabilities
+
 v3.5.0
 ======
 

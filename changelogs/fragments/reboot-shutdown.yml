@@ -1,5 +1,0 @@
-bugfixes:
-  - >-
-    win_reboot - Display warning if the reboot command returned ``A system shutdown is in progress. (1115)``. This can
-    be triggered by a service external to Ansible triggers the shutdown and Ansible attempts to reboot by running
-    ``shutdown.exe``.
