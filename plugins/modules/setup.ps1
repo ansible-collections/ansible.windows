@@ -1265,7 +1265,7 @@ foreach ($meta in $factMeta.GetEnumerator()) {
     # more complexity. Keep running each fact sequentially.
     $ps = [PowerShell]::Create()
 
-    foreach ($varName in @('ansibleFacts', 'factPath', 'module')) {
+    foreach ($varName in @('ansibleFacts', 'factPath', 'module', 'isAdmin')) {
         $val = Get-Variable -Name $varName -ValueOnly
         $null = $ps.AddCommand('Set-Variable').AddParameters(@{Name = $varName; Value = $val })
     }

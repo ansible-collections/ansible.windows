@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    setup - Fix admin checks to ensure facts that require administrator access actually run -
+    https://github.com/ansible-collections/ansible.windows/issues/900
