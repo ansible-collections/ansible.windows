@@ -4,6 +4,19 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.6.1
+======
+
+Release Summary
+---------------
+
+Release summary for v3.6.1
+
+Bugfixes
+--------
+
+- setup - Fix admin checks to ensure facts that require administrator access actually run - https://github.com/ansible-collections/ansible.windows/issues/900
+
 v3.6.0
 ======
 
