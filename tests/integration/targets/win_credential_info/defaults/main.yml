@@ -1,0 +1,6 @@
+---
+test_credential_dir: '{{ remote_tmp_dir }}\win_credential_info'
+test_hostname: ansible-info.domain.com
+test_hostname_alt: ansible-info-alt.domain.com
+key_password: '{{ credential_cert_password }}'
+cert_thumbprint: '{{ credential_cert_thumbprint }}'

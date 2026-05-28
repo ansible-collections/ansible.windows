@@ -1,0 +1,6 @@
+- name: remove credential certificate
+  ansible.windows.win_certificate_store:
+    state: absent
+    thumbprint: '{{ credential_cert_thumbprint }}'
+    store_location: CurrentUser
+    store_name: My

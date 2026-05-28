@@ -1,0 +1,49 @@
+---
+- name: ensure test dir is present
+  ansible.windows.win_file:
+    path: '{{ test_credential_dir }}'
+    state: directory
+
+- name: ensure test credentials are removed before testing
+  win_credential:
+    name: '{{ item.name }}'
+    type: '{{ item.type }}'
+    state: absent
+  vars: &become_vars
+    ansible_become: True
+    ansible_become_method: runas
+    ansible_become_user: '{{ ansible_user }}'
+    ansible_become_pass: '{{ ansible_password | default(ansible_test_connection_password) }}'
+  loop:
+  - { name: '{{ test_hostname }}', type: domain_password }
+  - { name: '{{ test_hostname }}', type: generic_password }
+  - { name: '{{ test_hostname }}', type: domain_certificate }
+  - { name: '{{ test_hostname }}', type: generic_certificate }
+  - { name: '{{ test_hostname_alt }}', type: domain_password }
+  - { name: '{{ test_hostname_alt }}', type: generic_password }
+  - { name: 'ansible-test/special:chars@host', type: generic_password }
+
+- block:
+  - name: run tests
+    include_tasks: tests.yml
+
+  always:
+  - name: remove test credentials
+    win_credential:
+      name: '{{ item.name }}'
+      type: '{{ item.type }}'
+      state: absent
+    vars: *become_vars
+    loop:
+    - { name: '{{ test_hostname }}', type: domain_password }
+    - { name: '{{ test_hostname }}', type: generic_password }
+    - { name: '{{ test_hostname }}', type: domain_certificate }
+    - { name: '{{ test_hostname }}', type: generic_certificate }
+    - { name: '{{ test_hostname_alt }}', type: domain_password }
+    - { name: '{{ test_hostname_alt }}', type: generic_password }
+    - { name: 'ansible-test/special:chars@host', type: generic_password }
+
+  - name: remove test dir
+    ansible.windows.win_file:
+      path: '{{ test_credential_dir }}'
+      state: absent
