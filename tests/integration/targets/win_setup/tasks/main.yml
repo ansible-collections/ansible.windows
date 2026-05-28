@@ -128,9 +128,21 @@
     - setup_result.ansible_facts.gather_subset[2] == 'interfaces'
     - setup_result.ansible_facts.ansible_interfaces is defined
     - setup_result.ansible_facts.ansible_interfaces[0] is defined
-    - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].active is defined
     - setup_result.ansible_facts.ansible_interfaces[0].connection_name is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].default_gateway is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].device is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].device_id is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].dns_domain is defined
     - setup_result.ansible_facts.ansible_interfaces[0].interface_index is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].ipv4 is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].ipv6 is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].macaddress is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].mtu is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].promisc is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].speed is defined
+    - setup_result.ansible_facts.ansible_interfaces[0].type is defined
     - setup_result.ansible_facts.keys() | list | union(['ansible_interfaces','gather_subset','module_setup']) | length == 3
 
 - name: test gather_subset "!all,!min,bogus" with list
