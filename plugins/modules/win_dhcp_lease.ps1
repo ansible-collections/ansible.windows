@@ -73,14 +73,14 @@ Function Convert-MacAddress {
     }
 }
 
-Function Compare-DhcpLease {
+Function Is-DhcpLease-Changed {
     Param(
-        [PSObject]$Original,
-        [PSObject]$Updated
+        $Original,
+        $Updated
     )
 
     # Compare values that we care about
-    -not (
+    return -not (
         ($Original.AddressState -eq $Updated.AddressState) -and
         ($Original.IPAddress -eq $Updated.IPAddress) -and
         ($Original.ScopeId -eq $Updated.ScopeId) -and
@@ -264,7 +264,7 @@ if ($state -eq "present") {
 
                 if (-not $check_mode) {
                     # Compare Values
-                    $module.Result.changed = Compare-DhcpLease -Original $original_lease -Updated $updated_reservation
+                    $module.Result.changed = Is-DhcpLease-Changed -Original $original_lease -Updated $updated_reservation
                     $module.Result.lease = Convert-ReturnValue -Object $updated_reservation
                 }
                 else {
@@ -363,7 +363,7 @@ if ($state -eq "present") {
 
             if (-not $check_mode) {
                 $reservation = Get-DhcpServerv4Lease -ClientId $current_lease.ClientId -ScopeId $current_lease.ScopeId @extra_args
-                $module.Result.changed = Compare-DhcpLease -Original $original_lease -Updated $reservation
+                $module.Result.changed = Is-DhcpLease-Changed -Original $original_lease -Updated $reservation
                 $module.Result.lease = Convert-ReturnValue -Object $reservation
             }
             else {
