@@ -58,17 +58,17 @@ Function Convert-MacAddress {
         [string]$mac
     )
 
-    # Evaluate Length
-    if ($mac.Length -eq 12) {
-        # Insert Dashes
-        $mac = $mac.Insert(2, "-").Insert(5, "-").Insert(8, "-").Insert(11, "-").Insert(14, "-")
+	# colon format 
+    if ($mac -match '^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$') {
+        return $mac -replace ':', '-'
+    }
+    # dash format 
+    elseif  ($mac -match '^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})$') {
         return $mac
     }
-    elseif ($mac.Length -eq 17) {
-        # Replace Colons by Dashes
-        return ($mac -replace ':', '-')
-    }
-    else {
+    elseif  ($mac -match '^[0-9A-Fa-f]{12}$') {
+        return $mac.Insert(2, "-").Insert(5, "-").Insert(8, "-").Insert(11, "-").Insert(14, "-")
+    }else {
         return $false
     }
 }
