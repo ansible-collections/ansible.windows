@@ -136,19 +136,29 @@ Catch {
 
 # Find existing lease by MAC address
 if ($mac) {
-    $mac = Convert-MacAddress -mac $mac
+    $mac_dashed = Convert-MacAddress -mac $mac
 
-    if ($mac -eq $false) {
+    if ($mac_dashed -eq $false) {
         $module.FailJson("The MAC Address is not properly formatted")
     }
     else {
-        $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object ClientId -eq $mac
+        try {
+            $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object ClientId -eq $mac_dashed
+        }
+        catch {
+            $module.FailJson("Unable to retreive dhcp scope: $($_.Exception.Message)", $_)
+        }
     }
 }
 
 # Find existing lease by IP address
 if ($ip -and (-not $current_lease)) {
-    $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object IPAddress -eq $ip
+    try {
+        $current_lease = Get-DhcpServerv4Scope @scope_filter @extra_args | Get-DhcpServerv4Lease @extra_args | Where-Object IPAddress -eq $ip
+    }
+    catch {
+        $module.FailJson("Unable to retreive dhcp scope: $($_.Exception.Message)", $_)
+    }
 }
 
 # Did we find a lease/reservation
@@ -222,8 +232,8 @@ if ($state -eq "present") {
                 # Update parameters
                 $params = @{ }
 
-                if ($mac) {
-                    $params.ClientId = $mac
+                if ($mac_dashed) {
+                    $params.ClientId = $mac_dashed
                 }
                 else {
                     $params.ClientId = $current_lease.ClientId
@@ -331,8 +341,8 @@ if ($state -eq "present") {
             # Update parameters
             $params = @{ }
 
-            if ($mac) {
-                $params.ClientId = $mac
+            if ($mac_dashed) {
+                $params.ClientId = $mac_dashed
             }
             else {
                 $params.ClientId = $current_lease.ClientId
@@ -385,7 +395,7 @@ if ($state -eq "present") {
 
         # Required Parameters for both lease and reservataion
         $params = @{
-            ClientId = $mac
+            ClientId = $mac_dashed
             IPAddress = $ip
             ScopeId = $scope_id
             Confirm = $false
@@ -414,7 +424,7 @@ if ($state -eq "present") {
 
                 # Retreive the lease
                 if (-not $check_mode) {
-                    $new_lease = Get-DhcpServerv4Lease -ClientId $mac -ScopeId $scope_id @extra_args
+                    $new_lease = Get-DhcpServerv4Lease -ClientId $mac_dashed -ScopeId $scope_id @extra_args
                     $module.Result.lease = Convert-ReturnValue -Object $new_lease
                 }
 
@@ -442,7 +452,7 @@ if ($state -eq "present") {
                         $params.Name = $params.HostName
                     }
                     else {
-                        $params.Name = "reservation-" + $mac
+                        $params.Name = "reservation-" + $mac_dashed
                     }
                 }
 
@@ -468,7 +478,7 @@ if ($state -eq "present") {
 
                 if (-not $check_mode) {
                     # Get DHCP reservation object
-                    $new_lease = Get-DhcpServerv4Reservation -ClientId $mac -ScopeId $scope_id @extra_args
+                    $new_lease = Get-DhcpServerv4Reservation -ClientId $mac_dashed -ScopeId $scope_id @extra_args
                     $module.Result.lease = Convert-ReturnValue -Object $new_lease
                 }
 
