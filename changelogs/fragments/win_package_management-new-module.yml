@@ -1,0 +1,2 @@
+minor_changes:
+  - win_package_management - New module to manage packages using PowerShell PackageManagement (OneGet) providers. Supports NuGet, PowerShellGet, and custom providers with flexible version constraints and scopes. Alternative to modifying win_package, preserving backward compatibility.

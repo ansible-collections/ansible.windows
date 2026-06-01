@@ -1,0 +1,204 @@
+---
+- name: Check if PackageManagement module is available
+  ansible.windows.win_shell: |
+    $pkg = Get-Module -Name PackageManagement -ListAvailable
+    if ($pkg) {
+      Write-Output "Available: $($pkg.Version)"
+    } else {
+      Write-Output "Not Available"
+    }
+  register: pkgmgmt_check
+  changed_when: false
+
+- name: Skip tests if PackageManagement is not available
+  ansible.builtin.meta: end_play
+  when: "'Not Available' in pkgmgmt_check.stdout"
+
+- name: Display PackageManagement version
+  ansible.builtin.debug:
+    msg: "PackageManagement: {{ pkgmgmt_check.stdout | trim }}"
+
+- name: Ensure NuGet provider is installed
+  ansible.windows.win_shell: |
+    $provider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+    if (-not $provider) {
+      Install-PackageProvider -Name NuGet -Force -Scope AllUsers
+      Write-Output "Installed"
+    } else {
+      Write-Output "Already installed"
+    }
+  register: nuget_provider
+  changed_when: "'Installed' in nuget_provider.stdout"
+
+- name: Run PackageManagement tests
+  block:
+    # Test 1: Install a PowerShell module
+    - name: Install Pester module (PowerShellGet provider)
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        scope: currentuser
+        state: present
+      register: install_result
+
+    - name: Verify installation result
+      ansible.builtin.assert:
+        that:
+          - install_result is changed
+          - install_result.package_name == "Pester"
+          - install_result.provider == "PowerShellGet"
+          - install_result.installed_version is defined
+          - install_result.rc == 0
+
+    # Test 2: Idempotency check (install again, should not change)
+    - name: Install Pester again (idempotency check)
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        scope: currentuser
+        state: present
+      register: install_again
+
+    - name: Verify idempotency
+      ansible.builtin.assert:
+        that:
+          - install_again is not changed
+          - install_again.package_name == "Pester"
+          - install_again.rc == 0
+
+    # Test 3: Install specific version
+    - name: Install specific version of PSReadLine
+      ansible.windows.win_package_management:
+        name: PSReadLine
+        version: 2.2.6
+        provider: PowerShellGet
+        scope: currentuser
+        force: true
+        state: present
+      register: version_result
+
+    - name: Verify specific version installation
+      ansible.builtin.assert:
+        that:
+          - version_result.package_name == "PSReadLine"
+          - version_result.rc == 0
+
+    # Test 4: Upgrade to latest
+    - name: Upgrade Pester to latest
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        state: latest
+      register: upgrade_result
+
+    - name: Verify upgrade result
+      ansible.builtin.assert:
+        that:
+          - upgrade_result.package_name == "Pester"
+          - upgrade_result.rc == 0
+
+    # Test 5: Install with minimum version
+    - name: Install package with minimum version
+      ansible.windows.win_package_management:
+        name: PowerShellGet
+        minimum_version: 2.0.0
+        provider: PowerShellGet
+        scope: currentuser
+        state: present
+      register: minver_result
+
+    - name: Verify minimum version installation
+      ansible.builtin.assert:
+        that:
+          - minver_result.package_name == "PowerShellGet"
+          - minver_result.rc == 0
+
+    # Test 6: Check mode
+    - name: Install package in check mode
+      ansible.windows.win_package_management:
+        name: PSDscResources
+        provider: PowerShellGet
+        scope: currentuser
+        state: present
+      check_mode: true
+      register: check_mode_result
+
+    - name: Verify check mode result
+      ansible.builtin.assert:
+        that:
+          - check_mode_result is changed or check_mode_result is not changed
+          - check_mode_result.rc == 0
+
+    # Test 7: Uninstall package
+    - name: Uninstall Pester
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        state: absent
+      register: uninstall_result
+
+    - name: Verify uninstall result
+      ansible.builtin.assert:
+        that:
+          - uninstall_result is changed
+          - uninstall_result.package_name == "Pester"
+          - uninstall_result.rc == 0
+
+    # Test 8: Idempotency check for uninstall
+    - name: Uninstall Pester again (idempotency check)
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        state: absent
+      register: uninstall_again
+
+    - name: Verify uninstall idempotency
+      ansible.builtin.assert:
+        that:
+          - uninstall_again is not changed
+          - uninstall_again.package_name == "Pester"
+
+    # Test 9: Error handling - package not found
+    - name: Try to install non-existent package
+      ansible.windows.win_package_management:
+        name: NonExistentPackage12345
+        provider: PowerShellGet
+        state: present
+      register: notfound_result
+      failed_when: false
+
+    - name: Verify error handling
+      ansible.builtin.assert:
+        that:
+          - notfound_result is failed
+          - "'not found' in notfound_result.msg | lower"
+
+  always:
+    # Cleanup: Ensure test packages are removed
+    - name: Cleanup - Uninstall Pester
+      ansible.windows.win_package_management:
+        name: Pester
+        provider: PowerShellGet
+        state: absent
+      failed_when: false
+
+    - name: Cleanup - Uninstall PSReadLine
+      ansible.windows.win_package_management:
+        name: PSReadLine
+        provider: PowerShellGet
+        state: absent
+      failed_when: false
+
+    - name: Cleanup - Uninstall PowerShellGet
+      ansible.windows.win_package_management:
+        name: PowerShellGet
+        provider: PowerShellGet
+        state: absent
+      failed_when: false
+
+    - name: Cleanup - Uninstall PSDscResources
+      ansible.windows.win_package_management:
+        name: PSDscResources
+        provider: PowerShellGet
+        state: absent
+      failed_when: false

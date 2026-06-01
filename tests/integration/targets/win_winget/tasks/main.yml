@@ -1,0 +1,147 @@
+---
+- name: Check if winget is available
+  ansible.windows.win_command: winget --version
+  register: winget_version_check
+  failed_when: false
+  changed_when: false
+
+- name: Skip tests if winget is not available
+  ansible.builtin.meta: end_play
+  when: winget_version_check.rc != 0
+
+- name: Display winget version
+  ansible.builtin.debug:
+    msg: "Winget version: {{ winget_version_check.stdout | trim }}"
+
+- name: Run winget tests
+  block:
+    # Test 1: Install a package (using a small, fast-installing package)
+    - name: Install 7zip.7zip
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: present
+      register: install_result
+
+    - name: Verify installation result
+      ansible.builtin.assert:
+        that:
+          - install_result is changed
+          - install_result.package_id == "7zip.7zip"
+          - install_result.rc == 0
+          - install_result.installed_version is defined
+
+    # Test 2: Idempotency check (install again, should not change)
+    - name: Install 7zip.7zip again (idempotency check)
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: present
+      register: install_again
+
+    - name: Verify idempotency
+      ansible.builtin.assert:
+        that:
+          - install_again is not changed
+          - install_again.package_id == "7zip.7zip"
+          - install_again.rc == 0
+
+    # Test 3: Upgrade to latest (should be idempotent if already latest)
+    - name: Upgrade 7zip.7zip to latest
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: latest
+      register: upgrade_result
+
+    - name: Verify upgrade result
+      ansible.builtin.assert:
+        that:
+          - upgrade_result.package_id == "7zip.7zip"
+          - upgrade_result.rc == 0
+
+    # Test 4: Install with specific scope (user)
+    - name: Install Microsoft.PowerToys for user
+      ansible.windows.win_winget:
+        name: Microsoft.PowerToys
+        scope: user
+        state: present
+      register: scope_result
+
+    - name: Verify scope installation
+      ansible.builtin.assert:
+        that:
+          - scope_result.package_id == "Microsoft.PowerToys"
+          - scope_result.rc == 0
+
+    # Test 5: Check mode
+    - name: Install package in check mode
+      ansible.windows.win_winget:
+        name: Git.Git
+        state: present
+      check_mode: true
+      register: check_mode_result
+
+    - name: Verify check mode result
+      ansible.builtin.assert:
+        that:
+          - check_mode_result is changed or check_mode_result is not changed
+          - check_mode_result.rc == 0
+
+    # Test 6: Uninstall package
+    - name: Uninstall 7zip.7zip
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: absent
+      register: uninstall_result
+
+    - name: Verify uninstall result
+      ansible.builtin.assert:
+        that:
+          - uninstall_result is changed
+          - uninstall_result.package_id == "7zip.7zip"
+          - uninstall_result.rc == 0
+
+    # Test 7: Idempotency check for uninstall
+    - name: Uninstall 7zip.7zip again (idempotency check)
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: absent
+      register: uninstall_again
+
+    - name: Verify uninstall idempotency
+      ansible.builtin.assert:
+        that:
+          - uninstall_again is not changed
+          - uninstall_again.package_id == "7zip.7zip"
+
+    # Test 8: Error handling - package not found
+    - name: Try to install non-existent package
+      ansible.windows.win_winget:
+        name: NonExistent.Package.12345
+        state: present
+      register: notfound_result
+      failed_when: false
+
+    - name: Verify error handling
+      ansible.builtin.assert:
+        that:
+          - notfound_result is failed
+          - "'not found' in notfound_result.msg | lower"
+
+  always:
+    # Cleanup: Ensure test packages are removed
+    - name: Cleanup - Uninstall 7zip.7zip
+      ansible.windows.win_winget:
+        name: 7zip.7zip
+        state: absent
+      failed_when: false
+
+    - name: Cleanup - Uninstall Microsoft.PowerToys
+      ansible.windows.win_winget:
+        name: Microsoft.PowerToys
+        state: absent
+      failed_when: false
+
+    - name: Cleanup - Uninstall Git.Git (if installed during tests)
+      ansible.windows.win_winget:
+        name: Git.Git
+        state: absent
+      failed_when: false

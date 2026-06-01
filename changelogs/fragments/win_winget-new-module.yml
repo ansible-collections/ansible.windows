@@ -1,0 +1,2 @@
+minor_changes:
+  - win_winget - New module to manage packages using Windows Package Manager (winget). Supports install, upgrade, and uninstall operations with custom sources and scopes. Built for Windows 11/Server 2025 and compatible with Windows 10/Server 2019-2022 when winget is installed.
