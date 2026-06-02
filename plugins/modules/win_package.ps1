@@ -541,7 +541,11 @@ Function Get-InstalledStatus {
             # continues to run on Server 2008 and 2008 R2. This should be removed sometime in the future.
             # https://github.com/ansible-collections/ansible.windows/issues/362
             $msixAvailable = [bool](Get-Command -Name Get-AppxPackage -ErrorAction SilentlyContinue)
-            $providerList = [String[]]$providerInfo.Keys | Where-Object { $_ -ne 'msix' -or $msixAvailable }
+            # Exclude package_management from auto-detection as it requires explicit
+            # opt-in via provider=package_management and the package_management_provider parameter.
+            $providerList = [String[]]$providerInfo.Keys | Where-Object {
+                ($_ -ne 'msix' -or $msixAvailable) -and $_ -ne 'package_management'
+            }
         }
         else {
             $providerList = @($Provider)
