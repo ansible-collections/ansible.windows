@@ -4,6 +4,20 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.7.0
+======
+
+Minor Changes
+-------------
+
+- win_package - Added ``package_management`` provider to support PowerShell PackageManagement (OneGet) framework. Enables installing and uninstalling packages via NuGet and PowerShellGet providers with full idempotency (https://github.com/ansible-collections/ansible.windows/pull/NEW).
+- win_winget - New module to manage packages with Windows Package Manager (winget). Supports install, upgrade, and uninstall operations with full idempotency, check mode support, and scope selection (https://github.com/ansible-collections/ansible.windows/pull/NEW).
+
+New Modules
+-----------
+
+- win_winget - Manage packages using Windows Package Manager (winget)
+
 v3.6.1
 ======
 

@@ -1146,6 +1146,199 @@ $providerInfo = [Ordered]@{
         }
     }
 
+    package_management = @{
+        FileSupported = { $false }
+
+        Test = {
+            param ([String]$Id)
+
+            $pkgMgmtProvider = $module.Params.package_management_provider
+            $pkgVersion = $module.Params.package_version
+            $pkgSource = $module.Params.package_source
+            $destinationPath = $module.Params.destination_path
+
+            $status = @{
+                Provider = 'package_management'
+                Id = $Id
+                Installed = $false
+                ExtraInfo = @{
+                    PkgMgmtProvider = $pkgMgmtProvider
+                    PkgVersion = $pkgVersion
+                    PkgSource = $pkgSource
+                    DestinationPath = $destinationPath
+                }
+            }
+
+            if (-not $Id) {
+                return $status
+            }
+
+            if (-not $pkgMgmtProvider) {
+                $module.FailJson("package_management_provider is required when using the package_management provider")
+            }
+
+            try {
+                $getParams = @{
+                    Name = $Id
+                    ProviderName = $pkgMgmtProvider
+                    ErrorAction = 'SilentlyContinue'
+                }
+
+                if ($destinationPath -and $pkgMgmtProvider -eq 'NuGet') {
+                    $getParams.Destination = $destinationPath
+                }
+
+                $installedPkgs = @(Get-Package @getParams)
+
+                if ($installedPkgs.Count -gt 0) {
+                    $status.Installed = $true
+
+                    # If a specific version is requested, check if it matches
+                    if ($pkgVersion) {
+                        $versionMatch = $installedPkgs | Where-Object { $_.Version -eq $pkgVersion }
+                        $status.Installed = $null -ne $versionMatch
+                    }
+
+                    $status.ExtraInfo.InstalledVersion = $installedPkgs[0].Version
+                }
+                elseif ($pkgMgmtProvider -eq 'NuGet' -and $destinationPath) {
+                    # For NuGet with a destination path, also check the filesystem
+                    # since Get-Package may not always find destination-based installs
+                    $pkgDir = Join-Path -Path $destinationPath -ChildPath "$Id*"
+                    if (Test-Path -LiteralPath $pkgDir) {
+                        $status.Installed = $true
+                        # Try to get version from directory name
+                        $foundDirs = @(Get-ChildItem -LiteralPath $destinationPath -Directory -Filter "$Id.*" -ErrorAction SilentlyContinue)
+                        if ($foundDirs.Count -gt 0) {
+                            $dirVersion = $foundDirs[0].Name -replace "^$([regex]::Escape($Id))\.", ''
+                            $status.ExtraInfo.InstalledVersion = $dirVersion
+
+                            if ($pkgVersion -and $dirVersion -ne $pkgVersion) {
+                                $status.Installed = $false
+                            }
+                        }
+                    }
+                }
+            }
+            catch {
+                # Get-Package may throw if the provider is not available
+                $module.FailJson("Failed to query PackageManagement for '$Id' with provider '$pkgMgmtProvider': $($_.Exception.Message)", $_)
+            }
+
+            $status
+        }
+
+        Set = {
+            param (
+                [String]
+                $Id,
+
+                [Object]
+                $Module,
+
+                [String]
+                $State,
+
+                [String]
+                $PkgMgmtProvider,
+
+                [String]
+                $PkgVersion,
+
+                [String]
+                $PkgSource,
+
+                [String]
+                $DestinationPath,
+
+                [String]
+                $InstalledVersion
+            )
+
+            if ($State -eq 'present') {
+                $installParams = @{
+                    Name = $Id
+                    ProviderName = $PkgMgmtProvider
+                    Force = $true
+                    ErrorAction = 'Stop'
+                }
+
+                if ($PkgVersion) {
+                    if ($PkgMgmtProvider -eq 'PowerShellGet') {
+                        $installParams.RequiredVersion = $PkgVersion
+                    }
+                    else {
+                        $installParams.RequiredVersion = $PkgVersion
+                    }
+                }
+
+                if ($PkgSource) {
+                    $installParams.Source = $PkgSource
+                }
+
+                if ($DestinationPath -and $PkgMgmtProvider -eq 'NuGet') {
+                    $installParams.Destination = $DestinationPath
+                }
+
+                try {
+                    $null = Install-Package @installParams
+                }
+                catch {
+                    $Module.Result.rc = 1
+                    $Module.Result.stdout = ""
+                    $Module.Result.stderr = $_.Exception.Message
+                    $Module.FailJson("Failed to install package '$Id' with provider '$PkgMgmtProvider': $($_.Exception.Message)", $_)
+                }
+            }
+            else {
+                $uninstallParams = @{
+                    Name = $Id
+                    ProviderName = $PkgMgmtProvider
+                    Force = $true
+                    ErrorAction = 'Stop'
+                }
+
+                if ($PkgVersion) {
+                    if ($PkgMgmtProvider -eq 'PowerShellGet') {
+                        $uninstallParams.RequiredVersion = $PkgVersion
+                    }
+                    else {
+                        $uninstallParams.RequiredVersion = $PkgVersion
+                    }
+                }
+
+                try {
+                    $null = Uninstall-Package @uninstallParams
+                }
+                catch {
+                    # For NuGet with a destination path, try filesystem cleanup
+                    if ($PkgMgmtProvider -eq 'NuGet' -and $DestinationPath) {
+                        $pkgDirs = @(Get-ChildItem -LiteralPath $DestinationPath -Directory -Filter "$Id*" -ErrorAction SilentlyContinue)
+                        if ($pkgDirs.Count -gt 0) {
+                            foreach ($dir in $pkgDirs) {
+                                Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        else {
+                            $Module.Result.rc = 1
+                            $Module.Result.stdout = ""
+                            $Module.Result.stderr = $_.Exception.Message
+                            $Module.FailJson("Failed to uninstall package '$Id' with provider '$PkgMgmtProvider': $($_.Exception.Message)", $_)
+                        }
+                    }
+                    else {
+                        $Module.Result.rc = 1
+                        $Module.Result.stdout = ""
+                        $Module.Result.stderr = $_.Exception.Message
+                        $Module.FailJson("Failed to uninstall package '$Id' with provider '$PkgMgmtProvider': $($_.Exception.Message)", $_)
+                    }
+                }
+            }
+
+            $Module.Result.rc = 0
+        }
+    }
+
     # Should always be last as the FileSupported is a catch all.
     registry = @{
         FileSupported = { $true }
@@ -1297,14 +1490,14 @@ $spec = @{
         log_path = @{ type = "path" }
         provider = @{ type = "str"; default = "auto"; choices = $providerInfo.Keys + "auto" }
         wait_for_children = @{ type = 'bool'; default = $false }
+        package_management_provider = @{ type = "str"; choices = @("NuGet", "PowerShellGet") }
+        package_source = @{ type = "str" }
+        package_version = @{ type = "str" }
+        destination_path = @{ type = "path" }
     }
     required_by = @{
         creates_version = "creates_path"
     }
-    required_if = @(
-        @("state", "present", @("path")),
-        @("state", "absent", @("path", "product_id"), $true)
-    )
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
@@ -1342,96 +1535,120 @@ if ($path -and $path.StartsWith('http', [System.StringComparison]::InvariantCult
     $pathType = 'url'
 }
 
-$tempFile = $null
-try {
-    $getParams = @{
-        Id = $productId
-        Provider = $provider
-        CreatesPath = $createsPath
-        CreatesVersion = $createsVersion
-        CreatesService = $createsService
+# PackageManagement provider uses a separate code path since it doesn't use file-based installs
+if ($provider -eq 'package_management') {
+    if (-not $productId) {
+        $module.FailJson("product_id is required when using the package_management provider")
     }
 
-    # If the package is a remote file, productId is set and state is set to present
-    # then check if the package is installed and avoid downloading the package to a temp file.
-    if ($pathType -and $productId -and ($state -eq 'present')) {
-        $packageStatus = Get-InstalledStatus @getParams
-    }
-    # If the path is a URL and no productId is set or we already checked and the package is not installed
-    # then create a temp copy for idempotency checks.
-    if (($pathType) -and (-not $productId -or -not $packageStatus.Installed)) {
-        $tempFile = switch ($pathType) {
-            url { Get-UrlFile -Module $module -Url $path }
-        }
-        $path = $tempFile
-        $getParams.Path = $path
-    }
-    elseif ($path -and -not $pathType) {
-        if (-not (Test-Path -LiteralPath $path) -and -not $module.CheckMode) {
-            $module.FailJson("the file at the path '$path' cannot be reached")
-        }
-        $getParams.Path = $path
-    }
-
-    # Check package installation status unless this was already done and we know the package is installed
-    if (-not $packageStatus.Installed) {
-        $packageStatus = Get-InstalledStatus @getParams
-    }
-
+    $packageStatus = Get-InstalledStatus -Id $productId -Provider $provider
     $changed = -not $packageStatus.Skip -and (($state -eq 'present') -ne $packageStatus.Installed)
-    $module.Result.rc = 0  # Make sure rc is always set
+    $module.Result.rc = 0
+
     if ($changed -and -not $module.CheckMode) {
-        # Make sure we get a temp copy of the file if the provider requires it and we haven't already done so.
-        if ($pathType -and -not $tempFile -and ($state -eq 'present' -or -not $packageStatus.SkipFileForRemove)) {
-            $tempFile = switch ($pathType) {
-                url { Get-UrlFile -Module $module -Url $path }
-            }
-            $path = $tempFile
-        }
-
-        if ($checksum_algorithm -and $state -eq 'present' -and $path) {
-            $tmp_checksum = (Get-FileHash -LiteralPath $path -Algorithm $checksum_algorithm).Hash
-            $module.Result.checksum = $tmp_checksum
-
-            # If the checksum has been set, verify the checksum of the remote against the input checksum.
-            if ($checksum -and $checksum -ne $tmp_checksum) {
-                $Module.FailJson(("The checksum for {0} did not match '{1}', it was '{2}'" -f $path, $checksum, $tmp_checksum))
-            }
-        }
-
-        if ($verify_signature -and $state -eq 'present' -and $path) {
-            try {
-                $sig = Get-AuthenticodeSignature -FilePath $path
-                if ($sig.Status.ToString() -ne 'Valid') {
-                    throw "File '$path': signature status is '$($sig.Status)', expected 'Valid'"
-                }
-            }
-            catch {
-                $module.FailJson("Authenticode check failed: $($_.Exception.Message)")
-            }
-        }
         $setParams = @{
-            Arguments = $arguments
-            ReturnCodes = $expectedReturnCode
             Id = $packageStatus.Id
-            LogPath = $logPath
             Module = $module
-            Path = $path
             State = $state
-            WorkingDirectory = $chdir
-            WaitChildren = $waitForChildren
         }
         $setParams += $packageStatus.ExtraInfo
         &$providerInfo."$($packageStatus.Provider)".Set @setParams
     }
-    if ($state -eq 'absent' -and $null -eq $productId -and $pathType -eq 'url') {
-        $Module.FailJson("Unable to find Product ID from the URL path. Please specify product_id when using state=absent")
-    }
+
     $module.Result.changed = $changed
 }
-finally {
-    if ($tempFile -and (Test-Path -LiteralPath $tempFile)) {
-        Remove-Item -LiteralPath $tempFile -Force
+else {
+    $tempFile = $null
+    try {
+        $getParams = @{
+            Id = $productId
+            Provider = $provider
+            CreatesPath = $createsPath
+            CreatesVersion = $createsVersion
+            CreatesService = $createsService
+        }
+
+        # If the package is a remote file, productId is set and state is set to present
+        # then check if the package is installed and avoid downloading the package to a temp file.
+        if ($pathType -and $productId -and ($state -eq 'present')) {
+            $packageStatus = Get-InstalledStatus @getParams
+        }
+        # If the path is a URL and no productId is set or we already checked and the package is not installed
+        # then create a temp copy for idempotency checks.
+        if (($pathType) -and (-not $productId -or -not $packageStatus.Installed)) {
+            $tempFile = switch ($pathType) {
+                url { Get-UrlFile -Module $module -Url $path }
+            }
+            $path = $tempFile
+            $getParams.Path = $path
+        }
+        elseif ($path -and -not $pathType) {
+            if (-not (Test-Path -LiteralPath $path) -and -not $module.CheckMode) {
+                $module.FailJson("the file at the path '$path' cannot be reached")
+            }
+            $getParams.Path = $path
+        }
+
+        # Check package installation status unless this was already done and we know the package is installed
+        if (-not $packageStatus.Installed) {
+            $packageStatus = Get-InstalledStatus @getParams
+        }
+
+        $changed = -not $packageStatus.Skip -and (($state -eq 'present') -ne $packageStatus.Installed)
+        $module.Result.rc = 0  # Make sure rc is always set
+        if ($changed -and -not $module.CheckMode) {
+            # Make sure we get a temp copy of the file if the provider requires it and we haven't already done so.
+            if ($pathType -and -not $tempFile -and ($state -eq 'present' -or -not $packageStatus.SkipFileForRemove)) {
+                $tempFile = switch ($pathType) {
+                    url { Get-UrlFile -Module $module -Url $path }
+                }
+                $path = $tempFile
+            }
+
+            if ($checksum_algorithm -and $state -eq 'present' -and $path) {
+                $tmp_checksum = (Get-FileHash -LiteralPath $path -Algorithm $checksum_algorithm).Hash
+                $module.Result.checksum = $tmp_checksum
+
+                # If the checksum has been set, verify the checksum of the remote against the input checksum.
+                if ($checksum -and $checksum -ne $tmp_checksum) {
+                    $Module.FailJson(("The checksum for {0} did not match '{1}', it was '{2}'" -f $path, $checksum, $tmp_checksum))
+                }
+            }
+
+            if ($verify_signature -and $state -eq 'present' -and $path) {
+                try {
+                    $sig = Get-AuthenticodeSignature -FilePath $path
+                    if ($sig.Status.ToString() -ne 'Valid') {
+                        throw "File '$path': signature status is '$($sig.Status)', expected 'Valid'"
+                    }
+                }
+                catch {
+                    $module.FailJson("Authenticode check failed: $($_.Exception.Message)")
+                }
+            }
+            $setParams = @{
+                Arguments = $arguments
+                ReturnCodes = $expectedReturnCode
+                Id = $packageStatus.Id
+                LogPath = $logPath
+                Module = $module
+                Path = $path
+                State = $state
+                WorkingDirectory = $chdir
+                WaitChildren = $waitForChildren
+            }
+            $setParams += $packageStatus.ExtraInfo
+            &$providerInfo."$($packageStatus.Provider)".Set @setParams
+        }
+        if ($state -eq 'absent' -and $null -eq $productId -and $pathType -eq 'url') {
+            $Module.FailJson("Unable to find Product ID from the URL path. Please specify product_id when using state=absent")
+        }
+        $module.Result.changed = $changed
+    }
+    finally {
+        if ($tempFile -and (Test-Path -LiteralPath $tempFile)) {
+            Remove-Item -LiteralPath $tempFile -Force
+        }
     }
 }
 

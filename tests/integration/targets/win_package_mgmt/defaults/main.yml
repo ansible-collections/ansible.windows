@@ -1,0 +1,8 @@
+---
+# Test packages for PackageManagement provider tests
+test_nuget_package: Newtonsoft.Json
+test_nuget_version: "13.0.3"
+test_nuget_dest: C:\NuGetTest
+test_psget_package: PSScriptAnalyzer
+test_psget_version: "1.22.0"
+test_psget_source: PSGallery

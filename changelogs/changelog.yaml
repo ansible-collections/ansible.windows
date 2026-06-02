@@ -1144,3 +1144,20 @@ releases:
     - release-summary.yml
     - setup-admin-facts.yml
     release_date: '2026-05-28'
+  3.7.0:
+    changes:
+      minor_changes:
+      - win_package - Added ``package_management`` provider to support PowerShell
+        PackageManagement (OneGet) framework. Enables installing and uninstalling
+        packages via NuGet and PowerShellGet providers with full idempotency (https://github.com/ansible-collections/ansible.windows/pull/NEW).
+      - win_winget - New module to manage packages with Windows Package Manager (winget).
+        Supports install, upgrade, and uninstall operations with full idempotency,
+        check mode support, and scope selection (https://github.com/ansible-collections/ansible.windows/pull/NEW).
+    fragments:
+    - win_package-package-management-provider.yml
+    - win_winget-new-module.yml
+    modules:
+    - description: Manage packages using Windows Package Manager (winget)
+      name: win_winget
+      namespace: ''
+    release_date: '2026-06-02'

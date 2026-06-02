@@ -166,14 +166,65 @@ options:
       C(HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall),
       C(HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall), and
       C(HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall).
+    - The C(package_management) provider uses the PowerShell PackageManagement
+      (OneGet) framework to install or uninstall packages. This supports
+      providers like C(NuGet) and C(PowerShellGet). When using this provider,
+      I(path) is not used. Instead use I(product_id) to specify the package
+      name as known to the PackageManagement provider.
     choices:
     - auto
     - msi
     - msix
     - msp
     - registry
+    - package_management
     default: auto
     type: str
+  package_management_provider:
+    description:
+    - The PackageManagement provider to use when I(provider) is set to
+      C(package_management).
+    - C(NuGet) manages NuGet packages, typically used for .NET libraries and
+      tools.
+    - C(PowerShellGet) manages PowerShell modules and scripts from
+      repositories like the PowerShell Gallery.
+    - This option is only used with the C(package_management) provider and
+      is required when I(provider) is set to C(package_management).
+    type: str
+    choices:
+    - NuGet
+    - PowerShellGet
+    version_added: '3.7.0'
+  package_source:
+    description:
+    - The name of the package source (repository) to use with the
+      C(package_management) provider.
+    - For C(NuGet) this is typically a NuGet feed URL or a registered source
+      name like C(nuget.org).
+    - For C(PowerShellGet) this is a registered repository name such as
+      C(PSGallery).
+    - If not specified, the default source for the provider is used.
+    - This option is only used with the C(package_management) provider.
+    type: str
+    version_added: '3.7.0'
+  package_version:
+    description:
+    - The specific version of the package to install when using the
+      C(package_management) provider.
+    - If not specified, the latest available version is installed.
+    - For C(NuGet), this should match the NuGet version format.
+    - For C(PowerShellGet), this should match the module version format.
+    - This option is only used with the C(package_management) provider.
+    type: str
+    version_added: '3.7.0'
+  destination_path:
+    description:
+    - The destination directory where NuGet packages should be installed.
+    - This is only used with the C(package_management) provider when
+      C(package_management_provider) is set to C(NuGet).
+    - If not specified, the default NuGet package directory is used.
+    type: path
+    version_added: '3.7.0'
   state:
     description:
     - Whether to install or uninstall the package.
@@ -214,6 +265,7 @@ notes:
 - All the installation checks under C(product_id) and C(creates_*) add
   together, if one fails then the program is considered to be absent.
 seealso:
+- module: ansible.windows.win_winget
 - module: chocolatey.chocolatey.win_chocolatey
 - module: community.windows.win_hotfix
 - module: ansible.windows.win_updates
@@ -372,6 +424,52 @@ EXAMPLES = r'''
     arguments: /S
     state: present
     verify_signature: true
+
+- name: Install a NuGet package using PackageManagement
+  ansible.windows.win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: present
+
+- name: Install a specific version of a NuGet package
+  ansible.windows.win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    package_version: '13.0.3'
+    state: present
+
+- name: Install a NuGet package to a specific directory
+  ansible.windows.win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    destination_path: C:\NuGetPackages
+    state: present
+
+- name: Install a PowerShell module from PSGallery
+  ansible.windows.win_package:
+    product_id: Pester
+    provider: package_management
+    package_management_provider: PowerShellGet
+    state: present
+
+- name: Install a specific version of a PowerShell module
+  ansible.windows.win_package:
+    product_id: Pester
+    provider: package_management
+    package_management_provider: PowerShellGet
+    package_version: '5.5.0'
+    package_source: PSGallery
+    state: present
+
+- name: Uninstall a PowerShell module using PackageManagement
+  ansible.windows.win_package:
+    product_id: Pester
+    provider: package_management
+    package_management_provider: PowerShellGet
+    state: absent
 '''
 
 RETURN = r'''

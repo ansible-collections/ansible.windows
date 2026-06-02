@@ -398,3 +398,9 @@ tests/integration/inventory*
 # Ansible runtime/build metadata
 meta/powershell_signatures.psd1
 
+# Collection build artifacts
+*.tar.gz
+
+# Jarvis Framework planning artifacts
+docs/plans/
+

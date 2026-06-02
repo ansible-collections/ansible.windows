@@ -1,0 +1,189 @@
+---
+# Integration tests for win_winget module
+# These tests require winget to be installed on the target host.
+
+- name: check if winget is available
+  win_shell: |
+    $wingetPaths = @(
+        (Get-Command winget.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
+        (Get-ChildItem "$env:ProgramFiles\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName)
+    ) | Where-Object { $_ }
+    if ($wingetPaths.Count -gt 0) {
+        "true"
+    } else {
+        "false"
+    }
+  register: winget_available
+  changed_when: false
+
+- name: run winget tests
+  when: winget_available.stdout | trim | bool
+  block:
+    - name: ensure test package is absent before tests
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      register: pre_cleanup
+
+    # --- Test 1: Install a package ---
+    - name: install test package
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: present
+      register: install_result
+
+    - name: assert package was installed
+      assert:
+        that:
+          - install_result is changed
+          - install_result.rc == 0
+          - install_result.package_id is defined
+
+    # --- Test 2: Install same package again (idempotency) ---
+    - name: install test package again (idempotency check)
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: present
+      register: install_again_result
+
+    - name: assert package install is idempotent
+      assert:
+        that:
+          - install_again_result is not changed
+
+    # --- Test 3: Check mode for uninstall ---
+    - name: uninstall test package in check mode
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      check_mode: true
+      register: check_uninstall_result
+
+    - name: assert check mode reports change
+      assert:
+        that:
+          - check_uninstall_result is changed
+
+    - name: verify package is still installed after check mode
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: present
+      register: still_installed
+
+    - name: assert package is still present
+      assert:
+        that:
+          - still_installed is not changed
+
+    # --- Test 4: Uninstall the package ---
+    - name: uninstall test package
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      register: uninstall_result
+
+    - name: assert package was uninstalled
+      assert:
+        that:
+          - uninstall_result is changed
+          - uninstall_result.rc == 0
+
+    # --- Test 5: Uninstall again (idempotency) ---
+    - name: uninstall test package again (idempotency check)
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      register: uninstall_again_result
+
+    - name: assert uninstall is idempotent
+      assert:
+        that:
+          - uninstall_again_result is not changed
+
+    # --- Test 6: Check mode for install ---
+    - name: install test package in check mode
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: present
+      check_mode: true
+      register: check_install_result
+
+    - name: assert check mode reports change for install
+      assert:
+        that:
+          - check_install_result is changed
+
+    - name: verify package was not actually installed in check mode
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      register: not_installed
+
+    - name: assert package was not installed in check mode
+      assert:
+        that:
+          - not_installed is not changed
+
+    # --- Test 7: Install with state=latest ---
+    - name: install test package with state=latest
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: latest
+      register: install_latest_result
+
+    - name: assert package was installed with latest
+      assert:
+        that:
+          - install_latest_result is changed
+          - install_latest_result.rc == 0
+
+    # --- Test 8: Run latest again (idempotency) ---
+    - name: run state=latest again (idempotency check)
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: latest
+      register: latest_again_result
+
+    - name: assert latest is idempotent when already at latest
+      assert:
+        that:
+          - latest_again_result is not changed
+
+    # --- Test 9: Install with scope=machine ---
+    - name: uninstall before scope test
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+
+    - name: install test package with scope=machine
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        scope: machine
+        state: present
+      register: scope_install_result
+
+    - name: assert scope install worked
+      assert:
+        that:
+          - scope_install_result is changed
+          - scope_install_result.rc == 0
+
+    # --- Test 10: Failure test - invalid package ---
+    - name: attempt to install non-existent package
+      win_winget:
+        id: This.Package.Does.Not.Exist.12345
+        state: present
+      register: invalid_result
+      ignore_errors: true
+
+    - name: assert invalid package fails
+      assert:
+        that:
+          - invalid_result is failed
+
+  always:
+    - name: clean up test package
+      win_winget:
+        id: '{{ test_winget_package_id }}'
+        state: absent
+      ignore_errors: true

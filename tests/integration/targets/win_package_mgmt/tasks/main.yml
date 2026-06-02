@@ -1,0 +1,275 @@
+---
+# Integration tests for win_package PackageManagement provider
+# Tests the NuGet and PowerShellGet provider support added in the enhancement.
+
+- name: ensure NuGet package provider is registered
+  win_shell: |
+    $null = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+    if (-not $?) {
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+    }
+    "ok"
+  changed_when: false
+
+- name: ensure PSGallery is trusted
+  win_shell: |
+    $repo = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+    if ($repo -and $repo.InstallationPolicy -ne 'Trusted') {
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+    }
+    "ok"
+  changed_when: false
+
+- block:
+    # =====================================================
+    # NuGet Provider Tests
+    # =====================================================
+
+    - name: ensure NuGet test directory exists
+      win_file:
+        path: '{{ test_nuget_dest }}'
+        state: directory
+
+    - name: ensure NuGet test package is absent before tests
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: absent
+      ignore_errors: true
+
+    # --- Test 1: Install NuGet package ---
+    - name: install NuGet package
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: present
+      register: nuget_install
+
+    - name: assert NuGet package was installed
+      assert:
+        that:
+          - nuget_install is changed
+          - nuget_install.rc == 0
+
+    # --- Test 2: Install NuGet package again (idempotency) ---
+    - name: install NuGet package again (idempotency check)
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: present
+      register: nuget_install_again
+
+    - name: assert NuGet install is idempotent
+      assert:
+        that:
+          - nuget_install_again is not changed
+
+    # --- Test 3: Install specific NuGet version ---
+    - name: uninstall NuGet package first
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: absent
+
+    - name: install specific NuGet version
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        package_version: '{{ test_nuget_version }}'
+        destination_path: '{{ test_nuget_dest }}'
+        state: present
+      register: nuget_version_install
+
+    - name: assert specific NuGet version was installed
+      assert:
+        that:
+          - nuget_version_install is changed
+          - nuget_version_install.rc == 0
+
+    # --- Test 4: Check mode for NuGet uninstall ---
+    - name: uninstall NuGet package in check mode
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: absent
+      check_mode: true
+      register: nuget_check_uninstall
+
+    - name: assert NuGet check mode reports change
+      assert:
+        that:
+          - nuget_check_uninstall is changed
+
+    # --- Test 5: Uninstall NuGet package ---
+    - name: uninstall NuGet package
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: absent
+      register: nuget_uninstall
+
+    - name: assert NuGet package was uninstalled
+      assert:
+        that:
+          - nuget_uninstall is changed
+          - nuget_uninstall.rc == 0
+
+    # --- Test 6: Uninstall NuGet again (idempotency) ---
+    - name: uninstall NuGet package again (idempotency check)
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        destination_path: '{{ test_nuget_dest }}'
+        state: absent
+      register: nuget_uninstall_again
+
+    - name: assert NuGet uninstall is idempotent
+      assert:
+        that:
+          - nuget_uninstall_again is not changed
+
+    # =====================================================
+    # PowerShellGet Provider Tests
+    # =====================================================
+
+    - name: ensure PowerShellGet test package is absent
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: absent
+      ignore_errors: true
+
+    # --- Test 7: Install PowerShellGet package ---
+    - name: install PowerShellGet package
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        package_source: '{{ test_psget_source }}'
+        state: present
+      register: psget_install
+
+    - name: assert PowerShellGet package was installed
+      assert:
+        that:
+          - psget_install is changed
+          - psget_install.rc == 0
+
+    # --- Test 8: Install PowerShellGet package again (idempotency) ---
+    - name: install PowerShellGet package again (idempotency check)
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: present
+      register: psget_install_again
+
+    - name: assert PowerShellGet install is idempotent
+      assert:
+        that:
+          - psget_install_again is not changed
+
+    # --- Test 9: Install specific PowerShellGet version ---
+    - name: uninstall PowerShellGet package first
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: absent
+
+    - name: install specific PowerShellGet version
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        package_version: '{{ test_psget_version }}'
+        package_source: '{{ test_psget_source }}'
+        state: present
+      register: psget_version_install
+
+    - name: assert specific PowerShellGet version was installed
+      assert:
+        that:
+          - psget_version_install is changed
+          - psget_version_install.rc == 0
+
+    # --- Test 10: Uninstall PowerShellGet package ---
+    - name: uninstall PowerShellGet package
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: absent
+      register: psget_uninstall
+
+    - name: assert PowerShellGet package was uninstalled
+      assert:
+        that:
+          - psget_uninstall is changed
+          - psget_uninstall.rc == 0
+
+    # --- Test 11: Uninstall PowerShellGet again (idempotency) ---
+    - name: uninstall PowerShellGet package again (idempotency check)
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: absent
+      register: psget_uninstall_again
+
+    - name: assert PowerShellGet uninstall is idempotent
+      assert:
+        that:
+          - psget_uninstall_again is not changed
+
+    # --- Test 12: Failure test - missing provider requirement ---
+    - name: attempt to use package_management without package_management_provider
+      win_package:
+        product_id: SomePackage
+        provider: package_management
+        state: present
+      register: missing_provider_result
+      ignore_errors: true
+
+    - name: assert missing provider fails
+      assert:
+        that:
+          - missing_provider_result is failed
+
+  always:
+    - name: clean up NuGet test package
+      win_package:
+        product_id: '{{ test_nuget_package }}'
+        provider: package_management
+        package_management_provider: NuGet
+        state: absent
+      ignore_errors: true
+
+    - name: clean up PowerShellGet test package
+      win_package:
+        product_id: '{{ test_psget_package }}'
+        provider: package_management
+        package_management_provider: PowerShellGet
+        state: absent
+      ignore_errors: true
+
+    - name: clean up NuGet test directory
+      win_file:
+        path: '{{ test_nuget_dest }}'
+        state: absent
+      ignore_errors: true

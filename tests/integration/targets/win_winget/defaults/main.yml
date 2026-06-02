@@ -1,0 +1,4 @@
+---
+# Test package: jq is a lightweight CLI tool, safe to install/uninstall
+test_winget_package_id: jqlang.jq
+test_winget_package_name: jq
