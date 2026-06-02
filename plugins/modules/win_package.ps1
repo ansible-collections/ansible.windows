@@ -1539,6 +1539,17 @@ if ($path -and $path.StartsWith('http', [System.StringComparison]::InvariantCult
     $pathType = 'url'
 }
 
+# Validate required parameters for non-package_management providers.
+# The package_management provider does not use file-based installs and has its own validation below.
+if ($provider -ne 'package_management') {
+    if ($state -eq 'present' -and -not $path) {
+        $module.FailJson("state is present but all of the following are missing: path")
+    }
+    if ($state -eq 'absent' -and -not $path -and -not $productId) {
+        $module.FailJson("state is absent but any of the following are missing: path, product_id")
+    }
+}
+
 # PackageManagement provider uses a separate code path since it doesn't use file-based installs
 if ($provider -eq 'package_management') {
     if (-not $productId) {
