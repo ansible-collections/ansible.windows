@@ -1,0 +1,204 @@
+# Integration tests for win_winget module
+# These tests verify winget package management operations.
+
+- name: check if winget is available
+  win_powershell:
+    script: |
+      $winget = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+      if (-not $winget) {
+          # Search known paths for non-interactive sessions
+          $candidates = @(
+              "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe"
+              "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe"
+          )
+          foreach ($c in $candidates) {
+              $resolved = Get-Item -Path $c -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($resolved) {
+                  $winget = $resolved
+                  break
+              }
+          }
+      }
+      if ($winget) {
+          $Ansible.Result = "available"
+      } else {
+          $Ansible.Result = "unavailable"
+      }
+  changed_when: false
+  register: winget_check
+
+- name: run winget tests
+  when: winget_check.result == "available"
+  block:
+    - name: get winget version
+      win_powershell:
+        script: |
+          $winget = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+          if (-not $winget) {
+              $resolved = Get-Item -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($resolved) { $winget = $resolved }
+          }
+          $result = & $winget.Source --version 2>&1
+          $Ansible.Result = $result.Trim()
+      changed_when: false
+      register: winget_version
+
+    - name: display winget version
+      debug:
+        msg: "winget version: {{ winget_version.result }}"
+
+    # --- ENSURE CLEAN STATE ---
+
+    - name: ensure test package is not installed before tests
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: pre_cleanup
+
+    # --- INSTALL TESTS ---
+
+    - name: install package - check mode
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_check
+      check_mode: true
+
+    - name: assert install check mode reports changed
+      assert:
+        that:
+          - install_check is changed
+          - not install_check.reboot_required
+
+    - name: verify package not actually installed after check mode
+      win_powershell:
+        script: |
+          $winget = (Get-Command winget.exe -ErrorAction SilentlyContinue).Source
+          if (-not $winget) {
+              $resolved = Get-Item -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($resolved) { $winget = $resolved.FullName }
+          }
+          $result = & $winget list --id jqlang.jq --exact --accept-source-agreements --disable-interactivity 2>&1
+          if ($LASTEXITCODE -ne 0) {
+              $Ansible.Result = "not_installed"
+          } else {
+              $Ansible.Result = "installed"
+          }
+      changed_when: false
+      register: check_mode_verify
+
+    - name: assert package was not installed in check mode
+      assert:
+        that:
+          - check_mode_verify.result == "not_installed"
+
+    - name: install package
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_result
+
+    - name: assert package was installed
+      assert:
+        that:
+          - install_result is changed
+          - install_result.rc == 0
+          - install_result.package.id is defined
+
+    # --- IDEMPOTENCY TEST ---
+
+    - name: install same package again (idempotency)
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_again
+
+    - name: assert install is idempotent
+      assert:
+        that:
+          - install_again is not changed
+          - install_again.rc == 0
+
+    # --- STATE LATEST TEST ---
+
+    - name: ensure package is at latest version
+      win_winget:
+        id: jqlang.jq
+        state: latest
+      register: latest_result
+
+    - name: assert latest state works
+      assert:
+        that:
+          - latest_result.rc == 0
+
+    # --- UNINSTALL TESTS ---
+
+    - name: uninstall package - check mode
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_check
+      check_mode: true
+
+    - name: assert uninstall check mode reports changed
+      assert:
+        that:
+          - uninstall_check is changed
+
+    - name: uninstall package
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_result
+
+    - name: assert package was uninstalled
+      assert:
+        that:
+          - uninstall_result is changed
+          - uninstall_result.rc == 0
+
+    - name: uninstall package again (idempotency)
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_again
+
+    - name: assert uninstall is idempotent
+      assert:
+        that:
+          - uninstall_again is not changed
+
+    # --- ERROR HANDLING ---
+
+    - name: attempt to install non-existent package
+      win_winget:
+        id: ThisPackage.DoesNotExist.12345
+        state: present
+      register: install_nonexistent
+      ignore_errors: true
+
+    - name: assert non-existent package fails
+      assert:
+        that:
+          - install_nonexistent is failed
+
+    # --- REQUIRED PARAMETER VALIDATION ---
+
+    - name: attempt to call module without id or name
+      win_winget:
+        state: present
+      register: no_id_or_name
+      ignore_errors: true
+
+    - name: assert module fails without id or name
+      assert:
+        that:
+          - no_id_or_name is failed
+
+- name: skip tests when winget is not available
+  when: winget_check.result != "available"
+  debug:
+    msg: >-
+      Skipping win_winget tests because winget is not available on this host.
+      winget requires Windows 10 1809+ with the App Installer package.

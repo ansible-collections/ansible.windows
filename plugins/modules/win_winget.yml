@@ -1,0 +1,189 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_winget
+  short_description: Manage packages with Windows Package Manager (winget)
+  description:
+    - Install, upgrade, or uninstall packages using the Windows Package Manager
+      (winget) CLI.
+    - Provides idempotent package management for Windows hosts using the winget
+      ecosystem.
+  version_added: 3.7.0
+  requirements:
+    - Windows Package Manager (winget) must be installed on the target host.
+    - Windows 10 1809 or later, or Windows Server 2019 or later.
+  options:
+    id:
+      description:
+        - The winget package identifier to manage.
+        - This is the unique identifier used by winget to locate the package,
+          for example V(Git.Git) or V(7zip.7zip).
+        - Either O(id) or O(name) must be provided.
+      type: str
+    name:
+      description:
+        - The display name of the package to manage.
+        - Uses the winget C(--name) filter for matching.
+        - Either O(id) or O(name) must be provided.
+        - O(id) is preferred for accuracy as O(name) may match multiple packages.
+      type: str
+    version:
+      description:
+        - The specific version to install or upgrade to.
+        - If not specified, the latest available version is used.
+      type: str
+    source:
+      description:
+        - The winget source to use for the package, for example V(winget) or
+          V(msstore).
+        - If not specified, winget uses all configured sources.
+      type: str
+    scope:
+      description:
+        - The installation scope for the package.
+        - V(user) installs for the current user only.
+        - V(machine) installs for all users on the machine.
+      type: str
+      choices:
+        - user
+        - machine
+    state:
+      description:
+        - The desired state of the package.
+        - V(present) ensures the package is installed.
+        - V(absent) ensures the package is removed.
+        - V(latest) ensures the package is installed and upgraded to the latest
+          available version.
+      type: str
+      default: present
+      choices:
+        - absent
+        - present
+        - latest
+    allow_reboot:
+      description:
+        - If V(true), allows winget to reboot the machine if the installer
+          requires it.
+        - If V(false) (the default), winget will not reboot automatically and
+          the module will report RV(reboot_required) if a reboot is needed.
+      type: bool
+      default: false
+    architecture:
+      description:
+        - The architecture of the package to install.
+        - Valid values include V(x64), V(x86), and V(arm64).
+      type: str
+      choices:
+        - x64
+        - x86
+        - arm64
+    override:
+      description:
+        - Override arguments to pass directly to the package installer.
+        - This replaces the default install arguments for the package.
+      type: str
+    custom:
+      description:
+        - Additional arguments to append to the default install arguments.
+        - Unlike O(override), this is appended to rather than replacing the
+          defaults.
+      type: str
+  notes:
+    - Winget must be available in the system C(PATH) on the target host.
+    - This module requires winget v1.4 or later for JSON output support.
+    - The first run of winget may trigger source agreement acceptance. This
+      module handles that automatically.
+    - Running in non-interactive sessions (such as WinRM) requires winget to
+      be properly configured for the SYSTEM account or the connection user.
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: none
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_package
+  author:
+    - Ansible Project (@ansible)
+
+EXAMPLES: |
+  - name: Install a package by id
+    ansible.windows.win_winget:
+      id: Git.Git
+      state: present
+
+  - name: Install a specific version of a package
+    ansible.windows.win_winget:
+      id: Python.Python.3.12
+      version: "3.12.4"
+      state: present
+
+  - name: Install a package for all users
+    ansible.windows.win_winget:
+      id: 7zip.7zip
+      scope: machine
+      state: present
+
+  - name: Ensure a package is at the latest version
+    ansible.windows.win_winget:
+      id: Microsoft.VisualStudioCode
+      state: latest
+
+  - name: Uninstall a package
+    ansible.windows.win_winget:
+      id: Git.Git
+      state: absent
+
+  - name: Install a package from a specific source
+    ansible.windows.win_winget:
+      id: Mozilla.Firefox
+      source: winget
+      state: present
+
+  - name: Install a package with custom installer arguments
+    ansible.windows.win_winget:
+      id: Git.Git
+      custom: /COMPONENTS=gitlfs
+      state: present
+
+RETURN:
+  reboot_required:
+    description:
+      - Whether a reboot is required to complete the operation.
+    returned: always
+    type: bool
+  rc:
+    description:
+      - The exit code from the winget command.
+    returned: always
+    type: int
+  stdout:
+    description:
+      - The standard output from the winget command.
+    returned: when the winget command is executed
+    type: str
+  stderr:
+    description:
+      - The standard error from the winget command.
+    returned: when the winget command is executed
+    type: str
+  package:
+    description:
+      - Information about the package that was managed.
+    returned: when the package is found
+    type: dict
+    contains:
+      id:
+        description: The winget package identifier.
+        type: str
+      version:
+        description: The installed version of the package.
+        type: str
+      available_version:
+        description: The latest available version of the package, if an upgrade is available.
+        type: str
