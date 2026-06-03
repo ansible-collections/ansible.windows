@@ -4,6 +4,19 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.6.2
+======
+
+Release Summary
+---------------
+
+Release summary for v3.6.2
+
+New Modules
+-----------
+
+- win_winget - Manage Windows packages using Windows Package Manager (winget)
+
 v3.6.1
 ======
 
