@@ -14,7 +14,9 @@ description:
   and C(.msixbundle).
 - These packages can be sourced from the local file system, network file share
   or a url.
-- See I(provider) for more info on each package type that is supported.
+- Also supports installing packages through Windows PackageManagement
+  (OneGet) providers such as V(NuGet) and V(PowerShellGet).
+- See O(provider) for more info on each package type that is supported.
 options:
   arguments:
     description:
@@ -127,53 +129,84 @@ options:
     description:
     - The product id of the installed packaged.
     - This is used for checking whether the product is already installed and
-      getting the uninstall information if C(state=absent).
-    - For msi packages, this is the C(ProductCode) (GUID) of the package. This
-      can be found under the same registry paths as the C(registry) provider.
-    - For msp packages, this is the C(PatchCode) (GUID) of the package which
-      can found under the C(Details -> Revision number) of the file's properties.
-    - For msix packages, this is the C(Name) or C(PackageFullName) of the
+      getting the uninstall information if O(state=absent).
+    - For V(msi) packages, this is the C(ProductCode) (GUID) of the package.
+      This can be found under the same registry paths as the V(registry)
+      provider.
+    - For V(msp) packages, this is the C(PatchCode) (GUID) of the package
+      which can found under the C(Details -> Revision number) of the file's
+      properties.
+    - For V(msix) packages, this is the C(Name) or C(PackageFullName) of the
       package found under the C(Get-AppxPackage) cmdlet.
-    - For registry (exe) packages, this is the registry key name under the
-      registry paths specified in I(provider).
-    - This value is ignored if C(path) is set to a local accessible file path
-      and the package is not an C(exe).
-    - This SHOULD be set when the package is an C(exe), or the path is a url
+    - For V(registry) (exe) packages, this is the registry key name under the
+      registry paths specified in O(provider).
+    - For V(package_management) packages, this is the package name as known to
+      the PackageManagement provider (e.g. V(NuGet), V(PowerShellGet)).
+    - This value is ignored if O(path) is set to a local accessible file path
+      and the package is not an C(.exe).
+    - This SHOULD be set when the package is an C(.exe), or the path is a url
       or a network share and credential delegation is not being used. The
       C(creates_*) options can be used instead but is not recommended.
+    - This MUST be set when O(provider) is V(package_management).
     type: str
   provider:
     description:
     - Set the package provider to use when searching for a package.
-    - The C(auto) provider will select the proper provider if I(path)
-      otherwise it scans all the other providers based on the I(product_id).
-    - The C(msi) provider scans for MSI packages installed on a machine wide
+    - The V(auto) provider will select the proper provider if O(path)
+      otherwise it scans all the other providers based on the O(product_id).
+    - The V(msi) provider scans for MSI packages installed on a machine wide
       and current user context based on the C(ProductCode) of the MSI.
-    - The C(msix) provider is used to install C(.appx), C(.msix),
+    - The V(msix) provider is used to install C(.appx), C(.msix),
       C(.appxbundle), or C(.msixbundle) packages. These packages are only
       installed or removed on the current use. The host must be set to allow
       sideloaded apps or in developer mode. See the examples for how to enable
-      this. If a package is already installed but C(path) points to an updated
+      this. If a package is already installed but O(path) points to an updated
       package, this will be installed over the top of the existing one.
-    - The C(msp) provider scans for all MSP patches installed on a machine wide
-      and current user context based on the C(PatchCode) of the MSP. A C(msp)
-      will be applied or removed on all C(msi) products that it applies to and
+    - The V(msp) provider scans for all MSP patches installed on a machine wide
+      and current user context based on the C(PatchCode) of the MSP. A V(msp)
+      will be applied or removed on all V(msi) products that it applies to and
       is installed. If the patch is obsoleted or superseded then no action will
       be taken.
-    - The C(registry) provider is used for traditional C(exe) installers and
+    - The V(registry) provider is used for traditional C(.exe) installers and
       uses the following registry path to determine if a product was installed;
       C(HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall),
       C(HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall),
       C(HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall), and
       C(HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall).
+    - The V(package_management) provider uses Windows PackageManagement
+      (OneGet) to install or uninstall packages. This provider requires
+      O(product_id) to be set to the package name. Use
+      O(package_management_provider) to specify the PackageManagement provider
+      (e.g. V(NuGet), V(PowerShellGet)). The O(path) option is not used with
+      this provider.
     choices:
     - auto
     - msi
     - msix
     - msp
     - registry
+    - package_management
     default: auto
     type: str
+  package_management_provider:
+    description:
+    - The PackageManagement provider to use for installing or uninstalling
+      packages when O(provider) is set to V(package_management).
+    - Common values include V(NuGet) and V(PowerShellGet).
+    - If not specified, PackageManagement will use its default provider
+      resolution.
+    - This option is only valid when O(provider) is V(package_management).
+    type: str
+    version_added: '3.7.0'
+  package_management_source:
+    description:
+    - The package source (repository) to use when installing packages with the
+      V(package_management) provider.
+    - This corresponds to a registered PackageManagement package source name.
+    - If not specified, PackageManagement will search all registered sources.
+    - This option is only valid when O(provider) is V(package_management).
+    type: str
+    version_added: '3.7.0'
   state:
     description:
     - Whether to install or uninstall the package.
@@ -205,14 +238,20 @@ extends_documentation_fragment:
 - ansible.windows.web_request
 
 notes:
-- When C(state=absent) and the product is an exe, the path may be different
+- When O(state=absent) and the product is an exe, the path may be different
   from what was used to install the package originally. If path is not set then
   the path used will be what is set under C(QuietUninstallString) or
-  C(UninstallString) in the registry for that I(product_id).
+  C(UninstallString) in the registry for that O(product_id).
 - By default all msi installs and uninstalls will be run with the arguments
   C(/log, /qn, /norestart).
-- All the installation checks under C(product_id) and C(creates_*) add
+- All the installation checks under O(product_id) and C(creates_*) add
   together, if one fails then the program is considered to be absent.
+- The V(package_management) provider requires the PackageManagement module
+  to be available on the target host. This is included by default on
+  Windows Server 2016 and later, and Windows 10 and later.
+- When using the V(package_management) provider, the V(auto) provider
+  detection will not scan for PackageManagement packages. You must
+  explicitly set O(provider) to V(package_management).
 seealso:
 - module: chocolatey.chocolatey.win_chocolatey
 - module: community.windows.win_hotfix
@@ -372,6 +411,28 @@ EXAMPLES = r'''
     arguments: /S
     state: present
     verify_signature: true
+
+- name: Install a NuGet package via PackageManagement
+  ansible.windows.win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: present
+
+- name: Install a package from a specific PackageManagement source
+  ansible.windows.win_package:
+    product_id: PSWindowsUpdate
+    provider: package_management
+    package_management_provider: PowerShellGet
+    package_management_source: PSGallery
+    state: present
+
+- name: Uninstall a PackageManagement package
+  ansible.windows.win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: absent
 '''
 
 RETURN = r'''

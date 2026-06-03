@@ -68,6 +68,9 @@
   - name: run tests for registry packages
     include_tasks: registry_tests.yml
 
+  - name: run tests for PackageManagement provider
+    include_tasks: package_management_tests.yml
+
   always:
   - name: remove registry package path
     win_regedit:
