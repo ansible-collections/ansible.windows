@@ -4,6 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell Ansible.Windows.Process
 
 $spec = @{
     options = @{
@@ -13,7 +14,6 @@ $spec = @{
         source = @{ type = "str" }
         scope = @{ type = "str"; choices = @("user", "machine") }
         state = @{ type = "str"; default = "present"; choices = @("absent", "present", "latest") }
-        allow_reboot = @{ type = "bool"; default = $false }
         architecture = @{ type = "str"; choices = @("x64", "x86", "arm64") }
         override = @{ type = "str" }
         custom = @{ type = "str" }
@@ -35,7 +35,6 @@ $version = $module.Params.version
 $source = $module.Params.source
 $scope = $module.Params.scope
 $state = $module.Params.state
-$allowReboot = $module.Params.allow_reboot
 $architecture = $module.Params.architecture
 $override = $module.Params.override
 $custom = $module.Params.custom
@@ -59,35 +58,10 @@ Function Find-WingetPath {
     }
 
     # In non-interactive sessions (WinRM/SYSTEM), winget may not be in PATH.
-    # Search known locations. Use Resolve-Path for wildcard patterns then
-    # Get-Item -LiteralPath for the resolved paths.
-    $literalPaths = @(
-        "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe"
-    )
-    $wildcardDirs = @(
-        "$env:ProgramFiles\WindowsApps"
-        "C:\Program Files\WindowsApps"
-    )
-
-    foreach ($literalPath in $literalPaths) {
-        if (Test-Path -LiteralPath $literalPath) {
-            return $literalPath
-        }
-    }
-
-    foreach ($searchDir in $wildcardDirs) {
-        if (-not (Test-Path -LiteralPath $searchDir)) {
-            continue
-        }
-        $appDirs = [System.IO.Directory]::GetDirectories($searchDir, "Microsoft.DesktopAppInstaller_*")
-        # Sort descending to get the newest version first
-        $appDirs = $appDirs | Sort-Object -Descending
-        foreach ($appDir in $appDirs) {
-            $candidate = Join-Path -Path $appDir -ChildPath "winget.exe"
-            if (Test-Path -LiteralPath $candidate) {
-                return $candidate
-            }
-        }
+    # Check the standard user-accessible location.
+    $localAppDataPath = "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe"
+    if (Test-Path -LiteralPath $localAppDataPath) {
+        return $localAppDataPath
     }
 
     return $null
@@ -109,45 +83,28 @@ Function Invoke-Winget {
         [Object]$Module
     )
 
-    # Build the command line
-    $argList = @($Arguments)
+    # Build the command line with common options
+    $argList = @(
+        $Arguments
+        '--accept-source-agreements'
+        '--disable-interactivity'
+        '--no-progress'
+    )
 
-    # Always accept source agreements and disable interactivity
-    $argList += '--accept-source-agreements'
-    $argList += '--disable-interactivity'
+    $res = Start-AnsibleWindowsProcess -FilePath $WingetPath -ArgumentList $argList
 
-    $commandLine = "& '$WingetPath' $($argList -join ' ')"
-
-    $module.Debug("Executing winget: $commandLine")
-
-    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $processInfo.FileName = $WingetPath
-    $processInfo.Arguments = $argList -join ' '
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    $processInfo.UseShellExecute = $false
-    $processInfo.CreateNoWindow = $true
-    # Force UTF-8 output
-    $processInfo.EnvironmentVariables["WINGET_RUNNING_AS_SYSTEM"] = "1"
-    $processInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $processInfo
-
-    try {
-        $null = $process.Start()
-        $stdout = $process.StandardOutput.ReadToEnd()
-        $stderr = $process.StandardError.ReadToEnd()
-        $process.WaitForExit()
-    }
-    catch {
-        $Module.FailJson("Failed to execute winget: $($_.Exception.Message)", $_)
+    # Check for errors
+    if ($res.ExitCode -ne 0) {
+        $Module.Result.rc = $res.ExitCode
+        $Module.Result.stdout = $res.Stdout
+        $Module.Result.stderr = $res.Stderr
+        $Module.FailJson("winget failed with exit code $($res.ExitCode), see stdout and stderr for details")
     }
 
     @{
-        ExitCode = $process.ExitCode
-        Stdout = $stdout
-        Stderr = $stderr
+        ExitCode = $res.ExitCode
+        Stdout = $res.Stdout
+        Stderr = $res.Stderr
     }
 }
 
@@ -196,24 +153,8 @@ Function Get-InstalledPackage {
     }
 
     # Parse the text output - winget list produces a position-based table.
-    # Strip ANSI escape codes and split on newlines.
-    $cleanOutput = $result.Stdout -replace '\x1b\[[0-9;]*m', ''
-    $lines = $cleanOutput -split "`r?`n"
-
-    # Winget uses \r (carriage return without newline) for spinner/progress
-    # output. This causes progress text to be prepended to actual output lines.
-    # Strip everything before the last \r on each line to get the clean content.
-    $lines = @(
-        foreach ($line in $lines) {
-            $lastCR = $line.LastIndexOf("`r")
-            if ($lastCR -ge 0) {
-                $line.Substring($lastCR + 1)
-            }
-            else {
-                $line
-            }
-        }
-    )
+    # With --no-progress, output is clean (no ANSI codes or spinner characters).
+    $lines = $result.Stdout -split "`r?`n"
 
     # Find the header line by looking for common column headers.
     # winget list output: Name  Id  Version  [Available]  Source
@@ -326,8 +267,6 @@ Function Install-WingetPackage {
 
         [String]$Custom,
 
-        [Bool]$AllowReboot,
-
         [Object]$Module
     )
 
@@ -372,10 +311,6 @@ Function Install-WingetPackage {
     if ($Custom) {
         $installArgs += '--custom'
         $installArgs += "`"$Custom`""
-    }
-
-    if ($AllowReboot) {
-        $installArgs += '--allow-reboot'
     }
 
     $installArgs += '--accept-package-agreements'
@@ -431,8 +366,6 @@ Function Update-WingetPackage {
         [String]$Override,
 
         [String]$Custom,
-
-        [Bool]$AllowReboot,
 
         [Object]$Module
     )
@@ -603,7 +536,7 @@ switch ($state) {
                 Install-WingetPackage -WingetPath $wingetPath -Id $id -Name $name `
                     -Version $version -Source $source -Scope $scope `
                     -Architecture $architecture -Override $override -Custom $custom `
-                    -AllowReboot $allowReboot -Module $module
+                    -Module $module
             }
         }
         elseif ($version -and $packageState.Version -ne $version) {
@@ -613,7 +546,7 @@ switch ($state) {
                 Install-WingetPackage -WingetPath $wingetPath -Id $id -Name $name `
                     -Version $version -Source $source -Scope $scope `
                     -Architecture $architecture -Override $override -Custom $custom `
-                    -AllowReboot $allowReboot -Module $module
+                    -Module $module
             }
         }
     }
@@ -635,7 +568,7 @@ switch ($state) {
                 Install-WingetPackage -WingetPath $wingetPath -Id $id -Name $name `
                     -Version $version -Source $source -Scope $scope `
                     -Architecture $architecture -Override $override -Custom $custom `
-                    -AllowReboot $allowReboot -Module $module
+                    -Module $module
             }
         }
         elseif ($packageState.AvailableVersion) {
@@ -645,7 +578,7 @@ switch ($state) {
                 Update-WingetPackage -WingetPath $wingetPath -Id $id -Name $name `
                     -Version $version -Source $source -Scope $scope `
                     -Architecture $architecture -Override $override -Custom $custom `
-                    -AllowReboot $allowReboot -Module $module
+                    -Module $module
             }
         }
     }

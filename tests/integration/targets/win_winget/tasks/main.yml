@@ -1,27 +1,70 @@
 # Integration tests for win_winget module
 # These tests verify winget package management operations.
 
-- name: check if winget is available
+- name: check if winget is available and functional
   win_powershell:
     script: |
-      $winget = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
-      if (-not $winget) {
+      $wingetPath = $null
+      $cmd = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+      if ($cmd) {
+          $wingetPath = $cmd.Source
+      } else {
           # Search known paths for non-interactive sessions
           $candidates = @(
               "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe"
-              "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe"
           )
           foreach ($c in $candidates) {
-              $resolved = Get-Item -Path $c -ErrorAction SilentlyContinue | Select-Object -First 1
-              if ($resolved) {
-                  $winget = $resolved
+              if (Test-Path -LiteralPath $c) {
+                  $wingetPath = $c
                   break
               }
           }
+          if (-not $wingetPath) {
+              $searchDirs = @(
+                  "$env:ProgramFiles\WindowsApps"
+                  "C:\Program Files\WindowsApps"
+              )
+              foreach ($dir in $searchDirs) {
+                  if (-not (Test-Path -LiteralPath $dir)) { continue }
+                  $appDirs = [System.IO.Directory]::GetDirectories($dir, "Microsoft.DesktopAppInstaller_*") |
+                      Sort-Object -Descending
+                  foreach ($appDir in $appDirs) {
+                      $p = Join-Path $appDir "winget.exe"
+                      if (Test-Path -LiteralPath $p) {
+                          $wingetPath = $p
+                          break
+                      }
+                  }
+                  if ($wingetPath) { break }
+              }
+          }
       }
-      if ($winget) {
-          $Ansible.Result = "available"
-      } else {
+      if (-not $wingetPath) {
+          $Ansible.Result = "unavailable"
+          return
+      }
+      # Verify winget can actually execute (MSIX apps may be Access Denied)
+      try {
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = $wingetPath
+          $psi.Arguments = '--version'
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+          $psi.UseShellExecute = $false
+          $psi.CreateNoWindow = $true
+          $proc = New-Object System.Diagnostics.Process
+          $proc.StartInfo = $psi
+          $null = $proc.Start()
+          $null = $proc.StandardOutput.ReadToEnd()
+          $null = $proc.StandardError.ReadToEnd()
+          $proc.WaitForExit()
+          if ($proc.ExitCode -eq 0) {
+              $Ansible.Result = "available"
+          } else {
+              $Ansible.Result = "unavailable"
+          }
+      } catch {
+          # winget binary exists but cannot be executed (e.g. Access Denied on MSIX apps)
           $Ansible.Result = "unavailable"
       }
   changed_when: false
@@ -33,12 +76,27 @@
     - name: get winget version
       win_powershell:
         script: |
-          $winget = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
-          if (-not $winget) {
+          $wingetPath = $null
+          $cmd = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+          if ($cmd) {
+              $wingetPath = $cmd.Source
+          } else {
               $resolved = Get-Item -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-              if ($resolved) { $winget = $resolved }
+              if ($resolved) { $wingetPath = $resolved.FullName }
           }
-          $result = & $winget.Source --version 2>&1
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = $wingetPath
+          $psi.Arguments = '--version'
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+          $psi.UseShellExecute = $false
+          $psi.CreateNoWindow = $true
+          $proc = New-Object System.Diagnostics.Process
+          $proc.StartInfo = $psi
+          $null = $proc.Start()
+          $result = $proc.StandardOutput.ReadToEnd()
+          $null = $proc.StandardError.ReadToEnd()
+          $proc.WaitForExit()
           $Ansible.Result = $result.Trim()
       changed_when: false
       register: winget_version
@@ -200,5 +258,7 @@
   when: winget_check.result != "available"
   debug:
     msg: >-
-      Skipping win_winget tests because winget is not available on this host.
-      winget requires Windows 10 1809+ with the App Installer package.
+      Skipping win_winget tests because winget is not functional on this host.
+      This can happen if winget is not installed, if the App Installer MSIX
+      package cannot be executed by the current user (e.g. Access Denied in
+      non-interactive sessions), or if Windows 10 1809+ is not present.

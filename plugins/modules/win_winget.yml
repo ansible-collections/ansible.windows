@@ -12,7 +12,10 @@ DOCUMENTATION:
   version_added: 3.7.0
   requirements:
     - Windows Package Manager (winget) must be installed on the target host.
-    - Windows 10 1809 or later, or Windows Server 2019 or later.
+    - Windows Server 2025 (winget included out-of-the-box) or Windows 10 1809+/Windows 11.
+    - For Windows Server 2022/2019, manual installation of App Installer and dependencies
+      (Microsoft.VCLibs, Microsoft.UI.Xaml) is required. Note that winget on Server 2022/2019
+      is considered experimental and unsupported by Microsoft.
   options:
     id:
       description:
@@ -61,14 +64,6 @@ DOCUMENTATION:
         - absent
         - present
         - latest
-    allow_reboot:
-      description:
-        - If V(true), allows winget to reboot the machine if the installer
-          requires it.
-        - If V(false) (the default), winget will not reboot automatically and
-          the module will report RV(reboot_required) if a reboot is needed.
-      type: bool
-      default: false
     architecture:
       description:
         - The architecture of the package to install.
@@ -90,12 +85,15 @@ DOCUMENTATION:
           defaults.
       type: str
   notes:
-    - Winget must be available in the system C(PATH) on the target host.
-    - This module requires winget v1.4 or later for JSON output support.
     - The first run of winget may trigger source agreement acceptance. This
-      module handles that automatically.
-    - Running in non-interactive sessions (such as WinRM) requires winget to
-      be properly configured for the SYSTEM account or the connection user.
+      module handles that automatically via C(--accept-source-agreements).
+    - Running in non-interactive sessions (such as WinRM or as the SYSTEM account)
+      may require winget to be installed for that specific user context. The module
+      will automatically locate winget if it is not in the system C(PATH), checking
+      C($env:LOCALAPPDATA\\Microsoft\\WindowsApps\\winget.exe).
+    - If a package installation requires a reboot, the module will set RV(reboot_required=true)
+      in the return values but will not automatically reboot the system. The Ansible
+      connection would be terminated if a reboot occurred during module execution.
   extends_documentation_fragment:
     - ansible.builtin.action_common_attributes
   attributes:
