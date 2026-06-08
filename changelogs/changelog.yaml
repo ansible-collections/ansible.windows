@@ -1134,3 +1134,13 @@ releases:
       name: win_capability_info
       namespace: ''
     release_date: '2026-05-25'
+  3.6.1:
+    changes:
+      bugfixes:
+      - setup - Fix admin checks to ensure facts that require administrator access
+        actually run - https://github.com/ansible-collections/ansible.windows/issues/900
+      release_summary: Release summary for v3.6.1
+    fragments:
+    - release-summary.yml
+    - setup-admin-facts.yml
+    release_date: '2026-05-28'

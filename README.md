@@ -109,4 +109,4 @@ If a support case cannot be opened with Red Hat or the collection has been obtai
 
 GNU General Public License v3.0 or later
 
-See [COPYING](COPYING) to see the full text.
+See [COPYING](https://github.com/ansible-collections/ansible.windows/blob/main/COPYING) to see the full text.

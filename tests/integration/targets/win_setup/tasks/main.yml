@@ -16,6 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
+# We don't want to validate all facts and how they are gathered, we just use
+# this to verify some values that use a more complex gathering process are
+# set to what is expected.
+- name: get some pre-existing facts for validation
+  ansible.windows.win_powershell:
+    script: |
+      $os = Get-CimInstance -Class Win32_OperatingSystem
+
+      @{
+          distribution = $os.Caption
+      }
+  register: pre_setup_facts
+
 - name: test setup module
   action: setup
   register: setup_result
@@ -35,7 +48,7 @@
       - setup_result.ansible_facts.ansible_date_time.hour is defined
       - setup_result.ansible_facts.ansible_date_time.minute is defined
       - setup_result.ansible_facts.ansible_date_time.iso8601 is defined
-      - setup_result.ansible_facts.ansible_distribution is defined
+      - setup_result.ansible_facts.ansible_distribution == pre_setup_facts.output[0].distribution
       - setup_result.ansible_facts.ansible_distribution_version is defined
       - setup_result.ansible_facts.ansible_fqdn is defined
       - setup_result.ansible_facts.ansible_hostname is defined
