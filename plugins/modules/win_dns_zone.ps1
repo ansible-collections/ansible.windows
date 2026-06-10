@@ -15,6 +15,7 @@ $spec = @{
         state = @{ type = "str"; choices = "absent", "present"; default = "present" }
         forwarder_timeout = @{ type = "int" }
         dns_servers = @{ type = "list"; elements = "str" }
+        directory_partition = @{ type = "str" }
     }
     supports_check_mode = $true
 }
@@ -29,6 +30,11 @@ $dynamic_update = $module.Params.dynamic_update
 $state = $module.Params.state
 $dns_servers = $module.Params.dns_servers
 $forwarder_timeout = $module.Params.forwarder_timeout
+$directory_partition = $module.Params.directory_partition
+
+if ($directory_partition -and $replication -in @('forest', 'domain', 'legacy')) {
+    $module.FailJson("The directory_partition option is mutually exclusive with replication values of 'forest', 'domain', and 'legacy'")
+}
 
 $parms = @{ name = $name }
 
@@ -49,6 +55,10 @@ Function Get-DnsZoneObject {
         $parms.replication = "none"
         $parms.zone_file = $Object.ZoneFile
     }
+    elseif ($Object.ReplicationScope -eq 'Custom') {
+        $parms.replication = "custom"
+        $parms.directory_partition = $Object.DirectoryPartitionName
+    }
     else {
         $parms.replication = $Object.ReplicationScope.toLower()
     }
@@ -62,7 +72,7 @@ Function Compare-DnsZone {
         [PSObject]$Updated)
 
     if ($Original -eq $false) { return $false }
-    $props = @('ZoneType', 'DynamicUpdate', 'IsDsIntegrated', 'MasterServers', 'ForwarderTimeout', 'ReplicationScope')
+    $props = @('ZoneType', 'DynamicUpdate', 'IsDsIntegrated', 'MasterServers', 'ForwarderTimeout', 'ReplicationScope', 'DirectoryPartitionName')
     $x = Compare-Object $Original $Updated -Property $props
     $x.Count -eq 0
 }
@@ -78,10 +88,10 @@ Try {
     if (-not $type) { $type = $current_zone.ZoneType.toLower() }
     if ($current_zone.ZoneType -like $type) { $current_zone_type_match = $true }
     # check for fast fails
-    if ($current_zone.ReplicationScope -like 'none' -and $replication -in @('legacy', 'forest', 'domain')) {
+    if ($current_zone.ReplicationScope -like 'none' -and ($replication -in @('legacy', 'forest', 'domain') -or $directory_partition)) {
         $module.FailJson("Converting a file backed DNS zone to Active Directory integrated zone is unsupported")
     }
-    if ($current_zone.ReplicationScope -in @('legacy', 'forest', 'domain') -and $replication -like 'none') {
+    if ($current_zone.ReplicationScope -in @('legacy', 'forest', 'domain', 'custom') -and $replication -like 'none') {
         $module.FailJson("Converting Active Directory integrated zone to a file backed DNS zone is unsupported")
     }
     if ($current_zone.IsDsIntegrated -eq $false -and $parms.DynamicUpdate -eq 'secure') {
@@ -95,8 +105,15 @@ Catch {
 
 if ($state -eq "present") {
     # parse replication/zonefile
-    if (-not $replication -and $current_zone) {
+    if ($directory_partition) {
+        $parms.ReplicationScope = 'Custom'
+        $parms.DirectoryPartitionName = $directory_partition
+    }
+    elseif (-not $replication -and $current_zone) {
         $parms.ReplicationScope = $current_zone.ReplicationScope
+        if ($current_zone.DirectoryPartitionName) {
+            $parms.DirectoryPartitionName = $current_zone.DirectoryPartitionName
+        }
     }
     elseif ((($replication -eq 'none') -or (-not $replication)) -and (-not $current_zone)) {
         $parms.ZoneFile = "$name.dns"
@@ -143,7 +160,12 @@ if ($state -eq "present") {
                     Catch { $module.FailJson("Failed to convert DNS zone $($name): $($_.Exception.Message)", $_) }
                 }
                 Try {
-                    if (-not $parms.ZoneFile) { Set-DnsServerPrimaryZone -Name $name -ReplicationScope $parms.ReplicationScope -WhatIf:$check_mode }
+                    if (-not $parms.ZoneFile -and $parms.DirectoryPartitionName) {
+                        Set-DnsServerPrimaryZone -Name $name -DirectoryPartitionName $parms.DirectoryPartitionName -WhatIf:$check_mode
+                    }
+                    elseif (-not $parms.ZoneFile) {
+                        Set-DnsServerPrimaryZone -Name $name -ReplicationScope $parms.ReplicationScope -WhatIf:$check_mode
+                    }
                     if ($dynamic_update) { Set-DnsServerPrimaryZone -Name $name -DynamicUpdate $parms.DynamicUpdate -WhatIf:$check_mode }
                 }
                 Catch { $module.FailJson("Failed to set properties on the zone $($name): $($_.Exception.Message)", $_) }
@@ -184,7 +206,12 @@ if ($state -eq "present") {
                 # update zone
                 if (-not $current_zone_type_match) { $module.FailJson("Failed to convert DNS zone $($name) to $type, unsupported conversion") }
                 Try {
-                    if ($parms.ReplicationScope) { Set-DnsServerStubZone -Name $name -ReplicationScope $parms.ReplicationScope -WhatIf:$check_mode }
+                    if ($parms.DirectoryPartitionName) {
+                        Set-DnsServerStubZone -Name $name -DirectoryPartitionName $parms.DirectoryPartitionName -WhatIf:$check_mode
+                    }
+                    elseif ($parms.ReplicationScope) {
+                        Set-DnsServerStubZone -Name $name -ReplicationScope $parms.ReplicationScope -WhatIf:$check_mode
+                    }
                     if ($forwarder_timeout) { Set-DnsServerStubZone -Name $name -ForwarderTimeout $forwarder_timeout -WhatIf:$check_mode }
                     if ($dns_servers) { Set-DnsServerStubZone -Name $name -MasterServers $dns_servers -WhatIf:$check_mode }
                 }
@@ -211,7 +238,10 @@ if ($state -eq "present") {
                 # update zone
                 if (-not $current_zone_type_match) { $module.FailJson("Failed to convert DNS zone $($name) to $type, unsupported conversion") }
                 Try {
-                    if ($parms.ReplicationScope) {
+                    if ($parms.DirectoryPartitionName) {
+                        Set-DnsServerConditionalForwarderZone -Name $name -DirectoryPartitionName $parms.DirectoryPartitionName -WhatIf:$check_mode
+                    }
+                    elseif ($parms.ReplicationScope) {
                         Set-DnsServerConditionalForwarderZone -Name $name -ReplicationScope $parms.ReplicationScope -WhatIf:$check_mode
                     }
                     if ($forwarder_timeout) { Set-DnsServerConditionalForwarderZone -Name $name -ForwarderTimeout $forwarder_timeout -WhatIf:$check_mode }
