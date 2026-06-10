@@ -1,0 +1,6 @@
+---
+minor_changes:
+  - "win_dns_zone - Added ``directory_partition`` parameter to support storing
+    AD-integrated zones in custom application directory partitions for
+    fine-grained replication control
+    (https://github.com/ansible-collections/ansible.windows/issues/901)."
