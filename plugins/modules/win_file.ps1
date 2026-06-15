@@ -180,6 +180,28 @@ function Update-Timestamp {
     return $changed
 }
 
+function Test-FileAppearsBinary($path) {
+    try {
+        # Open file for binary read
+        $fs = [IO.File]::OpenRead($path)
+        # Read up to 8192 bytes
+        $b = New-Object byte[] 8192
+        $n = $fs.Read($b, 0, 8192)
+        $fs.Dispose()
+        # Check for null byte
+        return ($n -gt 0) -and ($b[0..($n-1)] -contains 0x00)
+    } catch {
+        return $false
+    }
+}
+
+# Short circuit for diff_peek
+if ($null -ne $diff_peek) {
+    $appears_binary = Test-FileAppearsBinary -path $path
+    $state = if (Test-Path -LiteralPath $path) { 'file' } else { 'absent' }
+    Exit-Json @{path=$path; change=$false; appears_binary=$appears_binary; state=$state}
+}
+
 if ($state -eq "touch") {
     $newCreation = $false
     if (Test-Path -LiteralPath $path) {
