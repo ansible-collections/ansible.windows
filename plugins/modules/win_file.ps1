@@ -189,8 +189,9 @@ function Test-FileAppearsBinary($path) {
         $n = $fs.Read($b, 0, 8192)
         $fs.Dispose()
         # Check for null byte
-        return ($n -gt 0) -and ($b[0..($n-1)] -contains 0x00)
-    } catch {
+        return ($n -gt 0) -and ($b[0..($n - 1)] -contains 0x00)
+    }
+    catch {
         return $false
     }
 }
@@ -199,7 +200,7 @@ function Test-FileAppearsBinary($path) {
 if ($null -ne $diff_peek) {
     $appears_binary = Test-FileAppearsBinary -path $path
     $state = if (Test-Path -LiteralPath $path) { 'file' } else { 'absent' }
-    Exit-Json @{path=$path; change=$false; appears_binary=$appears_binary; state=$state}
+    Exit-Json @{ path = $path; change = $false; appears_binary = $appears_binary; state = $state }
 }
 
 if ($state -eq "touch") {
