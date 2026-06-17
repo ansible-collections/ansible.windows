@@ -12,6 +12,7 @@ $params = Parse-Args $args -supports_check_mode $true
 
 $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 $_remote_tmp = Get-AnsibleParam $params "_ansible_remote_tmp" -type "path" -default $env:TMP
+$diff_peek = Get-AnsibleParam -obj $params -name '_diff_peek' -type 'bool'
 
 $access_time = Get-AnsibleParam -obj $params -name "access_time" -type "str"
 $access_time_format = Get-AnsibleParam -obj $params -name "access_time_format" -type "str" -default "yyyy-MM-dd HH:mm:ss"
