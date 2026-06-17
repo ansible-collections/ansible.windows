@@ -1,0 +1,4 @@
+minor_changes:
+  - win_acl - Add check mode support so the module reports whether changes
+    would be made without modifying ACL permissions
+    (https://github.com/ansible-collections/ansible.windows/issues/911).

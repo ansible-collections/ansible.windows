@@ -48,7 +48,8 @@ function Get-UserSID {
     return $userSID
 }
 
-$params = Parse-Args $args
+$params = Parse-Args $args -supports_check_mode $true
+$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
 Function SetPrivilegeTokens() {
     # Set privilege tokens only if admin.
@@ -239,16 +240,46 @@ Try {
     }
 
     If ($state -eq "present" -And $match -eq $false) {
-        Try {
-            $objACL.AddAccessRule($objACE)
-            if ($path_item.PSProvider.Name -eq "Certificate") {
-                $certSecurityHandle.Acl = $objACL
+        If (-not $check_mode) {
+            Try {
+                $objACL.AddAccessRule($objACE)
+                if ($path_item.PSProvider.Name -eq "Certificate") {
+                    $certSecurityHandle.Acl = $objACL
+                }
+                else {
+                    Try {
+                        Set-ACL -LiteralPath $path -AclObject $objACL
+                    }
+                    Catch {
+                        $fileObj = Get-Item -LiteralPath $path
+
+                        # Newer .NET versions use an extension method instead of an instance method.
+                        if ('System.IO.FileSystemAclExtensions' -as [Type]) {
+                            [System.IO.FileSystemAclExtensions]::SetAccessControl($fileObj, $objACL)
+                        }
+                        else {
+                            $fileObj.SetAccessControl($objACL)
+                        }
+                    }
+                }
             }
-            else {
-                Try {
+            Catch {
+                Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
+            }
+        }
+        $result.changed = $true
+    }
+    ElseIf ($state -eq "absent" -And $match -eq $true) {
+        If (-not $check_mode) {
+            Try {
+                $objACL.RemoveAccessRule($objACE)
+                If ($path_item.PSProvider.Name -eq "Registry") {
                     Set-ACL -LiteralPath $path -AclObject $objACL
                 }
-                Catch {
+                elseif ($path_item.PSProvider.Name -eq "Certificate") {
+                    $certSecurityHandle.Acl = $objACL
+                }
+                else {
                     $fileObj = Get-Item -LiteralPath $path
 
                     # Newer .NET versions use an extension method instead of an instance method.
@@ -260,37 +291,11 @@ Try {
                     }
                 }
             }
-            $result.changed = $true
-        }
-        Catch {
-            Fail-Json -obj $result -message "an exception occurred when adding the specified rule - $($_.Exception.Message)"
-        }
-    }
-    ElseIf ($state -eq "absent" -And $match -eq $true) {
-        Try {
-            $objACL.RemoveAccessRule($objACE)
-            If ($path_item.PSProvider.Name -eq "Registry") {
-                Set-ACL -LiteralPath $path -AclObject $objACL
+            Catch {
+                Fail-Json -obj $result -message "an exception occurred when removing the specified rule - $($_.Exception.Message)"
             }
-            elseif ($path_item.PSProvider.Name -eq "Certificate") {
-                $certSecurityHandle.Acl = $objACL
-            }
-            else {
-                $fileObj = Get-Item -LiteralPath $path
-
-                # Newer .NET versions use an extension method instead of an instance method.
-                if ('System.IO.FileSystemAclExtensions' -as [Type]) {
-                    [System.IO.FileSystemAclExtensions]::SetAccessControl($fileObj, $objACL)
-                }
-                else {
-                    $fileObj.SetAccessControl($objACL)
-                }
-            }
-            $result.changed = $true
         }
-        Catch {
-            Fail-Json -obj $result -message "an exception occurred when removing the specified rule - $($_.Exception.Message)"
-        }
+        $result.changed = $true
     }
     Else {
         # A rule was attempting to be added but already exists
