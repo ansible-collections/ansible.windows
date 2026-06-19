@@ -22,6 +22,7 @@ $spec = @{
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
         state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
         skip_optional = @{ type = 'bool'; default = $false }
+        assigned_only = @{ type = 'bool'; default = $false }
 
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
@@ -1083,6 +1084,10 @@ Function Install-WindowsUpdate {
         $SkipOptional,
 
         [Parameter()]
+        [Switch]
+        $AssignedOnly,
+
+        [Parameter()]
         [AllowEmptyCollection()]
         [String[]]
         $Reject = @(),
@@ -1745,6 +1750,24 @@ namespace Ansible.Windows.WinUpdates
     $api.WriteLog("Search source set to '$($ServerSelection)' (ServerSelection = $($serverSelectionValue))")
 
     $query = 'IsInstalled = 0'
+    if ($AssignedOnly) {
+        if ($ServerSelection -eq 'managed_server') {
+            # Narrow the server-side search to updates assigned/approved to this
+            # host by the managed update server (WSUS). Mirrors a manual WUA scan
+            # of 'IsInstalled=0 AND IsAssigned=1' and avoids pulling metadata for
+            # the entire non-installed catalog.
+            $query = "$query AND IsAssigned = 1"
+        }
+        else {
+            # IsAssigned only has a defined meaning against a managed server.
+            # Against Windows Update / Microsoft Update it can return an empty
+            # result, so ignore the option and warn instead of silently finding
+            # nothing.
+            $api.WriteLog("WARNING: 'assigned_only' is ignored because " +
+                "'server_selection' is '$ServerSelection', not 'managed_server'. " +
+                "IsAssigned only applies to a managed update server (e.g. WSUS).")
+        }
+    }
     $api.WriteLog("Searching for updates to install with query '$query'")
     $searchResult = Invoke-AsyncMethod 'Searching for updates' $api.SearchAsync($searcher, $query, $CancelToken)
     $resCode = [Ansible.Windows.WinUpdates.OperationResultCode]$searchResult.ResultCode
@@ -2142,6 +2165,7 @@ $updateParameters = @{
     ServerSelection = $module.Params.server_selection
     State = $module.Params.state
     SkipOptional = $module.Params.skip_optional
+    AssignedOnly = $module.Params.assigned_only
     TempPath = $module.Tmpdir
     CheckMode = $module.CheckMode
 }
