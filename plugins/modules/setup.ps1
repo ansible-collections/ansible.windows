@@ -70,6 +70,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Security.Principal:
 using System.Text;
 
 namespace Ansible.Windows.Setup
@@ -548,6 +549,7 @@ namespace Ansible.Windows.Setup
     public class SystemInfo
     {
         public string NetBIOSName;
+        public string NetBIOSDomain;
         public UInt32 NumberOfProcessors;
         public UInt32 ProcessorArchitecture;
 
@@ -569,6 +571,7 @@ namespace Ansible.Windows.Setup
             if (!NativeMethods.GetComputerNameExW(0, buffer, ref size))
                 throw new Win32Exception("Failed to get ComputerName");
             NetBIOSName = buffer.ToString();
+            NetBIOSDomain = WindowsIdentity.GetCurrent().Name.Split('\\')[0];
         }
     }
 }
@@ -948,6 +951,7 @@ $factMeta = @(
             $ansibleFacts.ansible_fqdn = $fqdn
             $ansibleFacts.ansible_hostname = $ipProps.HostName
             $ansibleFacts.ansible_netbios_name = $systemInfo.NetBIOSName
+            $ansibleFacts.ansible_netbios_domain = SystemInfo.NetBIOSDomain
             $ansibleFacts.ansible_kernel = $osVersion.Version.ToString()
             $ansibleFacts.ansible_nodename = $fqdn
             $ansibleFacts.ansible_machine_id = $machineSid
