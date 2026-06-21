@@ -928,7 +928,7 @@ $factMeta = @(
             if ($ipProps.DomainName) {
                 $fqdn = "$($fqdn).$($ipProps.DomainName)"
             }
-            $domainSuffix = if ($domainInfo.PartOfDomain) { [string]$domainInfo.Domain } else { "" }
+            $domainSuffix = if ($domainInfo.PartOfDomain) { [string]$domainInfo.Domain } elseif ($ipProps.DomainName) { [string]$ipProps.DomainName } else { '' }
 
             $ownerParams = @{
                 LiteralPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
