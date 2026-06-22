@@ -148,10 +148,10 @@ stages:
     displayName: Ansible 2.16
     dependsOn:
       - Dependencies
-    variables:
-      - name: pythonVersions
-        value: "3.12"
     jobs:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.12"
       - template: templates/matrix.yml
         parameters:
           nameFormat: '{0}'
@@ -165,10 +165,10 @@ stages:
     displayName: Windows 1 WinPS
     dependsOn:
       - Dependencies
-    variables:
-      - name: pythonVersions
-        value: "3.12"
     jobs:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.12"
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
