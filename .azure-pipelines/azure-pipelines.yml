@@ -31,9 +31,15 @@ variables:
   - name: fetchDepth
     value: 0
   - name: defaultContainer
-    value: quay.io/ansible/azure-pipelines-test-container:7.0.0
+    value: quay.io/ansible/azure-pipelines-test-container:8.0.0
+
 
 pool: Standard
+
+parameters:
+  - name: pythonVersions
+    type: string
+    default: "3.13"
 
 stages:
   - stage: Dependencies
@@ -48,7 +54,7 @@ stages:
             fetchDepth: 1
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: "3.13"
+              versionSpec: ${{ parameters.pythonVersions }}
           - bash: python -m pip install ansible-core
             displayName: Install Ansible
           - bash: ansible-galaxy collection install -r tests/requirements.yml -p collections
@@ -138,6 +144,7 @@ stages:
         parameters:
           nameFormat: '{0}'
           testFormat: '2.17/{0}'
+          pythonVersions: "3.12"
           targets:
             - name: Sanity
               test: sanity
@@ -152,6 +159,7 @@ stages:
         parameters:
           nameFormat: '{0}'
           testFormat: '2.16/{0}'
+          pythonVersions: "3.12"
           targets:
             - name: Sanity
               test: sanity
