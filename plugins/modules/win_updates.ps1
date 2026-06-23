@@ -1765,7 +1765,8 @@ namespace Ansible.Windows.WinUpdates
             # nothing.
             $api.WriteLog("WARNING: 'assigned_only' is ignored because " +
                 "'server_selection' is '$ServerSelection', not 'managed_server'. " +
-                "IsAssigned only applies to a managed update server (e.g. WSUS).")
+                "IsAssigned only applies to a managed update server (for example
+		 WSUS).")
         }
     }
     $api.WriteLog("Searching for updates to install with query '$query'")

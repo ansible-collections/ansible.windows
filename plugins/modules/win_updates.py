@@ -64,6 +64,7 @@ options:
           against Windows Update / Microsoft Update it may return no updates.
         type: bool
         default: no
+        version_added: '3.7.0'
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required
