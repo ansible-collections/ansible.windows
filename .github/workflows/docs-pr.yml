@@ -10,30 +10,23 @@ env:
   GHP_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
 
 jobs:
-  # Validation job runs a strict build to ensure it will fail CI on any mistakes.
-  validate-docs:
-    permissions:
-      contents: read
-    name: Validate Ansible Docs
-    if: github.event.action != 'closed'
-    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-push.yml@main
-    with:
-      artifact-upload: false
-      init-lenient: false
-      init-fail-on-error: true
-      build-ref: refs/pull/${{ github.event.number }}/merge
-
-  # The build job runs with the most lenient settings to ensure the best chance of getting
-  # a rendered docsite that can be looked at.
   build-docs:
     permissions:
       contents: read
     name: Build Ansible Docs
     uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-pr.yml@main
     with:
-      init-lenient: true
-      init-fail-on-error: false
-
+      ansible-ref: devel
+      collection-name: ansible.windows
+      init-lenient: false
+      init-fail-on-error: true
+      squash-hierarchy: true
+      init-project: Ansible.Windows Collection
+      init-copyright: Ansible.Windows Contributors
+      init-title: Ansible.Windows Collection Documentation
+      init-html-short-title: Ansible.Windows Collection Docs
+      init-extra-html-theme-options: |
+        documentation_home_url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/branch/main/
   comment:
     permissions:
       pull-requests: write
