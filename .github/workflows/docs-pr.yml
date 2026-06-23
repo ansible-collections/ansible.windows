@@ -16,7 +16,7 @@ jobs:
       contents: read
     name: Validate Ansible Docs
     if: github.event.action != 'closed'
-    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-push.yml@main
+    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-pr.yml@main
     with:
       artifact-upload: false
       init-lenient: false
