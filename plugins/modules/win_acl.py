@@ -75,6 +75,8 @@ options:
     default: false
     version_added: 1.12.0
 notes:
+- Supports C(check_mode). In check mode the module reports whether the specified
+  rule would be added or removed without modifying ACL permissions.
 - If adding ACL's for AppPool identities, the Windows Feature "Web-Scripting-Tools" must be enabled.
 seealso:
 - module: ansible.windows.win_acl_inheritance

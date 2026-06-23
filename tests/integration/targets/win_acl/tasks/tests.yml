@@ -43,6 +43,26 @@
       Pop-Location
       ConvertTo-Json -InputObject @($ace_list)
 
+# Check mode tests - file system
+- name: add write rights to Guest - check mode
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Write
+  check_mode: true
+  register: check_mode_add
+
+- name: get result of add write rights to Guest - check mode
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: check_mode_add_actual
+
+- name: assert add write rights to Guest - check mode
+  assert:
+    that:
+    - check_mode_add is changed
+    - check_mode_add_actual.stdout_lines == ["[", "", "]"]
+
 - name: add write rights to Guest
   win_acl:
     path: '{{ test_acl_path }}'
@@ -78,6 +98,26 @@
   assert:
     that:
     - not allow_right_again is changed
+
+- name: remove write rights from Guest - check mode
+  win_acl:
+    path: '{{ test_acl_path }}'
+    type: allow
+    user: Guests
+    rights: Write
+    state: absent
+  check_mode: true
+  register: check_mode_remove
+
+- name: get result of remove write rights from Guest - check mode
+  win_shell: '$path = ''{{ test_acl_path }}''; {{ test_ace_cmd }}'
+  register: check_mode_remove_actual
+
+- name: assert remove write rights from Guest - check mode
+  assert:
+    that:
+    - check_mode_remove is changed
+    - (check_mode_remove_actual.stdout|from_json)|count == 1
 
 - name: remove write rights from Guest
   win_acl:
@@ -464,10 +504,16 @@
   check_mode: true
   register: add_fullcontrol_rights_on_certificate_check_mode
 
+- name: get result of add FullControl rights on certificate - check mode
+  win_shell: '$thumbprint = ''{{ test_acl_certificiate_cng_thumbprint }}''; {{ test_cert_ace_cmd }}'
+  register: add_fullcontrol_rights_on_certificate_check_mode_actual
+
 - name: assert add FullControl rights on certificate - check mode
   assert:
     that:
-    - not add_fullcontrol_rights_on_certificate_check_mode is changed
+    - add_fullcontrol_rights_on_certificate_check_mode is changed
+    - item.IdentityReference.Value != 'BUILTIN\Guests' or item.FileSystemRights != 2032127
+  with_items: '{{ add_fullcontrol_rights_on_certificate_check_mode_actual.stdout|from_json }}'
 
 - name: add FullControl rights on certificate
   win_acl:
@@ -516,7 +562,7 @@
 - name: assert remove FullControl rights on certificate - check mode
   assert:
     that:
-    - not remove_fullcontrol_rights_on_certificate_check_mode is changed
+    - remove_fullcontrol_rights_on_certificate_check_mode is changed
 
 - name: remove FullControl rights on certificate
   win_acl:
