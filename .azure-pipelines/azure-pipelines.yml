@@ -133,6 +133,8 @@ stages:
     displayName: Ansible 2.17
     dependsOn:
       - Dependencies
+    variables:
+      defaultContainer: quay.io/ansible/azure-pipelines-test-container:7.0.0
     jobs:
       - template: templates/matrix.yml
         parameters:
@@ -147,6 +149,8 @@ stages:
     displayName: Ansible 2.16
     dependsOn:
       - Dependencies
+    variables:
+      defaultContainer: quay.io/ansible/azure-pipelines-test-container:7.0.0
     jobs:
       - template: templates/matrix.yml
         parameters:
