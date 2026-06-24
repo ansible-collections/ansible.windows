@@ -66,12 +66,25 @@ options:
         controllers in the Active Directory forest.
       - l(replication=domain) will replicate the DNS zone to all domain
         controllers in the Active Directory domain.
+      - l(replication=legacy) will replicate the DNS zone to all domain
+        controllers in the Active Directory domain and to legacy clients.
       - l(replication=none) disables Active Directory integration and
         creates a local file with the name of the zone.
       - This is the equivalent of selecting l(store the zone in Active
         Directory) in the GUI.
     type: str
     choices: [ forest, domain, legacy, none ]
+  directory_partition:
+    description:
+      - Specifies the name of an existing custom Active Directory
+        application directory partition where the zone should be stored.
+      - When specified, the zone will use a custom replication scope
+        instead of the standard domain or forest partitions.
+      - This is mutually exclusive with O(replication) values of
+        C(forest), C(domain), and C(legacy).
+      - Requires the target directory partition to already exist.
+    type: str
+    version_added: 3.7.0
   dns_servers:
     description:
       - Specifies an list of IP addresses of the primary servers of the zone.
@@ -152,6 +165,20 @@ EXAMPLES = r'''
     name: marshallb.euc.vmware.com
     state: absent
 
+- name: Ensure primary zone is stored in a custom directory partition
+  ansible.windows.win_dns_zone:
+    name: custom.euc.vmware.com
+    type: primary
+    directory_partition: CustomDNSPartition
+
+- name: Ensure forwarder zone is stored in a custom directory partition
+  ansible.windows.win_dns_zone:
+    name: forwarder.euc.vmware.com
+    type: forwarder
+    directory_partition: CustomDNSPartition
+    dns_servers:
+      - 10.245.51.100
+
 - name: Ensure DNS zones are absent
   ansible.windows.win_dns_zone:
     name: "{{ item }}"
@@ -179,5 +206,6 @@ zone:
     shutdown:
     zone_file:
     replication:
+    directory_partition:
     dns_servers:
 '''

@@ -182,7 +182,18 @@
   register: test8
   failed_when: test8 is changed
 
+- name: Ensure directory_partition and replication=domain are mutually exclusive
+  win_dns_zone:
+    name: conflict.euc.vmware.com
+    type: primary
+    replication: domain
+    directory_partition: CustomDNSPartition
+  register: dp_mutex_test
+  ignore_errors: true
+  failed_when: dp_mutex_test is not failed
+
 - name: Start Check Mode Tests
+  check_mode: true
   block:
     - name: Ensure primary DNS zones are present (check mode)
       win_dns_zone:
@@ -248,4 +259,3 @@
         dynamic_update: none
       register: cm_test6
       failed_when: cm_test6 is changed
-  check_mode: true

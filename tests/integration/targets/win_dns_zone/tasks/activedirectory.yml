@@ -35,6 +35,9 @@
     - marshallb.euc.vmware.com
     - basavaraju.euc.vmware.com
     - virajp.euc.vmware.com
+    - custompart.euc.vmware.com
+    - customfwd.euc.vmware.com
+    - customstub.euc.vmware.com
 
 - name: Ensure primary DNS zone is present
   win_dns_zone:
@@ -304,3 +307,106 @@
   check_mode: true
   register: cm_test6
   failed_when: cm_test6 is changed
+
+# Custom directory partition tests
+- name: Create custom application directory partition
+  ansible.windows.win_shell: >-
+    Add-DnsServerDirectoryPartition -Name "CustomDNSPartition"
+  register: create_dp_result
+  failed_when: create_dp_result.rc != 0 and 'already exists' not in (create_dp_result.stderr | default(''))
+
+- name: Ensure primary zone in custom directory partition is present
+  win_dns_zone:
+    name: custompart.euc.vmware.com
+    type: primary
+    directory_partition: CustomDNSPartition
+  register: dp_test1a
+  failed_when: dp_test1a.changed == false
+
+- name: Ensure primary zone in custom directory partition is present (idempotence check)
+  win_dns_zone:
+    name: custompart.euc.vmware.com
+    type: primary
+    directory_partition: CustomDNSPartition
+  register: dp_test1
+  failed_when: dp_test1 is changed
+
+- name: Verify custom directory partition is returned in zone info
+  ansible.builtin.assert:
+    that:
+      - dp_test1a.zone.directory_partition == 'CustomDNSPartition'
+      - dp_test1a.zone.replication == 'custom'
+
+- name: Ensure forwarder zone in custom directory partition is present
+  win_dns_zone:
+    name: customfwd.euc.vmware.com
+    type: forwarder
+    directory_partition: CustomDNSPartition
+    dns_servers:
+      - 10.245.51.100
+  register: dp_test2a
+  failed_when: dp_test2a.changed == false
+
+- name: Ensure forwarder zone in custom directory partition is present (idempotence check)
+  win_dns_zone:
+    name: customfwd.euc.vmware.com
+    type: forwarder
+    directory_partition: CustomDNSPartition
+    dns_servers:
+      - 10.245.51.100
+  register: dp_test2
+  failed_when: dp_test2 is changed
+
+- name: Ensure stub zone in custom directory partition is present
+  win_dns_zone:
+    name: customstub.euc.vmware.com
+    type: stub
+    directory_partition: CustomDNSPartition
+    dns_servers:
+      - 10.19.20.1
+  register: dp_test3a
+  failed_when: dp_test3a.changed == false
+
+- name: Ensure stub zone in custom directory partition is present (idempotence check)
+  win_dns_zone:
+    name: customstub.euc.vmware.com
+    type: stub
+    directory_partition: CustomDNSPartition
+    dns_servers:
+      - 10.19.20.1
+  register: dp_test3
+  failed_when: dp_test3 is changed
+
+- name: Ensure directory_partition and replication=forest are mutually exclusive
+  win_dns_zone:
+    name: conflict.euc.vmware.com
+    type: primary
+    replication: forest
+    directory_partition: CustomDNSPartition
+  register: dp_test_conflict
+  ignore_errors: true
+  failed_when: dp_test_conflict is not failed
+
+- name: Ensure primary zone in custom directory partition is present (check mode)
+  win_dns_zone:
+    name: cmcustom.euc.vmware.com
+    type: primary
+    directory_partition: CustomDNSPartition
+  check_mode: true
+  register: dp_cm_test1
+  failed_when: dp_cm_test1 is changed
+
+- name: Cleanup custom directory partition zones
+  win_dns_zone:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - custompart.euc.vmware.com
+    - customfwd.euc.vmware.com
+    - customstub.euc.vmware.com
+
+- name: Remove custom application directory partition
+  ansible.windows.win_shell: >-
+    Remove-DnsServerDirectoryPartition -Name "CustomDNSPartition" -Force
+  register: remove_dp_result
+  failed_when: remove_dp_result.rc != 0 and 'does not exist' not in (remove_dp_result.stderr | default(''))
