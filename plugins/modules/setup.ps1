@@ -66,7 +66,7 @@ $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsI
 $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 Add-CSharpType -AnsibleModule $module -References @'
-using Microsoft.win32;
+using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
