@@ -444,7 +444,7 @@ namespace Ansible.Windows.Setup
 
                         // SMBIOS 2.5 is when the core and thread count fields
                         // were added.
-                        if (rawData.SMBIOSMajorVersion > 3 || (rawData.SMBIOSMajorVersion == 2 && rawData.SMBIOSMajorVersion > 4))
+                        if (rawData.SMBIOSMajorVersion > 3 || (rawData.SMBIOSMajorVersion == 2 && rawData.SMBIOSMinorVersion > 4))
                         {
                             if ((header.Length - headerSize) >= 34)
                             {
