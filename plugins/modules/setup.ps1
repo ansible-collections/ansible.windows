@@ -318,7 +318,6 @@ namespace Ansible.Windows.Setup
                 PartOfDomain = !String.IsNullOrEmpty(Domain);
             }
 
-
             if (!PartOfDomain)
             {
                 SafeNetAPIBuffer netBuffer;
@@ -336,7 +335,7 @@ namespace Ansible.Windows.Setup
                     }
                     return;
                 }
-                
+
                 if (res != 0)
                     throw new Win32Exception(res, "Failed to get workstation information");
 
