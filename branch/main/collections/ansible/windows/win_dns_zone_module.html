@@ -175,6 +175,17 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-directory_partition"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-directory-partition"><strong>directory_partition</strong></p>
+<a class="ansibleOptionLink" href="#parameter-directory_partition" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.7.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies the name of an existing custom Active Directory application directory partition where the zone should be stored.</p>
+<p>When specified, the zone will use a custom replication scope instead of the standard domain or forest partitions.</p>
+<p>This is mutually exclusive with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-dns-zone-module-parameter-replication"><span class="std std-ref"><span class="pre">replication</span></span></a></strong></code> values of <code class="docutils literal notranslate"><span class="pre">forest</span></code>, <code class="docutils literal notranslate"><span class="pre">domain</span></code>, and <code class="docutils literal notranslate"><span class="pre">legacy</span></code>.</p>
+<p>Requires the target directory partition to already exist.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-dns_servers"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-dns-servers"><strong>dns_servers</strong></p>
 <a class="ansibleOptionLink" href="#parameter-dns_servers" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
@@ -184,7 +195,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>At least one server is required.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-dynamic_update"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-dynamic-update"><strong>dynamic_update</strong></p>
 <a class="ansibleOptionLink" href="#parameter-dynamic_update" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -199,7 +210,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-forwarder_timeout"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-forwarder-timeout"><strong>forwarder_timeout</strong></p>
 <a class="ansibleOptionLink" href="#parameter-forwarder_timeout" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -208,20 +219,21 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <p>If the provided value is not valid, it will be omitted and a warning will be issued.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-name"><strong>name</strong></p>
 <a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Fully qualified name of the DNS zone.</p>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-replication"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-replication"><strong>replication</strong></p>
 <a class="ansibleOptionLink" href="#parameter-replication" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Specifies the replication scope for the DNS zone.</p>
 <p>l(replication=forest) will replicate the DNS zone to all domain controllers in the Active Directory forest.</p>
 <p>l(replication=domain) will replicate the DNS zone to all domain controllers in the Active Directory domain.</p>
+<p>l(replication=legacy) will replicate the DNS zone to all domain controllers in the Active Directory domain and to legacy clients.</p>
 <p>l(replication=none) disables Active Directory integration and creates a local file with the name of the zone.</p>
 <p>This is the equivalent of selecting l(store the zone in Active Directory) in the GUI.</p>
 <p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
@@ -233,7 +245,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-state"><strong>state</strong></p>
 <a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -247,7 +259,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </ul>
 </div></td>
 </tr>
-<tr class="row-even"><td><div class="ansible-option-cell">
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-dns-zone-module-parameter-type"><strong>type</strong></p>
 <a class="ansibleOptionLink" href="#parameter-type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -335,6 +347,20 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">marshallb.euc.vmware.com</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
 
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure primary zone is stored in a custom directory partition</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dns_zone</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom.euc.vmware.com</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">primary</span>
+<span class="w">    </span><span class="nt">directory_partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomDNSPartition</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure forwarder zone is stored in a custom directory partition</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_dns_zone</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forwarder.euc.vmware.com</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forwarder</span>
+<span class="w">    </span><span class="nt">directory_partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomDNSPartition</span>
+<span class="w">    </span><span class="nt">dns_servers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.245.51.100</span>
+
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure DNS zones are absent</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_zone</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">item</span> <span class="cp">}}</span><span class="s">&quot;</span>
@@ -364,7 +390,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 </div></td>
 <td><div class="ansible-option-cell"><p>New/Updated DNS zone parameters</p>
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> When l(state=present)</p>
-<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">{&quot;dns_servers&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;dynamic_update&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;forwarder_timeout&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;paused&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;replication&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;reverse_lookup&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;shutdown&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;zone_file&quot;:</span> <span class="pre">null}</span></code></p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">{&quot;directory_partition&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;dns_servers&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;dynamic_update&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;forwarder_timeout&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;paused&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;replication&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;reverse_lookup&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;shutdown&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;zone_file&quot;:</span> <span class="pre">null}</span></code></p>
 </div></td>
 </tr>
 </tbody>
