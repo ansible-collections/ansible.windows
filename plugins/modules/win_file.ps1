@@ -181,19 +181,23 @@ function Update-Timestamp {
     return $changed
 }
 
-function Test-FileAppearsBinary($path) {
+function Test-FileAppearsBinary {
+    [CmdletBinding()]
+    param ($Path)
+
+    $fs = $null
     try {
-        # Open file for binary read
-        $fs = [IO.File]::OpenRead($path)
-        # Read up to 8192 bytes
-        $b = New-Object byte[] 8192
+        $resolvedPath = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+        $fs = [IO.File]::OpenRead($resolvedPath)
+        $b = [byte[]]::new(8192)
         $n = $fs.Read($b, 0, 8192)
-        $fs.Dispose()
-        # Check for null byte
-        return ($n -gt 0) -and ($b[0..($n - 1)] -contains 0x00)
+        return ($n -gt 0) -and ([Array]::IndexOf($b, [byte]0, 0, $n) -ge 0)
     }
     catch {
         return $false
+    }
+    finally {
+        if ($fs) { $fs.Dispose() }
     }
 }
 
