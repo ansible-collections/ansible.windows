@@ -66,6 +66,7 @@ $currentUser = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsI
 $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 Add-CSharpType -AnsibleModule $module -References @'
+using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
@@ -317,11 +318,24 @@ namespace Ansible.Windows.Setup
                 PartOfDomain = !String.IsNullOrEmpty(Domain);
             }
 
-
             if (!PartOfDomain)
             {
                 SafeNetAPIBuffer netBuffer;
                 res = NativeMethods.NetWkstaGetInfo(null, 100, out netBuffer);
+
+                // Hardened systems may have the LanmanWorkstation service disabled
+                if (res == 2138)  // NERR_WkstaNotStarted
+                {
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters"))
+                    {
+                        if (key != null)
+                            Domain = key.GetValue("Workgroup", String.Empty).ToString();
+                        else
+                            Domain = String.Empty;
+                    }
+                    return;
+                }
+
                 if (res != 0)
                     throw new Win32Exception(res, "Failed to get workstation information");
 
