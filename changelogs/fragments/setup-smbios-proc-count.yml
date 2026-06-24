@@ -1,0 +1,5 @@
+bugfixes:
+  - >-
+    setup - Fix logic for checking SMBIOS version for ``ansible_processor_*`` facts when the host's SMBIOS version was
+    greater than ``2.4`` but less than ``3.0`` -
+    https://github.com/ansible-collections/ansible.windows/pull/919
