@@ -437,6 +437,8 @@ Function Add-SystemReadAce {
 }
 
 Function Get-UrlFile {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '',
+        Justification = 'Failing to parse CD header is not critical')]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -452,7 +454,28 @@ Function Get-UrlFile {
     Invoke-AnsibleWindowsWebRequest -Module $module -Request $request -Script {
         Param ([System.Net.WebResponse]$Response, [System.IO.Stream]$Stream)
 
-        $tempPath = Join-Path -Path $module.Tmpdir -ChildPath $Response.ResponseUri.Segments[-1]
+        $fileName = $Response.ResponseUri.Segments[-1]
+
+        # We use the Content-Disposition header to determine the proper filename.
+        # The extension used is important in later checks for determining what
+        # type of package it is and the URI in the response may not have the
+        # expected filename. If this fails we fallback to the last segment of
+        # the URI like we did in the past.
+        # https://github.com/ansible-collections/ansible.windows/issues/503
+        $contentDisposition = $Response.Headers['Content-Disposition']
+        if ($contentDisposition) {
+            try {
+                $parsedContentDisposition = [System.Net.Mime.ContentDisposition]::new($contentDisposition)
+                if ($parsedContentDisposition.FileName) {
+                    # Ensure the filename is unique by including a random prefix
+                    $randomName = [IO.Path]::GetRandomFileName()
+                    $fileName = "$randomName-$($parsedContentDisposition.FileName)"
+                }
+            }
+            catch {}
+        }
+
+        $tempPath = Join-Path -Path $module.Tmpdir -ChildPath $fileName
         $fs = [System.IO.File]::Create($tempPath)
         try {
             $Stream.CopyTo($fs)
