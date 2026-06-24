@@ -1,2 +1,2 @@
 minor_changes:
-  - win_updates - Add the "is_assigned" parameter to only query WSUS servers for updates assigned to the specific host
+  - win_updates - Add the ``assigned_only`` option to query WSUS servers for updates assigned to the specific host only
