@@ -1,0 +1,5 @@
+bugfixes:
+  - >-
+    setup - Ensure the ``ansible_domain`` fact has the DNS domain name the host is registered with through the IP
+    properties. In the past we only returned a value for this fact when the host was joined to an Active Directory
+    domain - https://github.com/ansible-collections/ansible.windows/pull/917
