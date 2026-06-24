@@ -84,6 +84,7 @@ options:
         C(forest), C(domain), and C(legacy).
       - Requires the target directory partition to already exist.
     type: str
+    version_added: 3.7.0
   dns_servers:
     description:
       - Specifies an list of IP addresses of the primary servers of the zone.
