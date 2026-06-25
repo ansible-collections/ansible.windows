@@ -45,6 +45,28 @@ options:
         type: bool
         default: no
         version_added: 1.8.0
+    assigned_only:
+        description:
+        - Limit the search to updates that are assigned (approved/deployed) to
+          the host by a managed update server such as WSUS.
+        - When V(true) the underlying Windows Update Agent search query is
+          narrowed to C(IsInstalled = 0 AND IsAssigned = 1) so the update server
+          only returns metadata for updates targeted at this host instead of the
+          full non-installed catalog. This mirrors a manual Windows Update / WUA
+          scan and can avoid large metadata transfers and errors such as
+          C(0x80244010) (WU_E_PT_EXCEEDED_MAX_SERVER_TRIPS) on hosts pointed at a
+          WSUS server that publishes a large catalog.
+        - The narrowing is applied when O(server_selection=managed_server), and
+          also when O(server_selection=default) if the host is GPO-configured for
+          a managed server (registry C(UseWUServer=1) and C(WUServer) set under
+          C(HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate)).
+        - If neither condition is met (for example O(server_selection=windows_update),
+          or C(default) with no WSUS policy) the option is ignored and a warning is
+          written to the update log, because C(IsAssigned) only has a defined
+          meaning against a managed update server and may otherwise return no updates.
+        type: bool
+        default: no
+        version_added: '3.7.0'
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required

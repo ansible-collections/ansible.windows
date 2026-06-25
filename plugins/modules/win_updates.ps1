@@ -22,6 +22,7 @@ $spec = @{
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
         state = @{ type = 'str'; choices = 'installed', 'searched', 'downloaded'; default = 'installed' }
         skip_optional = @{ type = 'bool'; default = $false }
+        assigned_only = @{ type = 'bool'; default = $false }
 
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
@@ -1083,6 +1084,10 @@ Function Install-WindowsUpdate {
         $SkipOptional,
 
         [Parameter()]
+        [Switch]
+        $AssignedOnly,
+
+        [Parameter()]
         [AllowEmptyCollection()]
         [String[]]
         $Reject = @(),
@@ -1771,6 +1776,50 @@ namespace Ansible.Windows.WinUpdates
     $api.WriteLog("Search source set to '$($ServerSelection)' (ServerSelection = $($serverSelectionValue))")
 
     $query = 'IsInstalled = 0'
+    if ($AssignedOnly) {
+        $useAssigned = $false
+        if ($ServerSelection -eq 'managed_server') {
+            $useAssigned = $true
+        }
+        elseif ($ServerSelection -eq 'default') {
+            # Under 'default' the WUA uses whatever source the host is configured for.
+            # If the host is GPO-configured for a managed server (WSUS) then IsAssigned
+            # is meaningful, so honour assigned_only. Detect via the WindowsUpdate policy
+            # keys (UseWUServer = 1 and a WUServer set).
+            try {
+                $auKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU')
+                $wuKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate')
+                $useWUServer = if ($auKey) { $auKey.GetValue('UseWUServer') } else { $null }
+                $wuServer = if ($wuKey) { $wuKey.GetValue('WUServer') } else { $null }
+                if ($auKey) { $auKey.Dispose() }
+                if ($wuKey) { $wuKey.Dispose() }
+                if (($useWUServer -eq 1) -and (-not [string]::IsNullOrEmpty($wuServer))) {
+                    $useAssigned = $true
+                    $api.WriteLog("'assigned_only': server_selection is 'default' but the host is " +
+                        "GPO-configured for a managed server (UseWUServer=1, WUServer='$wuServer'); " +
+                        "applying 'IsAssigned = 1'.")
+                }
+            }
+            catch {
+                $api.WriteLog("WARNING: 'assigned_only': could not inspect WindowsUpdate policy " +
+                    "registry to detect WSUS configuration: $($_.Exception.Message)")
+            }
+        }
+
+        if ($useAssigned) {
+            # Narrow the server-side search to updates assigned/approved to this host.
+            # Mirrors a manual WUA scan of 'IsInstalled=0 AND IsAssigned=1' and avoids
+            # pulling metadata for the entire non-installed catalog from the server.
+            $query = "$query AND IsAssigned = 1"
+        }
+        else {
+            # IsAssigned only has a defined meaning against a managed server. Ignore the
+            # option and warn instead of risking an empty result against Windows Update.
+            $api.WriteLog("WARNING: 'assigned_only' is ignored because the host is not using " +
+                "a managed update server (server_selection='$ServerSelection' and no WSUS " +
+                "policy detected). 'IsAssigned' only applies to a managed server (e.g. WSUS).")
+        }
+    }
     $api.WriteLog("Searching for updates to install with query '$query'")
     $searchResult = Invoke-AsyncMethod 'Searching for updates' $api.SearchAsync($searcher, $query, $CancelToken)
     $resCode = [Ansible.Windows.WinUpdates.OperationResultCode]$searchResult.ResultCode
@@ -2168,6 +2217,7 @@ $updateParameters = @{
     ServerSelection = $module.Params.server_selection
     State = $module.Params.state
     SkipOptional = $module.Params.skip_optional
+    AssignedOnly = $module.Params.assigned_only
     TempPath = $module.Tmpdir
     CheckMode = $module.CheckMode
 }
