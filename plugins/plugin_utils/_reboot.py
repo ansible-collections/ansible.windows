@@ -78,6 +78,8 @@ def reboot_host(
     pre_reboot_delay: int = 2,
     reboot_timeout: int = 600,
     test_command: t.Optional[str] = None,
+    last_boot_time: t.Optional[str] = None,
+    additional_test_commands: t.Optional[t.List[str]] = None,
 ) -> t.Dict[str, t.Any]:
     """Reboot a Windows Host.
 
@@ -119,6 +121,16 @@ def reboot_host(
             determines the machine is ready for management. When not defined
             the default command should wait until the reboot is complete and
             all pre-login configuration has completed.
+        last_boot_time: The last boot time of the system. If set then the host
+            has indicated it is already rebooting and we should wait for it to
+            come back online. The value should be the same result as
+            _DEFAULT_BOOT_TIME_COMMAND.
+        additional_test_commands: A list of additional commands to run after
+            the test_command to further validate the host is ready.
+            These will be run sequentially and any non-zero return codes will
+            be repeated until they return 0 or the reboot_timeout is reached.
+            This is designed to allow the default test cmd to be used alongside
+            additional caller defined commands.
 
     Returns:
         (Dict[str, Any]): The return result as a dictionary. Use the 'failed'
@@ -133,34 +145,44 @@ def reboot_host(
     }
     host_context = {"do_close_on_reset": True}
 
-    # Get current boot time. A lot of tasks that require a reboot leave the WSMan stack in a bad place. Will try to
-    # get the initial boot time 3 times before giving up.
-    try:
-        previous_boot_time = _do_until_success_or_retry_limit(
-            task_action,
-            connection,
-            host_context,
-            "pre-reboot boot time check",
-            3,
-            _get_system_boot_time,
-            task_action,
-            connection,
-            boot_time_command,
-        )
+    if last_boot_time:
+        # If an explicit last_boot_time was set we consider the host as already
+        # in the reboot cycle and skip trying to retrieve the last boot time
+        # and sending the reboot command.
+        perform_reboot = False
+        previous_boot_time = last_boot_time
 
-    except Exception as e:
-        # Report a the failure based on the last exception received.
-        if isinstance(e, _ReturnResultException):
-            result.update(e.result)
+    else:
+        # Get current boot time. A lot of tasks that require a reboot leave
+        # the WSMan stack in a bad place. Will try to get the initial boot
+        # time 3 times before giving up.
+        perform_reboot = True
+        try:
+            previous_boot_time = _do_until_success_or_retry_limit(
+                task_action,
+                connection,
+                host_context,
+                "pre-reboot boot time check",
+                3,
+                _get_system_boot_time,
+                task_action,
+                connection,
+                boot_time_command,
+            )
 
-        if isinstance(e, AnsibleConnectionFailure):
-            result["unreachable"] = True
-        else:
-            result["failed"] = True
+        except Exception as e:
+            # Report a the failure based on the last exception received.
+            if isinstance(e, _ReturnResultException):
+                result.update(e.result)
 
-        result["msg"] = str(e)
-        result["exception"] = traceback.format_exc()
-        return result
+            if isinstance(e, AnsibleConnectionFailure):
+                result["unreachable"] = True
+            else:
+                result["failed"] = True
+
+            result["msg"] = str(e)
+            result["exception"] = traceback.format_exc()
+            return result
 
     # Get the original connection_timeout option var so it can be reset after
     original_connection_timeout: t.Optional[float] = None
@@ -220,7 +242,8 @@ ConvertTo-Json -Compress -InputObject @{
 
     start = None
     try:
-        _perform_reboot(task_action, connection, reboot_command)
+        if perform_reboot:
+            _perform_reboot(task_action, connection, reboot_command)
 
         start = datetime.now(timezone.utc)
         result["changed"] = True
@@ -273,6 +296,21 @@ ConvertTo-Json -Compress -InputObject @{
             expected=expected_test_result,
         )
 
+        if additional_test_commands:
+            for cmd in additional_test_commands:
+                display.vv(f"{task_action} running additional post reboot test command")
+                _do_until_success_or_timeout(
+                    task_action,
+                    connection,
+                    host_context,
+                    "additional post-reboot test command",
+                    reboot_timeout,
+                    _run_test_command,
+                    task_action,
+                    connection,
+                    cmd,
+                )
+
         display.vv(f"{task_action}: system successfully rebooted")
 
     except Exception as e:
@@ -309,6 +347,7 @@ def _check_boot_time(
     current_boot_time = _get_system_boot_time(
         task_action, connection, boot_time_command
     )
+    display.vvvv(f"{task_action}: comparing current boot time {current_boot_time!r} to previous {previous_boot_time!r}")
     if current_boot_time == previous_boot_time:
         raise _TestCommandFailure("boot time has not changed")
 

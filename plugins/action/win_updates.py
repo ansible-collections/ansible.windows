@@ -33,6 +33,36 @@ from ..plugin_utils._reboot import reboot_host
 
 display = Display()
 
+# An additional test command for rebooting to wait until the host is ready for
+# the next update round. Some reports have indicated CBS could still be
+# installing updates even when the AutoLogonCheck reg key is created. By also
+# waiting for this to be 0 or 1 we should be more certain the host is ready and
+# CBS is still not doing post reboot work. In testing I've found the values can
+# be (MS may add future values as this isn't publicly documented):
+#   None - The key doesn't exist which we treat as 0
+#   0 - No work is being done
+#   1 - An update is pending a reboot but not doing work
+#   2 - CBS is actively working on something and we should wait
+_CBS_SERVICING_TEST_CMD = r"""
+try {
+    $propParams = @{
+        LiteralPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Interface'
+        Name = 'ServicingInProgress'
+        ErrorAction = 'Stop'
+    }
+    $val = Get-ItemPropertyValue @propParams
+    if ($val -in @(0, 1)) {
+        exit 0
+    }
+    else {
+        exit $val
+    }
+}
+catch {
+    exit 0
+}
+"""
+
 
 def _get_hresult_error(hresult):  # type: (int) -> str
     """Converts a WUA HRESULT to a human readable error message.
@@ -796,12 +826,27 @@ class ActionModule(ActionBase):
                 has_rebooted_on_failure = False
 
             if reboot_required and reboot:
-                display.v("Rebooting host after installing updates", host=task_vars.get('inventory_hostname', None))
+                inventory_hostname = task_vars.get('inventory_hostname', None)
+                if update_result.reboot_in_progress_last_boot_time:
+                    msg = f"[{inventory_hostname}] Host indicated reboot is in progress, waiting for it to come " \
+                        "back online before trying again. This is a best effort attempt to recover from a reboot " \
+                        "that was triggered outside of Ansible's control. If the host is shutting down instead of " \
+                        "rebooting the task will time out."
+                    display.warning(msg)
+                else:
+                    display.v("Rebooting host after installing updates", host=inventory_hostname)
+
                 if self._task.check_mode:
                     reboot_res = {'failed': False}
 
                 else:
-                    reboot_res = reboot_host(self._task.action, self._connection, reboot_timeout=reboot_timeout)
+                    reboot_res = reboot_host(
+                        self._task.action,
+                        self._connection,
+                        reboot_timeout=reboot_timeout,
+                        last_boot_time=update_result.reboot_in_progress_last_boot_time,
+                        additional_test_commands=[_CBS_SERVICING_TEST_CMD],
+                    )
 
                 result['rebooted'] = True
 
@@ -936,7 +981,11 @@ class ActionModule(ActionBase):
             raise _ReturnResultException(msg, exception=result.get('exception', None), **extra_result)
 
         for w in result.get('warnings', []):
-            display.warning(w)
+            # warnings from this plugin can be injected by _execute_module on
+            # a subsequent run so we want to ensure only module warnings that
+            # were strings are written to the display here.
+            if isinstance(w, str):
+                display.warning(w)
 
         return result
 
@@ -978,6 +1027,7 @@ class UpdateResult:
         self.install_results = {}
         self.changed = False
         self.reboot_required = False
+        self.reboot_in_progress_last_boot_time = None
         self.failed = False
         self.msg = None
         self.exception = None
@@ -1072,3 +1122,10 @@ class UpdateResult:
             self.exception = result['exception'].get('exception', None)
             if 'hresult' in result['exception']:
                 self.hresult = result['exception']['hresult'] & 0xFFFFFFFF
+
+            # Special marker when WUA returned an error indicating a shutdown
+            # is in progress. When reboot=True we use this to proceed directly
+            # to waiting for the reboot to complete before trying again.
+            last_boot_time = result['exception'].pop('_is_rebooting_last_boot_time', None)
+            if last_boot_time is not None:
+                self.reboot_in_progress_last_boot_time = str(last_boot_time)
