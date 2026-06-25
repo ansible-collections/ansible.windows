@@ -506,7 +506,8 @@ class ActionModule(ActionBase):
             # we only need to copy 1 file, don't mess around with zips
             file_src = query_return['files'][0]['src']
             file_dest = query_return['files'][0]['dest']
-            basename = original_basename or file_dest
+            if self._task.diff:
+                result['diff'] = self._get_diff_data(dest, source_full, task_vars, content is None)
             result.update(self._copy_single_file(file_src, dest, basename, file_dest,
                                                  task_vars, self._connection._shell.tmpdir, backup))
             if result.get('failed') is True:
