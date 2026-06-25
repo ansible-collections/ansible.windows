@@ -105,6 +105,7 @@ options:
         - start
         - cancel
         - poll
+        - test
         default: start
     _operation_options:
         description:

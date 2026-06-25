@@ -656,6 +656,7 @@ class ActionModule(ActionBase):
         'reject_list',
         'server_selection',
         'state',
+        '_operation',  # Internal use only. Used in CI tests
     ]
 
     DEFAULT_REBOOT_TIMEOUT = 1200
@@ -692,12 +693,21 @@ class ActionModule(ActionBase):
 
         module_options = self._task.args.copy()
 
+        operation_val = module_options.pop('_operation', None)
+        for_testing = False
+        if operation_val == 'test':
+            for_testing = True
+        elif operation_val is not None:
+            raise AnsibleActionFail("_operation is an internal option and cannot be set")
+
         if self._task.async_val > 0:
             if reboot:
                 raise AnsibleActionFail("async is not supported for this task when reboot=yes")
 
             # When running in async the module itself waits for the result and formats the results.
+            module_options['_operation'] = 'test' if for_testing else 'start'
             module_options['_operation_options'] = {"wait": True}
+
             result = self._execute_module(
                 module_name='ansible.windows.win_updates',
                 module_args=module_options,
@@ -706,7 +716,7 @@ class ActionModule(ActionBase):
 
         else:
             try:
-                result = self._run_sync(task_vars, module_options, reboot, reboot_timeout)
+                result = self._run_sync(task_vars, module_options, reboot, reboot_timeout, for_testing=for_testing)
             except Exception as e:
                 result = {}
                 if isinstance(e, _ReturnResultException):
@@ -754,7 +764,8 @@ class ActionModule(ActionBase):
 
         return result
 
-    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout):  # type: (Dict, Dict, bool, int) -> Dict
+    def _run_sync(self, task_vars, module_options, reboot, reboot_timeout, for_testing=False):
+        # type: (Dict, Dict, bool, int, bool) -> Dict
         """Installs the updates in a synchronous fashion with multiple update invocations if needed."""
         # In case we are running with become we need to make sure the module uses the correct dir
         result = {
@@ -769,7 +780,7 @@ class ActionModule(ActionBase):
             round += 1
             display.v("Running win_updates - round %s" % round, host=task_vars.get('inventory_hostname', None))
 
-            update_result = self._run_updates(task_vars, module_options)
+            update_result = self._run_updates(task_vars, module_options, for_testing=for_testing)
 
             self._updates.update(update_result.updates)
             self._filtered_updates.update(update_result.filtered_updates)
@@ -874,14 +885,15 @@ class ActionModule(ActionBase):
 
         return result
 
-    def _run_updates(self, task_vars, module_options):
-        # type: (Dict, Dict) -> UpdateResult
+    def _run_updates(self, task_vars, module_options, for_testing=False):
+        # type: (Dict, Dict, bool) -> UpdateResult
         """Runs the win_updates module and returns the raw results from that task."""
         inventory_hostname = task_vars.get('inventory_hostname', None)
 
         display.vv("Starting update task", host=inventory_hostname)
         start_result = self._execute_win_updates(
             task_vars=task_vars,
+            operation="test" if for_testing else "start",
             module_options=module_options,
         )
         cancel_options = start_result.pop('cancel_options', {})

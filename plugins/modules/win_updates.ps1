@@ -26,7 +26,7 @@ $spec = @{
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
         reboot_timeout = @{ type = 'int'; default = 1200 }
-        _operation = @{ type = 'str'; choices = 'start', 'cancel', 'poll'; default = 'start' }
+        _operation = @{ type = 'str'; choices = 'start', 'cancel', 'poll', 'test'; default = 'start' }
         _operation_options = @{ type = 'dict' }
     }
     supports_check_mode = $true
@@ -1095,7 +1095,10 @@ Function Install-WindowsUpdate {
         $CheckMode,
 
         [Switch]
-        $LocalDebugger
+        $LocalDebugger,
+
+        [Switch]
+        $ForTesting
     )
 
     Add-CSharpType -TempPath $TempPath -References @'
@@ -1770,6 +1773,15 @@ namespace Ansible.Windows.WinUpdates
     $searcher.ServerSelection = $serverSelectionValue
     $api.WriteLog("Search source set to '$($ServerSelection)' (ServerSelection = $($serverSelectionValue))")
 
+    if ($ForTesting) {
+        # We use this for testing in CI to avoid actually talking to the WU
+        # endpoint. We've found the service is flaky and times out often enough
+        # to cause test failures. Instead we just test that we can access WUA
+        # in our custom wrapper.
+        $api.WriteProgress('exit', $exitResult)
+        return
+    }
+
     $query = 'IsInstalled = 0'
     $api.WriteLog("Searching for updates to install with query '$query'")
     $searchResult = Invoke-AsyncMethod 'Searching for updates' $api.SearchAsync($searcher, $query, $CancelToken)
@@ -2170,6 +2182,7 @@ $updateParameters = @{
     SkipOptional = $module.Params.skip_optional
     TempPath = $module.Tmpdir
     CheckMode = $module.CheckMode
+    ForTesting = $module.Params._operation -eq 'test'
 }
 $wait = [bool]$module.Params._operation_options.wait
 

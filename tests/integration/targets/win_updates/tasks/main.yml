@@ -38,6 +38,10 @@
     - async_reboot_fail is failed
     - async_reboot_fail.msg == 'async is not supported for this task when reboot=yes'
 
+# We do at least 1 run not with _operation: test to ensure the logic for
+# searching and polling is sound. The rest of the tests skip this to speed up
+# the CI runs and avoid flaky failure due to the WUA service being unreliable
+# in CI.
 - name: expect failure when state is not a valid option
   win_updates:
     state: invalid
@@ -54,6 +58,7 @@
   win_updates:
     category_names: '*'
     state: searched
+    _operation: test
   register: search_async
   async: 60
 
@@ -61,6 +66,7 @@
   win_updates:
     category_names: '*'
     state: searched
+    _operation: test
   register: search_become
   become: yes
   become_method: runas
@@ -70,6 +76,7 @@
   win_updates:
     category_names: '*'
     state: searched
+    _operation: test
   register: search_async_and_become
   async: 60
   become: yes
@@ -110,6 +117,7 @@
     - UpdateRollups
     state: searched
     log_path: '{{ remote_tmp_dir }}\update.log'
+    _operation: test
   register: search_check
   check_mode: yes
 
@@ -141,12 +149,14 @@
     win_updates:
       category_names: '*'
       state: searched
+      _operation: test
     register: search_sync
 
   - name: search for all updates with async without batch logon
     win_updates:
       category_names: '*'
       state: searched
+      _operation: test
     register: search_async
     async: 60
 
