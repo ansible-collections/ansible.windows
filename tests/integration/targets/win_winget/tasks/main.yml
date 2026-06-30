@@ -1,0 +1,264 @@
+# Integration tests for win_winget module
+# These tests verify winget package management operations.
+
+- name: check if winget is available and functional
+  win_powershell:
+    script: |
+      $wingetPath = $null
+      $cmd = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+      if ($cmd) {
+          $wingetPath = $cmd.Source
+      } else {
+          # Search known paths for non-interactive sessions
+          $candidates = @(
+              "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe"
+          )
+          foreach ($c in $candidates) {
+              if (Test-Path -LiteralPath $c) {
+                  $wingetPath = $c
+                  break
+              }
+          }
+          if (-not $wingetPath) {
+              $searchDirs = @(
+                  "$env:ProgramFiles\WindowsApps"
+                  "C:\Program Files\WindowsApps"
+              )
+              foreach ($dir in $searchDirs) {
+                  if (-not (Test-Path -LiteralPath $dir)) { continue }
+                  $appDirs = [System.IO.Directory]::GetDirectories($dir, "Microsoft.DesktopAppInstaller_*") |
+                      Sort-Object -Descending
+                  foreach ($appDir in $appDirs) {
+                      $p = Join-Path $appDir "winget.exe"
+                      if (Test-Path -LiteralPath $p) {
+                          $wingetPath = $p
+                          break
+                      }
+                  }
+                  if ($wingetPath) { break }
+              }
+          }
+      }
+      if (-not $wingetPath) {
+          $Ansible.Result = "unavailable"
+          return
+      }
+      # Verify winget can actually execute (MSIX apps may be Access Denied)
+      try {
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = $wingetPath
+          $psi.Arguments = '--version'
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+          $psi.UseShellExecute = $false
+          $psi.CreateNoWindow = $true
+          $proc = New-Object System.Diagnostics.Process
+          $proc.StartInfo = $psi
+          $null = $proc.Start()
+          $null = $proc.StandardOutput.ReadToEnd()
+          $null = $proc.StandardError.ReadToEnd()
+          $proc.WaitForExit()
+          if ($proc.ExitCode -eq 0) {
+              $Ansible.Result = "available"
+          } else {
+              $Ansible.Result = "unavailable"
+          }
+      } catch {
+          # winget binary exists but cannot be executed (e.g. Access Denied on MSIX apps)
+          $Ansible.Result = "unavailable"
+      }
+  changed_when: false
+  register: winget_check
+
+- name: run winget tests
+  when: winget_check.result == "available"
+  block:
+    - name: get winget version
+      win_powershell:
+        script: |
+          $wingetPath = $null
+          $cmd = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
+          if ($cmd) {
+              $wingetPath = $cmd.Source
+          } else {
+              $resolved = Get-Item -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($resolved) { $wingetPath = $resolved.FullName }
+          }
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = $wingetPath
+          $psi.Arguments = '--version'
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+          $psi.UseShellExecute = $false
+          $psi.CreateNoWindow = $true
+          $proc = New-Object System.Diagnostics.Process
+          $proc.StartInfo = $psi
+          $null = $proc.Start()
+          $result = $proc.StandardOutput.ReadToEnd()
+          $null = $proc.StandardError.ReadToEnd()
+          $proc.WaitForExit()
+          $Ansible.Result = $result.Trim()
+      changed_when: false
+      register: winget_version
+
+    - name: display winget version
+      debug:
+        msg: "winget version: {{ winget_version.result }}"
+
+    # --- ENSURE CLEAN STATE ---
+
+    - name: ensure test package is not installed before tests
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: pre_cleanup
+
+    # --- INSTALL TESTS ---
+
+    - name: install package - check mode
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_check
+      check_mode: true
+
+    - name: assert install check mode reports changed
+      assert:
+        that:
+          - install_check is changed
+          - not install_check.reboot_required
+
+    - name: verify package not actually installed after check mode
+      win_powershell:
+        script: |
+          $winget = (Get-Command winget.exe -ErrorAction SilentlyContinue).Source
+          if (-not $winget) {
+              $resolved = Get-Item -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($resolved) { $winget = $resolved.FullName }
+          }
+          $result = & $winget list --id jqlang.jq --exact --accept-source-agreements --disable-interactivity 2>&1
+          if ($LASTEXITCODE -ne 0) {
+              $Ansible.Result = "not_installed"
+          } else {
+              $Ansible.Result = "installed"
+          }
+      changed_when: false
+      register: check_mode_verify
+
+    - name: assert package was not installed in check mode
+      assert:
+        that:
+          - check_mode_verify.result == "not_installed"
+
+    - name: install package
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_result
+
+    - name: assert package was installed
+      assert:
+        that:
+          - install_result is changed
+          - install_result.rc == 0
+          - install_result.package.id is defined
+
+    # --- IDEMPOTENCY TEST ---
+
+    - name: install same package again (idempotency)
+      win_winget:
+        id: jqlang.jq
+        state: present
+      register: install_again
+
+    - name: assert install is idempotent
+      assert:
+        that:
+          - install_again is not changed
+          - install_again.rc == 0
+
+    # --- STATE LATEST TEST ---
+
+    - name: ensure package is at latest version
+      win_winget:
+        id: jqlang.jq
+        state: latest
+      register: latest_result
+
+    - name: assert latest state works
+      assert:
+        that:
+          - latest_result.rc == 0
+
+    # --- UNINSTALL TESTS ---
+
+    - name: uninstall package - check mode
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_check
+      check_mode: true
+
+    - name: assert uninstall check mode reports changed
+      assert:
+        that:
+          - uninstall_check is changed
+
+    - name: uninstall package
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_result
+
+    - name: assert package was uninstalled
+      assert:
+        that:
+          - uninstall_result is changed
+          - uninstall_result.rc == 0
+
+    - name: uninstall package again (idempotency)
+      win_winget:
+        id: jqlang.jq
+        state: absent
+      register: uninstall_again
+
+    - name: assert uninstall is idempotent
+      assert:
+        that:
+          - uninstall_again is not changed
+
+    # --- ERROR HANDLING ---
+
+    - name: attempt to install non-existent package
+      win_winget:
+        id: ThisPackage.DoesNotExist.12345
+        state: present
+      register: install_nonexistent
+      ignore_errors: true
+
+    - name: assert non-existent package fails
+      assert:
+        that:
+          - install_nonexistent is failed
+
+    # --- REQUIRED PARAMETER VALIDATION ---
+
+    - name: attempt to call module without id or name
+      win_winget:
+        state: present
+      register: no_id_or_name
+      ignore_errors: true
+
+    - name: assert module fails without id or name
+      assert:
+        that:
+          - no_id_or_name is failed
+
+- name: skip tests when winget is not available
+  when: winget_check.result != "available"
+  debug:
+    msg: >-
+      Skipping win_winget tests because winget is not functional on this host.
+      This can happen if winget is not installed, if the App Installer MSIX
+      package cannot be executed by the current user (e.g. Access Denied in
+      non-interactive sessions), or if Windows 10 1809+ is not present.
