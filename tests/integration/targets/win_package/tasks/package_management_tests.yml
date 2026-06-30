@@ -1,0 +1,191 @@
+---
+# Tests for the package_management provider in win_package.
+# Uses the NuGet PackageManagement provider which is available on Windows
+# Server 2016+ and Windows 10+.
+
+- name: ensure NuGet PackageManagement provider and source are available
+  win_shell: |
+    $provider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+    if (-not $provider) {
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+    }
+    $source = Get-PackageSource -Name NuGet.org -ErrorAction SilentlyContinue
+    if (-not $source) {
+        Register-PackageSource -Name NuGet.org -Location https://www.nuget.org/api/v2 -ProviderName NuGet -Trusted -Force | Out-Null
+    }
+    "ok"
+  changed_when: false
+
+- name: ensure test package is absent before tests
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: absent
+  register: pm_cleanup
+  failed_when: false
+
+# Test 1: Failure - package_management without product_id
+- name: fail when product_id is not set for package_management provider
+  win_package:
+    provider: package_management
+    state: present
+  register: pm_fail_no_id
+  failed_when: pm_fail_no_id.msg != "product_id is required when provider is 'package_management'"
+
+# Test 2: Failure - package_management_provider with wrong provider
+- name: fail when package_management_provider is used with non-package_management provider
+  win_package:
+    path: C:\fake.msi
+    provider: msi
+    package_management_provider: NuGet
+    state: present
+  register: pm_fail_wrong_provider
+  failed_when: pm_fail_wrong_provider.msg != "package_management_provider can only be used when provider is 'package_management'"
+
+# Test 3: Failure - package_management_source with wrong provider
+- name: fail when package_management_source is used with non-package_management provider
+  win_package:
+    path: C:\fake.msi
+    provider: msi
+    package_management_source: PSGallery
+    state: present
+  register: pm_fail_wrong_source
+  failed_when: pm_fail_wrong_source.msg != "package_management_source can only be used when provider is 'package_management'"
+
+# Test 4: Install a NuGet package (check mode)
+- name: install NuGet package via PackageManagement (check mode)
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    package_management_source: NuGet.org
+    state: present
+  register: pm_install_check
+  check_mode: yes
+
+- name: verify package not installed after check mode
+  win_shell: |
+    $pkg = Get-Package -Name Newtonsoft.Json -ProviderName NuGet -ErrorAction SilentlyContinue
+    if ($pkg) { "installed" } else { "absent" }
+  register: pm_install_check_actual
+  changed_when: false
+
+- name: assert install NuGet package (check mode)
+  assert:
+    that:
+    - pm_install_check is changed
+    - pm_install_check_actual.stdout | trim == 'absent'
+
+# Test 5: Install a NuGet package
+- name: install NuGet package via PackageManagement
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    package_management_source: NuGet.org
+    state: present
+  register: pm_install
+
+- name: verify package is installed
+  win_shell: |
+    $pkg = Get-Package -Name Newtonsoft.Json -ProviderName NuGet -ErrorAction SilentlyContinue
+    if ($pkg) { "installed" } else { "absent" }
+  register: pm_install_actual
+  changed_when: false
+
+- name: assert install NuGet package
+  assert:
+    that:
+    - pm_install is changed
+    - pm_install.rc == 0
+    - pm_install_actual.stdout | trim == 'installed'
+
+# Test 6: Install a NuGet package (idempotence)
+- name: install NuGet package via PackageManagement (idempotence)
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    package_management_source: NuGet.org
+    state: present
+  register: pm_install_again
+
+- name: assert install NuGet package (idempotence)
+  assert:
+    that:
+    - not pm_install_again is changed
+
+# Test 7: Uninstall a NuGet package (check mode)
+- name: uninstall NuGet package via PackageManagement (check mode)
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: absent
+  register: pm_uninstall_check
+  check_mode: yes
+
+- name: verify package still installed after uninstall check mode
+  win_shell: |
+    $pkg = Get-Package -Name Newtonsoft.Json -ProviderName NuGet -ErrorAction SilentlyContinue
+    if ($pkg) { "installed" } else { "absent" }
+  register: pm_uninstall_check_actual
+  changed_when: false
+
+- name: assert uninstall NuGet package (check mode)
+  assert:
+    that:
+    - pm_uninstall_check is changed
+    - pm_uninstall_check_actual.stdout | trim == 'installed'
+
+# Test 8: Uninstall a NuGet package
+- name: uninstall NuGet package via PackageManagement
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: absent
+  register: pm_uninstall
+
+- name: verify package is uninstalled
+  win_shell: |
+    $pkg = Get-Package -Name Newtonsoft.Json -ProviderName NuGet -ErrorAction SilentlyContinue
+    if ($pkg) { "installed" } else { "absent" }
+  register: pm_uninstall_actual
+  changed_when: false
+
+- name: assert uninstall NuGet package
+  assert:
+    that:
+    - pm_uninstall is changed
+    - pm_uninstall.rc == 0
+    - pm_uninstall_actual.stdout | trim == 'absent'
+
+# Test 9: Uninstall a NuGet package (idempotence)
+- name: uninstall NuGet package via PackageManagement (idempotence)
+  win_package:
+    product_id: Newtonsoft.Json
+    provider: package_management
+    package_management_provider: NuGet
+    state: absent
+  register: pm_uninstall_again
+
+- name: assert uninstall NuGet package (idempotence)
+  assert:
+    that:
+    - not pm_uninstall_again is changed
+
+# Test 10: Verify existing provider tests still work - path=present without path should fail
+# for non-package_management providers
+- name: verify original required_if still works for non-package_management providers
+  win_package:
+    state: present
+  register: pm_orig_required_if
+  failed_when: 'pm_orig_required_if.msg != "state is present but all of the following are missing: path"'
+
+- name: verify original absent required_if still works
+  win_package:
+    state: absent
+  register: pm_orig_absent_required_if
+  failed_when: 'pm_orig_absent_required_if.msg != "state is absent but any of the following are missing: path, product_id"'

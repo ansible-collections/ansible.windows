@@ -564,7 +564,9 @@ Function Get-InstalledStatus {
             # continues to run on Server 2008 and 2008 R2. This should be removed sometime in the future.
             # https://github.com/ansible-collections/ansible.windows/issues/362
             $msixAvailable = [bool](Get-Command -Name Get-AppxPackage -ErrorAction SilentlyContinue)
-            $providerList = [String[]]$providerInfo.Keys | Where-Object { $_ -ne 'msix' -or $msixAvailable }
+            $providerList = [String[]]$providerInfo.Keys | Where-Object {
+                ($_ -ne 'msix' -or $msixAvailable) -and $_ -ne 'package_management'
+            }
         }
         else {
             $providerList = @($Provider)
@@ -1169,6 +1171,104 @@ $providerInfo = [Ordered]@{
         }
     }
 
+    package_management = @{
+        FileSupported = { $false }
+
+        Test = {
+            param ([String]$Id)
+
+            $pmProvider = $module.Params.package_management_provider
+
+            $status = @{
+                Provider = 'package_management'
+                Id = $Id
+                Installed = $false
+            }
+
+            if (-not $Id) {
+                return $status
+            }
+
+            $getParams = @{
+                Name = $Id
+                ErrorAction = 'SilentlyContinue'
+            }
+            if ($pmProvider) {
+                $getParams.ProviderName = $pmProvider
+            }
+
+            $pkg = Get-Package @getParams
+            if ($null -ne $pkg) {
+                $status.Installed = $true
+                $status.ExtraInfo = @{
+                    InstalledVersion = $pkg.Version
+                    Source = $pkg.Source
+                }
+            }
+
+            $status
+        }
+
+        Set = {
+            param (
+                [String]
+                $Id,
+
+                [Object]
+                $Module,
+
+                [String]
+                $State
+            )
+
+            $pmProvider = $Module.Params.package_management_provider
+            $pmSource = $Module.Params.package_management_source
+
+            try {
+                if ($State -eq 'present') {
+                    $installParams = @{
+                        Name = $Id
+                        Force = $true
+                        ErrorAction = 'Stop'
+                    }
+                    if ($pmProvider) {
+                        $installParams.ProviderName = $pmProvider
+                    }
+                    if ($pmSource) {
+                        $installParams.Source = $pmSource
+                    }
+
+                    $null = Install-Package @installParams
+                }
+                else {
+                    $uninstallParams = @{
+                        Name = $Id
+                        Force = $true
+                        ErrorAction = 'Stop'
+                    }
+                    if ($pmProvider) {
+                        $uninstallParams.ProviderName = $pmProvider
+                    }
+
+                    $pkg = Get-Package @uninstallParams
+                    if ($null -ne $pkg) {
+                        $null = $pkg | Uninstall-Package -Force -ErrorAction Stop
+                    }
+                }
+            }
+            catch {
+                $Module.Result.rc = 1
+                $Module.Result.stdout = ""
+                $Module.Result.stderr = $_.Exception.Message
+
+                $msg = "Failed to $State package '$Id' via PackageManagement: $($_.Exception.Message)"
+                $Module.FailJson($msg, $_)
+            }
+
+            $Module.Result.rc = 0
+        }
+    }
+
     # Should always be last as the FileSupported is a catch all.
     registry = @{
         FileSupported = { $true }
@@ -1319,15 +1419,13 @@ $spec = @{
         creates_service = @{ type = "str" }
         log_path = @{ type = "path" }
         provider = @{ type = "str"; default = "auto"; choices = $providerInfo.Keys + "auto" }
+        package_management_provider = @{ type = "str" }
+        package_management_source = @{ type = "str" }
         wait_for_children = @{ type = 'bool'; default = $false }
     }
     required_by = @{
         creates_version = "creates_path"
     }
-    required_if = @(
-        @("state", "present", @("path")),
-        @("state", "absent", @("path", "product_id"), $true)
-    )
     supports_check_mode = $true
 }
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec, @(Get-AnsibleWindowsWebRequestSpec))
@@ -1346,9 +1444,36 @@ $createsVersion = $module.Params.creates_version
 $createsService = $module.Params.creates_service
 $logPath = $module.Params.log_path
 $provider = $module.Params.provider
+$packageManagementProvider = $module.Params.package_management_provider
+$packageManagementSource = $module.Params.package_management_source
 $waitForChildren = $module.Params.wait_for_children
 
 $module.Result.reboot_required = $false
+
+# Manual validation to replace required_if - the package_management provider uses product_id
+# instead of path, so the original required_if constraints cannot express this conditional logic.
+if ($provider -ne 'package_management') {
+    if ($state -eq 'present' -and -not $path) {
+        $module.FailJson("state is present but all of the following are missing: path")
+    }
+    if ($state -eq 'absent' -and -not $path -and -not $productId) {
+        $module.FailJson("state is absent but any of the following are missing: path, product_id")
+    }
+}
+else {
+    # package_management provider requires product_id (the package name)
+    if (-not $productId) {
+        $module.FailJson("product_id is required when provider is 'package_management'")
+    }
+}
+
+# Validate package_management-specific options are only used with that provider
+if ($packageManagementProvider -and $provider -ne 'package_management') {
+    $module.FailJson("package_management_provider can only be used when provider is 'package_management'")
+}
+if ($packageManagementSource -and $provider -ne 'package_management') {
+    $module.FailJson("package_management_source can only be used when provider is 'package_management'")
+}
 
 if ($null -ne $arguments) {
     # convert a list to a string and escape the values
@@ -1359,6 +1484,21 @@ if ($null -ne $arguments) {
 
 # This must be set after the module spec so the validate-modules sanity-test can get the arg spec.
 Import-PInvokeCode -Module $module
+
+# The package_management provider uses PackageManagement cmdlets and does not require file paths.
+# Handle it separately from the file-based provider logic.
+if ($provider -eq 'package_management') {
+    $packageStatus = &$providerInfo.package_management.Test -Id $productId
+    $packageStatus = Format-PackageStatus @packageStatus
+
+    $changed = ($state -eq 'present') -ne $packageStatus.Installed
+    $module.Result.rc = 0
+    if ($changed -and -not $module.CheckMode) {
+        &$providerInfo.package_management.Set -Id $productId -Module $module -State $state
+    }
+    $module.Result.changed = $changed
+    $module.ExitJson()
+}
 
 $pathType = $null
 if ($path -and $path.StartsWith('http', [System.StringComparison]::InvariantCultureIgnoreCase)) {

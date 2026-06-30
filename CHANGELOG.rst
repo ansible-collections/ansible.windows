@@ -4,6 +4,19 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.6.2
+======
+
+Release Summary
+---------------
+
+Release summary for v3.6.2
+
+Minor Changes
+-------------
+
+- win_package - Added support for PackageManagement provider, enabling installation and management of packages from PowerShellGet, Chocolatey, and other PackageManagement providers - https://issues.redhat.com/browse/ACA-6275
+
 v3.6.1
 ======
 

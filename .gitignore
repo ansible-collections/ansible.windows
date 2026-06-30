@@ -398,3 +398,6 @@ tests/integration/inventory*
 # Ansible runtime/build metadata
 meta/powershell_signatures.psd1
 
+# Swarm planning artifacts (not for PR)
+docs/plans/
+
