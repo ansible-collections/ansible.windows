@@ -1,0 +1,4 @@
+bugfixes:
+  - win_dhcp_lease - Rewrite module to fix MAC case mismatch causing false
+    diffs in check mode, inconsistent ``Diff`` and ``Result.lease`` population,
+    missing post-write re-reads and post-delete verification  (https://github.com/ansible-collections/ansible.windows/pull/909).
