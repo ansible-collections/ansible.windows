@@ -1103,8 +1103,12 @@ else {
             }
         }
 
+        $tmp_user = $username
+        if ($null -eq $tmp_user) {
+            $tmp_user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        }
         try {
-            $task = $task_folder.RegisterTaskDefinition($name, $task_definition, $task_creation_flags, $null, $null, $null)
+            $task = $task_folder.RegisterTaskDefinition($name, $task_definition, $task_creation_flags, $tmp_user, $null, $null)
         }
         catch {
             Fail-Json -obj $result -message "failed to register new task definition: $($_.Exception.Message)"
