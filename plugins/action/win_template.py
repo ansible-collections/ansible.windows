@@ -200,10 +200,6 @@ class ActionModule(ActionBase):
                         escape_backslashes=False,
                         overrides=overrides,
                     )
-            except AnsibleAction:
-                raise
-            except Exception as e:
-                raise AnsibleActionFail("%s: %s" % (type(e).__name__, to_text(e)))
             finally:
                 self._loader.cleanup_tmp_file(b_tmp_source)
 
@@ -238,8 +234,6 @@ class ActionModule(ActionBase):
             finally:
                 shutil.rmtree(to_bytes(local_tempdir, errors='surrogate_or_strict'))
 
-        except AnsibleAction as e:
-            result.update(e.result)
         finally:
             self._remove_tmp_path(self._connection._shell.tmpdir)
 
