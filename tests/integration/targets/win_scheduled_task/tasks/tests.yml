@@ -438,3 +438,33 @@
   assert:
     that:
     - remove_sole_task_again is not changed
+
+# Task Scheduler seems to have some special requirements when running as SYSTEM
+# https://github.com/ansible-collections/community.windows/issues/633
+- name: with SYSTEM user tests
+  become: true
+  become_user: SYSTEM
+  become_method: runas
+  block:
+  - name: create task as SYSTEM user
+    win_scheduled_task:
+      name: "{{test_scheduled_task_name}} with system user"
+      path: "{{test_scheduled_task_path}}"
+      state: present
+      actions:
+      - path: cmd.exe
+        arguments: /c echo hi
+      description: Original Description
+    register: create_task
+
+  - name: get result of create task as SYSTEM user
+    win_scheduled_task_stat:
+      path: "{{test_scheduled_task_path}}"
+      name: "{{test_scheduled_task_name}} with system user"
+    register: create_task_result
+
+  - name: Remove task as SYSTEM user
+    win_scheduled_task:
+      name: "{{test_scheduled_task_name}} with system user"
+      path: "{{test_scheduled_task_path}}"
+      state: absent
