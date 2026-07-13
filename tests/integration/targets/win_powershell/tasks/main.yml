@@ -5,10 +5,13 @@
           IsWindows = $IsWindows -or $PSVersionTable.PSVersion -lt "6.0"
           Tmpdir = (([IO.Path]::GetTempPath())).ToLowerInvariant()
       }
-  register:
-    is_windows: _task.result.output[0].IsWindows
-    test_tmpdir: _task.result.output[0].Tmpdir
+  register: test_baseline
   changed_when: False
+
+- name: extract raw baseline information to facts
+  set_fact:
+    is_windows: '{{ test_baseline.output[0].IsWindows }}'
+    test_tmpdir: '{{ test_baseline.output[0].Tmpdir }}'
 
 - name: get datetimes used for tests
   win_powershell:

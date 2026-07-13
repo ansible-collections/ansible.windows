@@ -129,22 +129,6 @@ stages:
               test: sanity
             - name: Units
               test: units
-  - stage: Ansible_2_17
-    displayName: Ansible 2.17
-    dependsOn:
-      - Dependencies
-    variables:
-      defaultContainer: quay.io/ansible/azure-pipelines-test-container:7.0.0
-    jobs:
-      - template: templates/matrix.yml
-        parameters:
-          nameFormat: '{0}'
-          testFormat: '2.17/{0}'
-          targets:
-            - name: Sanity
-              test: sanity
-            - name: Units
-              test: units
   - stage: Ansible_2_16
     displayName: Ansible 2.16
     dependsOn:
@@ -183,6 +167,41 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
+  - stage: Windows_1_WinPS_Actions
+    displayName: Windows 1 WinPS Action Plugins
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: windows/{0}/5.1/1
+          testGroupFormat: "{{1}}/{0}"
+          groups:
+            - "2.18"
+            - "2.19"
+            - "2.20"
+            - "2.21"
+          targets:
+            - name: 2022 PSRP HTTP
+              test: 2022/psrp/http
+  - stage: Windows_1_WinPS_Actions_Old
+    displayName: Windows 1 WinPS Action Plugins Old
+    dependsOn:
+      - Dependencies
+    variables:
+      defaultContainer: quay.io/ansible/azure-pipelines-test-container:7.0.0
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: windows_old/{0}/1
+          testGroupFormat: "{{1}}/{0}"
+          groups:
+            - "2.16"
+          targets:
+            - name: 2022
+              test: 2022
   - stage: Windows_1_Pwsh_7_6
     displayName: Windows 1 Pwsh 7.6
     dependsOn:
@@ -313,6 +332,44 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
+  - stage: Windows_5_WinPS
+    displayName: Windows 5 WinPS
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/5.1/5
+          targets:
+            - name: 2019 WinRM HTTP
+              test: 2019/winrm/http
+            - name: 2022 WinRM HTTPS
+              test: 2022/winrm/https
+            - name: 2022 PSRP HTTPS
+              test: 2022/psrp/https
+            - name: 2022 SSH Key
+              test: 2022/ssh/key
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
+  - stage: Windows_5_Pwsh_7_6
+    displayName: Windows 5 Pwsh 7.6
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: devel/windows/{0}/7.6/5
+          targets:
+            - name: 2025 WinRM HTTP
+              test: 2025/winrm/http
+            - name: 2025 PSRP HTTP
+              test: 2025/psrp/http
+            - name: 2025 SSH Key
+              test: 2025/ssh/key
   - stage: Posix_Pwsh_7_6
     displayName: Posix Pwsh 7.6
     dependsOn:
@@ -333,9 +390,10 @@ stages:
       - Ansible_2_20
       - Ansible_2_19
       - Ansible_2_18
-      - Ansible_2_17
       - Ansible_2_16
       - Windows_1_WinPS
+      - Windows_1_WinPS_Actions
+      - Windows_1_WinPS_Actions_Old
       - Windows_1_Pwsh_7_6
       - Windows_2_WinPS
       - Windows_2_Pwsh_7_6
@@ -343,6 +401,8 @@ stages:
       - Windows_3_Pwsh_7_6
       - Windows_4_WinPS
       - Windows_4_Pwsh_7_6
+      - Windows_5_WinPS
+      - Windows_5_Pwsh_7_6
       - Posix_Pwsh_7_6
     jobs:
       - template: templates/coverage.yml
