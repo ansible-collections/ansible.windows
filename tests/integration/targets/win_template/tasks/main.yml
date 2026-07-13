@@ -291,3 +291,16 @@
     that:
     - actual_managed_default is contains expected_managed_default
     - actual_managed_override is contains expected_managed_override
+
+- name: expect error with invalid template
+  win_template:
+    src: invalid.j2
+    dest: '{{ remote_tmp_dir }}/invalid.templated'
+  register: template_result_invalid
+  ignore_errors: true
+
+- name: verify that the invalid template failure message
+  assert:
+    that:
+    - template_result_invalid is failed
+    - template_result_invalid.msg is search("'undefined_var' is undefined")
