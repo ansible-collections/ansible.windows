@@ -169,19 +169,26 @@ namespace Ansible.MappedDrive
     internal class Impersonation : IDisposable
     {
         private IntPtr hToken = IntPtr.Zero;
+        private bool _isImpersonated = false;
 
         public Impersonation(IntPtr token)
         {
             hToken = token;
             if (token != IntPtr.Zero)
+            {
                 if (!NativeMethods.ImpersonateLoggedOnUser(hToken))
                     throw new Win32Exception("Failed to impersonate token with ImpersonateLoggedOnUser()");
+                _isImpersonated = true;
+            }
         }
 
         public void Dispose()
         {
-            if (hToken != null)
+            if (hToken != IntPtr.Zero && _isImpersonated)
+            {
                 NativeMethods.RevertToSelf();
+                _isImpersonated = false;
+            }
             GC.SuppressFinalize(this);
         }
         ~Impersonation() { Dispose(); }

@@ -8,6 +8,15 @@ from ansible.module_utils.common.validation import check_type_bool
 from ansible.plugins.action import ActionBase
 
 
+USE_DATA_TAGGING = False
+try:
+    from ansible.template import trust_as_template as _
+
+    USE_DATA_TAGGING = True
+except ImportError:
+    pass
+
+
 class ActionModule(ActionBase):
 
     def run(
@@ -35,7 +44,13 @@ class ActionModule(ActionBase):
 
             # Replace the script argument with the contents of the local script.
             full_path = self._find_needle('files', path)
-            module_args['script'] = self._loader.get_text_file_contents(full_path)
+            if USE_DATA_TAGGING:
+                script_contents = self._loader.get_text_file_contents(full_path)
+            else:
+                with open(full_path, 'rb') as f:
+                    script_contents = f.read().decode('utf-8')
+
+            module_args['script'] = script_contents
             del module_args['path']
 
         module_result = self._execute_module(

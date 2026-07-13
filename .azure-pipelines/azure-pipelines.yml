@@ -167,8 +167,26 @@ stages:
               test: 2025/psrp/http
             - name: 2025 SSH Key
               test: 2025/ssh/key
-  - stage: Windows_1_WinPS_Old
-    displayName: Windows 1 WinPS Older Ansible Versions
+  - stage: Windows_1_WinPS_Actions
+    displayName: Windows 1 WinPS Action Plugins
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: Server {0}
+          testFormat: windows/{0}/5.1/1
+          testGroupFormat: "{{1}}/{0}"
+          groups:
+            - "2.18"
+            - "2.19"
+            - "2.20"
+            - "2.21"
+          targets:
+            - name: 2022 PSRP HTTP
+              test: 2022/psrp/http
+  - stage: Windows_1_WinPS_Actions_Old
+    displayName: Windows 1 WinPS Action Plugins Old
     dependsOn:
       - Dependencies
     variables:
@@ -177,17 +195,13 @@ stages:
       - template: templates/matrix.yml
         parameters:
           nameFormat: Server {0}
-          testFormat: windows/{0}/5.1/1
+          testFormat: windows_old/{0}/1
           testGroupFormat: "{{1}}/{0}"
           groups:
             - "2.16"
-            - "2.18"
-            - "2.19"
-            - "2.20"
-            - "2.21"
           targets:
-            - name: 2025 PSRP HTTP
-              test: 2025/psrp/http
+            - name: 2022
+              test: 2022
   - stage: Windows_1_Pwsh_7_6
     displayName: Windows 1 Pwsh 7.6
     dependsOn:
@@ -378,8 +392,9 @@ stages:
       - Ansible_2_18
       - Ansible_2_16
       - Windows_1_WinPS
+      - Windows_1_WinPS_Actions
+      - Windows_1_WinPS_Actions_Old
       - Windows_1_Pwsh_7_6
-      - Windows_1_WinPS_Old
       - Windows_2_WinPS
       - Windows_2_Pwsh_7_6
       - Windows_3_WinPS
