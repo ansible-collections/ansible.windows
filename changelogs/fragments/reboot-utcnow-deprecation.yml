@@ -1,3 +1,0 @@
-minor_changes:
-  - reboot - Replace deprecated ``datetime.datetime.utcnow()`` with ``datetime.now(timezone.utc)``
-    for Python 3.12+ compatibility.

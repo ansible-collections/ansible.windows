@@ -1144,3 +1144,56 @@ releases:
     - release-summary.yml
     - setup-admin-facts.yml
     release_date: '2026-05-28'
+  3.7.0:
+    changes:
+      bugfixes:
+      - setup - Ensure the ``ansible_domain`` fact has the DNS domain name the host
+        is registered with through the IP properties. In the past we only returned
+        a value for this fact when the host was joined to an Active Directory domain
+        - https://github.com/ansible-collections/ansible.windows/pull/917
+      - setup - Fix DomainInfo collection when LanmanWorkstation service is stopped
+        or disabled on hardened Windows systems (https://github.com/ansible-collections/ansible.windows/pull/915).
+      - setup - Fix logic for checking SMBIOS version for ``ansible_processor_*``
+        facts when the host's SMBIOS version was greater than ``2.4`` but less than
+        ``3.0`` - https://github.com/ansible-collections/ansible.windows/pull/919
+      - win_mapped_drive - Fixed compatibility with PowerShell 7 by fixing inline
+        C# declaration
+      - win_package - Favour the HTTP response's ``Content-Disposition`` for the temporary
+        filename when downloading a the temporary package from a URL. This ensures
+        the package detection mechanism on the file extension continues to work -
+        https://github.com/ansible-collections/ansible.windows/issues/503
+      - win_powershell - Fix support for controller side ``path`` lookups on Ansible
+        2.18 and older
+      - win_template - Fix issue where errors during templating, like an undefined
+        variable, were ignored and the task continued without a failure - https://github.com/ansible-collections/ansible.windows/issues/926
+      - win_updates - Add additional post reboot check to ensure that Windows is still
+        not performing more update work after a reboot is complete.
+      - win_updates - Fix issue display warnings after data tagging changes made in
+        Ansible 2.19.
+      - win_updates - Handle update task that errors with ``ERROR_SHUTDOWN_IN_PROGRESS``
+        when ``reboot=True`` is set. If this error is received and the task has ``reboot=True``
+        then the module will wait for the reboot to be complete before trying again
+        like how other errors are handled.
+      minor_changes:
+      - reboot - Replace deprecated ``datetime.datetime.utcnow()`` with ``datetime.now(timezone.utc)``
+        for Python 3.12+ compatibility.
+      - win_acl - Add check mode support so the module reports whether changes would
+        be made without modifying ACL permissions (https://github.com/ansible-collections/ansible.windows/issues/911).
+      - win_dns_zone - Added ``directory_partition`` parameter to support storing
+        AD-integrated zones in custom application directory partitions for fine-grained
+        replication control (https://github.com/ansible-collections/ansible.windows/issues/901).
+      release_summary: Release summary for v3.7.0
+    fragments:
+    - 911-win_acl-check-mode.yml
+    - 915-setup-lanmanworkstation.yml
+    - reboot-utcnow-deprecation.yml
+    - release-summary.yml
+    - setup-ansible-domain-standalone.yml
+    - setup-smbios-proc-count.yml
+    - update-reboot-fixes.yml
+    - win_dns_zone-directory-partition.yml
+    - win_mapped_drive-pwsh7.yml
+    - win_package-url-filename.yml
+    - win_powershell-path.yml
+    - win_template-error-handling.yml
+    release_date: '2026-07-14'

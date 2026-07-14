@@ -1,3 +1,0 @@
-bugfixes:
-  - >-
-    win_mapped_drive - Fixed compatibility with PowerShell 7 by fixing inline C# declaration

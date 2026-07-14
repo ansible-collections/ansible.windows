@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    win_template - Fix issue where errors during templating, like an undefined variable, were ignored and the task
-    continued without a failure - https://github.com/ansible-collections/ansible.windows/issues/926
