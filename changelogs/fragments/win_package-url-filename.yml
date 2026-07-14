@@ -1,5 +1,0 @@
-bugfixes:
-  - >-
-    win_package - Favour the HTTP response's ``Content-Disposition`` for the temporary filename when downloading a
-    the temporary package from a URL. This ensures the package detection mechanism on the file extension continues
-    to work - https://github.com/ansible-collections/ansible.windows/issues/503

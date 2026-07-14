@@ -1,3 +1,0 @@
-bugfixes:
-  - setup - Fix DomainInfo collection when LanmanWorkstation service is stopped or disabled
-    on hardened Windows systems (https://github.com/ansible-collections/ansible.windows/pull/915).
