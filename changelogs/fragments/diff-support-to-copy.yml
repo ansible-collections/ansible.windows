@@ -1,4 +1,6 @@
-bugfixes:
-- >-
-  win_copy - Add diff support to win_copy and win_template -
-  https://github.com/ansible-collections/ansible.windows/issues/16
+minor_changes:
+  - >-
+    win_copy - Add diff support to win_copy and win_template when copying
+    single files only. Copying multiple files will still not produce any diff
+    output -
+    https://github.com/ansible-collections/ansible.windows/issues/16
