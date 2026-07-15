@@ -19,9 +19,7 @@
 - name: set expected value for reg structure
   set_fact:
     expected:
-      changed: false
       exists: true
-      failed: false
       properties:
         binary: { raw_value: ["0x01", "0x16"], type: 'REG_BINARY', value: [1, 22] }
         dword: { raw_value: 1, type: 'REG_DWORD', value: 1 }
@@ -38,7 +36,10 @@
 - name: assert get known nested reg key structure
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists == expected.exists
+    - actual.properties == expected.properties
+    - actual.sub_keys == expected.sub_keys
 
 - name: get known reg key with no sub keys but some properties
   win_reg_stat:
@@ -48,9 +49,7 @@
 - name: set expected value for reg key with no sub keys but some properties
   set_fact:
     expected:
-      changed: false
       exists: true
-      failed: false
       properties:
         none: { raw_value: [], type: 'REG_NONE', value: [] }
         none1: { raw_value: ["0x00"], type: 'REG_NONE', value: [0] }
@@ -61,7 +60,10 @@
 - name: assert get known reg key with no sub keys but some properties
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists == expected.exists
+    - actual.properties == expected.properties
+    - actual.sub_keys == expected.sub_keys
 
 - name: get known reg key without sub keys and properties
   win_reg_stat:
@@ -81,17 +83,11 @@
     path: HKCU:\{{ test_reg_path }}\Thispathwillneverexist
   register: actual
 
-- name: set expected value for non-existent reg key
-  set_fact:
-    expected:
-      changed: false
-      exists: false
-      failed: false
-
 - name: assert get non-existent reg key
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - not actual.exists
 
 - name: get string property
   win_reg_stat:
@@ -99,20 +95,14 @@
     name: string
   register: actual
 
-- name: set expected string property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: 'test'
-      type: 'REG_SZ'
-      value: 'test'
-
 - name: assert get string property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == 'test'
+    - actual.type == 'REG_SZ'
+    - actual.value == 'test'
 
 - name: get expand string property
   win_reg_stat:
@@ -120,20 +110,14 @@
     name: expand
   register: actual
 
-- name: set expected expand string property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: '%windir%\dir'
-      type: 'REG_EXPAND_SZ'
-      value: "{{win_dir_value.stdout_lines[0]}}\\dir"
-
 - name: assert get expand string property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == '%windir%\dir'
+    - actual.type == 'REG_EXPAND_SZ'
+    - actual.value == win_dir_value.stdout_lines[0] ~ '\dir'
 
 - name: get multi string property
   win_reg_stat:
@@ -141,20 +125,14 @@
     name: multi
   register: actual
 
-- name: set expected multi string property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: ['a, b', 'c']
-      type: 'REG_MULTI_SZ'
-      value: ['a, b', 'c']
-
 - name: assert get multi string property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == ['a, b', 'c']
+    - actual.type == 'REG_MULTI_SZ'
+    - actual.value == ['a, b', 'c']
 
 - name: get binary property
   win_reg_stat:
@@ -162,20 +140,14 @@
     name: binary
   register: actual
 
-- name: set expected binary property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: ["0x01", "0x16"]
-      type: 'REG_BINARY'
-      value: [1, 22]
-
 - name: assert get binary property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == ["0x01", "0x16"]
+    - actual.type == 'REG_BINARY'
+    - actual.value == [1, 22]
 
 - name: get dword property
   win_reg_stat:
@@ -183,20 +155,14 @@
     name: dword
   register: actual
 
-- name: set expected dword property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: 1
-      type: 'REG_DWORD'
-      value: 1
-
 - name: assert get dword property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == 1
+    - actual.type == 'REG_DWORD'
+    - actual.value == 1
 
 - name: get qword property
   win_reg_stat:
@@ -204,20 +170,14 @@
     name: qword
   register: actual
 
-- name: set expected qword property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: 1
-      type: 'REG_QWORD'
-      value: 1
-
 - name: assert get qword property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == 1
+    - actual.type == 'REG_QWORD'
+    - actual.value == 1
 
 - name: get none property
   win_reg_stat:
@@ -225,20 +185,14 @@
     name: none
   register: actual
 
-- name: set expected none property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: []
-      type: 'REG_NONE'
-      value: []
-
 - name: assert get none property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == []
+    - actual.type == 'REG_NONE'
+    - actual.value == []
 
 - name: get none with value property
   win_reg_stat:
@@ -246,20 +200,14 @@
     name: none1
   register: actual
 
-- name: set expected none with value property
-  set_fact:
-    expected:
-      changed: false
-      exists: true
-      failed: false
-      raw_value: ["0x00"]
-      type: 'REG_NONE'
-      value: [0]
-
-- name: assert get non with value property
+- name: assert get none with value property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - actual.exists
+    - actual.raw_value == ["0x00"]
+    - actual.type == 'REG_NONE'
+    - actual.value == [0]
 
 - name: get non-existent property
   win_reg_stat:
@@ -267,17 +215,11 @@
     name: doesnotexist
   register: actual
 
-- name: set expected non-existent property
-  set_fact:
-    expected:
-      changed: false
-      exists: false
-      failed: false
-
 - name: assert get non-existent property
   assert:
     that:
-    - actual == expected
+    - actual is not changed
+    - not actual.exists
 
 - name: get key with default property set
   win_reg_stat:
