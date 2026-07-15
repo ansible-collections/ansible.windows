@@ -1,0 +1,4 @@
+bugfixes:
+- >-
+  win_copy - Add diff support to win_copy and win_template -
+  https://github.com/ansible-collections/ansible.windows/issues/16
