@@ -1,0 +1,111 @@
+- name: diff with non-existent destination
+  win_copy:
+    src: foo.txt
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_non_existent
+  diff: true
+
+- name: assert diff with non-existent destination
+  assert:
+    that:
+    - diff_non_existent.diff.after == "foo.txt\n"
+    - diff_non_existent.diff.after_header == role_path ~ '/files/foo.txt'
+    - diff_non_existent.diff.before == ''
+
+- name: diff with same file
+  win_copy:
+    src: foo.txt
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_same_file
+  diff: true
+
+- name: assert diff with same file
+  assert:
+    that:
+    - diff_same_file.diff is not defined
+
+- name: diff with different file
+  win_copy:
+    src: subdir/bar.txt
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_different_file
+  diff: true
+
+- name: assert diff with different file
+  assert:
+    that:
+    - diff_different_file.diff.after == "baz\n"
+    - diff_different_file.diff.after_header == role_path ~ '/files/subdir/bar.txt'
+    - diff_different_file.diff.before == "foo.txt\n"
+    - diff_different_file.diff.before_header == test_win_copy_path ~ '\diff_tests-foo.txt'
+
+- name: diff with content
+  win_copy:
+    content: 'this is some content'
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_content
+  diff: true
+
+- name: assert diff with content
+  assert:
+    that:
+    - diff_content.diff.after == 'this is some content'
+    - diff_content.diff.after_header == test_win_copy_path ~ '\diff_tests-foo.txt'
+    - diff_content.diff.before == "baz\n"
+    - diff_content.diff.before_header == test_win_copy_path ~ '\diff_tests-foo.txt'
+
+- name: set local bin file paths
+  set_fact:
+    local_bin1: "{{ local_tmp.path ~ '/win_copy-bin1' }}"
+    local_bin2: "{{ local_tmp.path ~ '/win_copy-bin2' }}"
+
+# Binary tests use the first 8192 bytes so our second binary should just fit
+# and be detected as binary
+- name: create local binary files
+  shell:
+    cmd: >
+      printf 'abc\x00' > {{ local_bin1 | quote }} &&
+      printf '%8191s' '' | tr ' ' 'a' > {{ local_bin2 | quote }} &&
+      printf '\x00' >> {{ local_bin2 | quote }}
+  delegate_to: localhost
+
+- name: diff with binary replacing text
+  win_copy:
+    src: '{{ local_bin1 }}'
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_binary_replacing_text
+  diff: true
+
+- name: assert diff with binary replacing text
+  assert:
+    that:
+    - diff_binary_replacing_text.diff.src_binary == 1
+    - diff_binary_replacing_text.diff.before == 'this is some content'
+    - diff_binary_replacing_text.diff.before_header == test_win_copy_path ~ '\diff_tests-foo.txt'
+
+- name: diff with binary replacing binary
+  win_copy:
+    src: '{{ local_bin2 }}'
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_binary_replacing_binary
+  diff: true
+
+- name: assert diff with binary replacing binary
+  assert:
+    that:
+    - diff_binary_replacing_binary.diff.dst_binary == 1
+    - diff_binary_replacing_binary.diff.src_binary == 1
+
+- name: diff with text replacing binary
+  win_copy:
+    src: foo.txt
+    dest: '{{ test_win_copy_path }}\diff_tests-foo.txt'
+  register: diff_text_replacing_binary
+  diff: true
+
+- name: assert diff with text replacing binary
+  assert:
+    that:
+    - diff_text_replacing_binary.diff.after == 'foo.txt\n'
+    - diff_text_replacing_binary.diff.after_header == role_path ~ '/files/foo.txt'
+    - diff_text_replacing_binary.diff.dst_binary == 1
