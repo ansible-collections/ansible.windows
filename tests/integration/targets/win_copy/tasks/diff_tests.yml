@@ -64,9 +64,9 @@
 - name: create local binary files
   shell:
     cmd: >
-      printf 'abc\x00' > {{ local_bin1 | quote }} &&
+      printf 'abc\000' > {{ local_bin1 | quote }} &&
       printf '%8191s' '' | tr ' ' 'a' > {{ local_bin2 | quote }} &&
-      printf '\x00' >> {{ local_bin2 | quote }}
+      printf '\000' >> {{ local_bin2 | quote }}
   delegate_to: localhost
 
 - name: diff with binary replacing text
