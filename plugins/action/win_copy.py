@@ -507,8 +507,21 @@ class ActionModule(ActionBase):
             file_src = query_return['files'][0]['src']
             file_dest = query_return['files'][0]['dest']
             basename = original_basename or file_dest
+            file_diff = None
+            if self._task.diff:
+                file_diff = self._get_diff_data(
+                    dest,
+                    source_full,
+                    task_vars,
+                    content=content is not None,
+                )
+
             result.update(self._copy_single_file(file_src, dest, basename, file_dest,
                                                  task_vars, self._connection._shell.tmpdir, backup))
+
+            if file_diff is not None:
+                result['diff'] = file_diff
+
             if result.get('failed') is True:
                 result['msg'] = "failed to copy file %s: %s" % (file_src, result['msg'])
             result['changed'] = True
