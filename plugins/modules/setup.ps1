@@ -934,7 +934,18 @@ $factMeta = @(
                 $groupMembers.Dispose()
             }
             catch {
-                $module.Warn("Error during machine sid retrieval: $($_.Exception.Message)")
+                if ($_.Exception.ToString() -match 'Server service is not started') {
+                    $admin = Get-CimInstance Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE '%-500'"
+                    if ($admin) {
+                        $machineSid = ($admin.SID -replace '-500$')
+                    }
+                    else {
+                        $module.Warn('Error retrieving machine sid from Win32_UserAccount')
+                    }
+                }
+                else {
+                    $module.Warn("Error during machine sid retrieval: $($_.Exception.Message)")
+                }
             }
 
             $ipProps = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
