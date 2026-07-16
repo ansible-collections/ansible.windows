@@ -1,22 +1,11 @@
 ---
-- name: Check DHCP Service/Role Install State
-  ansible.windows.win_feature:
-    name: DHCP
-    state: present
-    include_management_tools: yes
-  register: dhcp_role
-  check_mode: true
-
-- name: Reboot if Necessary
-  ansible.windows.win_reboot:
-  when: dhcp_role.reboot_required
-  check_mode: true
-
 - name: Remove DHCP Address by IP
   win_dhcp_lease:
     state: absent
     ip: "{{ dhcp_lease_ip }}"
   check_mode: true
+  register: remove_reservation
+  failed_when: remove_reservation.changed != false
 
 - name: Create Lease
   win_dhcp_lease:
@@ -28,6 +17,8 @@
     dns_regtype: noreg
     description: This is a description!
   check_mode: true
+  register: create_lease
+  failed_when: create_lease.changed == false
 
 - name: Create Reservation
   win_dhcp_lease:
@@ -36,6 +27,8 @@
     mac: "{{ dhcp_lease_mac }}"
     scope_id: "{{ dhcp_scope_id }}"
   check_mode: true
+  register: create_reservation
+  failed_when: create_reservation.changed == false
 
 - name: Create Reservation w/Description
   win_dhcp_lease:
@@ -45,8 +38,13 @@
     scope_id: "{{ dhcp_scope_id }}"
     description: This is a Description!
   check_mode: true
+  register: create_reservation_with_description
+  failed_when: create_reservation_with_description.changed == false
 
 - name: Remove DHCP Reservation by MAC
   win_dhcp_lease:
     state: absent
     mac: "{{ dhcp_lease_mac }}"
+  check_mode: true
+  register: remove_reservation_by_mac
+  failed_when: remove_reservation_by_mac.changed != false
