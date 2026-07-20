@@ -648,6 +648,7 @@ class ActionModule(ActionBase):
 
     _VALID_ARGS = [
         'accept_list',
+        'assigned_only',
         'category_names',
         'log_path',
         'reboot',
