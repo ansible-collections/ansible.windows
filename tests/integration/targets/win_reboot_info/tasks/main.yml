@@ -1,0 +1,101 @@
+---
+- name: Get reboot info before any changes
+  ansible.windows.win_reboot_info:
+  register: reboot_info_initial
+
+- name: Assert no pending reboot initially
+  ansible.builtin.assert:
+    that:
+      - not reboot_info_initial is changed
+      - reboot_info_initial.last_reboot is defined
+      - reboot_info_initial.last_reboot.time is match("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+      - reboot_info_initial.last_reboot.time_epoch is number
+      - reboot_info_initial.pending_reboot == false
+      - reboot_info_initial.pending_reboot_reasons | length == 0
+
+- name: Assert check mode returns the same data
+  ansible.windows.win_reboot_info:
+  register: reboot_info_check
+  check_mode: true
+
+- name: Validate check mode matches normal mode
+  ansible.builtin.assert:
+    that:
+      - not reboot_info_check is changed
+      - reboot_info_check.last_reboot.time == reboot_info_initial.last_reboot.time
+      - reboot_info_check.pending_reboot == false
+
+- block:
+    - name: Fake a pending reboot via Component Based Servicing
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending
+        state: present
+
+    - name: Fake a pending reboot via Windows Update
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired
+        state: present
+
+    - name: Get reboot info after faking pending reboot
+      ansible.windows.win_reboot_info:
+      register: reboot_info_pending
+
+    - name: Assert pending reboot is detected
+      ansible.builtin.assert:
+        that:
+          - reboot_info_pending.pending_reboot == true
+          - reboot_info_pending.pending_reboot_reasons | length >= 2
+          - "'component_based_servicing' in reboot_info_pending.pending_reboot_reasons | map(attribute='source')"
+          - "'windows_update' in reboot_info_pending.pending_reboot_reasons | map(attribute='source')"
+
+    - name: Assert each reason has expected structure
+      ansible.builtin.assert:
+        that:
+          - item.source is string
+          - item.description is string
+      loop: "{{ reboot_info_pending.pending_reboot_reasons }}"
+
+  always:
+    - name: Remove fake Component Based Servicing key
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending
+        state: absent
+        delete_key: true
+
+    - name: Remove fake Windows Update key
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired
+        state: absent
+        delete_key: true
+
+- name: Get reboot info after cleanup
+  ansible.windows.win_reboot_info:
+  register: reboot_info_cleaned
+
+- name: Assert pending reboot is cleared after cleanup
+  ansible.builtin.assert:
+    that:
+      - reboot_info_cleaned.pending_reboot == false
+      - reboot_info_cleaned.pending_reboot_reasons | length == 0
+
+- name: Record last boot time before reboot
+  ansible.builtin.set_fact:
+    boot_time_before_reboot: "{{ reboot_info_cleaned.last_reboot.time }}"
+
+- name: Reboot the host
+  ansible.windows.win_reboot:
+
+- name: Get reboot info after reboot
+  ansible.windows.win_reboot_info:
+  register: reboot_info_post_reboot
+
+- name: Assert reboot info is updated after reboot
+  ansible.builtin.assert:
+    that:
+      - reboot_info_post_reboot.pending_reboot == false
+      - reboot_info_post_reboot.pending_reboot_reasons | length == 0
+      - reboot_info_post_reboot.last_reboot.time != boot_time_before_reboot
+      - reboot_info_post_reboot.last_reboot.details.initiated_by is string
+      - reboot_info_post_reboot.last_reboot.details.process is string
+      - reboot_info_post_reboot.last_reboot.details.type is string
+      - reboot_info_post_reboot.last_reboot.details.event_time is match("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
