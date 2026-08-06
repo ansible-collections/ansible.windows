@@ -45,6 +45,18 @@ options:
         type: bool
         default: no
         version_added: 1.8.0
+    maximum_retries_on_failed_updates:
+        description:
+        - The maximum number of times the module will attempt to install an
+          update that appears to have been rolled back or not applied after a
+          reboot.
+        - Some updates, particularly feature updates, may require multiple
+          install attempts before completing successfully.
+        - This is only used when C(reboot=true) and the module detects the
+          same updates being reported as available after a reboot cycle.
+        type: int
+        default: 1
+        version_added: 3.8.0
     reboot:
         description:
         - Ansible will automatically reboot the remote host if it is required

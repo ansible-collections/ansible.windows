@@ -26,6 +26,7 @@ $spec = @{
         # options used by the action plugin - ignored here
         reboot = @{ type = 'bool'; default = $false }
         reboot_timeout = @{ type = 'int'; default = 1200 }
+        maximum_retries_on_failed_updates = @{ type = 'int'; default = 1 }
         _operation = @{ type = 'str'; choices = 'start', 'cancel', 'poll', 'test'; default = 'start' }
         _operation_options = @{ type = 'dict' }
     }

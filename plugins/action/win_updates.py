@@ -656,6 +656,7 @@ class ActionModule(ActionBase):
         'reject_list',
         'server_selection',
         'state',
+        'maximum_retries_on_failed_updates',
         '_operation',  # Internal use only. Used in CI tests
     ]
 
@@ -775,10 +776,11 @@ class ActionModule(ActionBase):
         }
         installed_updates = set()
         has_rebooted_on_failure = False
-        round = 0
+        attempt_round = 0
+        attempt_rolled_back_round = 0
         while True:
-            round += 1
-            display.v("Running win_updates - round %s" % round, host=task_vars.get('inventory_hostname', None))
+            attempt_round += 1
+            display.v("Running win_updates - round %s" % attempt_round, host=task_vars.get('inventory_hostname', None))
 
             update_result = self._run_updates(task_vars, module_options, for_testing=for_testing)
 
@@ -795,7 +797,10 @@ class ActionModule(ActionBase):
             new_updates = current_updates.difference(installed_updates)
             installed_updates.update(current_updates)
 
-            if current_updates and not new_updates:
+            if (current_updates and not new_updates):
+                attempt_rolled_back_round += 1
+
+            if attempt_rolled_back_round >= module_options.get('maximum_retries_on_failed_updates', 1):
                 for update_id in current_updates:
                     self._install_results[update_id]['result_code'] = 4
                     self._install_results[update_id]['hresult'] = -1
