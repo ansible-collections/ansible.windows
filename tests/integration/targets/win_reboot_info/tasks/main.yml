@@ -1,4 +1,7 @@
 ---
+- name: Reboot to clear any pending reboots
+  ansible.windows.win_reboot: {}
+
 - name: Get reboot info before any changes
   ansible.windows.win_reboot_info:
   register: reboot_info_initial
@@ -30,7 +33,7 @@
       ansible.windows.win_regedit:
         path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
         name: PendingFileRenameOperations
-        data: ['\\??\C:\temp\test.tmp', '']
+        data: ['\\??\C:\temp\test.tmp', ""]
         type: multistring
         state: present
 
