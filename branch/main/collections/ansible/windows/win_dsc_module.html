@@ -230,13 +230,13 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_shell</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">    </span><span class="no">$port = (Get-Item -LiteralPath WSMan:\localhost\Client\DefaultPorts\HTTP).Value</span>
 <span class="w">    </span><span class="no">$onlinePorts = @(Get-ChildItem -LiteralPath WSMan:\localhost\Listener |</span>
-<span class="w">        </span><span class="no">Where-Object { &#39;Transport=HTTP&#39; -in $_.Keys } |</span>
+<span class="w">        </span><span class="no">Where-Object { 'Transport=HTTP' -in $_.Keys } |</span>
 <span class="w">        </span><span class="no">Get-ChildItem |</span>
 <span class="w">        </span><span class="no">Where-Object Name -eq Port |</span>
 <span class="w">        </span><span class="no">Select-Object -ExpandProperty Value)</span>
 
 <span class="w">    </span><span class="no">if ($port -notin $onlinePorts) {</span>
-<span class="w">        </span><span class="no">&quot;The default client port $port is not set up as a WSMan HTTP listener, win_dsc will not work.&quot;</span>
+<span class="w">        </span><span class="no">"The default client port $port is not set up as a WSMan HTTP listener, win_dsc will not work."</span>
 <span class="w">    </span><span class="no">}</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Extract zip file</span>
@@ -258,15 +258,15 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">Key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKEY_CURRENT_USER\ExampleKey</span>
 <span class="w">    </span><span class="nt">ValueName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestValue</span>
 <span class="w">    </span><span class="nt">ValueData</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TestData</span>
-<span class="w">    </span><span class="nt">PsDscRunAsCredential_username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">    </span><span class="nt">PsDscRunAsCredential_password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_username</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">'</span>
+<span class="w">    </span><span class="nt">PsDscRunAsCredential_password</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">'</span>
 <span class="w">  </span><span class="nt">no_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create file with multiple attributes</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span>
 <span class="w">    </span><span class="nt">DestinationPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\ansible\dsc</span>
-<span class="w">    </span><span class="nt">Attributes</span><span class="p">:</span><span class="w"> </span><span class="c1"># can also be a comma separated string, e.g. &#39;Hidden, System&#39;</span>
+<span class="w">    </span><span class="nt">Attributes</span><span class="p">:</span><span class="w"> </span><span class="c1"># can also be a comma separated string, e.g. 'Hidden, System'</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hidden</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">System</span>
 <span class="w">    </span><span class="nt">Ensure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Present</span>
@@ -275,7 +275,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Call DSC resource with DateTime option</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dsc</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">resource_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DateTimeResource</span>
-<span class="w">    </span><span class="nt">DateTimeOption</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2019-02-22T13:57:31.2311892+00:00&#39;</span>
+<span class="w">    </span><span class="nt">DateTimeOption</span><span class="p">:</span><span class="w"> </span><span class="s">'2019-02-22T13:57:31.2311892+00:00'</span>
 
 <span class="c1"># more complex example using custom DSC resource and dict values</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Setup the xWebAdministration module</span>
@@ -296,11 +296,11 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">        </span><span class="nt">CertificateStoreName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MY</span>
 <span class="w">        </span><span class="nt">CertificateThumbprint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C676A89018C4D5902353545343634F35E6B3A659</span>
 <span class="w">        </span><span class="nt">HostName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DSCTest</span>
-<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
-<span class="w">        </span><span class="nt">SSLFlags</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">'*'</span>
+<span class="w">        </span><span class="nt">SSLFlags</span><span class="p">:</span><span class="w"> </span><span class="s">'1'</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
 <span class="w">        </span><span class="nt">Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4321</span>
-<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*&#39;</span>
+<span class="w">        </span><span class="nt">IPAddress</span><span class="p">:</span><span class="w"> </span><span class="s">'*'</span>
 <span class="w">    </span><span class="nt">AuthenticationInfo</span><span class="p">:</span><span class="w"> </span><span class="c1"># Example of a CimInstance DSC parameter (dict)</span>
 <span class="w">      </span><span class="nt">Anonymous</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">      </span><span class="nt">Basic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>

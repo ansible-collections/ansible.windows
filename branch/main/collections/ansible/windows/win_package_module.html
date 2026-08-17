@@ -562,13 +562,13 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install the Visual C thingy</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'</span>
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/install /passive /norestart</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Visual C thingy with list of arguments instead of a string</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'</span>
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/install</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/passive</span>
@@ -577,7 +577,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install MSBuild thingy with arguments split to prevent quotes</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://download.visualstudio.microsoft.com/download/pr/9665567e-f580-4acd-85f2-bc94a1db745f/vs_BuildTools.exe</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{D1437F51-786A-4F57-A99C-F8E94FBA1BD8}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{D1437F51-786A-4F57-A99C-F8E94FBA1BD8}'</span>
 <span class="w">    </span><span class="nt">arguments</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--norestart</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--passive</span>
@@ -590,9 +590,9 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Remote Desktop Connection Manager from msi with a permanent log</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://download.microsoft.com/download/A/F/0/AF0071F3-B198-4A35-AA90-C68D103BDCCF/rdcman.msi</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{0240359E-6A4C-4884-9E94-B397A02D893C}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{0240359E-6A4C-4884-9E94-B397A02D893C}'</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">    </span><span class="nt">log_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\logs\vcredist_x64-exe-</span><span class="cp">{{</span><span class="nv">lookup</span><span class="o">(</span><span class="s1">&#39;pipe&#39;</span><span class="o">,</span> <span class="s1">&#39;date +%Y%m%dT%H%M%S&#39;</span><span class="o">)</span><span class="cp">}}</span><span class="l l-Scalar l-Scalar-Plain">.log</span>
+<span class="w">    </span><span class="nt">log_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">D:\logs\vcredist_x64-exe-</span><span class="cp">{{</span><span class="nv">lookup</span><span class="o">(</span><span class="s1">'pipe'</span><span class="o">,</span> <span class="s1">'date +%Y%m%dT%H%M%S'</span><span class="o">)</span><span class="cp">}}</span><span class="l l-Scalar l-Scalar-Plain">.log</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Application from msi with multiple properties for installer</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
@@ -602,7 +602,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="no">SERVICE=1</span>
 <span class="w">      </span><span class="no">DBNAME=ApplicationDB</span>
 <span class="w">      </span><span class="no">DBSERVER=.\SQLEXPRESS</span>
-<span class="w">      </span><span class="no">INSTALLDIR=&quot;C:\Program Files (x86)\App lication\App Server&quot;</span>
+<span class="w">      </span><span class="no">INSTALLDIR="C:\Program Files (x86)\App lication\App Server"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Microsoft® SQL Server® 2019 Express (DPAPI example)</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
@@ -614,12 +614,12 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">ansible_become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
-<span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">user</span> <span class="cp">}}</span><span class="s">&quot;</span>
-<span class="w">    </span><span class="nt">ansible_become_pass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">password</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">"</span><span class="cp">{{</span> <span class="nv">user</span> <span class="cp">}}</span><span class="s">"</span>
+<span class="w">    </span><span class="nt">ansible_become_pass</span><span class="p">:</span><span class="w"> </span><span class="s">"</span><span class="cp">{{</span> <span class="nv">password</span> <span class="cp">}}</span><span class="s">"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Uninstall Remote Desktop Connection Manager</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{0240359E-6A4C-4884-9E94-B397A02D893C}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{0240359E-6A4C-4884-9E94-B397A02D893C}'</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Remote Desktop Connection Manager locally omitting the product_id</span>
@@ -668,8 +668,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install application and override expected return codes</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://download.microsoft.com/download/1/6/7/167F0D79-9317-48AE-AEDB-17120579F8E2/NDP451-KB2858728-x86-x64-AllOS-ENU.exe</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{7DEBE4EB-6B40-3766-BB35-5CBBC385DA37}&#39;</span>
-<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/q</span><span class="nv"> </span><span class="s">/norestart&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{7DEBE4EB-6B40-3766-BB35-5CBBC385DA37}'</span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="s">'/q</span><span class="nv"> </span><span class="s">/norestart'</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
 <span class="w">    </span><span class="nt">expected_return_code</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">666</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3010</span><span class="p p-Indicator">]</span>
 
@@ -680,7 +680,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove a .msp patch</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_package</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{AC76BA86-A440-FFFF-A440-0C13154E5D00}&#39;</span>
+<span class="w">    </span><span class="nt">product_id</span><span class="p">:</span><span class="w"> </span><span class="s">'{AC76BA86-A440-FFFF-A440-0C13154E5D00}'</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Enable installation of 3rd party MSIX packages</span>

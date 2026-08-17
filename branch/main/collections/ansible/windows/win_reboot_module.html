@@ -282,7 +282,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reboot with custom connect timeout for unreliable networks</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">msg</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Scheduled</span><span class="nv"> </span><span class="s">reboot</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">patching&quot;</span>
+<span class="w">    </span><span class="nt">msg</span><span class="p">:</span><span class="w"> </span><span class="s">"Scheduled</span><span class="nv"> </span><span class="s">reboot</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">patching"</span>
 <span class="w">    </span><span class="nt">connect_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0</span>
 <span class="w">    </span><span class="nt">reboot_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">900</span>
 <span class="w">    </span><span class="nt">post_reboot_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
@@ -301,7 +301,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="c1"># Or you can make win_reboot validate exactly what you need to work before running the next task</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Validate that the netlogon service has started, before running the next task</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">test_command</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;exit</span><span class="nv"> </span><span class="s">(Get-Service</span><span class="nv"> </span><span class="s">-Name</span><span class="nv"> </span><span class="s">Netlogon).Status</span><span class="nv"> </span><span class="s">-ne</span><span class="nv"> </span><span class="s">&quot;Running&quot;&#39;</span>
+<span class="w">    </span><span class="nt">test_command</span><span class="p">:</span><span class="w"> </span><span class="s">'exit</span><span class="nv"> </span><span class="s">(Get-Service</span><span class="nv"> </span><span class="s">-Name</span><span class="nv"> </span><span class="s">Netlogon).Status</span><span class="nv"> </span><span class="s">-ne</span><span class="nv"> </span><span class="s">"Running"'</span>
 </pre></div>
 </div>
 </section>

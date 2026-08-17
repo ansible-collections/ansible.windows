@@ -270,7 +270,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Wait for asynchronous job to end</span>
 <span class="w">  </span><span class="nt">ansible.builtin.async_status</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">jid</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">long_cmd.ansible_job_id</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">jid</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">long_cmd.ansible_job_id</span> <span class="cp">}}</span><span class="s">'</span>
 <span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_result</span>
 <span class="w">  </span><span class="nt">until</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_result.finished</span>
 <span class="w">  </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>

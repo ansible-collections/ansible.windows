@@ -284,52 +284,52 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with entry &#39;hello&#39;, and containing &#39;world&#39;</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with entry 'hello', and containing 'world'</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
 <span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">world</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with dword entry &#39;hello&#39;, and containing 1337 as the decimal value</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with dword entry 'hello', and containing 1337 as the decimal value</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
 <span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1337</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dword</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with dword entry &#39;hello&#39;, and containing 0xff2500ae as the hex value</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with dword entry 'hello', and containing 0xff2500ae as the hex value</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
 <span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0xff2500ae</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dword</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with binary entry &#39;hello&#39;, and containing binary data in hex-string format</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with binary entry 'hello', and containing binary data in hex-string format</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
 <span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hex:be,ef,be,ef,be,ef,be,ef,be,ef</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">binary</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with binary entry &#39;hello&#39;, and containing binary data in yaml format</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with binary entry 'hello', and containing binary data in yaml format</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
 <span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0xbe</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xef</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xbe</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xef</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xbe</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xef</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xbe</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xef</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xbe</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0xef</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">binary</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with expand string entry &#39;hello&#39;</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with expand string entry 'hello'</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
-<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;%appdata%\local&#39;</span>
+<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="s">'%appdata%\local'</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expandstring</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with multi string entry &#39;hello&#39;</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add or update registry path MyCompany, with multi string entry 'hello'</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>
-<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;hello&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;world&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">'hello'</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">'world'</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multistring</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Disable keyboard layout hotkey for all users (changes existing)</span>
@@ -358,7 +358,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
 <span class="w">    </span><span class="nt">delete_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove entry &#39;hello&#39; from registry path MyCompany</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove entry 'hello' from registry path MyCompany</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_regedit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKCU:\Software\MyCompany</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello</span>

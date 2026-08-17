@@ -279,18 +279,18 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="c1"># become is required to save and retrieve the credentials in the tasks</span>
 <span class="w">    </span><span class="nt">ansible_become</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">    </span><span class="nt">ansible_become_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runas</span>
-<span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">    </span><span class="nt">ansible_become_pass</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">'</span>
+<span class="w">    </span><span class="nt">ansible_become_pass</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">'</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create mapped drive with credentials that do not persist on the next logon</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_mapped_drive</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">letter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">M</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">\\SERVER\C$</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">'</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_password</span> <span class="cp">}}</span><span class="s">'</span>
 
-<span class="c1"># This should only be required for Windows Server OS&#39;</span>
+<span class="c1"># This should only be required for Windows Server OS'</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure WebDAV client feature is installed</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_feature</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WebDAV-Redirector</span>

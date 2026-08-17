@@ -324,104 +324,104 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create database server record</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cgyl1404p&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A&quot;</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.1.1.1&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;amer.example.com&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"cgyl1404p"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"A"</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"10.1.1.1"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"amer.example.com"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create matching PTR record</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.1.1&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;PTR&quot;</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;db1&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.in-addr.arpa&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"1.1.1"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"PTR"</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"db1"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"10.in-addr.arpa"</span>
 
 <span class="c1"># Demonstrate replacing an A record with a CNAME</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove static record</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;db1&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"db1"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"A"</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;amer.example.com&quot;</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"amer.example.com"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create database server alias</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;db1&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CNAME&quot;</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cgyl1404p.amer.example.com&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;amer.example.com&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"db1"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"CNAME"</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"cgyl1404p.amer.example.com"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"amer.example.com"</span>
 
 <span class="c1"># Demonstrate creating multiple A records for the same name</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create multiple A record values for www</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;www&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"www"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"A"</span>
 <span class="w">    </span><span class="nt">values</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.42.5</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.42.6</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.42.7</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"example.com"</span>
 
 <span class="c1"># Demonstrates a partial update (replace some existing values with new ones)</span>
 <span class="c1"># for a pre-existing name</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Update www host with new addresses</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;www&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"www"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"A"</span>
 <span class="w">    </span><span class="nt">values</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.42.5</span><span class="w">  </span><span class="c1"># this old value was kept (others removed)</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.42.12</span><span class="w">  </span><span class="c1"># this new value was added</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"example.com"</span>
 
 <span class="c1"># Demonstrate creating a SRV record</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Creating a SRV record with port number and priority</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"test"</span>
 <span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">995</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SRV&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"SRV"</span>
 <span class="w">    </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;amer.example.com&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"amer.example.com"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"example.com"</span>
 
 <span class="c1"># Demonstrate creating a NS record with multiple values</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Creating NS record</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ansible.prog&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"ansible.prog"</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NS&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"NS"</span>
 <span class="w">    </span><span class="nt">values</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.1</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.2</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.3</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.4</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"example.com"</span>
 
 <span class="c1"># Demonstrate creating a TXT record</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Creating a TXT record with descriptive Text</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"test"</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;TXT&quot;</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;justavalue&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"TXT"</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"justavalue"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"example.com"</span>
 
 <span class="c1"># Demostrate creating a A record to Zone Scope</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create database server record</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_dns_record</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cgyl1404p.amer.example.com&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A&quot;</span>
-<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.1.1.1&quot;</span>
-<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;amer.example.com&quot;</span>
-<span class="w">    </span><span class="nt">zone_scope</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;external&quot;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"cgyl1404p.amer.example.com"</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"A"</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">"10.1.1.1"</span>
+<span class="w">    </span><span class="nt">zone</span><span class="p">:</span><span class="w"> </span><span class="s">"amer.example.com"</span>
+<span class="w">    </span><span class="nt">zone_scope</span><span class="p">:</span><span class="w"> </span><span class="s">"external"</span>
 </pre></div>
 </div>
 <section id="authors">

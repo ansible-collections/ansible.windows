@@ -349,14 +349,14 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Copy a single file as another user</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_copy</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NuGet.config</span>
-<span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;%AppData%\NuGet\NuGet.config&#39;</span>
+<span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="s">'%AppData%\NuGet\NuGet.config'</span>
 <span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">ansible_become_user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">user</span>
 <span class="w">    </span><span class="nt">ansible_become_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pass</span>
 <span class="w">    </span><span class="c1"># The tmp dir must be set when using win_copy as another user</span>
 <span class="w">    </span><span class="c1"># This ensures the become user will have permissions for the operation</span>
 <span class="w">    </span><span class="c1"># Make sure to specify a folder both the ansible_user and the become_user have access to (i.e not %TEMP% which is user specific and requires Admin)</span>
-<span class="w">    </span><span class="nt">ansible_remote_tmp</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;c:\tmp&#39;</span>
+<span class="w">    </span><span class="nt">ansible_remote_tmp</span><span class="p">:</span><span class="w"> </span><span class="s">'c:\tmp'</span>
 </pre></div>
 </div>
 </section>

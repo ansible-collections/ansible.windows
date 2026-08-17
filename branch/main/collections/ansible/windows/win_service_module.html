@@ -596,7 +596,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restarted</span>
 <span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT AUTHORITY\LocalService</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user as the services&#39; virtual account</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set the log on user as the services' virtual account</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span>
 <span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NT SERVICE\service name</span>
@@ -651,7 +651,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reboot</span>
 <span class="w">    </span><span class="nt">failure_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\System32\cmd.exe /c mkdir C:\temp</span>
 <span class="w">    </span><span class="nt">failure_reboot_msg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Restarting host because service name has failed</span>
-<span class="w">    </span><span class="nt">failure_reset_period_sec</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0xFFFFFFFF&#39;</span>
+<span class="w">    </span><span class="nt">failure_reset_period_sec</span><span class="p">:</span><span class="w"> </span><span class="s">'0xFFFFFFFF'</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set only 1 failure action without a repeat of the last action</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span>
@@ -665,8 +665,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_service</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service name</span>
 <span class="w">    </span><span class="nt">failure_actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
-<span class="w">    </span><span class="nt">failure_command</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># removes the existing command</span>
-<span class="w">    </span><span class="nt">failure_reboot_msg</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># removes the existing reboot msg</span>
+<span class="w">    </span><span class="nt">failure_command</span><span class="p">:</span><span class="w"> </span><span class="s">''</span><span class="w">  </span><span class="c1"># removes the existing command</span>
+<span class="w">    </span><span class="nt">failure_reboot_msg</span><span class="p">:</span><span class="w"> </span><span class="s">''</span><span class="w">  </span><span class="c1"># removes the existing reboot msg</span>
 </pre></div>
 </div>
 </section>

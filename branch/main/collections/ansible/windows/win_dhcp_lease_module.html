@@ -298,7 +298,7 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <span class="w">    </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.100.205</span>
 <span class="w">    </span><span class="nt">scope_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.100.0</span>
 <span class="w">    </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">00:B1:8A:D1:5A:1F</span>
-<span class="w">    </span><span class="nt">dns_hostname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">ansible_inventory</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">dns_hostname</span><span class="p">:</span><span class="w"> </span><span class="s">"</span><span class="cp">{{</span> <span class="nv">ansible_inventory</span> <span class="cp">}}</span><span class="s">"</span>
 <span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Testing Server</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure DHCP lease or reservation does not exist</span>
@@ -325,13 +325,13 @@ see <a class="reference internal" href="#ansible-collections-ansible-windows-win
 <span class="c1"># Modify an existing lease by running the following tasks</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove old lease</span>
 <span class="w">  </span><span class="nt">win_dhcp_lease</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00:11:22:33:44:55&quot;</span>
+<span class="w">    </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="s">"00:11:22:33:44:55"</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create new lease with updated properties</span>
 <span class="w">  </span><span class="nt">win_dhcp_lease</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00:11:22:33:44:55&quot;</span>
-<span class="w">    </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.100.100&quot;</span>
+<span class="w">    </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="s">"00:11:22:33:44:55"</span>
+<span class="w">    </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="s">"192.168.100.100"</span>
 <span class="w">    </span><span class="nt">duration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
 </pre></div>

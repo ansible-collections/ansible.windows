@@ -366,7 +366,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run basic PowerShell script</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">echo &quot;Hello World&quot;</span>
+<span class="w">      </span><span class="no">echo "Hello World"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run script located in the adjacent files directory</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
@@ -424,26 +424,26 @@ To check whether it is installed, run <code class="code docutils literal notrans
 
 <span class="w">      </span><span class="no"># Use $Ansible to detect check mode</span>
 <span class="w">      </span><span class="no">if ($Ansible.CheckMode) {</span>
-<span class="w">          </span><span class="no">echo &#39;running in check mode&#39;</span>
+<span class="w">          </span><span class="no">echo 'running in check mode'</span>
 <span class="w">      </span><span class="no">}</span>
 <span class="w">      </span><span class="no">else {</span>
-<span class="w">          </span><span class="no">echo &#39;running in normal mode&#39;</span>
+<span class="w">          </span><span class="no">echo 'running in normal mode'</span>
 <span class="w">      </span><span class="no">}</span>
 
 <span class="w">      </span><span class="no"># Use builtin ShouldProcess (-WhatIf)</span>
-<span class="w">      </span><span class="no">if ($PSCmdlet.ShouldProcess(&#39;target&#39;)) {</span>
-<span class="w">          </span><span class="no">echo &#39;also running in normal mode&#39;</span>
+<span class="w">      </span><span class="no">if ($PSCmdlet.ShouldProcess('target')) {</span>
+<span class="w">          </span><span class="no">echo 'also running in normal mode'</span>
 <span class="w">      </span><span class="no">}</span>
 <span class="w">      </span><span class="no">else {</span>
-<span class="w">          </span><span class="no">echo &#39;also running in check mode&#39;</span>
+<span class="w">          </span><span class="no">echo 'also running in check mode'</span>
 <span class="w">      </span><span class="no">}</span>
 <span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a file in a specific directory using chdir</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">New-Item -Path &#39;created_by_ansible.txt&#39; -ItemType File -Force</span>
-<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;C:\Temp&#39;</span>
+<span class="w">      </span><span class="no">New-Item -Path 'created_by_ansible.txt' -ItemType File -Force</span>
+<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="s">'C:\Temp'</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Return a failure back to Ansible</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
@@ -455,7 +455,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Define when the script made a change or not</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">if ((Get-Item WSMan:\localhost\Service\Auth\Basic).Value -eq &#39;true&#39;) {</span>
+<span class="w">      </span><span class="no">if ((Get-Item WSMan:\localhost\Service\Auth\Basic).Value -eq 'true') {</span>
 <span class="w">          </span><span class="no">Set-Item WSMan:\localhost\Service\Auth\Basic -Value false</span>
 <span class="w">      </span><span class="no">}</span>
 <span class="w">      </span><span class="no">else {</span>
@@ -466,14 +466,14 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">      </span><span class="no">if ($Ansible.Verbosity -ge 3) {</span>
-<span class="w">          </span><span class="no">$VerbosePreference = &quot;Continue&quot;</span>
+<span class="w">          </span><span class="no">$VerbosePreference = "Continue"</span>
 <span class="w">      </span><span class="no">}</span>
 <span class="w">      </span><span class="no">if ($Ansible.Verbosity -eq 5) {</span>
-<span class="w">          </span><span class="no">$DebugPreference = &quot;Continue&quot;</span>
+<span class="w">          </span><span class="no">$DebugPreference = "Continue"</span>
 <span class="w">      </span><span class="no">}</span>
-<span class="w">      </span><span class="no">Write-Output &quot;Hello World!&quot;</span>
-<span class="w">      </span><span class="no">Write-Verbose &quot;Hello World!&quot;</span>
-<span class="w">      </span><span class="no">Write-Debug &quot;Hello World!&quot;</span>
+<span class="w">      </span><span class="no">Write-Output "Hello World!"</span>
+<span class="w">      </span><span class="no">Write-Verbose "Hello World!"</span>
+<span class="w">      </span><span class="no">Write-Debug "Hello World!"</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set sensitive parameter value as SecureString parameter</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
@@ -488,7 +488,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">      </span><span class="nt">Uri</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">foo</span>
 <span class="w">    </span><span class="nt">sensitive_parameters</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Token</span>
-<span class="w">        </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">        </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">'</span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set credential parameter</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_powershell</span><span class="p">:</span>
@@ -504,7 +504,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">sensitive_parameters</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Credential</span>
 <span class="w">        </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CredUserName</span>
-<span class="w">        </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">        </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">sensitive_value</span> <span class="cp">}}</span><span class="s">'</span>
 </pre></div>
 </div>
 </section>
