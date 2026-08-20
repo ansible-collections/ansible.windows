@@ -13,8 +13,8 @@
       - reboot_info_initial.last_reboot is defined
       - reboot_info_initial.last_reboot.time is match("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
       - reboot_info_initial.last_reboot.time_epoch is number
-      - reboot_info_initial.pending_reboot == false
-      - reboot_info_initial.pending_reboot_reasons | length == 0
+      - reboot_info_initial.reboot_required == false
+      - reboot_info_initial.reboot_required_reasons | length == 0
 
 - name: Assert check mode returns the same data
   ansible.windows.win_reboot_info:
@@ -26,7 +26,7 @@
     that:
       - not reboot_info_check is changed
       - reboot_info_check.last_reboot.time == reboot_info_initial.last_reboot.time
-      - reboot_info_check.pending_reboot == false
+      - reboot_info_check.reboot_required == false
 
 - block:
     - name: Fake a pending reboot via PendingFileRenameOperations
@@ -52,17 +52,17 @@
     - name: Assert pending reboot is detected
       ansible.builtin.assert:
         that:
-          - reboot_info_pending.pending_reboot == true
-          - reboot_info_pending.pending_reboot_reasons | length >= 2
-          - "'pending_file_rename' in reboot_info_pending.pending_reboot_reasons | map(attribute='source')"
-          - "'domain_join' in reboot_info_pending.pending_reboot_reasons | map(attribute='source')"
+          - reboot_info_pending.reboot_required == true
+          - reboot_info_pending.reboot_required_reasons | length >= 2
+          - "'pending_file_rename' in reboot_info_pending.reboot_required_reasons | map(attribute='source')"
+          - "'domain_join' in reboot_info_pending.reboot_required_reasons | map(attribute='source')"
 
     - name: Assert each reason has expected structure
       ansible.builtin.assert:
         that:
           - item.source is string
           - item.description is string
-      loop: "{{ reboot_info_pending.pending_reboot_reasons }}"
+      loop: "{{ reboot_info_pending.reboot_required_reasons }}"
 
   always:
     - name: Remove fake PendingFileRenameOperations value
@@ -84,8 +84,8 @@
 - name: Assert pending reboot is cleared after cleanup
   ansible.builtin.assert:
     that:
-      - reboot_info_cleaned.pending_reboot == false
-      - reboot_info_cleaned.pending_reboot_reasons | length == 0
+      - reboot_info_cleaned.reboot_required == false
+      - reboot_info_cleaned.reboot_required_reasons | length == 0
 
 - name: Record last boot time before reboot
   ansible.builtin.set_fact:
@@ -101,8 +101,8 @@
 - name: Assert reboot info is updated after reboot
   ansible.builtin.assert:
     that:
-      - reboot_info_post_reboot.pending_reboot == false
-      - reboot_info_post_reboot.pending_reboot_reasons | length == 0
+      - reboot_info_post_reboot.reboot_required == false
+      - reboot_info_post_reboot.reboot_required_reasons | length == 0
       - reboot_info_post_reboot.last_reboot.time != boot_time_before_reboot
       - reboot_info_post_reboot.last_reboot.details.initiated_by is string
       - reboot_info_post_reboot.last_reboot.details.process is string

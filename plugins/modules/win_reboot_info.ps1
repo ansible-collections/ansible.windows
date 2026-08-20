@@ -45,6 +45,7 @@ function Get-LastRebootEvent {
             return @{
                 process = $rebootEvent.Properties[0].Value
                 reason = $rebootEvent.Properties[2].Value
+                reason_code = $rebootEvent.Properties[3].Value
                 type = $rebootEvent.Properties[4].Value
                 comment = $rebootEvent.Properties[5].Value
                 initiated_by = $rebootEvent.Properties[6].Value
@@ -52,9 +53,9 @@ function Get-LastRebootEvent {
             }
         }
     }
+    catch {
         $Module.Warn("Failed to query the System event log for reboot events: $_", $_)
     }
-
 }
 
 function Test-ComponentBasedServicing {
@@ -142,23 +143,6 @@ function Test-ServerManager {
     }
 }
 
-function Get-PendingRebootReason {
-    <#
-    .SYNOPSIS
-    Checks multiple registry sources for pending reboot indicators and returns a list of matching reasons.
-    If a check is null, that result is filtered out.
-    #>
-    $checks = @(
-        Test-ComponentBasedServicing
-        Test-WindowsUpdate
-        Test-PendingFileRename
-        Test-PendingComputerRename
-        Test-DomainJoin
-        Test-ServerManager
-    ) | Where-Object { $_ }
-
-    return , @($checks)
-}
 
 $spec = @{
     options = @{}
@@ -174,8 +158,15 @@ $module.Result.last_reboot = @{
     details = Get-LastRebootEvent -Module $module -BootTime $bootTime.utc_datetime
 }
 
-$reasons = Get-PendingRebootReason
-$module.Result.pending_reboot = $reasons.Count -gt 0
-$module.Result.pending_reboot_reasons = @($reasons)
+$reasons = @(
+    Test-ComponentBasedServicing
+    Test-WindowsUpdate
+    Test-PendingFileRename
+    Test-PendingComputerRename
+    Test-DomainJoin
+    Test-ServerManager
+)
+$module.Result.reboot_required = $reasons.Count -gt 0
+$module.Result.reboot_required_reasons = $reasons
 
 $module.ExitJson()

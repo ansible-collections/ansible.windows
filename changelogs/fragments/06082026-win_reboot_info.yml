@@ -1,4 +1,0 @@
----
-minor_changes:
-  - win_reboot_info - Add module to gather information about the last reboot and any pending
-    reboots

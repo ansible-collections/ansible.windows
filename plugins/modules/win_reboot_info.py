@@ -27,7 +27,7 @@ EXAMPLES = r'''
 
 - name: Reboot if required
   ansible.windows.win_reboot:
-  when: reboot_info.pending_reboot
+  when: reboot_info.reboot_required
 
 - name: Display last boot time
   ansible.builtin.debug:
@@ -43,8 +43,8 @@ EXAMPLES = r'''
 
 - name: Show pending reboot sources
   ansible.builtin.debug:
-    msg: "Pending reboot due to: {{ reboot_info.pending_reboot_reasons | map(attribute='source') | list }}"
-  when: reboot_info.pending_reboot
+    msg: "Pending reboot due to: {{ reboot_info.reboot_required_reasons | map(attribute='source') | list }}"
+  when: reboot_info.reboot_required
 '''
 
 RETURN = r'''
@@ -92,12 +92,12 @@ last_reboot:
           description: The time the shutdown event was logged as an ISO 8601 UTC timestamp.
           type: str
           sample: "2024-01-15T08:29:45Z"
-pending_reboot:
+reboot_required:
   description: Whether the system has a pending reboot from any source.
   returned: always
   type: bool
   sample: true
-pending_reboot_reasons:
+reboot_required_reasons:
   description:
   - A list of sources that require a reboot.
   - Will be an empty list if no reboot is pending.
