@@ -83,10 +83,13 @@ last_reboot:
         reason_code:
           description:
           - The shutdown reason code associated with the reboot, as recorded in the event log.
-          - This combines the major and minor reason codes and is returned as an 8-digit
-            hexadecimal string, matching the value shown in the Windows event viewer.
-          type: str
-          sample: "0x800000ff"
+          - This is a 32-bit value combining the major reason, minor reason, and flag bits
+            (for example the high bit indicates a planned shutdown).
+          - This is normally returned as a lowercase hexadecimal string matching the value
+            shown in the Windows event viewer, but may fall back to the raw value from the
+            event log if it could not be formatted as a hexadecimal string.
+          type: raw
+          sample: "0x80040002"
         comment:
           description: The comment or message provided when the reboot was initiated.
           type: str

@@ -24,6 +24,23 @@ function Get-LastBootTime {
     }
 }
 
+function Format-ReasonCode {
+    param($Value)
+
+    # The reason code from event 1074 is a 32-bit value (major + minor reason + flag bits).
+    # Format it as an unpadded lowercase hex string (e.g. 0x80040002) to match the value
+    # shown in the Windows event viewer. Fall back to returning the raw value unchanged if
+    # it can't be interpreted as a number so a malformed field doesn't drop the rest of the
+    # reboot details.
+    try {
+        # Mask to 32 bits so a value deserialized as a signed integer still formats correctly.
+        return '0x{0:x}' -f ([int64]$Value -band 0xFFFFFFFFL)
+    }
+    catch {
+        return $Value
+    }
+}
+
 function Get-LastRebootEvent {
     param(
         [Ansible.Basic.AnsibleModule]$Module,
@@ -45,7 +62,7 @@ function Get-LastRebootEvent {
             return @{
                 process = $rebootEvent.Properties[0].Value
                 reason = $rebootEvent.Properties[2].Value
-                reason_code = '0x{0:x8}' -f [uint32]$rebootEvent.Properties[3].Value
+                reason_code = Format-ReasonCode -Value $rebootEvent.Properties[3].Value
                 type = $rebootEvent.Properties[4].Value
                 comment = $rebootEvent.Properties[5].Value
                 initiated_by = $rebootEvent.Properties[6].Value
