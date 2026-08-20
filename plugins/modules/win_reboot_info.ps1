@@ -20,7 +20,7 @@ function Get-LastBootTime {
         }
     }
     catch {
-        $Module.FailJson("Failed to get last boot time from CIM: $($_.Exception.Message)")
+        $Module.FailJson("Failed to get last boot time from CIM: $_", $_)
     }
 }
 
@@ -39,7 +39,7 @@ function Get-LastRebootEvent {
         if ($rebootEvent) {
             $eventTime = $rebootEvent.TimeCreated.ToUniversalTime()
             if ($eventTime -lt $BootTime.AddMinutes(-5)) {
-                return $null
+                return
             }
 
             return @{
@@ -52,11 +52,9 @@ function Get-LastRebootEvent {
             }
         }
     }
-    catch {
-        $Module.Warn("Failed to query the System event log for reboot events: $($_.Exception.Message)")
+        $Module.Warn("Failed to query the System event log for reboot events: $_", $_)
     }
 
-    return $null
 }
 
 function Test-ComponentBasedServicing {
