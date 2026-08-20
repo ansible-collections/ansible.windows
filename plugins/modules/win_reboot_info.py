@@ -80,6 +80,13 @@ last_reboot:
           description: The reason category for the reboot.
           type: str
           sample: "Operating System: Recovery (Planned)"
+        reason_code:
+          description:
+          - The shutdown reason code associated with the reboot, as recorded in the event log.
+          - This combines the major and minor reason codes and is returned as an 8-digit
+            hexadecimal string, matching the value shown in the Windows event viewer.
+          type: str
+          sample: "0x800000ff"
         comment:
           description: The comment or message provided when the reboot was initiated.
           type: str

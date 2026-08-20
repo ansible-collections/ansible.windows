@@ -45,7 +45,7 @@ function Get-LastRebootEvent {
             return @{
                 process = $rebootEvent.Properties[0].Value
                 reason = $rebootEvent.Properties[2].Value
-                reason_code = $rebootEvent.Properties[3].Value
+                reason_code = '0x{0:x8}' -f [uint32]$rebootEvent.Properties[3].Value
                 type = $rebootEvent.Properties[4].Value
                 comment = $rebootEvent.Properties[5].Value
                 initiated_by = $rebootEvent.Properties[6].Value
