@@ -27,18 +27,16 @@ function Get-LastBootTime {
 function Format-ReasonCode {
     param($Value)
 
-    # The reason code from event 1074 is a 32-bit value (major + minor reason + flag bits).
-    # Format it as an unpadded lowercase hex string (e.g. 0x80040002) to match the value
-    # shown in the Windows event viewer. Fall back to returning the raw value unchanged if
-    # it can't be interpreted as a number so a malformed field doesn't drop the rest of the
-    # reboot details.
-    try {
-        # Mask to 32 bits so a value deserialized as a signed integer still formats correctly.
-        return '0x{0:x}' -f ([int64]$Value -band 0xFFFFFFFFL)
+    # The reason code from event 1074 is returned as a string. Parse it as an integer since
+    # that's what it actually represents, using Int64 rather than Int32 since the high bit
+    # (the "planned" flag, e.g. 0x80040002) makes the value exceed Int32's range. Fall back
+    # to returning the raw value unchanged if it can't be parsed so a malformed field doesn't
+    # drop the rest of the reboot details.
+    $reasonCode = $null
+    if ([System.Management.Automation.LanguagePrimitives]::TryConvertTo($Value, [long], [ref]$reasonCode)) {
+        return $reasonCode
     }
-    catch {
-        return $Value
-    }
+    return $Value
 }
 
 function Get-LastRebootEvent {
