@@ -28,10 +28,12 @@ function Format-ReasonCode {
     param($Value)
 
     # The reason code from event 1074 is returned as a string. Parse it as an integer since
-    # that's what it actually represents, using Int64 rather than Int32 since the high bit
-    # (the "planned" flag, e.g. 0x80040002) makes the value exceed Int32's range. Fall back
-    # to returning the raw value unchanged if it can't be parsed so a malformed field doesn't
-    # drop the rest of the reboot details.
+    # that's what it actually represents, using Int64 rather than Int32 since the signed bit
+    # (the "planned" flag, e.g. 0x80040002) makes the value negative whereas YAML
+    # parses hex values as unsigned. This allows users to more easily compare the returned
+    # value with a hex literal '- res.reason_code == 0x80000000'. Fall back to returning the
+    # raw value unchanged if it can't be parsed so a malformed field doesn't drop the rest of
+    # the reboot details.
     $reasonCode = $null
     if ([System.Management.Automation.LanguagePrimitives]::TryConvertTo($Value, [long], [ref]$reasonCode)) {
         return $reasonCode
