@@ -1,4 +1,0 @@
-bugfixes:
-  - >-
-    win_copy - Fix error when setting ``dest`` to just the filename. The destination in this case will be the
-    working directory set by the connection plugin.

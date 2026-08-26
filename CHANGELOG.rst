@@ -4,6 +4,30 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.8.0
+======
+
+Release Summary
+---------------
+
+Release summary for v3.8.0
+
+Minor Changes
+-------------
+
+- win_copy - Add diff support to win_copy and win_template when copying single files only. Copying multiple files will still not produce any diff output - https://github.com/ansible-collections/ansible.windows/issues/16
+- win_updates - Add maximum_retries_on_failed_updates option to control how many attempts the module can take at installing a rolled back update. (Fixes https://github.com/ansible-collections/ansible.windows/issues/762)
+
+Bugfixes
+--------
+
+- win_copy - Fix error when setting ``dest`` to just the filename. The destination in this case will be the working directory set by the connection plugin.
+
+New Modules
+-----------
+
+- win_reboot_info - Get reboot status information for a Windows host
+
 v3.7.0
 ======
 

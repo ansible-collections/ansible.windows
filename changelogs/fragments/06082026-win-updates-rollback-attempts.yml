@@ -1,5 +1,0 @@
----
-minor_changes:
-  - win_updates - Add maximum_retries_on_failed_updates option to control how many attempts the module
-    can take at installing a rolled back update.
-    (Fixes https://github.com/ansible-collections/ansible.windows/issues/762)

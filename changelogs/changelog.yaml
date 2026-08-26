@@ -1197,3 +1197,26 @@ releases:
     - win_powershell-path.yml
     - win_template-error-handling.yml
     release_date: '2026-07-14'
+  3.8.0:
+    changes:
+      bugfixes:
+      - win_copy - Fix error when setting ``dest`` to just the filename. The destination
+        in this case will be the working directory set by the connection plugin.
+      minor_changes:
+      - win_copy - Add diff support to win_copy and win_template when copying single
+        files only. Copying multiple files will still not produce any diff output
+        - https://github.com/ansible-collections/ansible.windows/issues/16
+      - win_updates - Add maximum_retries_on_failed_updates option to control how
+        many attempts the module can take at installing a rolled back update. (Fixes
+        https://github.com/ansible-collections/ansible.windows/issues/762)
+      release_summary: Release summary for v3.8.0
+    fragments:
+    - 06082026-win-updates-rollback-attempts.yml
+    - diff-support-to-copy.yml
+    - release-summary.yml
+    - win_copy-dest-filename.yml
+    modules:
+    - description: Get reboot status information for a Windows host
+      name: win_reboot_info
+      namespace: ''
+    release_date: '2026-08-26'
