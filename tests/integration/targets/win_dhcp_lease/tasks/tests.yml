@@ -3,6 +3,8 @@
   ansible.windows.win_dhcp_lease:
     state: absent
     ip: "{{ dhcp_lease_ip }}"
+  register: remove_reservation
+  failed_when: remove_reservation.changed != false
 
 - name: Remove DHCP Address by IP (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -20,6 +22,8 @@
     dns_hostname: "{{ dhcp_lease_hostname }}"
     dns_regtype: noreg
     description: This is a description!
+  register: create_lease
+  failed_when: create_lease.changed == false
 
 - name: Create New DHCP Lease (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -43,6 +47,8 @@
   ansible.windows.win_dhcp_lease:
     type: reservation
     ip: "{{ dhcp_lease_ip }}"
+  register: convert_lease_to_reservation
+  failed_when: convert_lease_to_reservation.changed == false
 
 - name: Convert Lease to Reservation (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -62,6 +68,8 @@
     type: reservation
     mac: "{{ dhcp_lease_mac }}"
     description: Changed Description!
+  register: update_reservation_description
+  failed_when: update_reservation_description.changed == false
 
 - name: Update Reservation Description (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -81,6 +89,8 @@
   ansible.windows.win_dhcp_lease:
     type: lease
     ip: "{{ dhcp_lease_ip }}"
+  register: convert_reservation_to_lease
+  failed_when: convert_reservation_to_lease.changed == false
 
 - name: Convert Reservation to Lease (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -93,6 +103,8 @@
   ansible.windows.win_dhcp_lease:
     state: absent
     mac: "{{ dhcp_lease_mac }}"
+  register: remove_reservation
+  failed_when: remove_reservation.changed == false
 
 - name: Remove DHCP Reservation (Idempotentcy Check) - Changed should equal false
   ansible.windows.win_dhcp_lease:
@@ -115,6 +127,8 @@
     scope_id: "{{ dhcp_scope_id }}"
     mac: "{{ dhcp_lease_mac }}"
     reservation_name: "original-name"
+  register: create_reservation
+  failed_when: create_reservation.changed == false
 
 - name: Update Reservation Name
   win_dhcp_lease:
@@ -122,6 +136,8 @@
     ip: "{{ dhcp_lease_ip }}"
     mac: "{{ dhcp_lease_mac }}"
     reservation_name: "updated-name"
+  register: update_reservation
+  failed_when: update_reservation.changed == false
 
 - name: Validate Reservation Name Update
   ansible.windows.win_shell: |
@@ -134,6 +150,8 @@
   ansible.windows.win_dhcp_lease:
     state: absent
     mac: "{{ dhcp_lease_mac }}"
+  register: remove_reservation
+  failed_when: remove_reservation.changed == false
 
 # Test Error Handling - Invalid MAC Address
 - name: Attempt to Create Lease with Invalid MAC
