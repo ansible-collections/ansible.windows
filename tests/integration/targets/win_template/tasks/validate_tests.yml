@@ -1,0 +1,223 @@
+# Tests for the validate option of win_template
+# https://github.com/ansible-collections/ansible.windows/issues/50
+
+- name: create validate test directory
+  win_file:
+    path: '{{ remote_tmp_dir }}\validate'
+    state: directory
+
+- block:
+  - name: template with a validate command that is missing the placeholder
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\no-placeholder.txt'
+      validate: Get-Date
+    register: validate_no_placeholder
+    ignore_errors: true
+
+  - name: get result of template with a validate command that is missing the placeholder
+    win_stat:
+      path: '{{ remote_tmp_dir }}\validate\no-placeholder.txt'
+    register: validate_no_placeholder_actual
+
+  - name: assert template with a validate command that is missing the placeholder
+    assert:
+      that:
+      - validate_no_placeholder is failed
+      - validate_no_placeholder.msg == 'validate must contain %s: Get-Date'
+      - not validate_no_placeholder_actual.stat.exists
+
+  # The command is given the rendered template, not the raw source, so it can only match on the
+  # value of templated_var.
+  - name: template with a successful validate command
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\success.txt'
+      validate: >-
+        if (-not (Select-String -LiteralPath %s -Pattern 'templated_var_loaded' -Quiet)) { exit 1 }
+    register: validate_success
+
+  - name: get result of template with a successful validate command
+    slurp:
+      path: '{{ remote_tmp_dir }}\validate\success.txt'
+    register: validate_success_actual
+
+  - name: assert template with a successful validate command
+    assert:
+      that:
+      - validate_success is changed
+      - validate_success_actual.content | b64decode == expected_dos
+
+  - name: template with a successful validate command again
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\success.txt'
+      validate: >-
+        if (-not (Select-String -LiteralPath %s -Pattern 'templated_var_loaded' -Quiet)) { exit 1 }
+    register: validate_success_again
+
+  - name: assert template with a successful validate command again
+    assert:
+      that:
+      - validate_success_again is not changed
+
+  - name: create an existing destination for the failing validate command
+    win_copy:
+      content: "existing content\r\n"
+      dest: '{{ remote_tmp_dir }}\validate\failure.txt'
+
+  - name: template with a failing validate command
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\failure.txt'
+      validate: >-
+        Test-Path -LiteralPath %s > $null;
+        [Console]::Error.WriteLine("invalid template");
+        exit 3
+    register: validate_failure
+    ignore_errors: true
+
+  - name: get result of template with a failing validate command
+    slurp:
+      path: '{{ remote_tmp_dir }}\validate\failure.txt'
+    register: validate_failure_actual
+
+  - name: assert template with a failing validate command
+    assert:
+      that:
+      - validate_failure is failed
+      - validate_failure is not changed
+      - validate_failure.rc == 3
+      - validate_failure.msg is search('^failed to validate: rc:3 error:')
+      - validate_failure.stderr is search('invalid template')
+      # the destination must be left exactly as it was
+      - validate_failure_actual.content | b64decode == "existing content\r\n"
+
+  - name: template with a failing validate command and a non-existent destination
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\failure-new.txt'
+      validate: Test-Path -LiteralPath %s > $null; exit 1
+    register: validate_failure_new
+    ignore_errors: true
+
+  - name: get result of template with a failing validate command and a non-existent destination
+    win_stat:
+      path: '{{ remote_tmp_dir }}\validate\failure-new.txt'
+    register: validate_failure_new_actual
+
+  - name: assert template with a failing validate command and a non-existent destination
+    assert:
+      that:
+      - validate_failure_new is failed
+      - not validate_failure_new_actual.stat.exists
+
+  - name: create a validate destination directory containing a space
+    win_file:
+      path: '{{ remote_tmp_dir }}\validate\dir with space'
+      state: directory
+
+  # The temporary path given to the validate command is derived from the destination filename and is
+  # quoted for PowerShell, this checks both of those behaviours.
+  - name: template to a destination with spaces and validate
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\dir with space\file with space.txt'
+      validate: >-
+        $file = Get-Item -LiteralPath %s;
+        if ($file.Name -ne 'file with space.txt') { exit 1 }
+    register: validate_spaces
+
+  - name: get result of template to a destination with spaces and validate
+    slurp:
+      path: '{{ remote_tmp_dir }}\validate\dir with space\file with space.txt'
+    register: validate_spaces_actual
+
+  - name: assert template to a destination with spaces and validate
+    assert:
+      that:
+      - validate_spaces is changed
+      - validate_spaces_actual.content | b64decode == expected_dos
+
+  - name: create a validate destination directory for the trailing slash test
+    win_file:
+      path: '{{ remote_tmp_dir }}\validate\dir'
+      state: directory
+
+  # When dest is a directory the rendered template keeps the source filename.
+  - name: template to a directory destination and validate
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\dir\'
+      validate: >-
+        $file = Get-Item -LiteralPath %s;
+        if ($file.Name -ne 'foo.j2') { exit 1 }
+    register: validate_dir
+
+  - name: get result of template to a directory destination and validate
+    slurp:
+      path: '{{ remote_tmp_dir }}\validate\dir\foo.j2'
+    register: validate_dir_actual
+
+  - name: assert template to a directory destination and validate
+    assert:
+      that:
+      - validate_dir is changed
+      - validate_dir_actual.content | b64decode == expected_dos
+
+  # The validate command must not run in check mode, it creates a marker file and exits non-zero so
+  # both the command running and the destination being written can be detected.
+  - name: template with validate in check mode
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\check.txt'
+      validate: >-
+        New-Item -Path "{{ remote_tmp_dir }}\validate\validate-ran.txt" -ItemType File > $null;
+        Test-Path -LiteralPath %s > $null;
+        exit 1
+    check_mode: true
+    register: validate_check_mode
+
+  - name: check whether the validate command ran in check mode
+    win_stat:
+      path: '{{ remote_tmp_dir }}\validate\validate-ran.txt'
+    register: validate_check_mode_marker
+
+  - name: get result of template with validate in check mode
+    win_stat:
+      path: '{{ remote_tmp_dir }}\validate\check.txt'
+    register: validate_check_mode_actual
+
+  - name: assert template with validate in check mode
+    assert:
+      that:
+      - validate_check_mode is changed
+      - validate_check_mode is not failed
+      - not validate_check_mode_marker.stat.exists
+      - not validate_check_mode_actual.stat.exists
+
+  - name: template with validate and backup
+    win_template:
+      src: another_foo.j2
+      dest: '{{ remote_tmp_dir }}\validate\success.txt'
+      backup: true
+      validate: >-
+        if (-not (Select-String -LiteralPath %s -Pattern 'ABC' -Quiet)) { exit 1 }
+    register: validate_backup
+
+  - name: get backup file of template with validate and backup
+    slurp:
+      path: '{{ validate_backup.backup_file }}'
+    register: validate_backup_actual
+
+  - name: assert template with validate and backup
+    assert:
+      that:
+      - validate_backup is changed
+      - validate_backup_actual.content | b64decode == expected_dos
+
+  always:
+  - name: remove validate test directory
+    win_file:
+      path: '{{ remote_tmp_dir }}\validate'
+      state: absent

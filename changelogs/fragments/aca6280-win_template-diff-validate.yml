@@ -1,0 +1,8 @@
+minor_changes:
+  - >-
+    win_template - Add the ``validate`` option to run a command against the
+    rendered template on the remote host before it is copied to ``dest``. The
+    path of the rendered template is substituted into the command in place of
+    ``%s`` and is quoted for PowerShell so paths containing spaces are handled
+    correctly. If the command fails ``dest`` is left untouched -
+    https://github.com/ansible-collections/ansible.windows/issues/50
