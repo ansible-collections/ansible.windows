@@ -25,6 +25,8 @@ from ansible.module_utils.common.text.converters import to_bytes, to_text, to_na
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action import ActionBase
 
+from ..plugin_utils._quote import quote_pwsh
+
 try:
     # try the 2.19+ version that can preserve user-set `ansible_managed` first
     from ansible._internal._templating._template_vars import generate_ansible_template_vars
@@ -49,6 +51,61 @@ class ActionModule(ActionBase):
 
     TRANSFERS_FILES = True
 
+    def _validate_rendered_file(self, local_path, remote_filename, validate):
+        """Run the validate command against the rendered template on the remote host.
+
+        The rendered template is transferred to a temporary directory on the remote host and the
+        validate command is run against it through the PowerShell shell. Nothing is written to the
+        final destination, so a failing command leaves the destination untouched.
+
+        :arg local_path: Path on the controller of the rendered template.
+        :arg remote_filename: Filename to use for the rendered template on the remote host.
+        :arg validate: The validation command containing the ``%s`` placeholder.
+        :returns: ``None`` when the validation succeeded, otherwise a result dict for the failure.
+        """
+        # _make_tmp_path sets _shell.tmpdir, use our own directory that is cleaned up straight
+        # after the validation so it is not clobbered by the win_copy action that runs next.
+        previous_tmpdir = self._connection._shell.tmpdir
+        tmpdir = self._make_tmp_path()
+        try:
+            remote_path = self._connection._shell.join_path(tmpdir, remote_filename)
+            self._transfer_file(local_path, remote_path)
+
+            cmd = validate.replace('%s', quote_pwsh(remote_path))
+            task_environment = {}
+            self._compute_environment_string(task_environment)
+            # PowerShell's env_prefix is empty; apply the environment as the module wrapper does.
+            env_prefix = ''.join(
+                "[System.Environment]::SetEnvironmentVariable(%s, %s); " % (
+                    quote_pwsh(to_text(name)), quote_pwsh(to_text(value)),
+                )
+                for name, value in task_environment.items()
+            )
+            validate_result = self._low_level_execute_command(env_prefix + cmd)
+        finally:
+            self._remove_tmp_path(tmpdir)
+            self._connection._shell.tmpdir = previous_tmpdir
+
+        rc = validate_result.get('rc', 0)
+        if not validate_result.get('failed') and rc == 0:
+            return None
+
+        stderr = validate_result.get('stderr') or ''
+        stdout = validate_result.get('stdout') or ''
+        error = stderr.strip() or validate_result.get('msg') or stdout.strip()
+
+        return dict(
+            failed=True,
+            changed=False,
+            msg="failed to validate: rc:%s error:%s" % (rc, error),
+            cmd=cmd,
+            rc=rc,
+            stdout=stdout,
+            stdout_lines=validate_result.get('stdout_lines', []),
+            stderr=stderr,
+            stderr_lines=validate_result.get('stderr_lines', []),
+        )
+
     def run(self, tmp=None, task_vars=None):
         ''' handler for template operations '''
 
@@ -61,7 +118,7 @@ class ActionModule(ActionBase):
         # Options type validation
         # stings
         for s_type in ('src', 'dest', 'state', 'newline_sequence', 'variable_start_string', 'variable_end_string', 'block_start_string',
-                       'block_end_string', 'comment_start_string', 'comment_end_string'):
+                       'block_end_string', 'comment_start_string', 'comment_end_string', 'validate'):
             if s_type in self._task.args:
                 value = ensure_type(self._task.args[s_type], 'string')
                 if value is not None and not isinstance(value, str):
@@ -87,6 +144,7 @@ class ActionModule(ActionBase):
         comment_start_string = self._task.args.get('comment_start_string', COMMENT_START_STRING)
         comment_end_string = self._task.args.get('comment_end_string', COMMENT_END_STRING)
         output_encoding = self._task.args.get('output_encoding', 'utf-8') or 'utf-8'
+        validate = self._task.args.get('validate', None)
 
         # Option `lstrip_blocks' was added in Jinja2 version 2.7.
         if lstrip_blocks:
@@ -115,6 +173,8 @@ class ActionModule(ActionBase):
                 raise AnsibleActionFail("src and dest are required")
             elif newline_sequence not in allowed_sequences:
                 raise AnsibleActionFail("newline_sequence needs to be one of: \n, \r or \r\n")
+            elif validate is not None and '%s' not in validate:
+                raise AnsibleActionFail("validate must contain %%s: %s" % validate)
             else:
                 try:
                     source = self._find_needle('templates', source)
@@ -207,7 +267,7 @@ class ActionModule(ActionBase):
 
             # remove 'template only' options:
             for remove in ('newline_sequence', 'block_start_string', 'block_end_string', 'variable_start_string', 'variable_end_string',
-                           'comment_start_string', 'comment_end_string', 'trim_blocks', 'lstrip_blocks', 'output_encoding'):
+                           'comment_start_string', 'comment_end_string', 'trim_blocks', 'lstrip_blocks', 'output_encoding', 'validate'):
                 new_task.args.pop(remove, None)
 
             local_tempdir = tempfile.mkdtemp(dir=C.DEFAULT_LOCAL_TMP)
@@ -223,6 +283,58 @@ class ActionModule(ActionBase):
                         dest=dest,
                     ),
                 )
+
+                # Validate the rendered template before win_copy places it at the destination.
+                # Nothing is run in check mode as the command could have side effects on the host.
+                if validate and not self._task.check_mode:
+                    # Reuse win_copy's comparison logic to skip validation when the rendered content
+                    # would not be copied. Running this action in check mode does not modify dest.
+                    check_task = new_task.copy()
+                    check_task.check_mode = True
+                    check_action = self._shared_loader_obj.action_loader.get(
+                        'ansible.windows.win_copy',
+                        task=check_task,
+                        connection=self._connection,
+                        play_context=self._play_context,
+                        loader=self._loader,
+                        templar=self._templar,
+                        shared_loader_obj=self._shared_loader_obj,
+                    )
+                    check_result = check_action.run(task_vars=task_vars)
+                    if check_result.get('failed'):
+                        result.update(check_result)
+                        return result
+                    elif not check_result.get('changed'):
+                        result.update(check_result)
+                        return result
+
+                    if self._connection._shell.path_has_trailing_slash(dest):
+                        validate_filename = os.path.basename(source)
+                    else:
+                        dest_stat = self._execute_module(
+                            module_name='ansible.windows.win_stat',
+                            module_args={'path': dest},
+                            task_vars=task_vars,
+                        )
+                        if dest_stat.get('failed'):
+                            result.update(dest_stat)
+                            return result
+
+                        if dest_stat.get('stat', {}).get('isdir'):
+                            validate_filename = os.path.basename(source)
+                        else:
+                            # replace \ with / so os.path can be used to get the filename
+                            validate_filename = os.path.basename(dest.replace('\\', os.path.sep))
+
+                    validate_failure = self._validate_rendered_file(
+                        result_file,
+                        validate_filename or os.path.basename(source),
+                        validate,
+                    )
+                    if validate_failure is not None:
+                        result.update(validate_failure)
+                        return result
+
                 copy_action = self._shared_loader_obj.action_loader.get('ansible.windows.win_copy',
                                                                         task=new_task,
                                                                         connection=self._connection,
