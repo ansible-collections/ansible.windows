@@ -1,0 +1,2 @@
+﻿This is a new utf-8 file
+This is the last line
