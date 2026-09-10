@@ -1,1 +1,4 @@
 tests/integration/targets/win_dsc/files/xTestCompositeDsc/1.0.0/DSCResources/xTestComposite/xTestComposite.schema.psm1 pslint!skip # Pwsh cannot parse DSC to MOF on Linux
+tests/integration/targets/win_lineinfile/files/expectations/23_utf8_bom.txt shebang
+tests/integration/targets/win_lineinfile/files/expectations/24_utf8_bom_line_added.txt shebang
+tests/integration/targets/win_lineinfile/files/expectations/30_linebreaks_checksum_bad.txt line-endings
