@@ -1,0 +1,1468 @@
+# Test code for the win_lineinfile module, adapted from the standard lineinfile module tests
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+
+# The expected content behind each checksum used in this target is recorded in files/expectations/,
+# see files/expectations/99_README.md. Note that files/expectations/.gitattributes pins the line
+# endings and working tree encoding of those fixtures, without it the encoding tests silently break.
+
+- name: deploy the test file for lineinfile
+  ansible.windows.win_copy:
+    src: test.txt
+    dest: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert that the test file was deployed
+  assert:
+    that:
+    - result is changed
+
+- name: stat the test file
+  # Note: The test.txt is copied from a Linux host, therefore it will retain
+  # unix line ending when stat'd here. This affects checksum, meaning that
+  # when this repo is checked out to Windows, checksum does not match checked-
+  # out file checksum unless line-endings are altered.
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: check win_stat file result
+  assert:
+    that:
+    - result.stat.exists
+    - not result.stat.isdir
+    - result.stat.checksum == '5feac65e442c91f557fc90069ce6efc4d346ab51'
+    - result is not failed
+    - result is not changed
+
+# 01
+- name: insert a line at the beginning of the file, and back it up
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line at the beginning
+    insertbefore: BOF
+    backup: true
+  register: result
+
+- name: stat the backup file
+  ansible.windows.win_stat:
+    path: '{{ result.backup_file }}'
+  register: backup_file
+
+- name: assert that the line was inserted at the head of the file
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-8'
+    - backup_file.stat.exists
+    - backup_file.stat.checksum == '5feac65e442c91f557fc90069ce6efc4d346ab51'
+
+- name: insert a line at the beginning of the file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line at the beginning
+    insertbefore: BOF
+    backup: true
+  register: result_again
+
+- name: assert that inserting the line at the head of the file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.backup_file is not defined
+
+- name: stat the test after the insert at the head
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test hash is what we expect for the file with the insert at the head
+  assert:
+    that:
+    - result.stat.checksum == 'c61233b0ee2038aab41b5f30683c57b2a013b376'
+
+# 02
+- name: insert a line at the end of the file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result
+
+- name: assert that the line was inserted at the end of the file
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: insert a line at the end of the file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result_again
+
+- name: assert that inserting the line at the end of the file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the test after the insert at the end
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after the insert at the end
+  assert:
+    that:
+    - result.stat.checksum == 'a91260ad67b00609cc0737ff70ac5170c6a519a8'
+
+# 03
+- name: insert a line after the first line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line after line 1
+    insertafter: '^This is line 1$'
+  register: result
+
+- name: assert that the line was inserted after the first line
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: insert a line after the first line again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line after line 1
+    insertafter: '^This is line 1$'
+  register: result_again
+
+- name: assert that inserting a line after the first line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the test after insert after the first line
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after the insert after the first line
+  assert:
+    that:
+    - result.stat.checksum == '6ffbabdaa21ecb3593d32144de535598cfd7c6ea'
+
+# 04
+- name: insert a line before the last line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line before line 5
+    insertbefore: '^This is line 5$'
+  register: result
+
+- name: assert that the line was inserted before the last line
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: insert a line before the last line again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New line before line 5
+    insertbefore: '^This is line 5$'
+  register: result_again
+
+- name: assert that inserting a line before the last line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the test after the insert before the last line
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after the insert before the last line
+  assert:
+    that:
+    - result.stat.checksum == '49d988ad97fb4cce3ad795c8459f1cde231a891b'
+
+# 05
+- name: replace a line with backrefs
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: This is line 3
+    backrefs: true
+    regex: '^(REF).*$'
+  register: result
+
+- name: assert that the line with backrefs was changed
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line replaced'
+
+- name: replace a line with backrefs again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: This is line 3
+    backrefs: true
+    regex: '^(REF).*$'
+  register: result_again
+
+- name: assert that replacing a line with backrefs is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the test after the backref line was replaced
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after backref line was replaced
+  assert:
+    that:
+    - result.stat.checksum == '6f9c2128f4c886f3c40c1f1cf50241d74f160437'
+
+# 06
+- name: remove the middle line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 3$'
+  register: result
+
+- name: assert that the line was removed
+  assert:
+    that:
+    - result is changed
+    - result.msg == '1 line(s) removed'
+    - result.found == 1
+
+- name: remove the middle line again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 3$'
+  register: result_again
+
+- name: assert that removing the middle line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.msg == '0 line(s) removed'
+    - result_again.found == 0
+
+- name: stat the test after the middle line was removed
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after the middle line was removed
+  assert:
+    that:
+    - result.stat.checksum == '4b7910c84bd1177b9013f277c85d5be55f384a36'
+
+# 07
+- name: run a validation script that succeeds
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 5$'
+    validate: sort.exe %s
+  register: result
+
+- name: assert that the file validated after removing a line
+  assert:
+    that:
+    - result is changed
+    - result.msg == '1 line(s) removed'
+
+- name: run a validation script that succeeds again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 5$'
+    validate: sort.exe %s
+  register: result_again
+
+- name: assert that removing a validated line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.msg == '0 line(s) removed'
+
+- name: stat the test after the validation succeeded
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after the validation succeeded
+  assert:
+    that:
+    - result.stat.checksum == '938afecdcde51fda42ddbea6f2e92876e710f289'
+
+# 08 - this task is expected to fail, so there is no idempotency check for it
+- name: run a validation script that fails
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 1$'
+    validate: sort.exe %s.foo
+  register: result
+  ignore_errors: true
+
+- name: assert that the validate failed
+  assert:
+    that:
+    - result is failed
+    - "'failed to validate' in result.msg"
+
+- name: stat the test after the validation failed
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches the previous after the validation failed
+  assert:
+    that:
+    - result.stat.checksum == '938afecdcde51fda42ddbea6f2e92876e710f289'
+
+- name: run a validation command that is missing the %s placeholder
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+    regex: '^This is line 1$'
+    validate: sort.exe
+  register: result
+  ignore_errors: true
+
+- name: assert that the missing placeholder was reported
+  assert:
+    that:
+    - result is failed
+    - result.msg == 'validate must contain %s: sort.exe'
+
+- name: stat the test after the validate placeholder failure
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert the file was left alone after the validate placeholder failure
+  assert:
+    that:
+    - result.stat.checksum == '938afecdcde51fda42ddbea6f2e92876e710f289'
+
+# 09
+- name: use create=true
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/new_test.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: use create=true again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/new_test.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: result_again
+
+- name: assert that creating the file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/new_test.txt'
+  register: result
+
+- name: assert the newly created test checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '84faac1183841c57434693752fc3debc91b9195d'
+
+- name: fail when the file is missing and create is not set
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/does_not_exist.txt'
+    state: present
+    line: This should not be written
+  register: result
+  ignore_errors: true
+
+- name: assert that a missing file without create failed
+  assert:
+    that:
+    - result is failed
+    - "'does not exist' in result.msg"
+
+# Test EOF in cases where file has no newline at EOF
+- name: testnoeof deploy the file for lineinfile
+  ansible.windows.win_copy:
+    src: testnoeof.txt
+    dest: '{{ remote_tmp_dir }}/testnoeof.txt'
+  register: result
+
+# 10
+- name: testnoeof insert a line at the end of the file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/testnoeof.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result
+
+- name: testnoeof assert that the line was inserted at the end of the file
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: testnoeof insert a line at the end of the file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/testnoeof.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result_again
+
+- name: testnoeof assert that appending to a file without a trailing newline is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: testnoeof stat the no newline EOF test after the insert at the end
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/testnoeof.txt'
+  register: result
+
+- name: testnoeof assert test checksum matches after the insert at the end
+  assert:
+    that:
+    - result.stat.checksum == '229852b09f7e9921fbcbb0ee0166ba78f7f7f261'
+
+# 11
+# The line below is a YAML double quoted scalar, so \r\n is expanded into a real line break before
+# the module ever sees it. The resulting line cannot be matched again when the file is read back
+# line by line, so this operation is inherently not idempotent and deliberately is not re-run.
+- name: add multiple lines at the end of the file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: "This is a line\r\nwith newline character"
+    insertafter: EOF
+  register: result
+
+- name: assert that the multiple lines was inserted
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: stat file after adding multiple lines
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after inserting multiple lines
+  assert:
+    that:
+    - result.stat.checksum == 'd10d70cb77a16fb54f143bccbf711f3177acd310'
+
+# Test EOF with empty file to make sure no unnecessary newline is added
+- name: testempty deploy the testempty file for lineinfile
+  ansible.windows.win_copy:
+    src: testempty.txt
+    dest: '{{ remote_tmp_dir }}/testempty.txt'
+  register: result
+
+# 12
+- name: testempty insert a line at the end of the file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/testempty.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result
+
+- name: testempty assert that the line was inserted at the end of the file
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: testempty insert a line at the end of the file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/testempty.txt'
+    state: present
+    line: New line at the end
+    insertafter: EOF
+  register: result_again
+
+- name: testempty assert that appending to an empty file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: testempty stat the test after the insert at the end
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/testempty.txt'
+  register: result
+
+- name: testempty assert test checksum matches after the insert at the end
+  assert:
+    that:
+    - result.stat.checksum == 'd3d34f11edda51be7ca5dcb0757cf3e1257c0bfe'
+
+# 13
+- name: replace a line with backrefs included in the line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New $1 created with the backref
+    backrefs: true
+    regex: '^This is (line 4)$'
+  register: result
+
+- name: assert that the line with backrefs was changed
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line replaced'
+
+- name: replace a line with backrefs included in the line again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: New $1 created with the backref
+    backrefs: true
+    regex: '^This is (line 4)$'
+  register: result_again
+
+- name: assert that replacing a line with an expanded backref is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the test after the backref line was replaced
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test.txt'
+  register: result
+
+- name: assert test checksum matches after backref line was replaced
+  assert:
+    that:
+    - result.stat.checksum == '9c1a1451b50665e59be666c5d8c08fb99603d4f1'
+
+- name: fail when backrefs is used without a regex
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: present
+    line: This should not be written
+    backrefs: true
+  register: result
+  ignore_errors: true
+
+- name: assert that backrefs without a regex failed
+  assert:
+    that:
+    - result is failed
+    - result.msg == 'regexp= is required with backrefs=true'
+
+- name: fail when state=absent is used without a line or regex
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test.txt'
+    state: absent
+  register: result
+  ignore_errors: true
+
+- name: assert that state=absent without a line or regex failed
+  assert:
+    that:
+    - result is failed
+    - result.msg == 'one of line= or regexp= is required with state=absent'
+
+- name: fail when the path is a directory
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}'
+    state: present
+    line: This should not be written
+  register: result
+  ignore_errors: true
+
+- name: assert that a directory path failed
+  assert:
+    that:
+    - result is failed
+    - "'is a directory' in result.msg"
+
+###################################################################
+# issue 8535
+
+# 14
+- name: create a new file for testing quoting issues
+  ansible.windows.win_copy:
+    src: test_quoting.txt
+    dest: '{{ remote_tmp_dir }}/test_quoting.txt'
+  register: result
+
+- name: assert the new file was created
+  assert:
+    that:
+    - result is changed
+
+- name: use with_items to add code-like strings to the quoting txt file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: '{{ item }}'
+    insertbefore: BOF
+  with_items:
+  - "'foo'"
+  - "dotenv.load();"
+  - "var dotenv = require('dotenv');"
+  register: result
+
+- name: assert the quote test file was modified correctly
+  assert:
+    that:
+    - result.results | length == 3
+    - result.results[0] is changed
+    - result.results[0].item == "'foo'"
+    - result.results[1] is changed
+    - result.results[1].item == "dotenv.load();"
+    - result.results[2] is changed
+    - result.results[2].item == "var dotenv = require('dotenv');"
+
+- name: use with_items to add code-like strings to the quoting txt file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: '{{ item }}'
+    insertbefore: BOF
+  with_items:
+  - "'foo'"
+  - "dotenv.load();"
+  - "var dotenv = require('dotenv');"
+  register: result_again
+
+- name: assert adding the code-like strings is idempotent
+  assert:
+    that:
+    - result_again.results | length == 3
+    - result_again.results[0] is not changed
+    - result_again.results[1] is not changed
+    - result_again.results[2] is not changed
+
+- name: stat the quote test file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+  register: result
+
+- name: assert test checksum matches for quote test file
+  assert:
+    that:
+    - result.stat.checksum == 'f3bccdbdfa1d7176c497ef87d04957af40ab48d2'
+
+# 15
+- name: append a line into the quoted file with a single quote
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: "import g'"
+  register: result
+
+- name: assert that the quoted file was changed
+  assert:
+    that:
+    - result is changed
+
+- name: append a line into the quoted file with a single quote again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: "import g'"
+  register: result_again
+
+- name: assert appending a single quoted line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the quote test file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+  register: result
+
+- name: assert test checksum matches adding line with single quote
+  assert:
+    that:
+    - result.stat.checksum == 'dabf4cbe471e1797d8dcfc773b6b638c524d5237'
+
+# 16
+- name: insert a line into the quoted file with many double quotation strings
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: '"quote" and "unquote"'
+  register: result
+
+- name: assert that the quoted file was changed
+  assert:
+    that:
+    - result is changed
+
+- name: insert a line into the quoted file with many double quotation strings again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+    line: '"quote" and "unquote"'
+  register: result_again
+
+- name: assert inserting a double quoted line is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the quote test file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_quoting.txt'
+  register: result
+
+- name: assert test checksum matches quoted line added
+  assert:
+    that:
+    - result.stat.checksum == '9dc1fc1ff19942e2936564102ad37134fa83b91d'
+
+# Windows vs. Unix line separator test cases
+
+# 17
+- name: Create windows test file with initial line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: Create windows test file with initial line again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: result_again
+
+- name: assert that creating the windows test file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '84faac1183841c57434693752fc3debc91b9195d'
+
+# 18
+- name: Test appending to the file using the default (windows) line separator
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result
+
+- name: assert that the new line was added
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: Test appending to the file using the default (windows) line separator again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result_again
+
+- name: assert appending with the windows line separator is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_windows_sep.txt'
+  register: result
+
+- name: assert the file checksum matches expected checksum
+  assert:
+    that:
+    - result.stat.checksum == '6c6f51f98eb499852fbb7ef3b212c26752c25c31'
+
+# 19
+- name: Create unix test file with initial line
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_unix_sep.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_unix_sep.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '84faac1183841c57434693752fc3debc91b9195d'
+
+# 20
+- name: Test appending to the file using unix line separator
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_unix_sep.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+    newline: unix
+  register: result
+
+- name: assert that the new line was added
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+
+- name: Test appending to the file using unix line separator again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_unix_sep.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+    newline: unix
+  register: result_again
+
+- name: assert appending with the unix line separator is idempotent
+  assert:
+    that:
+    - result_again is not changed
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_unix_sep.txt'
+  register: result
+
+- name: assert the file checksum matches expected checksum
+  assert:
+    that:
+    - result.stat.checksum == '4aa2ad771bb1453406760eadee8234265d599dcf'
+
+# Encoding management test cases
+
+# 21 - default (auto) encoding should use utf-8 with no BOM
+- name: Test create file without explicit encoding results in utf-8 without BOM
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-8 file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-8'
+
+- name: Test create file without explicit encoding again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-8 file
+  register: result_again
+
+- name: assert creating a utf-8 file without a BOM is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-8'
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == 'b69fcbacca8291a4668f57fba91d7c022f1c3dc7'
+
+# 22
+- name: Test appending to the utf-8 without BOM file - should autodetect UTF-8 no BOM
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result
+
+- name: assert that the new line was added and encoding did not change
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-8'
+
+- name: Test appending to the utf-8 without BOM file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result_again
+
+- name: assert appending to a utf-8 file without a BOM is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-8'
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_auto_utf8.txt'
+  register: result
+
+- name: assert the file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == 'aeb246a40f614889534f4983f47c5567625ade53'
+
+# 23 - UTF-8 explicit (with BOM)
+- name: Test create file with explicit utf-8 encoding results in utf-8 with a BOM
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+    create: true
+    encoding: utf-8
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-8 file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-8'
+
+- name: Test create file with explicit utf-8 encoding again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+    create: true
+    encoding: utf-8
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-8 file
+  register: result_again
+
+- name: assert creating a utf-8 file with a BOM is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-8'
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == 'd45344b2b3bf1cf90eae851b40612f5f37a88bbb'
+
+# 24
+- name: Test appending to the utf-8 with BOM file - should autodetect utf-8 with BOM encoding
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result
+
+- name: assert that the new line was added and encoding did not change
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-8'
+
+- name: Test appending to the utf-8 with BOM file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result_again
+
+- name: assert appending to a utf-8 file with a BOM is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-8'
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf8.txt'
+  register: result
+
+- name: assert the file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '64c62066d06ea6c807a8fe98bc40c4903cf4c119'
+
+# 25 - UTF-16 explicit
+- name: Test create file with explicit utf-16 encoding
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+    create: true
+    encoding: utf-16
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-16 file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-16'
+
+- name: Test create file with explicit utf-16 encoding again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+    create: true
+    encoding: utf-16
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-16 file
+  register: result_again
+
+- name: assert creating a utf-16 file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-16'
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '785b0693cec13b60e2c232782adeda2f8a967434'
+
+# 26
+- name: Test appending to the utf-16 file - should autodetect utf-16 encoding
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result
+
+- name: assert that the new line was added and encoding did not change
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-16'
+
+- name: Test appending to the utf-16 file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result_again
+
+- name: assert appending to a utf-16 file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-16'
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf16.txt'
+  register: result
+
+- name: assert the file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '7f790f323e496b7138883a3634514cc2a3426919'
+
+# 27 - UTF-32 explicit
+- name: Test create file with explicit utf-32 encoding
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+    create: true
+    encoding: utf-32
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-32 file
+  register: result
+
+- name: assert that the new file was created
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-32'
+
+- name: Test create file with explicit utf-32 encoding again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+    create: true
+    encoding: utf-32
+    insertbefore: BOF
+    state: present
+    line: This is a new utf-32 file
+  register: result_again
+
+- name: assert creating a utf-32 file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-32'
+
+- name: validate that the newly created file exists
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+  register: result
+
+- name: assert the newly created file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == '7a6e3f3604c0def431aaa813173a4ddaa10fd1fb'
+
+# 28
+- name: Test appending to the utf-32 file - should autodetect utf-32 encoding
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result
+
+- name: assert that the new line was added and encoding did not change
+  assert:
+    that:
+    - result is changed
+    - result.msg == 'line added'
+    - result.encoding == 'utf-32'
+
+- name: Test appending to the utf-32 file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+    insertbefore: EOF
+    state: present
+    line: This is the last line
+  register: result_again
+
+- name: assert appending to a utf-32 file is idempotent
+  assert:
+    that:
+    - result_again is not changed
+    - result_again.encoding == 'utf-32'
+
+- name: stat the file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_utf32.txt'
+  register: result
+
+- name: assert the file checksum matches
+  assert:
+    that:
+    - result.stat.checksum == 'd13e135c7d466cc2f985d72f12ffaa73567772e6'
+
+# Check mode and diff mode
+- name: create a file to exercise check mode
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_check_mode.txt'
+    create: true
+    insertbefore: BOF
+    state: present
+    line: This is a new file
+  register: check_mode_setup
+
+- name: add a line in check mode
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_check_mode.txt'
+    state: present
+    line: This line is only added in check mode
+  register: check_mode_add
+  check_mode: true
+  diff: true
+
+- name: stat the check mode file after the check mode addition
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_check_mode.txt'
+  register: check_mode_stat
+
+- name: assert check mode reported the addition without touching the file
+  assert:
+    that:
+    - check_mode_setup is changed
+    - check_mode_add is changed
+    - check_mode_add.msg == 'line added'
+    - "'This line is only added in check mode' not in check_mode_add.diff.before"
+    - "'This line is only added in check mode' in check_mode_add.diff.after"
+    - check_mode_stat.stat.checksum == '84faac1183841c57434693752fc3debc91b9195d'
+
+- name: remove a line in check mode
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_check_mode.txt'
+    state: absent
+    regex: '^This is a new file$'
+  register: check_mode_remove
+  check_mode: true
+
+- name: stat the check mode file after the check mode removal
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_check_mode.txt'
+  register: check_mode_stat
+
+- name: assert check mode reported the removal without touching the file
+  assert:
+    that:
+    - check_mode_remove is changed
+    - check_mode_remove.msg == '1 line(s) removed'
+    - check_mode_remove.found == 1
+    - check_mode_stat.stat.checksum == '84faac1183841c57434693752fc3debc91b9195d'
+
+#########################################################################
+# issue #33858
+# \r\n causes line break instead of printing literally which breaks paths.
+
+- name: create testing file
+  ansible.windows.win_copy:
+    src: test_linebreak.txt
+    dest: '{{ remote_tmp_dir }}/test_linebreak.txt'
+
+- name: stat the test file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_linebreak.txt'
+  register: result
+
+- name: check win_stat file result
+  assert:
+    that:
+    - result.stat.exists
+    - not result.stat.isdir
+    - result.stat.checksum == 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    - result is not failed
+    - result is not changed
+
+# 29 - the line below is a YAML plain scalar so the backslashes stay literal
+- name: insert path c:\return\new to test file
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_linebreak.txt'
+    line: c:\return\new
+  register: result_literal
+
+- name: assert that the literal line was inserted
+  assert:
+    that:
+    - result_literal is changed
+    - result_literal.msg == 'line added'
+
+- name: insert path c:\return\new to test file again
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_linebreak.txt'
+    line: c:\return\new
+  register: result_literal_again
+
+- name: assert that inserting a literal path is idempotent
+  assert:
+    that:
+    - result_literal_again is not changed
+
+# 30
+# The line below is a YAML double quoted scalar, so \r and \n are expanded into real control
+# characters. The resulting line cannot be matched again when the file is read back line by line,
+# so this operation is inherently not idempotent and deliberately is not re-run.
+- name: insert path "c:\return\new" to test file, will cause line breaks
+  ansible.windows.win_lineinfile:
+    path: '{{ remote_tmp_dir }}/test_linebreak.txt'
+    line: "c:\return\new"
+  register: result_expand
+
+- name: assert that the expanded line was inserted
+  assert:
+    that:
+    - result_expand is changed
+    - result_expand.msg == 'line added'
+
+- name: stat the test file
+  ansible.windows.win_stat:
+    path: '{{ remote_tmp_dir }}/test_linebreak.txt'
+  register: result
+
+- name: assert that one line is literal and the other has breaks
+  assert:
+    that:
+    - result.stat.checksum == 'd2dfd11bc70526ff13a91153c76a7ae5595a845b'
+
+# 31 - relative paths
+- name: Get current working directory
+  ansible.windows.win_shell: $pwd.Path
+  register: pwd
+
+- name: create a relative tmp dir
+  ansible.windows.win_tempfile:
+    path: '{{ pwd.stdout | trim | win_dirname }}'
+    state: directory
+  register: relative_tmp_dir
+
+- name: Check that relative paths work
+  block:
+  - name: deploy the test file for lineinfile
+    ansible.windows.win_copy:
+      src: test.txt
+      dest: '{{ relative_tmp_dir.path }}/test.txt'
+    register: result
+
+  - name: assert that the test file was deployed
+    assert:
+      that:
+      - result is changed
+
+  - name: stat the test file
+    ansible.windows.win_stat:
+      path: '{{ relative_tmp_dir.path }}/test.txt'
+    register: result
+
+  - name: check win_stat file result
+    assert:
+      that:
+      - result.stat.exists
+      - not result.stat.isdir
+      - result.stat.checksum == '5feac65e442c91f557fc90069ce6efc4d346ab51'
+      - result is not failed
+      - result is not changed
+
+  - name: insert a line at the beginning of the file, and back it up
+    ansible.windows.win_lineinfile:
+      path: '../{{ relative_tmp_dir.path | win_basename }}/test.txt'
+      state: present
+      line: New line at the beginning
+      insertbefore: BOF
+      backup: true
+    register: result
+
+  - name: stat the backup file
+    ansible.windows.win_stat:
+      path: '{{ result.backup_file }}'
+    register: backup_file
+
+  - name: assert that the line was inserted at the head of the file
+    assert:
+      that:
+      - result is changed
+      - result.msg == 'line added'
+      - backup_file.stat.exists
+      - backup_file.stat.checksum == '5feac65e442c91f557fc90069ce6efc4d346ab51'
+
+  - name: insert a line at the beginning of the file using a relative path again
+    ansible.windows.win_lineinfile:
+      path: '../{{ relative_tmp_dir.path | win_basename }}/test.txt'
+      state: present
+      line: New line at the beginning
+      insertbefore: BOF
+      backup: true
+    register: result_again
+
+  - name: assert that inserting a line using a relative path is idempotent
+    assert:
+      that:
+      - result_again is not changed
+      - result_again.backup_file is not defined
+
+  - name: stat the test after the insert at the head
+    ansible.windows.win_stat:
+      path: '{{ relative_tmp_dir.path }}/test.txt'
+    register: result
+
+  - name: assert test hash is what we expect for the file with the insert at the head
+    assert:
+      that:
+      - result.stat.checksum == 'c61233b0ee2038aab41b5f30683c57b2a013b376'
+
+  always:
+  - name: remove the relative tmp dir
+    ansible.windows.win_file:
+      path: '{{ relative_tmp_dir.path }}'
+      state: absent
