@@ -1,0 +1,133 @@
+# Tests for the diff output produced by win_template
+# https://github.com/ansible-collections/ansible.windows/issues/16
+
+- name: create diff test directory
+  win_file:
+    path: '{{ remote_tmp_dir }}\diff'
+    state: directory
+
+- block:
+  - name: template with diff and a non-existent destination
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\new.txt'
+    diff: true
+    register: diff_new
+
+  - name: assert template with diff and a non-existent destination
+    assert:
+      that:
+      - diff_new is changed
+      - diff_new.diff.before == ''
+      - diff_new.diff.after == expected_dos
+      - diff_new.diff.after_header | basename == 'foo.j2'
+
+  - name: template with diff and an identical destination
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\new.txt'
+    diff: true
+    register: diff_identical
+
+  - name: assert template with diff and an identical destination
+    assert:
+      that:
+      - diff_identical is not changed
+      - diff_identical.diff is not defined
+
+  - name: create a CRLF destination that differs by a single line
+    win_copy:
+      content: "BEGIN\r\noriginal_value\r\nEND\r\n"
+      dest: '{{ remote_tmp_dir }}\diff\crlf.txt'
+
+  - name: template with diff over an existing CRLF file
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\crlf.txt'
+    diff: true
+    register: diff_crlf
+
+  # Splitting on \n keeps the \r attached to each line so the set difference is only 1 entry when
+  # both sides of the diff use the same line endings. A diff that normalised the rendered content
+  # to LF would report all 3 lines as changed here.
+  - name: assert template with diff over an existing CRLF file
+    assert:
+      that:
+      - diff_crlf is changed
+      - diff_crlf.diff.before == "BEGIN\r\noriginal_value\r\nEND\r\n"
+      - diff_crlf.diff.after == expected_dos
+      - diff_crlf.diff.before_header == remote_tmp_dir ~ '\diff\crlf.txt'
+      - diff_crlf.diff.after_header | basename == 'foo.j2'
+      - (diff_crlf.diff.before.split('\n') | difference(diff_crlf.diff.after.split('\n'))) == ['original_value\r']
+
+  - name: template with diff and a Unix newline_sequence over an existing CRLF file
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\crlf.txt'
+      newline_sequence: '\n'
+    diff: true
+    register: diff_newline_sequence
+
+  # The line endings really do change on disk so every line is expected to be reported as changed,
+  # the diff must reflect the content as it is actually written out.
+  - name: assert template with diff and a Unix newline_sequence over an existing CRLF file
+    assert:
+      that:
+      - diff_newline_sequence is changed
+      - diff_newline_sequence.diff.before == expected_dos
+      - diff_newline_sequence.diff.after == expected_unix
+      - (diff_newline_sequence.diff.before.split('\n') | difference(diff_newline_sequence.diff.after.split('\n')) | length) == 3
+
+  - name: create a CRLF destination for the check mode diff test
+    win_copy:
+      content: "BEGIN\r\noriginal_value\r\nEND\r\n"
+      dest: '{{ remote_tmp_dir }}\diff\check.txt'
+
+  - name: template with diff in check mode
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\check.txt'
+    diff: true
+    check_mode: true
+    register: diff_check_mode
+
+  - name: get result of template with diff in check mode
+    slurp:
+      path: '{{ remote_tmp_dir }}\diff\check.txt'
+    register: diff_check_mode_actual
+
+  - name: assert template with diff in check mode
+    assert:
+      that:
+      - diff_check_mode is changed
+      - diff_check_mode.diff.before == "BEGIN\r\noriginal_value\r\nEND\r\n"
+      - diff_check_mode.diff.after == expected_dos
+      - (diff_check_mode.diff.before.split('\n') | difference(diff_check_mode.diff.after.split('\n'))) == ['original_value\r']
+      - diff_check_mode_actual.content | b64decode == "BEGIN\r\noriginal_value\r\nEND\r\n"
+
+  - name: template with diff in check mode and a non-existent destination
+    win_template:
+      src: foo.j2
+      dest: '{{ remote_tmp_dir }}\diff\check-new.txt'
+    diff: true
+    check_mode: true
+    register: diff_check_mode_new
+
+  - name: get result of template with diff in check mode and a non-existent destination
+    win_stat:
+      path: '{{ remote_tmp_dir }}\diff\check-new.txt'
+    register: diff_check_mode_new_actual
+
+  - name: assert template with diff in check mode and a non-existent destination
+    assert:
+      that:
+      - diff_check_mode_new is changed
+      - diff_check_mode_new.diff.before == ''
+      - diff_check_mode_new.diff.after == expected_dos
+      - not diff_check_mode_new_actual.stat.exists
+
+  always:
+  - name: remove diff test directory
+    win_file:
+      path: '{{ remote_tmp_dir }}\diff'
+      state: absent
