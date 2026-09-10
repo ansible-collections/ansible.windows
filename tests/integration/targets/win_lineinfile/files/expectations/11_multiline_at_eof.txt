@@ -1,0 +1,9 @@
+New line at the beginning
+This is line 1
+New line after line 1
+This is line 2
+This is line 4
+New line before line 5
+New line at the end
+This is a line
+with newline character
