@@ -304,3 +304,9 @@
     that:
     - template_result_invalid is failed
     - template_result_invalid.msg is search("'undefined_var' is undefined")
+
+- name: run diff tests
+  include_tasks: diff_tests.yml
+
+- name: run validate tests
+  include_tasks: validate_tests.yml
