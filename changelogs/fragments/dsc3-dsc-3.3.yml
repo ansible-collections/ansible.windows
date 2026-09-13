@@ -1,0 +1,17 @@
+minor_changes:
+  - >-
+    dsc3 - Add the ``directives``, ``what_if``, ``parameters_file``, ``system_root``, ``ignore_settings_file``,
+    ``resource_path``, ``chdir`` and ``executable`` options to support Microsoft DSC 3.3.
+  - >-
+    dsc3 - Return ``reboot_required``, ``restart_required``, ``security_context`` and ``execution_type``, surface
+    DSC warning messages as Ansible warnings and include the DSC error message in ``msg`` when ``dsc`` fails.
+bugfixes:
+  - >-
+    dsc3 - Derive ``changed`` in check mode from the ``inDesiredState`` result and walk the nested results of group
+    resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` instead of reporting every group as changed.
+  - >-
+    dsc3 - Read the execution details from ``executionInformation`` with a fallback to the deprecated
+    ``metadata.Microsoft.DSC`` property that DSC will remove in a future release.
+  - >-
+    dsc3 - Map all DSC exit codes to a readable failure message and document ``remote_config_file`` as defaulting to
+    ``false``, matching the existing behaviour.

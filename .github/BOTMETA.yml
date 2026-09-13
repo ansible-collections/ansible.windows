@@ -12,6 +12,8 @@ files:
     maintainers: $team_windows
     ignore: georgefrank ryansb
     keywords: credssp hyperv powershell psrp winrm
+  $modules/dsc3.py:
+    authors: yangskyboxlabs
   $modules/win_acl.py:
     authors: h0nIg schwartzmx trondhindenes
     ignore: georgefrank h0nIg

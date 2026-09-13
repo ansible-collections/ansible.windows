@@ -23,11 +23,12 @@ class ActionModule(ActionBase):
         if task_vars is None:
             task_vars = dict()
 
-        super(ActionModule, self).run(tmp, task_vars)
+        result = super(ActionModule, self).run(tmp, task_vars)
         del tmp  # tmp no longer has any effect
 
         module_args = self._task.args
         config_file = module_args.get('config_file', None)
+        # The default must match the one in the module spec (dsc3.ps1) and documentation (dsc3.py).
         remote_config_file = check_type_bool(module_args.get('remote_config_file', False))
 
         tmpdir = self._connection._shell.tmpdir
@@ -37,6 +38,9 @@ class ActionModule(ActionBase):
             if config_file and not remote_config_file:
                 if module_args.get('config', None):
                     raise AnsibleActionFail("parameters are mutually exclusive: config, config_file")
+
+                if module_args.get('directives', None):
+                    raise AnsibleActionFail("parameters are mutually exclusive: directives, config_file")
 
                 if self._task.async_val:
                     raise AnsibleActionFail("async operations are not supported with local config_file")
@@ -70,7 +74,8 @@ class ActionModule(ActionBase):
                 module_result['invocation']['module_args']['config_file'] = config_file
                 module_result['invocation']['module_args']['remote_config_file'] = remote_config_file
 
-            return module_result
+            result.update(module_result)
+            return result
 
         finally:
             if tmpdir and remove_tmpdir:
