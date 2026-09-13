@@ -31,8 +31,14 @@ switch ($cmd) {
     "set" { $outputState = $after }
     "test" {
         $outputState = $before
-        $outputState["_inDesiredState"] = ![bool]$diff
+        $outputState | Add-Member -NotePropertyName "_inDesiredState" -NotePropertyValue (![bool]$diff) -Force
     }
+}
+
+if ($env:FAKE_RESTART_REQUIRED) {
+    # Enumerate the entries so the value is a plain array, ConvertTo-Json serializes a PSObject wrapped array as an object.
+    $restartRequired = @(foreach ($entry in (ConvertFrom-Json $env:FAKE_RESTART_REQUIRED)) { $entry })
+    $outputState | Add-Member -NotePropertyName "_restartRequired" -NotePropertyValue $restartRequired -Force
 }
 
 ConvertTo-Json $outputState -Compress -Depth 100 | Write-Output
