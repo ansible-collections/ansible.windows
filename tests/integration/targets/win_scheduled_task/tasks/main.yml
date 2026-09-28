@@ -1,24 +1,27 @@
 ---
-- name: remove test tasks before test
-  include_tasks: clean.yml
+- name: Remove test tasks before test
+  ansible.builtin.include_tasks: clean.yml
 
-- block:
-  - name: Test failure scenarios
-    include_tasks: failures.yml
+- name: Execute test suite blocks
+  block:
+    - name: Test failure scenarios
+      ansible.builtin.include_tasks: failures.yml
 
-  - name: Test normal scenarios
-    include_tasks: tests.yml
+    - name: Test normal scenarios
+      ansible.builtin.include_tasks: tests.yml
 
-  - include_tasks: clean.yml
+    - name: Clean up test environment after normal scenarios
+      ansible.builtin.include_tasks: clean.yml
 
-  - name: Test principals
-    include_tasks: principals.yml
+    - name: Test principals
+      ansible.builtin.include_tasks: principals.yml
 
-  - include_tasks: clean.yml
+    - name: Clean up test environment after principal tests
+      ansible.builtin.include_tasks: clean.yml
 
-  - name: Test triggers
-    include_tasks: triggers.yml
+    - name: Test triggers
+      ansible.builtin.include_tasks: triggers.yml
 
   always:
-  - name: remove test tasks after test
-    include_tasks: clean.yml
+    - name: Remove test tasks after test
+      ansible.builtin.include_tasks: clean.yml

@@ -223,7 +223,6 @@ options:
         - remote_disconnect
         - session_lock
         - session_unlock
-        version_added: 1.6.0
 
   # Principal options
   display_name:
@@ -251,7 +250,7 @@ options:
     - C(service_account) means that a service account like System, Local
       Service or Network Service will run the task.
     type: str
-    choices: [ none, password, s4u, interactive_token, group, service_account, token_or_password ]
+    choices: [ none, password, s4u, interactive_token, group, service_account, interactive_token_or_password ]
   run_level:
     description:
     - The level of user rights used to run the task.
@@ -417,16 +416,17 @@ notes:
   and omitting the password parameter. For more information on gMSAs,
   see U(https://techcommunity.microsoft.com/t5/Core-Infrastructure-and-Security/Windows-Server-2012-Group-Managed-Service-Accounts/ba-p/255910)
 seealso:
-- module: community.windows.win_scheduled_task_stat
+- module: ansible.windows.win_scheduled_task_info
 - module: ansible.windows.win_user_right
 author:
 - Peter Mounce (@petemounce)
 - Jordan Borean (@jborean93)
+- Hen Yaish (@yaish25491)
 '''
 
 EXAMPLES = r'''
 - name: Create a task to open 2 command prompts as SYSTEM
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskName
     description: open command prompt
     actions:
@@ -442,7 +442,7 @@ EXAMPLES = r'''
     enabled: true
 
 - name: Create task to run a PS script as NETWORK service on boot
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskName2
     description: Run a PowerShell script
     actions:
@@ -463,26 +463,26 @@ EXAMPLES = r'''
     action: add
 
 - name: Change above task to run under a domain user account, storing the passwords
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\User
     password: Password
     logon_type: password
 
 - name: Change the above task again, choosing not to store the password
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\User
     logon_type: s4u
 
 - name: Change above task to use a gMSA, where the password is managed automatically
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskName2
     username: DOMAIN\gMsaSvcAcct$
     logon_type: password
 
 - name: Create task with multiple triggers
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
@@ -493,7 +493,7 @@ EXAMPLES = r'''
     username: SYSTEM
 
 - name: Set logon type to password but don't force update the password
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
@@ -503,12 +503,12 @@ EXAMPLES = r'''
     update_password: false
 
 - name: Disable a task that already exists
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TaskToDisable
     enabled: false
 
 - name: Create a task that will be repeated every minute for five minutes
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: RepeatedTask
     description: open command prompt
     actions:
@@ -522,7 +522,7 @@ EXAMPLES = r'''
           stop_at_duration_end: true
 
 - name: Create task to run a PS script in Windows 10 compatibility on boot with a delay of 1min
-  community.windows.win_scheduled_task:
+  ansible.windows.win_scheduled_task:
     name: TriggerTask
     path: \Custom
     actions:
