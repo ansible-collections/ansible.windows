@@ -1,0 +1,2 @@
+minor_changes:
+  - win_firewall_rule_info - added a new module to gather detailed information about Windows firewall rules.
