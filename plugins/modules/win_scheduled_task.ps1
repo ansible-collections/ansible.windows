@@ -6,6 +6,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -PowerShell Ansible.ModuleUtils.AddType
+#AnsibleRequires -PowerShell ..module_utils._SecurityIdentifier
 #Requires -Module Ansible.ModuleUtils.Legacy
 #Requires -Module Ansible.ModuleUtils.SID
 
@@ -142,6 +143,21 @@ public enum TASK_SESSION_STATE_CHANGE_TYPE // https://docs.microsoft.com/en-us/w
 ########################
 ### HELPER FUNCTIONS ###
 ########################
+Function Convert-ToSID {
+    param($account_name)
+
+    if (-not $account_name) {
+        return $null
+    }
+    try {
+        $sid = ($account_name | ConvertTo-AnsibleWindowsSecurityIdentifier -ErrorAction Stop).Value
+    }
+    catch {
+        Fail-Json -obj $result -message "account_name $account_name is not a valid account, cannot get SID: $($_.Exception.Message)"
+    }
+    return $sid
+}
+
 Function Convert-SnakeToPascalCase($snake) {
     # very basic function to convert snake_case to PascalCase for use in COM
     # objects
@@ -715,6 +731,10 @@ if ($name -cmatch $invalid_name_chars_regex) {
     Fail-Json -obj $result -message "Invalid task name '$name'. The following characters are not valid: $invalid_name_chars"
 }
 
+if ($null -ne $username -and $null -ne $group) {
+    Fail-Json -obj $result -message "username and group can not be set at the same time"
+}
+
 # convert username and group to SID if set
 $username_sid = $null
 if ($username) {
@@ -732,9 +752,6 @@ if ($null -ne $logon_type) {
 }
 
 # now validate the logon_type option with the other parameters
-if ($null -ne $username -and $null -ne $group) {
-    Fail-Json -obj $result -message "username and group can not be set at the same time"
-}
 if ($null -ne $logon_type) {
     if ($logon_type -eq [TASK_LOGON_TYPE]::TASK_LOGON_S4U -and $null -eq $password) {
         Fail-Json -obj $result -message "password must be set when logon_type=s4u"
