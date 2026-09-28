@@ -136,7 +136,7 @@ Add-CSharpType -TempPath $_remote_tmp -References @'
 using System;
 using System.Runtime.InteropServices;
 
-namespace Community.Windows.WinFirewallRule
+namespace Ansible.Windows.WinFirewallRule
 {
     [ComImport]
     [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
@@ -209,18 +209,10 @@ try {
         $new_rule.InterfaceTypes = ConvertTo-InterfaceType -interfaceTypes $interfacetypes
     }
     if ($null -ne $edge -and $edge -ne "no") {
-        # EdgeTraversalOptions property exists only from Windows 7/Windows Server 2008 R2
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/dd607256(v=vs.85).aspx
-        if ($new_rule | Get-Member -Name 'EdgeTraversalOptions') {
-            $new_rule.EdgeTraversalOptions = ConvertTo-EdgeTraversalOption -edgeTraversalOptionsStr $edge
-        }
+        $new_rule.EdgeTraversalOptions = ConvertTo-EdgeTraversalOption -edgeTraversalOptionsStr $edge
     }
     if ($null -ne $security -and $security -ne "notrequired") {
-        # SecureFlags property exists only from Windows 8/Windows Server 2012
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/hh447465(v=vs.85).aspx
-        if ($new_rule | Get-Member -Name 'SecureFlags') {
-            $new_rule.SecureFlags = ConvertTo-SecureFlag -secureFlagsStr $security
-        }
+        $new_rule.SecureFlags = ConvertTo-SecureFlag -secureFlagsStr $security
     }
 
     $fwPropertiesToCompare = @('Description', 'Direction', 'Action', 'ApplicationName', 'Grouping', 'ServiceName', 'Enabled',
@@ -312,7 +304,7 @@ try {
                                     }
                                     # There is a fundamental problem with the COM binder in PowerShell and how it treats null values.
                                     ElseIf ($prop -eq 'ApplicationName') {
-                                        [Community.Windows.WinFirewallRule.NetFwRule]::PutApplicationName($existingRule, $new_rule.$prop)
+                                        [Ansible.Windows.WinFirewallRule.NetFwRule]::PutApplicationName($existingRule, $new_rule.$prop)
                                     }
                                     Else {
                                         $existingRule.$prop = $new_rule.$prop
