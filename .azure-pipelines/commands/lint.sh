@@ -9,6 +9,6 @@ set -o pipefail -eux
 # Then check the ansible-lint upper bound to specify here.
 
 python -m pip install \
-    'ansible-lint==25.5.0'
+    'ansible-lint==26.8.0'
 
 ansible-lint
