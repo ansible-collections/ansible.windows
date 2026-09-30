@@ -71,6 +71,22 @@ stages:
               test: sanity
             - name: Units
               test: units
+  - stage: Ansible_2_22
+    displayName: Ansible 2.22
+    dependsOn:
+      - Dependencies
+    jobs:
+      - template: templates/matrix.yml
+        parameters:
+          nameFormat: '{0}'
+          testFormat: '2.22/{0}'
+          targets:
+            - name: Sanity
+              test: sanity
+            - name: Units
+              test: units
+            - name: Lint
+              test: lint
   - stage: Ansible_2_21
     displayName: Ansible 2.21
     dependsOn:
@@ -85,8 +101,6 @@ stages:
               test: sanity
             - name: Units
               test: units
-            - name: Lint
-              test: lint
   - stage: Ansible_2_20
     displayName: Ansible 2.20
     dependsOn:
@@ -96,20 +110,6 @@ stages:
         parameters:
           nameFormat: '{0}'
           testFormat: '2.20/{0}'
-          targets:
-            - name: Sanity
-              test: sanity
-            - name: Units
-              test: units
-  - stage: Ansible_2_19
-    displayName: Ansible 2.19
-    dependsOn:
-      - Dependencies
-    jobs:
-      - template: templates/matrix.yml
-        parameters:
-          nameFormat: '{0}'
-          testFormat: '2.19/{0}'
           targets:
             - name: Sanity
               test: sanity
@@ -179,9 +179,9 @@ stages:
           testGroupFormat: "{{1}}/{0}"
           groups:
             - "2.18"
-            - "2.19"
             - "2.20"
             - "2.21"
+            - "2.22"
           targets:
             - name: 2022 PSRP HTTP
               test: 2022/psrp/http
@@ -386,9 +386,9 @@ stages:
     condition: succeededOrFailed()
     dependsOn:
       - Ansible_devel
+      - Ansible_2_22
       - Ansible_2_21
       - Ansible_2_20
-      - Ansible_2_19
       - Ansible_2_18
       - Ansible_2_16
       - Windows_1_WinPS
