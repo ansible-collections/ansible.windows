@@ -1,14 +1,16 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# Copyright: (c) 2019, Brant Evans <bevans@redhat.com>
+# Copyright: (c) 2019, Brant Evans (bevans@redhat.com)
+# Copyright: (c) 2026, Hen Yaish (hyaish@redhat.com)
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
 ---
 module: win_initialize_disk
 short_description: Initializes disks on Windows Server
 description:
-    - "The M(community.windows.win_initialize_disk) module initializes disks"
+    - "The M(ansible.windows.win_initialize_disk) module initializes disks"
 options:
     disk_number:
         description:
@@ -42,34 +44,32 @@ options:
 notes:
     - One of three parameters (I(disk_number), I(uniqueid), and I(path)) are mandatory to identify the target disk, but
       more than one cannot be specified at the same time.
-    - A minimum Operating System Version of Server 2012 or Windows 8 is required to use this module.
-    - This module is idempotent if I(force) is not specified.
+    - A minimum Operating System Version of Windows Server 2016 or newer is required to use this module.
 
 seealso:
-    - module: community.windows.win_disk_facts
-    - module: community.windows.win_partition
-    - module: community.windows.win_format
+    - module: ansible.windows.win_initialize_disk_info
 
 author:
     - Brant Evans (@branic)
+    - Hen Yaish (@yaish25491)
 '''
 
-EXAMPLES = '''
+EXAMPLES = r'''
 - name: Initialize a disk
-  community.windows.win_initialize_disk:
+  ansible.windows.win_initialize_disk:
     disk_number: 1
 
 - name: Initialize a disk with an MBR partition style
-  community.windows.win_initialize_disk:
+  ansible.windows.win_initialize_disk:
     disk_number: 1
     style: mbr
 
 - name: Forcefully initialize a disk
-  community.windows.win_initialize_disk:
+  ansible.windows.win_initialize_disk:
     disk_number: 2
     force: true
 '''
 
-RETURN = '''
+RETURN = r'''
 #
 '''
