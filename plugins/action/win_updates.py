@@ -790,10 +790,15 @@ class ActionModule(ActionBase):
             self._download_results.update(update_result.download_results)
             self._install_results.update(update_result.install_results)
 
-            # Check that at least 1 update has not already been installed. This
+            # Check that at least 1 update revision has not already been installed. This
             # is to detect an update that may have been rolled back in the last
-            # reboot or whether WUA failed to report that the update failed.
-            current_updates = set(update_result.install_results)
+            # reboot or whether WUA failed to report that the update failed. WUA
+            # can reuse an update ID for a reissued update, so include the revision
+            # number when detecting a loop.
+            current_updates = set(
+                (update_id, update_result.updates[update_id].get('revision_number'))
+                for update_id in update_result.install_results
+            )
             new_updates = current_updates.difference(installed_updates)
             installed_updates.update(current_updates)
 
@@ -801,7 +806,8 @@ class ActionModule(ActionBase):
                 attempt_rolled_back_round += 1
 
             if attempt_rolled_back_round >= module_options.get('maximum_retries_on_failed_updates', 1):
-                for update_id in current_updates:
+                for update in current_updates:
+                    update_id = update[0]
                     self._install_results[update_id]['result_code'] = 4
                     self._install_results[update_id]['hresult'] = -1
 
@@ -810,7 +816,7 @@ class ActionModule(ActionBase):
                     'An update loop was detected, this could be caused by an update being rolled back during a '
                     'reboot or the Windows Update API incorrectly reporting a failed update as being successful.'
                     'Check the Windows Updates logs on the host to gather more information. Updates in the reboot '
-                    f'loop are: {", ".join(current_updates)}'
+                    f'loop are: {", ".join(update[0] for update in current_updates)}'
                 )
                 break
 

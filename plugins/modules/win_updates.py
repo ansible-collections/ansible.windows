@@ -53,7 +53,7 @@ options:
         - Some updates, particularly feature updates, may require multiple
           install attempts before completing successfully.
         - This is only used when C(reboot=true) and the module detects the
-          same updates being reported as available after a reboot cycle.
+          same update revisions being reported as available after a reboot cycle.
         type: int
         default: 1
         version_added: 3.8.0

@@ -1,0 +1,2 @@
+bugfixes:
+  - win_updates - Do not detect a reboot loop when Windows Update reissues an update with a newer revision.

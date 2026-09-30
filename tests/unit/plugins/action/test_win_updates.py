@@ -656,3 +656,53 @@ def test_repeated_update(monkeypatch):
     assert not actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['installed']
     assert actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['failure_hresult_code'] == -1
     assert actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['failure_msg'] == 'Unknown WUA HRESULT -1 (UNKNOWN 0xFFFFFFFF)'
+
+
+def test_reissued_update(monkeypatch):
+    reboot_mock = MagicMock()
+    reboot_mock.return_value = {'failed': False}
+    monkeypatch.setattr(win_updates, 'reboot_host', reboot_mock)
+
+    update_id = '501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a'
+
+    def update_result(revision_number, reboot_required=False):
+        result = win_updates.UpdateResult()
+        result.updates = {
+            update_id: {
+                'title': 'Security Intelligence Update for Microsoft Defender Antivirus',
+                'kb': ['KB2267602'],
+                'categories': ['Definition Updates'],
+                'revision_number': revision_number,
+            },
+        }
+        result.selected_updates = {update_id}
+        result.install_results = {
+            update_id: {
+                'result_code': 2,
+                'reboot_required': reboot_required,
+                'hresult': 0,
+            },
+        }
+        result.changed = True
+        result.reboot_required = reboot_required
+        return result
+
+    final_result = win_updates.UpdateResult()
+    update_results = iter([
+        update_result(200, reboot_required=True),
+        update_result(201),
+        final_result,
+    ])
+    plugin = win_updates_init({
+        'category_names': ['*'],
+        'reboot': True,
+    })
+    monkeypatch.setattr(plugin, '_run_updates', lambda *args, **kwargs: next(update_results))
+
+    actual = plugin.run()
+
+    assert reboot_mock.call_count == 1
+    assert 'failed' not in actual
+    assert actual['installed_update_count'] == 1
+    assert actual['updates'][update_id]['installed']
+    assert plugin._updates[update_id]['revision_number'] == 201
