@@ -1,0 +1,3 @@
+minor_changes:
+  - win_initialize_disk integration tests - refactored test suite to use `win_initialize_disk_info` instead of raw PowerShell `Get-Disk` commands.
+  - win_initialize_disk - cleaned up internal disk status retrieval logic in favor of simplified action handling.

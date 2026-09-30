@@ -1,6 +1,7 @@
 #!powershell
 
-# Copyright: (c) 2019, Brant Evans <bevans@redhat.com>
+# Copyright: (c) 2019, Brant Evans (bevans@redhat.com)
+# Copyright: (c) 2026, Hen Yaish (hyaish@redhat.com)
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
@@ -42,35 +43,22 @@ function Get-AnsibleDisk {
         $Path
     )
 
-    if ($null -ne $DiskNumber) {
-        try {
-            $disk = Get-Disk -Number $DiskNumber
+    try {
+        if ($null -ne $DiskNumber) {
+            return Get-Disk -Number $DiskNumber -ErrorAction Stop
         }
-        catch {
-            $module.FailJson("There was an error retrieving the disk using disk_number $($DiskNumber): $($_.Exception.Message)")
+        elseif ($null -ne $UniqueId) {
+            return Get-Disk -UniqueId $UniqueId -ErrorAction Stop
         }
-    }
-    elseif ($null -ne $UniqueId) {
-        try {
-            $disk = Get-Disk -UniqueId $UniqueId
-        }
-        catch {
-            $module.FailJson("There was an error retrieving the disk using id $($UniqueId): $($_.Exception.Message)")
+        elseif ($null -ne $Path) {
+            return Get-Disk -Path $Path -ErrorAction Stop
         }
     }
-    elseif ($null -ne $Path) {
-        try {
-            $disk = Get-Disk -Path $Path
-        }
-        catch {
-            $module.FailJson("There was an error retrieving the disk using path $($Path): $($_.Exception.Message)")
-        }
-    }
-    else {
-        $module.FailJson("Unable to retrieve disk: disk_number, id, or path was not specified")
+    catch {
+        $module.FailJson("There was an error retrieving the disk: $($_.Exception.Message)", $_)
     }
 
-    return $disk
+    $module.FailJson("Unable to retrieve disk: disk_number, id, or path was not specified")
 }
 
 function Initialize-AnsibleDisk {
@@ -109,40 +97,28 @@ function Clear-AnsibleDisk {
     }
 }
 
-function Set-AnsibleDisk {
+function Set-AnsibleDiskOnline {
     param(
         $AnsibleDisk,
         $BringOnline
     )
 
-    $refresh_disk_status = $false
+    if ($BringOnline -And -Not $module.CheckMode) {
+        if ($AnsibleDisk.IsOffline) {
+            Set-Disk -Number $AnsibleDisk.Number -IsOffline:$false
+        }
 
-    if ($BringOnline) {
-        if (-Not $module.CheckMode) {
-            if ($AnsibleDisk.IsOffline) {
-                Set-Disk -Number $AnsibleDisk.Number -IsOffline:$false
-                $refresh_disk_status = $true
-            }
-
-            if ($AnsibleDisk.IsReadOnly) {
-                Set-Disk -Number $AnsibleDisk.Number -IsReadOnly:$false
-                $refresh_disk_status = $true
-            }
+        if ($AnsibleDisk.IsReadOnly) {
+            Set-Disk -Number $AnsibleDisk.Number -IsReadOnly:$false
         }
     }
-
-    if ($refresh_disk_status) {
-        $AnsibleDisk = Get-AnsibleDisk -DiskNumber $AnsibleDisk.Number
-    }
-
-    return $AnsibleDisk
 }
 
 $ansible_disk = Get-AnsibleDisk -DiskNumber $disk_number -UniqueId $uniqueid -Path $path
-$ansible_part_style = $ansible_disk.PartitionStyle
+$ansible_part_style = $ansible_disk.PartitionStyle.ToString()
 
 if (("RAW" -eq $ansible_part_style) -Or ("Offline" -eq $ansible_disk.OperationalStatus)) {
-    $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
+    Set-AnsibleDiskOnline -AnsibleDisk $ansible_disk -BringOnline $bring_online
     Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style
 }
 else {
@@ -154,9 +130,11 @@ else {
         $module.FailJson($msg)
     }
     elseif ($force_init) {
-        $ansible_disk = Set-AnsibleDisk -AnsibleDisk $ansible_disk -BringOnline $bring_online
+        Set-AnsibleDiskOnline -AnsibleDisk $ansible_disk -BringOnline $bring_online
         Clear-AnsibleDisk -AnsibleDisk $ansible_disk
-        if ( $bring_online ) { Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style }
+        if ($bring_online) {
+            Initialize-AnsibleDisk -AnsibleDisk $ansible_disk -PartitionStyle $partition_style
+        }
     }
 }
 
