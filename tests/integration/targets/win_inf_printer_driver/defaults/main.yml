@@ -1,0 +1,9 @@
+---
+test_inf_printer_builtin_inf: C:\Windows\INF\prnge001.inf
+test_inf_printer_builtin_name: Generic / Text Only
+
+test_inf_printer_thirdparty_url: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/win_inf_printer_driver/HP-Color-LaserJet-Series-II.zip
+test_inf_printer_thirdparty_inf: prnhp001.inf
+test_inf_printer_thirdparty_names:
+  - HP LaserJet Series II
+  - HP Color LaserJet 4500 PCL 5

@@ -1,0 +1,124 @@
+---
+- name: Fail to install without inf_file
+  ansible.windows.win_inf_printer_driver:
+    driver_name: "{{ test_inf_printer_builtin_name }}"
+    state: present
+  register: no_inf
+  failed_when: "no_inf.msg != 'state is present but all of the following are missing: inf_file'"
+
+- name: Run the built-in driver lifecycle
+  module_defaults:
+    ansible.windows.win_inf_printer_driver:
+      driver_name: "{{ test_inf_printer_builtin_name }}"
+      inf_file: "{{ test_inf_printer_builtin_inf }}"
+  block:
+    - name: List the driver before the tests
+      ansible.windows.win_powershell: &get_state
+        parameters:
+          Name: "{{ test_inf_printer_builtin_name }}"
+        script: |
+          param($Name)
+          $Ansible.Result = (Get-PrinterDriver -Name $Name -ErrorAction SilentlyContinue).Name
+      register: driver_before
+
+    - name: Remove a leftover driver from a previous run
+      ansible.windows.win_inf_printer_driver:
+        state: absent
+      when: driver_before.result == test_inf_printer_builtin_name
+
+    - name: List the driver after cleanup
+      ansible.windows.win_powershell: *get_state
+      register: driver_after_cleanup
+
+    - name: Assert the driver is absent before the tests
+      ansible.builtin.assert:
+        that:
+          - driver_after_cleanup.result != test_inf_printer_builtin_name
+
+    - name: Install the driver in check mode
+      ansible.windows.win_inf_printer_driver:
+        state: present
+      check_mode: true
+      register: install_check
+
+    - name: Get the driver state after the check-mode install
+      ansible.windows.win_powershell: *get_state
+      register: state_after_install_check
+
+    - name: Assert the check-mode install reported a change but installed nothing
+      ansible.builtin.assert:
+        that:
+          - install_check is changed
+          - state_after_install_check.result != test_inf_printer_builtin_name
+
+    - name: Install the driver
+      ansible.windows.win_inf_printer_driver:
+        state: present
+      register: install
+
+    - name: Get the driver state after install
+      ansible.windows.win_powershell: *get_state
+      register: state_after_install
+
+    - name: Assert the driver was installed
+      ansible.builtin.assert:
+        that:
+          - install is changed
+          - state_after_install.result == test_inf_printer_builtin_name
+
+    - name: Install the driver again
+      ansible.windows.win_inf_printer_driver:
+        state: present
+      register: install_again
+
+    - name: Assert the second install was a no-op
+      ansible.builtin.assert:
+        that:
+          - install_again is not changed
+
+    - name: Remove the driver in check mode
+      ansible.windows.win_inf_printer_driver:
+        state: absent
+      check_mode: true
+      register: remove_check
+
+    - name: Get the driver state after the check-mode remove
+      ansible.windows.win_powershell: *get_state
+      register: state_after_remove_check
+
+    - name: Assert the check-mode remove reported a change but removed nothing
+      ansible.builtin.assert:
+        that:
+          - remove_check is changed
+          - state_after_remove_check.result == test_inf_printer_builtin_name
+
+    - name: Remove the driver
+      ansible.windows.win_inf_printer_driver:
+        state: absent
+      register: remove
+
+    - name: Get the driver state after remove
+      ansible.windows.win_powershell: *get_state
+      register: state_after_remove
+
+    - name: Assert the driver was removed
+      ansible.builtin.assert:
+        that:
+          - remove is changed
+          - state_after_remove.result != test_inf_printer_builtin_name
+
+    - name: Remove the driver again
+      ansible.windows.win_inf_printer_driver:
+        state: absent
+      register: remove_again
+
+    - name: Assert the second remove was a no-op
+      ansible.builtin.assert:
+        that:
+          - remove_again is not changed
+
+  always:
+    - name: Clean up the built-in driver
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ test_inf_printer_builtin_name }}"
+        state: absent

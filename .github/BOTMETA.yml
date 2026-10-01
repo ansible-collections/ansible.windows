@@ -57,6 +57,8 @@ files:
     authors: andrewsaraceni
   $modules/win_hostname.py:
     authors: riponbanik
+  $modules/win_inf_printer_driver.py:
+    authors: ch0nx nsjoseph daBONDi
   $modules/win_optional_feature.py:
     authors: rcanderson23
   $modules/win_owner.py:
