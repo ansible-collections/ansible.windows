@@ -398,3 +398,5 @@ tests/integration/inventory*
 # Ansible runtime/build metadata
 meta/powershell_signatures.psd1
 
+# mac files
+.DS_Store

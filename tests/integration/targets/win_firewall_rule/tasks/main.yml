@@ -1,0 +1,28 @@
+---
+- name: Run win_firewall_rule integration tests
+  block:
+    - name: Ensure test environment is clean before running tests
+      ansible.windows.win_firewall_rule:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - http
+        - VarExpansionTest
+        - Rule for application group
+        - icmptest
+        - ApplicationToAnyTest
+
+    - name: Run test tasks
+      ansible.builtin.include_tasks: tests.yml
+
+  always:
+    - name: Clean up leftover firewall rules
+      ansible.windows.win_firewall_rule:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - http
+        - VarExpansionTest
+        - Rule for application group
+        - icmptest
+        - ApplicationToAnyTest
