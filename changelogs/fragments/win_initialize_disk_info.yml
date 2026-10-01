@@ -1,0 +1,2 @@
+minor_changes:
+  - win_initialize_disk_info - added a new info module to gather detailed information about disks on Windows hosts.
