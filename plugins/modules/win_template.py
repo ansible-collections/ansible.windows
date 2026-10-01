@@ -96,6 +96,24 @@ options:
     - When set to C(true) the first newline after a block is removed (block, not variable tag!).
     type: bool
     default: yes
+  validate:
+    description:
+    - The validation command to run against the rendered template before it is copied to O(dest).
+    - The rendered template is transferred to a temporary directory on the remote host and its path
+      is substituted into the command wherever the placeholder C(%s) appears. Every occurrence of
+      C(%s) is replaced, all other C(%) characters are left as is.
+    - The substituted path is already quoted for PowerShell so it is safe to use with destinations
+      that contain spaces or backslashes. Do not add quotes of your own around C(%s).
+    - The command is run on the remote Windows host through the PowerShell shell, in the same way
+      M(ansible.windows.win_shell) runs a command. Pipelines and other shell syntax can be used.
+    - If the command exits with a non-zero return code the task fails and O(dest) is left untouched.
+    - The temporary copy of the rendered template is removed once the command has run.
+    - This option is ignored when the task is run in check mode, as the command could have side
+      effects on the remote host.
+    - Unlike M(ansible.builtin.template), the command runs on every non check mode invocation of the
+      task, even when the rendered content already matches O(dest).
+    type: str
+    version_added: '3.9.0'
   variable_end_string:
     description:
     - The string marking the end of a print statement.
@@ -124,6 +142,7 @@ notes:
 - For Linux you can use M(ansible.builtin.template) which uses '\\n' as C(newline_sequence) by default.
 seealso:
 - module: ansible.windows.win_copy
+- module: ansible.windows.win_shell
 - module: ansible.builtin.copy
 - module: ansible.builtin.template
 author:
@@ -148,6 +167,24 @@ EXAMPLES = r'''
     src: unix/config.conf.j2
     dest: C:\share\unix\config.conf
     trim_blocks: true
+
+- name: Render an nginx config, only writing it out once nginx has validated it
+  ansible.windows.win_template:
+    src: nginx.conf.j2
+    dest: C:\nginx\conf\nginx.conf
+    validate: C:\nginx\nginx.exe -t -c %s
+
+- name: Render a JSON file, only writing it out if it parses
+  ansible.windows.win_template:
+    src: app.json.j2
+    dest: C:\Program Files\App\app.json
+    validate: Get-Content -LiteralPath %s -Raw | ConvertFrom-Json | Out-Null
+
+- name: Render a PowerShell script, only writing it out if it has no syntax errors
+  ansible.windows.win_template:
+    src: bootstrap.ps1.j2
+    dest: C:\Temp\bootstrap.ps1
+    validate: $null = [ScriptBlock]::Create((Get-Content -LiteralPath %s -Raw))
 '''
 
 RETURN = r'''
