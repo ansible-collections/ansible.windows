@@ -1,0 +1,4 @@
+minor_changes:
+  - win_scheduled_task - migrated modules and integration tests from
+    `community.windows` to `ansible.windows`, updating task assertions
+    and `win_scheduled_task_info` integration.
