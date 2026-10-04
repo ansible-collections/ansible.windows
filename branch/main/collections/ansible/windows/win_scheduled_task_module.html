@@ -1,0 +1,973 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.27.0" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_scheduled_task module – Manage scheduled tasks &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=41de9001" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=b54c304f" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_scheduled_task_info module – Get information about Windows Scheduled Tasks" href="win_scheduled_task_info_module.html" />
+    <link rel="prev" title="ansible.windows.win_route module – Add or remove a static route" href="win_route_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_scheduled_task module – Manage scheduled tasks</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_scheduled_task.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-scheduled-task-module"></span><section id="ansible-windows-win-scheduled-task-module-manage-scheduled-tasks">
+<h1>ansible.windows.win_scheduled_task module – Manage scheduled tasks<a class="headerlink" href="#ansible-windows-win-scheduled-task-module-manage-scheduled-tasks" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.9.0).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_scheduled_task</span></code>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Creates/modifies or removes Windows scheduled tasks.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-actions"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-actions"><strong>actions</strong></p>
+<a class="ansibleOptionLink" href="#parameter-actions" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of action to configure for the task.</p>
+<p>See suboptions for details on how to construct each list entry.</p>
+<p>When creating a task there MUST be at least one action but when deleting a task this can be a null or an empty list.</p>
+<p>The ordering of this list is important, the module will ensure the order is kept when modifying the task.</p>
+<p>This module only supports the <code class="docutils literal notranslate"><span class="pre">ExecAction</span></code> type but can still delete the older legacy types.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-actions/arguments"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-actions-arguments"><strong>arguments</strong></p>
+<a class="ansibleOptionLink" href="#parameter-actions/arguments" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>An argument string to supply for the executable.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-actions/path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-actions-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-actions/path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The path to the executable for the ExecAction.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-actions/working_directory"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-actions-working-directory"><strong>working_directory</strong></p>
+<a class="ansibleOptionLink" href="#parameter-actions/working_directory" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The working directory to run the executable from.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-allow_demand_start"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-allow-demand-start"><strong>allow_demand_start</strong></p>
+<a class="ansibleOptionLink" href="#parameter-allow_demand_start" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task can be started by using either the Run command or the Context menu.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-allow_hard_terminate"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-allow-hard-terminate"><strong>allow_hard_terminate</strong></p>
+<a class="ansibleOptionLink" href="#parameter-allow_hard_terminate" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task can be terminated by using TerminateProcess.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-author"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-author"><strong>author</strong></p>
+<a class="ansibleOptionLink" href="#parameter-author" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The author of the task.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-compatibility"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-compatibility"><strong>compatibility</strong></p>
+<a class="ansibleOptionLink" href="#parameter-compatibility" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The integer value with indicates which version of Task Scheduler a task is compatible with.</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> means the task is compatible with the AT command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> means the task is compatible with Task Scheduler 1.0(Windows Vista, Windows Server 2008 and older).</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> means the task is compatible with Task Scheduler 2.0(Windows Vista, Windows Server 2008).</p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> means the task is compatible with Task Scheduler 2.0(Windows 7, Windows Server 2008 R2).</p>
+<p><code class="docutils literal notranslate"><span class="pre">4</span></code> means the task is compatible with Task Scheduler 2.0(Windows 10, Windows Server 2016, Windows Server 2019).</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">2</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">3</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">4</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-date"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-date"><strong>date</strong></p>
+<a class="ansibleOptionLink" href="#parameter-date" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The date when the task was registered.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-delete_expired_task_after"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-delete-expired-task-after"><strong>delete_expired_task_after</strong></p>
+<a class="ansibleOptionLink" href="#parameter-delete_expired_task_after" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The amount of time that the Task Scheduler will wait before deleting the task after it expires.</p>
+<p>A task expires after the end_boundary has been exceeded for all triggers associated with the task.</p>
+<p>This is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-description"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-description"><strong>description</strong></p>
+<a class="ansibleOptionLink" href="#parameter-description" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The description of the task.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-disallow_start_if_on_batteries"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-disallow-start-if-on-batteries"><strong>disallow_start_if_on_batteries</strong></p>
+<a class="ansibleOptionLink" href="#parameter-disallow_start_if_on_batteries" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will not be started if the computer is running on battery power.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-display_name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-display-name"><strong>display_name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-display_name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The name of the user/group that is displayed in the Task Scheduler UI.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-enabled"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-enabled"><strong>enabled</strong></p>
+<a class="ansibleOptionLink" href="#parameter-enabled" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task is enabled, the task can only run when <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-execution_time_limit"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-execution-time-limit"><strong>execution_time_limit</strong></p>
+<a class="ansibleOptionLink" href="#parameter-execution_time_limit" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The amount of time allowed to complete the task.</p>
+<p>When set to <code class="docutils literal notranslate"><span class="pre">PT0S</span></code>, the time limit is infinite.</p>
+<p>When omitted, the default time limit is 72 hours.</p>
+<p>This is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-group"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-group"><strong>group</strong></p>
+<a class="ansibleOptionLink" href="#parameter-group" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The group that will run the task.</p>
+<p><code class="docutils literal notranslate"><span class="pre">group</span></code> and <code class="docutils literal notranslate"><span class="pre">username</span></code> are exclusive to each other and cannot be set at the same time.</p>
+<p><code class="docutils literal notranslate"><span class="pre">logon_type</span></code> can either be not set or equal <code class="docutils literal notranslate"><span class="pre">group</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-hidden"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-hidden"><strong>hidden</strong></p>
+<a class="ansibleOptionLink" href="#parameter-hidden" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will be hidden in the UI.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-logon_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-logon-type"><strong>logon_type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-logon_type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The logon method that the task will run with.</p>
+<p><code class="docutils literal notranslate"><span class="pre">password</span></code> means the password will be stored and the task has access to network resources.</p>
+<p><code class="docutils literal notranslate"><span class="pre">s4u</span></code> means the existing token will be used to run the task and no password will be stored with the task. Means no network or encrypted files access.</p>
+<p><code class="docutils literal notranslate"><span class="pre">interactive_token</span></code> means the user must already be logged on interactively and will run in an existing interactive session.</p>
+<p><code class="docutils literal notranslate"><span class="pre">group</span></code> means that the task will run as a group.</p>
+<p><code class="docutils literal notranslate"><span class="pre">service_account</span></code> means that a service account like System, Local Service or Network Service will run the task.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;password&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;s4u&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;interactive_token&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;group&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;service_account&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;interactive_token_or_password&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-multiple_instances"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-multiple-instances"><strong>multiple_instances</strong></p>
+<a class="ansibleOptionLink" href="#parameter-multiple_instances" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>An integer that indicates the behaviour when starting a task that is already running.</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> will start a new instance in parallel with existing instances of that task.</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> will wait until other instances of that task to finish running before starting itself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> will not start a new instance if another is running.</p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> will stop other instances of the task and start the new one.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">2</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">3</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-name"><strong>name</strong></p>
+<a class="ansibleOptionLink" href="#parameter-name" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The name of the scheduled task without the path.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-password"><strong>password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The password for the user account to run the scheduled task as.</p>
+<p>This is required when running a task without the user being logged in, excluding the builtin service accounts and Group Managed Service Accounts (gMSA).</p>
+<p>If set, will always result in a change unless <code class="docutils literal notranslate"><span class="pre">update_password</span></code> is set to <code class="docutils literal notranslate"><span class="pre">no</span></code> and no other changes are required for the service.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-path"><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Task folder in which this task will be stored.</p>
+<p>Will create the folder when <code class="docutils literal notranslate"><span class="pre">state=present</span></code> and the folder does not already exist.</p>
+<p>Will remove the folder when <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> and there are no tasks left in the folder.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;\\&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-priority"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-priority"><strong>priority</strong></p>
+<a class="ansibleOptionLink" href="#parameter-priority" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The priority level (0-10) of the task.</p>
+<p>When creating a new task the default is <code class="docutils literal notranslate"><span class="pre">7</span></code>.</p>
+<p>See <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383512.aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa383512.aspx</a> for details on the priority levels.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-restart_count"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-restart-count"><strong>restart_count</strong></p>
+<a class="ansibleOptionLink" href="#parameter-restart_count" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of times that the Task Scheduler will attempt to restart the task.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-restart_interval"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-restart-interval"><strong>restart_interval</strong></p>
+<a class="ansibleOptionLink" href="#parameter-restart_interval" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>How long the Task Scheduler will attempt to restart the task.</p>
+<p>If this is set then <code class="docutils literal notranslate"><span class="pre">restart_count</span></code> must also be set.</p>
+<p>The maximum allowed time is 31 days.</p>
+<p>The minimum allowed time is 1 minute.</p>
+<p>This is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-run_level"></div>
+<div class="ansibleOptionAnchor" id="parameter-runlevel"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-runlevel"><span id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-run-level"></span><strong>run_level</strong></p>
+<a class="ansibleOptionLink" href="#parameter-run_level" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: runlevel</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The level of user rights used to run the task.</p>
+<p>If not specified the task will be created with limited rights.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;limited&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;highest&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-run_only_if_idle"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-run-only-if-idle"><strong>run_only_if_idle</strong></p>
+<a class="ansibleOptionLink" href="#parameter-run_only_if_idle" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will run the task only if the computer is in an idle state.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-run_only_if_network_available"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-run-only-if-network-available"><strong>run_only_if_network_available</strong></p>
+<a class="ansibleOptionLink" href="#parameter-run_only_if_network_available" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will run only when a network is available.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-source"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-source"><strong>source</strong></p>
+<a class="ansibleOptionLink" href="#parameter-source" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The source of the task.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-start_when_available"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-start-when-available"><strong>start_when_available</strong></p>
+<a class="ansibleOptionLink" href="#parameter-start_when_available" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task can start at any time after its scheduled time has passed.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>When <code class="docutils literal notranslate"><span class="pre">state=present</span></code> will ensure the task exists.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">state=absent</span></code> will ensure the task does not exist.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;present&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-stop_if_going_on_batteries"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-stop-if-going-on-batteries"><strong>stop_if_going_on_batteries</strong></p>
+<a class="ansibleOptionLink" href="#parameter-stop_if_going_on_batteries" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will be stopped if the computer begins to run on battery power.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers"><strong>triggers</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A list of triggers to configure for the task.</p>
+<p>See suboptions for details on how to construct each list entry.</p>
+<p>The ordering of this list is important, the module will ensure the order is kept when modifying the task.</p>
+<p>There are multiple types of triggers, see <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383868.aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa383868.aspx</a> for a list of trigger types and their options.</p>
+<p>The suboption options listed below are not required for all trigger types, read the description for more details.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/days_of_month"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-days-of-month"><strong>days_of_month</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/days_of_month" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The days of the month from 1 to 31 for the triggers.</p>
+<p>If you wish to set the trigger for the last day of any month use <code class="docutils literal notranslate"><span class="pre">run_on_last_day_of_month</span></code>.</p>
+<p>Can be a list or comma separated string of day numbers.</p>
+<p>Required when <code class="docutils literal notranslate"><span class="pre">type=monthly</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/days_of_week"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-days-of-week"><strong>days_of_week</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/days_of_week" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The days of the week for the trigger.</p>
+<p>Can be a list or comma separated string of full day names e.g. monday instead of mon.</p>
+<p>Required when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">weekly</span></code>.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type=monthlydow</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/delay"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-delay"><strong>delay</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/delay" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The time to delay the task from running once the trigger has been fired.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">boot</span></code>, <code class="docutils literal notranslate"><span class="pre">event</span></code>, <code class="docutils literal notranslate"><span class="pre">logon</span></code>, <code class="docutils literal notranslate"><span class="pre">registration</span></code>, <code class="docutils literal notranslate"><span class="pre">session_state_change</span></code>.</p>
+<p>Is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/enabled"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-enabled"><strong>enabled</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/enabled" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Whether to set the trigger to enabled or disabled</p>
+<p>Used in all trigger types.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/end_boundary"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-end-boundary"><strong>end_boundary</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/end_boundary" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The end time for when the trigger is deactivated.</p>
+<p>This is in ISO 8601 DateTime format <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDThh:mm:ss</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/execution_time_limit"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-execution-time-limit"><strong>execution_time_limit</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/execution_time_limit" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The maximum amount of time that the task is allowed to run for.</p>
+<p>Optional for all the trigger types.</p>
+<p>Is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/months_of_year"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-months-of-year"><strong>months_of_year</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/months_of_year" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The months of the year for the trigger.</p>
+<p>Can be a list or comma separated string of full month names e.g. march instead of mar.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">monthlydow</span></code>, <code class="docutils literal notranslate"><span class="pre">monthly</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/random_delay"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-random-delay"><strong>random_delay</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/random_delay" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The delay time that is randomly added to the start time of the trigger.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">daily</span></code>, <code class="docutils literal notranslate"><span class="pre">monthlydow</span></code>, <code class="docutils literal notranslate"><span class="pre">monthly</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">weekly</span></code>.</p>
+<p>Is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/repetition"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-repetition"><strong>repetition</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/repetition" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Allows you to define the repetition action of the trigger that defines how often the task is run and how long the repetition pattern is repeated after the task is started.</p>
+<p>It takes in the following keys, <code class="docutils literal notranslate"><span class="pre">duration</span></code>, <code class="docutils literal notranslate"><span class="pre">interval</span></code>, <code class="docutils literal notranslate"><span class="pre">stop_at_duration_end</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/repetition/duration"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-repetition-duration"><strong>duration</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/repetition/duration" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Defines how long the pattern is repeated.</p>
+<p>The value is in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+<p>By default this is not set which means it will repeat indefinitely.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/repetition/interval"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-repetition-interval"><strong>interval</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/repetition/interval" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The amount of time between each restart of the task.</p>
+<p>The value is written in the ISO 8601 Duration format <code class="docutils literal notranslate"><span class="pre">P[n]Y[n]M[n]DT[n]H[n]M[n]S</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/repetition/stop_at_duration_end"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-repetition-stop-at-duration-end"><strong>stop_at_duration_end</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/repetition/stop_at_duration_end" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Whether a running instance of the task is stopped at the end of the repetition pattern.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/run_on_last_day_of_month"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-run-on-last-day-of-month"><strong>run_on_last_day_of_month</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/run_on_last_day_of_month" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Boolean value that sets whether the task runs on the last day of the month.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">monthly</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/run_on_last_week_of_month"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-run-on-last-week-of-month"><strong>run_on_last_week_of_month</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/run_on_last_week_of_month" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Boolean value that sets whether the task runs on the last week of the month.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">monthlydow</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/start_boundary"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-start-boundary"><strong>start_boundary</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/start_boundary" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The start time for the task, even if the trigger meets the other start criteria, it won’t start until this time is met.</p>
+<p>If you wish to run a task at 9am on a day you still need to specify the date on which the trigger is activated, you can set any date even ones in the past.</p>
+<p>Required when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">daily</span></code>, <code class="docutils literal notranslate"><span class="pre">monthlydow</span></code>, <code class="docutils literal notranslate"><span class="pre">monthly</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">weekly</span></code>.</p>
+<p>Optional for the rest of the trigger types.</p>
+<p>This is in ISO 8601 DateTime format <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDThh:mm:ss</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/state_change"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-state-change"><strong>state_change</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/state_change" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Allows you to define the kind of Terminal Server session change that triggers a task.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type=session_state_change</span></code></p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;console_connect&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;console_disconnect&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;remote_connect&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;remote_disconnect&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;session_lock&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;session_unlock&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/subscription"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-subscription"><strong>subscription</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/subscription" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Only used and is required for <code class="docutils literal notranslate"><span class="pre">type=event</span></code>.</p>
+<p>The XML query string that identifies the event that fires the trigger.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-type"><strong>type</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/type" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The trigger type, this value controls what below options are required.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;boot&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;daily&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;event&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;idle&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;logon&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;monthlydow&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;monthly&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;registration&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;time&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;weekly&quot;</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;session_state_change&quot;</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/user_id"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-user-id"><strong>user_id</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/user_id" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The username that the trigger will target.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">logon</span></code>, <code class="docutils literal notranslate"><span class="pre">session_state_change</span></code>.</p>
+<p>Can be the username or SID of a user.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">type=logon</span></code> and you want the trigger to fire when a user in a group logs on, leave this as null and set <code class="docutils literal notranslate"><span class="pre">group</span></code> to the group you wish to trigger.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/weeks_interval"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-weeks-interval"><strong>weeks_interval</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/weeks_interval" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The interval of weeks to run on, e.g. <code class="docutils literal notranslate"><span class="pre">1</span></code> means every week while <code class="docutils literal notranslate"><span class="pre">2</span></code> means every other week.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type=weekly</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-triggers/weeks_of_month"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-triggers-weeks-of-month"><strong>weeks_of_month</strong></p>
+<a class="ansibleOptionLink" href="#parameter-triggers/weeks_of_month" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>The weeks of the month for the trigger.</p>
+<p>Can be a list or comma separated string of the numbers 1 to 4 representing the first to 4th week of the month.</p>
+<p>Optional when <code class="docutils literal notranslate"><span class="pre">type=monthlydow</span></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-update_password"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-update-password"><strong>update_password</strong></p>
+<a class="ansibleOptionLink" href="#parameter-update_password" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether to update the password even when not other changes have occurred.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">yes</span></code> will always result in a change when executing the module.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">true</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-username"></div>
+<div class="ansibleOptionAnchor" id="parameter-user"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-username"><span id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-user"></span><strong>username</strong></p>
+<a class="ansibleOptionLink" href="#parameter-username" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: user</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The user to run the scheduled task as.</p>
+<p>Will default to the current user under an interactive token if not specified during creation.</p>
+<p>The user account specified must have the <code class="docutils literal notranslate"><span class="pre">SeBatchLogonRight</span></code> logon right which can be added with <a class="reference internal" href="win_user_right_module.html#ansible-collections-ansible-windows-win-user-right-module"><span class="std std-ref">ansible.windows.win_user_right</span></a>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-version"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-version"><strong>version</strong></p>
+<a class="ansibleOptionLink" href="#parameter-version" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The version number of the task.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-wake_to_run"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-scheduled-task-module-parameter-wake-to-run"><strong>wake_to_run</strong></p>
+<a class="ansibleOptionLink" href="#parameter-wake_to_run" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the task will wake the computer when it is time to run the task.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The option names and structure for actions and triggers of a service follow the <code class="docutils literal notranslate"><span class="pre">RegisteredTask</span></code> naming standard and requirements, it would be useful to read up on this guide if coming across any issues <a class="reference external" href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa382542.aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa382542.aspx</a>.</p></li>
+<li><p>A Group Managed Service Account (gMSA) can be used by setting <code class="docutils literal notranslate"><span class="pre">logon_type</span></code> to <code class="docutils literal notranslate"><span class="pre">password</span></code> and omitting the password parameter. For more information on gMSAs, see <a class="reference external" href="https://techcommunity.microsoft.com/t5/Core-Infrastructure-and-Security/Windows-Server-2012-Group-Managed-Service-Accounts/ba-p/255910">https://techcommunity.microsoft.com/t5/Core-Infrastructure-and-Security/Windows-Server-2012-Group-Managed-Service-Accounts/ba-p/255910</a></p></li>
+</ul>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="win_scheduled_task_info_module.html#ansible-collections-ansible-windows-win-scheduled-task-info-module"><span class="std std-ref">ansible.windows.win_scheduled_task_info</span></a></dt><dd><p>Get information about Windows Scheduled Tasks.</p>
+</dd>
+<dt><a class="reference internal" href="win_user_right_module.html#ansible-collections-ansible-windows-win-user-right-module"><span class="std std-ref">ansible.windows.win_user_right</span></a></dt><dd><p>Manage Windows User Rights.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a task to open 2 command prompts as SYSTEM</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskName</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open command prompt</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd.exe</span>
+<span class="w">        </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/c hostname</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd.exe</span>
+<span class="w">        </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/c whoami</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">daily</span>
+<span class="w">        </span><span class="nt">start_boundary</span><span class="p">:</span><span class="w"> </span><span class="s">'2017-10-09T09:00:00'</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create task to run a PS script as NETWORK service on boot</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskName2</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run a PowerShell script</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</span>
+<span class="w">        </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boot</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NETWORK SERVICE</span>
+<span class="w">    </span><span class="nt">run_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">highest</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Update Local Security Policy to allow users to run scheduled tasks</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_user_right</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SeBatchLogonRight</span>
+<span class="w">    </span><span class="nt">users</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LocalUser</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\NetworkUser</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Change above task to run under a domain user account, storing the passwords</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskName2</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\User</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Password</span>
+<span class="w">    </span><span class="nt">logon_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Change the above task again, choosing not to store the password</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskName2</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\User</span>
+<span class="w">    </span><span class="nt">logon_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s4u</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Change above task to use a gMSA, where the password is managed automatically</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskName2</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOMAIN\gMsaSvcAcct$</span>
+<span class="w">    </span><span class="nt">logon_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create task with multiple triggers</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TriggerTask</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">\Custom</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd.exe</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">daily</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthlydow</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Set logon type to password but don't force update the password</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TriggerTask</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">\Custom</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd.exe</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Administrator</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password</span>
+<span class="w">    </span><span class="nt">update_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Disable a task that already exists</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TaskToDisable</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create a task that will be repeated every minute for five minutes</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RepeatedTask</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open command prompt</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmd.exe</span>
+<span class="w">        </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/c hostname</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">registration</span>
+<span class="w">        </span><span class="nt">repetition</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PT1M</span>
+<span class="w">          </span><span class="nt">duration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PT5M</span>
+<span class="w">          </span><span class="nt">stop_at_duration_end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create task to run a PS script in Windows 10 compatibility on boot with a delay of 1min</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_scheduled_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TriggerTask</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">\Custom</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</span>
+<span class="w">        </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-ExecutionPolicy Unrestricted -NonInteractive -File C:\TestDir\Test.ps1</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boot</span>
+<span class="w">        </span><span class="nt">delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PT1M</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SYSTEM</span>
+<span class="w">    </span><span class="nt">compatibility</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</pre></div>
+</div>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Peter Mounce (&#64;petemounce)</p></li>
+<li><p>Jordan Borean (&#64;jborean93)</p></li>
+<li><p>Hen Yaish (&#64;yaish25491)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_route_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_route module – Add or remove a static route" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_scheduled_task_info_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_scheduled_task_info module – Get information about Windows Scheduled Tasks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
