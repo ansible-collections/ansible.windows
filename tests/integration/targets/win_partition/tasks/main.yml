@@ -1,18 +1,125 @@
 ---
-- name: Copy VHDX scripts
-  ansible.windows.win_template:
-    src: "{{ item.src }}"
-    dest: '{{ remote_tmp_dir }}\{{ item.dest }}'
-  loop:
-    - { src: vhdx_creation_script.j2, dest: vhdx_creation_script.txt }
-    - { src: vhdx_deletion_script.j2, dest: vhdx_deletion_script.txt }
-
-- name: Create VHD
-  ansible.windows.win_command: diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_creation_script.txt"
-
 - name: Run tests
   block:
+    - name: Clean up VHDs left by previous win_partition test runs
+      ansible.windows.win_powershell:
+        path: cleanup_stale_vhds.ps1
+
+    - name: Select unused drive letters for test partitions
+      ansible.windows.win_powershell:
+        path: select_drive_letters.ps1
+      register: partition_test_drive_letters
+      changed_when: false
+
+    - name: Record the unique drive letters for this test run
+      ansible.builtin.set_fact:
+        partition_test_drive_letter: >-
+          {{ partition_test_drive_letters.output[0] }}
+        partition_test_new_drive_letter: >-
+          {{ partition_test_drive_letters.output[1] }}
+
+    - name: Copy VHDX scripts
+      ansible.windows.win_template:
+        src: "{{ item.src }}"
+        dest: '{{ remote_tmp_dir }}\{{ item.dest }}'
+      loop:
+        - src: vhdx_creation_script.j2
+          dest: vhdx_creation_script.txt
+        - src: vhdx_deletion_script.j2
+          dest: vhdx_deletion_script.txt
+
+    - name: Create VHD
+      ansible.windows.win_command:
+        cmd: >-
+          diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_creation_script.txt"
+      register: create_vhd
+
+    - name: Get the disk number for the test VHD
+      ansible.windows.win_powershell:
+        path: get_test_disk_number.ps1
+        parameters:
+          ImagePath: '{{ AnsibleVhdx }}'
+      register: partition_test_disk
+      changed_when: false
+
+    - name: Record the disk number for this test run
+      ansible.builtin.set_fact:
+        partition_test_disk_number: "{{ partition_test_disk.output[0] | int }}"
+
     - import_tasks: tests.yml
   always:
+    - name: Get any remaining partitions on the test VHD
+      ansible.windows.win_partition_info:
+        disk_number: '{{ partition_test_disk_number }}'
+      register: cleanup_partition_info
+      ignore_errors: true
+      when:
+        - partition_test_disk_number is defined
+
+    - name: Remove any remaining partitions on the test VHD
+      ansible.windows.win_partition:
+        disk_number: '{{ partition_test_disk_number }}'
+        partition_number: '{{ item.partition_number }}'
+        state: absent
+      loop: '{{ cleanup_partition_info.partitions | default([]) }}'
+      ignore_errors: true
+      when:
+        - partition_test_disk_number is defined
+
+    - name: Verify all test partitions were removed
+      ansible.windows.win_partition_info:
+        disk_number: '{{ partition_test_disk_number }}'
+      register: cleanup_partition_verification
+      ignore_errors: true
+      when:
+        - partition_test_disk_number is defined
+
     - name: Detach disk
-      ansible.windows.win_command: diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_deletion_script.txt"
+      ansible.windows.win_command:
+        cmd: >-
+          diskpart.exe /s "{{ remote_tmp_dir }}\vhdx_deletion_script.txt"
+      ignore_errors: true
+
+    - name: Verify the test VHD is detached
+      ansible.windows.win_powershell:
+        path: verify_vhd_detached.ps1
+        parameters:
+          ImagePath: '{{ AnsibleVhdx }}'
+      changed_when: false
+      register: cleanup_vhd_detach_verification
+      ignore_errors: true
+      when:
+        - create_vhd is defined
+        - create_vhd is succeeded
+
+    - name: Remove test VHD file
+      ansible.windows.win_file:
+        path: '{{ AnsibleVhdx }}'
+        state: absent
+      ignore_errors: true
+
+    - name: Verify the test VHD file was removed
+      ansible.windows.win_stat:
+        path: '{{ AnsibleVhdx }}'
+      register: cleanup_vhd_file
+      ignore_errors: true
+
+    - name: Assert test partitions and VHD were cleaned up
+      ansible.builtin.assert:
+        that:
+          - >-
+            partition_test_disk_number is not defined or
+            (
+              not cleanup_partition_verification.failed and
+              not cleanup_partition_verification.exists and
+              cleanup_partition_verification.partitions == []
+            )
+          - >-
+            create_vhd is not defined or
+            not (create_vhd is succeeded) or
+            (
+              not cleanup_vhd_detach_verification.failed and
+              not (cleanup_vhd_detach_verification.output[0] | bool)
+            )
+          - not cleanup_vhd_file.failed
+          - not cleanup_vhd_file.stat.exists

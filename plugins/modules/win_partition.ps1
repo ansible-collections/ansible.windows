@@ -41,6 +41,16 @@ $offline = $module.Params.offline
 $mbr_type = $module.Params.mbr_type
 $gpt_type = $module.Params.gpt_type
 
+if ($null -ne $disk_number -and $disk_number -lt 0) {
+    $module.FailJson("disk_number must be greater than or equal to 0")
+}
+if ($null -ne $partition_number -and $partition_number -lt 1) {
+    $module.FailJson("partition_number must be greater than or equal to 1")
+}
+if ($null -ne $drive_letter -and $drive_letter -ne "auto" -and $drive_letter -notmatch "^[a-zA-Z]$") {
+    $module.FailJson("Incorrect usage of drive_letter: specify a drive letter from A-Z or use 'auto' to automatically assign a drive letter")
+}
+
 $size_is_maximum = $false
 $ansible_partition = $false
 $ansible_partition_size = $null
@@ -98,20 +108,15 @@ if ($null -ne $disk_number -and $null -ne $partition_number) {
     $ansible_partition = Get-Partition -DiskNumber $disk_number -PartitionNumber $partition_number -ErrorAction SilentlyContinue
 }
 # Check if drive_letter is either auto-assigned or a character from A-Z
-elseif ($drive_letter -and $drive_letter -ne "auto" -and -not ($disk_number -and $partition_number)) {
-    if ($drive_letter -match "^[a-zA-Z]$") {
-        # This step need to be a bit more complex so that we can support Windows failover cluster disks.
-        # With Windows failover cluster disks every node sees every disk participating in that cluster.
-        # For example a clustered disk in a three node cluster will show up three times.
-        # Fortunatly we can differentiate local from remote disk as only local disk will ever have a disk number.
-        # So with that we just ignore all disk without a number which will result in a local disk being picked.
-        $ansible_partition = Get-Partition -DriveLetter $drive_letter -ErrorAction SilentlyContinue | Where-Object { $null -ne $_.DiskNumber }
-    }
-    else {
-        $module.FailJson("Incorrect usage of drive_letter: specify a drive letter from A-Z or use 'auto' to automatically assign a drive letter")
-    }
+elseif ($drive_letter -and $drive_letter -ne "auto" -and -not ($null -ne $disk_number -and $null -ne $partition_number)) {
+    # This step need to be a bit more complex so that we can support Windows failover cluster disks.
+    # With Windows failover cluster disks every node sees every disk participating in that cluster.
+    # For example a clustered disk in a three node cluster will show up three times.
+    # Fortunatly we can differentiate local from remote disk as only local disk will ever have a disk number.
+    # So with that we just ignore all disk without a number which will result in a local disk being picked.
+    $ansible_partition = Get-Partition -DriveLetter $drive_letter -ErrorAction SilentlyContinue | Where-Object { $null -ne $_.DiskNumber }
 }
-elseif ($disk_number) {
+elseif ($null -ne $disk_number) {
     try {
         Get-Disk -Number $disk_number | Out-Null
     }
