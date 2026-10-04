@@ -1,1 +1,1 @@
-AnsibleVhdx: '{{ remote_tmp_dir }}\AnsiblePart.vhdx'
+AnsibleVhdx: '{{ remote_tmp_dir }}\AnsibleWinPartitionTest.vhdx'

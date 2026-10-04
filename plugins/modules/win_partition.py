@@ -7,9 +7,10 @@
 DOCUMENTATION = r'''
 ---
 module: win_partition
+version_added: '3.10.0'
 short_description: Creates, changes and removes partitions on Windows Server
 description:
-  - The M(community.windows.win_partition) module can create, modify or delete a partition on a disk
+  - The M(ansible.windows.win_partition) module can create, modify or delete a partition on a disk.
 options:
   state:
     description:
@@ -27,11 +28,13 @@ options:
   disk_number:
     description:
       - Disk number is mandatory for creating new partitions.
+      - Disk numbers start at C(0).
       - A combination of I(disk_number) and I(partition_number) can be used to specify the partition instead of I(drive_letter) if required.
     type: int
   partition_number:
     description:
       - Used in conjunction with I(disk_number) to uniquely identify a partition.
+      - Partition numbers start at C(1).
     type: int
   partition_size:
     description:
@@ -82,24 +85,26 @@ notes:
   - For more information, see U(https://msdn.microsoft.com/en-us/library/windows/desktop/hh830524.aspx).
 author:
   - Varun Chopra (@chopraaa) <v@chopraaa.com>
+seealso:
+  - module: ansible.windows.win_partition_info
 '''
 
 EXAMPLES = r'''
 - name: Create a partition with drive letter D and size 5 GiB
-  community.windows.win_partition:
+  ansible.windows.win_partition:
     drive_letter: D
     partition_size: 5 GiB
     disk_number: 1
 
 - name: Resize previously created partition to it's maximum size and change it's drive letter to E
-  community.windows.win_partition:
+  ansible.windows.win_partition:
     drive_letter: E
     partition_size: -1
     partition_number: 1
     disk_number: 1
 
 - name: Delete partition
-  community.windows.win_partition:
+  ansible.windows.win_partition:
     disk_number: 1
     partition_number: 1
     state: absent

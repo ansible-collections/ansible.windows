@@ -1,21 +1,69 @@
 ---
 - name: Since partition is not present, disk_number is required to create a new partition.
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
   register: incorrect_attempt_1
-  ignore_errors: True
+  ignore_errors: true
 
 - assert:
     that:
       - incorrect_attempt_1 is failed
       - '"Missing required parameter: disk_number" in incorrect_attempt_1.msg'
 
+- name: Disk 0 is accepted as a target disk before partition size validation
+  ansible.windows.win_partition:
+    disk_number: 0
+    drive_letter: auto
+  register: disk_zero_missing_size
+  ignore_errors: true
+
+- assert:
+    that:
+      - disk_zero_missing_size is failed
+      - '"Missing required parameter: partition_size" in disk_zero_missing_size.msg'
+
+- name: Reject negative disk numbers
+  ansible.windows.win_partition:
+    disk_number: -1
+    partition_size: -1
+  register: invalid_disk_number
+  ignore_errors: true
+
+- assert:
+    that:
+      - invalid_disk_number is failed
+      - '"disk_number must be greater than or equal to 0" in invalid_disk_number.msg'
+
+- name: Reject partition number zero
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: 0
+    state: absent
+  register: invalid_partition_number
+  ignore_errors: true
+
+- assert:
+    that:
+      - invalid_partition_number is failed
+      - '"partition_number must be greater than or equal to 1" in invalid_partition_number.msg'
+
+- name: Reject a negative disk number in an info filter
+  ansible.windows.win_partition_info:
+    disk_number: -1
+  register: invalid_info_disk_number
+  ignore_errors: true
+
+- assert:
+    that:
+      - invalid_info_disk_number is failed
+      - '"disk_number must be greater than or equal to 0" in invalid_info_disk_number.msg'
+
 - name: Added disk_number but size is still absent
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     disk_number: 0
   register: incorrect_attempt_2
-  ignore_errors: True
+  ignore_errors: true
 
 - assert:
     that:
@@ -23,12 +71,12 @@
       - '"Missing required parameter: partition_size" in incorrect_attempt_2.msg'
 
 - name: Added size but the disk we specified earlier doesn't have enough space
-  win_partition:
-    drive_letter: D
-    disk_number: 1
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
+    disk_number: '{{ partition_test_disk_number }}'
     partition_size: 20 GiB
   register: incorrect_attempt_3
-  ignore_errors: True
+  ignore_errors: true
 
 - assert:
     that:
@@ -36,76 +84,117 @@
       - '"Partition size is not supported by disk" in incorrect_attempt_3.msg'
 
 - name: Create 1 gib partition using drive_letter and default (huge) mbr type (check mode)
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: present
     partition_size: 1 GiB
-    disk_number: 1
-    active: True
+    disk_number: '{{ partition_test_disk_number }}'
+    active: true
   register: create_small_part_check
-  check_mode: True
+  check_mode: true
 
 - name: Create 1 gib partition using drive_letter and default (huge) mbr type
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: present
     partition_size: 1 GiB
-    disk_number: 1
-    active: True
+    disk_number: '{{ partition_test_disk_number }}'
+    active: true
   register: create_small_part
 
 - name: Create 1 gib partition using drive_letter and default (huge) mbr type (idempotence)
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: present
     partition_size: 1 GiB
-    disk_number: 1
-    active: True
+    disk_number: '{{ partition_test_disk_number }}'
+    active: true
   register: create_small_part_idempotence
 
-- name: "Check if partition was created successfully"
-  ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter D; "$($AnsiPart.DriveLetter),$($AnsiPart.Size),$($AnsiPart.IsActive),$($AnsiPart.MbrType)"
+- name: Get information about all partitions after creating the test partition
+  ansible.windows.win_partition_info:
+  register: all_partition_info
+
+- name: Assert unfiltered info includes the created partition
+  ansible.builtin.assert:
+    that:
+      - all_partition_info.exists
+      - >-
+        all_partition_info.partitions
+        | selectattr('drive_letter', 'equalto', partition_test_drive_letter)
+        | list | length == 1
+
+- name: Get information about the created partition
+  ansible.windows.win_partition_info:
+    drive_letter: '{{ partition_test_drive_letter }}'
   register: get_small_part
+
+- name: Get information about partition 1 across all disks
+  ansible.windows.win_partition_info:
+    partition_number: 1
+  register: partition_number_info
 
 - assert:
     that:
       - create_small_part_check is changed
       - create_small_part is changed
       - create_small_part_idempotence is not changed
-      - get_small_part.stdout | trim == "D,1073741824,True,6"
+      - get_small_part.exists
+      - get_small_part.partitions | length == 1
+      - get_small_part.partitions[0].drive_letter == partition_test_drive_letter
+      - get_small_part.partitions[0].size == 1073741824
+      - get_small_part.partitions[0].is_active
+      - get_small_part.partitions[0].mbr_type == 6
+      - >-
+        partition_number_info.partitions
+        | selectattr('disk_number', 'equalto', partition_test_disk_number | int)
+        | selectattr('drive_letter', 'equalto', partition_test_drive_letter)
+        | list | length == 1
+
+- name: Assert the created partition is on the test VHD
+  ansible.builtin.assert:
+    that:
+      - >-
+        (get_small_part.partitions[0].disk_number | int) ==
+        (partition_test_disk_number | int)
+    fail_msg: >-
+      Expected disk {{ partition_test_disk_number }}, but info returned disk
+      {{ get_small_part.partitions[0].disk_number }}.
 
 - name: "Change drive letter, maximize partition size and set partition to read only (check mode)"
-  win_partition:
-    drive_letter: E
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_new_drive_letter }}'
     state: present
     partition_size: -1
-    disk_number: 1
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
-    read_only: True
+    read_only: true
   register: upgrade_small_part_check
-  check_mode: True
+  check_mode: true
 
 - name: "Change drive letter, maximize partition size and set partition to read only"
-  win_partition:
-    drive_letter: E
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_new_drive_letter }}'
     state: present
     partition_size: -1
-    disk_number: 1
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
-    read_only: True
+    read_only: true
   register: upgrade_small_part
 
 - name: "Change drive letter, maximize partition size and set partition to read only (idempotence)"
-  win_partition:
-    drive_letter: E
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_new_drive_letter }}'
     state: present
     partition_size: -1
-    disk_number: 1
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
-    read_only: True
+    read_only: true
   register: upgrade_small_part_idempotence
 
-- ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter E; "$($AnsiPart.DriveLetter),$($AnsiPart.Size),$($AnsiPart.IsReadOnly)"
+- name: Get information about the resized partition
+  ansible.windows.win_partition_info:
+    drive_letter: '{{ partition_test_new_drive_letter }}'
   register: get_max_part
 
 - name: Check if creation and updation were successful
@@ -114,81 +203,89 @@
       - upgrade_small_part_check is changed
       - upgrade_small_part is changed
       - upgrade_small_part_idempotence is not changed
-      - get_max_part.stdout | trim == "E,2096037888,True"
+      - get_max_part.exists
+      - get_max_part.partitions | length == 1
+      - get_max_part.partitions[0].drive_letter == partition_test_new_drive_letter
+      - get_max_part.partitions[0].size == 2096037888
+      - get_max_part.partitions[0].is_read_only
 
 - name: "Changing size of a read only partition"
-  win_partition:
-    drive_letter: E
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_new_drive_letter }}'
     partition_size: 1 GiB
   register: modify_read_only_partition
-  ignore_errors: True
+  ignore_errors: true
 
 - assert:
     that:
       - modify_read_only_partition is failed
 
 - name: "Delete partition (check mode)"
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
     state: absent
   register: delete_partition_check
-  check_mode: True
+  check_mode: true
 
 - name: "Delete partition"
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
     state: absent
   register: delete_partition
 
 - name: "Delete partition (idempotence)"
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
     state: absent
   register: delete_partition_idempotence
 
-- name: "Confirm that the partition is absent"
-  ansible.windows.win_shell: Get-Partition -DiskNumber 1 -PartitionNumber 1
+- name: Confirm that the partition is absent
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: 1
   register: confirm_partition_deletion
-  ignore_errors: True
 
 - assert:
     that:
       - delete_partition_check is changed
       - delete_partition is changed
       - delete_partition_idempotence is not changed
-      - '"No matching MSFT_Partition objects found" in confirm_partition_deletion.stderr'
+      - not confirm_partition_deletion.exists
+      - confirm_partition_deletion.partitions == []
 
 - name: "Create new partition without drive letter and ifs mbr type (check mode)"
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_size: -1
     mbr_type: ifs
-    offline: True
+    offline: true
   register: recreate_partition_check
-  check_mode: True
+  check_mode: true
 
 - name: "Create new partition without drive letter and ifs mbr type"
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_size: -1
     mbr_type: ifs
-    offline: True
+    offline: true
   register: recreate_partition
 
 - name: "Create new partition without drive letter and ifs mbr type (idempotence failure)" # Disk is full now; no idempotence without drive letters
-  win_partition:
-    disk_number: 1
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
     partition_size: -1
     mbr_type: ifs
-    offline: True
+    offline: true
   register: recreate_partition_idempotence_failure
-  ignore_errors: True
+  ignore_errors: true
 
-- name: "Confirm that new partition is created with maximum size, is offline and is IFS"
-  ansible.windows.win_shell: $AnsiPart = Get-Partition -DiskNumber 1 -PartitionNumber 1; "$($AnsiPart.Size),$($AnsiPart.IsOffline),$($AnsiPart.MbrType)"
+- name: Get information about the recreated partition
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: 1
   register: confirm_recreate_partition
 
 - assert:
@@ -196,61 +293,68 @@
       - recreate_partition_check is changed
       - recreate_partition is changed
       - recreate_partition_idempotence_failure is failed
-      - confirm_recreate_partition.stdout | trim == "2096037888,True,7"
+      - confirm_recreate_partition.exists
+      - confirm_recreate_partition.partitions | length == 1
+      - confirm_recreate_partition.partitions[0].size == 2096037888
+      - confirm_recreate_partition.partitions[0].is_offline
+      - confirm_recreate_partition.partitions[0].mbr_type == 7
 
 - name: "Adding a drive letter to our partition should bring it back online (check mode)"
-  win_partition:
-    drive_letter: D
-    disk_number: 1
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
   register: add_drive_letter_check
-  ignore_errors: True
-  check_mode: True
+  ignore_errors: true
+  check_mode: true
 
 - name: "Adding a drive letter to our partition should bring it back online"
-  win_partition:
-    drive_letter: D
-    disk_number: 1
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
   register: add_drive_letter
-  ignore_errors: True
+  ignore_errors: true
 
 - name: "Adding a drive letter to our partition should bring it back online (idempotence)"
-  win_partition:
-    drive_letter: D
-    disk_number: 1
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
+    disk_number: '{{ partition_test_disk_number }}'
     partition_number: 1
   register: add_drive_letter_idempotence
-  ignore_errors: True
+  ignore_errors: true
 
-- name: "Confirm that drive is back online"
-  ansible.windows.win_shell: $AnsiPart = Get-Partition -DiskNumber 1 -PartitionNumber 1; "$($AnsiPart.DriveLetter),$($AnsiPart.IsOffline)"
+- name: Confirm that the partition is online and has a drive letter
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: 1
   register: confirm_add_drive_letter
-  ignore_errors: True
 
 - assert:
     that:
       - add_drive_letter_check is changed
       - add_drive_letter is changed
       - add_drive_letter_idempotence is not changed
-      - confirm_add_drive_letter.stdout | trim == "D,False"
+      - confirm_add_drive_letter.exists
+      - confirm_add_drive_letter.partitions[0].drive_letter == partition_test_drive_letter
+      - not confirm_add_drive_letter.partitions[0].is_offline
 
 - name: "Remove partition again (check mode)"
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: absent
   register: delete_partition_again_check
-  check_mode: True
+  check_mode: true
 
 - name: "Remove partition again"
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: absent
   register: delete_partition_again
 
 - name: "Remove partition again (idempotence)"
-  win_partition:
-    drive_letter: D
+  ansible.windows.win_partition:
+    drive_letter: '{{ partition_test_drive_letter }}'
     state: absent
   register: delete_partition_again_idempotence
 
@@ -259,3 +363,140 @@
       - delete_partition_again_check is changed
       - delete_partition_again is changed
       - delete_partition_again_idempotence is not changed
+
+- name: Confirm that the partition was removed again
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: 1
+  register: confirm_partition_deletion_again
+
+- assert:
+    that:
+      - not confirm_partition_deletion_again.exists
+      - confirm_partition_deletion_again.partitions == []
+
+- name: Verify the test VHD is the empty disk selected for GPT conversion
+  ansible.windows.win_powershell:
+    path: verify_disk_for_gpt_conversion.ps1
+    parameters:
+      ImagePath: '{{ AnsibleVhdx }}'
+      DiskNumber: '{{ partition_test_disk_number }}'
+  changed_when: false
+
+- name: Copy the GPT conversion script
+  ansible.windows.win_template:
+    src: gpt_conversion_script.j2
+    dest: '{{ remote_tmp_dir }}\gpt_conversion_script.txt'
+
+- name: Convert the empty test VHD to GPT
+  ansible.windows.win_command:
+    cmd: >-
+      diskpart.exe /s "{{ remote_tmp_dir }}\gpt_conversion_script.txt"
+
+- name: Verify the test VHD is now GPT
+  ansible.windows.win_powershell:
+    path: verify_gpt_disk.ps1
+    parameters:
+      DiskNumber: '{{ partition_test_disk_number }}'
+  changed_when: false
+
+- name: Create a hidden GPT basic data partition in check mode
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_size: 1 GiB
+    gpt_type: basic_data
+    hidden: true
+  register: create_gpt_part_check
+  check_mode: true
+
+- name: Create a hidden GPT basic data partition
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_size: 1 GiB
+    gpt_type: basic_data
+    hidden: true
+  register: create_gpt_part
+
+- name: Get information about the GPT partitions on the test disk
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+  register: gpt_disk_partition_info
+
+- name: Assert the new GPT partition was created
+  ansible.builtin.assert:
+    that:
+      - >-
+        gpt_disk_partition_info.partitions
+        | selectattr('size', 'equalto', 1073741824)
+        | list | length == 1
+
+- name: Record the created GPT partition number
+  ansible.builtin.set_fact:
+    partition_test_gpt_partition_number: >-
+      {{ gpt_disk_partition_info.partitions
+         | selectattr('size', 'equalto', 1073741824)
+         | map(attribute='partition_number') | first }}
+
+- name: Create the hidden GPT partition again (idempotence)
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+    partition_size: 1 GiB
+    gpt_type: basic_data
+    hidden: true
+  register: create_gpt_part_idempotence
+
+- name: Get information about the GPT partition
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+  register: gpt_partition_info
+
+- name: Assert GPT type, hidden state, idempotence, and actual size
+  ansible.builtin.assert:
+    that:
+      - create_gpt_part_check is changed
+      - create_gpt_part is changed
+      - create_gpt_part_idempotence is not changed
+      - gpt_partition_info.exists
+      - gpt_partition_info.partitions | length == 1
+      - gpt_partition_info.partitions[0].size == 1073741824
+      - gpt_partition_info.partitions[0].gpt_type | lower == '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
+      - gpt_partition_info.partitions[0].is_hidden
+
+- name: Delete the GPT partition in check mode
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+    state: absent
+  register: delete_gpt_part_check
+  check_mode: true
+
+- name: Delete the GPT partition
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+    state: absent
+  register: delete_gpt_part
+
+- name: Delete the GPT partition again (idempotence)
+  ansible.windows.win_partition:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+    state: absent
+  register: delete_gpt_part_idempotence
+
+- name: Confirm the GPT partition was removed
+  ansible.windows.win_partition_info:
+    disk_number: '{{ partition_test_disk_number }}'
+    partition_number: '{{ partition_test_gpt_partition_number }}'
+  register: confirm_gpt_partition_deletion
+
+- name: Assert GPT partition deletion and idempotence
+  ansible.builtin.assert:
+    that:
+      - delete_gpt_part_check is changed
+      - delete_gpt_part is changed
+      - delete_gpt_part_idempotence is not changed
+      - not confirm_gpt_partition_deletion.exists
+      - confirm_gpt_partition_deletion.partitions == []
