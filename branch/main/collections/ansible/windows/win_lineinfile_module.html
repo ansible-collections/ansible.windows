@@ -1,0 +1,488 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="2.27.0" name="antsibull-docs" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ansible.windows.win_lineinfile module – Ensure a particular line is in a file, or replace an existing line using a back-referenced regular expression &mdash; Ansible collections  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=41de9001" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/ansible.css?v=b54c304f" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/antsibull-minimal.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/rtd-ethical-ads.css?v=289b023e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/images/Ansible-Mark-RGB_Black.png"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7f41d439"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ansible.windows.win_listen_ports_facts module – Recopilates the facts of the listening ports of the machine" href="win_listen_ports_facts_module.html" />
+    <link rel="prev" title="ansible.windows.win_inet_proxy module – Manages proxy settings for WinINet and Internet Explorer" href="win_inet_proxy_module.html" /><!-- extra head elements for Ansible beyond RTD Sphinx Theme -->
+
+
+
+
+</head>
+
+<body class="wy-body-for-nav"><!-- extra body elements for Ansible beyond RTD Sphinx Theme -->
+
+<div class="DocSite-globalNav ansibleNav">
+  <ul>
+    <li><a href="https://www.ansible.com/blog" target="_blank">Blog</a></li>
+    <li><a href="https://forum.ansible.com/" target="_blank">Ansible community forum</a></li>
+    <li><a href="https://docs.ansible.com/" target="_blank">Documentation</a></li>
+  </ul>
+</div>
+
+<a class="DocSite-nav" href="/" style="padding-bottom: 30px;">
+
+  <img class="DocSiteNav-logo"
+    src="../../../_static/images/Ansible-Mark-RGB_White.png"
+    alt="Ansible Logo">
+  <div class="DocSiteNav-title">Ansible Collections Documentation</div>
+</a>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Ansible collections
+          </a><!--- Based on https://github.com/rtfd/sphinx_rtd_theme/pull/438/files -->
+
+<div class="version">
+  
+    
+  
+</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <label class="sr-only" for="q">Search docs:</label>
+    <input type="text" class="st-default-search-input" id="q" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+  
+              <p class="caption" role="heading"><span class="caption-text">Collections:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Collection Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Collections in the Ansible Namespace</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Ansible.Windows</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#description">Description</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html#plugin-index">Plugin Index</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Plugin indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_filter.html">Index of all Filter Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_module.html">Index of all Modules</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference indexes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../environment_variables.html">Index of all Collection Environment Variables</a></li>
+</ul>
+<!-- extra nav elements for Ansible beyond RTD Sphinx Theme -->
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Ansible collections</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Collection Index</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Collections in the Ansible Namespace</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Ansible.Windows</a></li>
+      <li class="breadcrumb-item active">ansible.windows.win_lineinfile module – Ensure a particular line is in a file, or replace an existing line using a back-referenced regular expression</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/ansible-collections/ansible.windows/edit/main/plugins/modules/win_lineinfile.py?description=%23%23%23%23%23%20SUMMARY%0A%3C!—%20Your%20description%20here%20–%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+  
+           <div itemprop="articleBody">
+             
+  <span class="target" id="ansible-collections-ansible-windows-win-lineinfile-module"></span><section id="ansible-windows-win-lineinfile-module-ensure-a-particular-line-is-in-a-file-or-replace-an-existing-line-using-a-back-referenced-regular-expression">
+<h1>ansible.windows.win_lineinfile module – Ensure a particular line is in a file, or replace an existing line using a back-referenced regular expression<a class="headerlink" href="#ansible-windows-win-lineinfile-module-ensure-a-particular-line-is-in-a-file-or-replace-an-existing-line-using-a-back-referenced-regular-expression" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is part of the <a class="reference external" href="https://galaxy.ansible.com/ui/repo/published/ansible/windows/">ansible.windows collection</a> (version 3.9.0).</p>
+<p>It is not included in <code class="docutils literal notranslate"><span class="pre">ansible-core</span></code>.
+To check whether it is installed, run <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">list</span></code>.</p>
+<p>To install it, use: <code class="code docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ansible.windows</span></code>.</p>
+<p>To use it in a playbook, specify: <code class="code docutils literal notranslate"><span class="pre">ansible.windows.win_lineinfile</span></code>.</p>
+</div>
+<p class="ansible-version-added">New in ansible.windows 3.9.0</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id3">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+</ul>
+</nav>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>This module will search a file for a line, and ensure that it is present or absent.</p></li>
+<li><p>This is primarily useful when you want to change a single line in a file only.</p></li>
+<li><p>For non-Windows targets, use the <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.lineinfile</span></a> module instead.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-backrefs"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-backrefs"><strong>backrefs</strong></p>
+<a class="ansibleOptionLink" href="#parameter-backrefs" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used with <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>.</p>
+<p>If set, <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-line"><span class="std std-ref"><span class="pre">line</span></span></a></strong></code> can contain backreferences (both positional and named) that will get populated if the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-regex"><span class="std std-ref"><span class="pre">regex</span></span></a></strong></code> matches.</p>
+<p>This flag changes the operation of the module slightly; <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertbefore"><span class="std std-ref"><span class="pre">insertbefore</span></span></a></strong></code> and <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertafter"><span class="std std-ref"><span class="pre">insertafter</span></span></a></strong></code> will be ignored, and if the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-regex"><span class="std std-ref"><span class="pre">regex</span></span></a></strong></code> does not match anywhere in the file, the file will be left unchanged.</p>
+<p>If the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-regex"><span class="std std-ref"><span class="pre">regex</span></span></a></strong></code> does match, the last matching line will be replaced by the expanded <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-line"><span class="std std-ref"><span class="pre">line</span></span></a></strong></code> parameter.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-backup"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-backup"><strong>backup</strong></p>
+<a class="ansibleOptionLink" href="#parameter-backup" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Determine whether a backup should be created.</p>
+<p>When set to <code class="ansible-value docutils literal notranslate"><span class="pre">true</span></code>, create a backup file including the timestamp information so you can get the original file back if you somehow clobbered it incorrectly.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-create"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-create"><strong>create</strong></p>
+<a class="ansibleOptionLink" href="#parameter-create" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used with <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>.</p>
+<p>If specified, the file will be created if it does not already exist.</p>
+<p>By default it will fail if the file is missing.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-encoding"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-encoding"><strong>encoding</strong></p>
+<a class="ansibleOptionLink" href="#parameter-encoding" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies the encoding of the source text file to operate on (and thus what the output encoding will be).</p>
+<p>The default of <code class="ansible-value docutils literal notranslate"><span class="pre">auto</span></code> will cause the module to auto-detect the encoding of the source file and ensure that the modified file is written with the same encoding.</p>
+<p>An explicit encoding can be passed as a string that is a valid value to pass to the .NET framework <code class="docutils literal notranslate"><span class="pre">System.Text.Encoding.GetEncoding(</span></code>) method, see <a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getencoding">https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getencoding</a>.</p>
+<p>This is mostly useful with <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-create"><span class="std std-ref"><span class="pre">create=true</span></span></a></code> if you want to create a new file with a specific encoding.</p>
+<p>If <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-create"><span class="std std-ref"><span class="pre">create=true</span></span></a></code> is specified without a specific encoding, the default encoding (UTF-8, no BOM) will be used.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-insertafter"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertafter"><strong>insertafter</strong></p>
+<a class="ansibleOptionLink" href="#parameter-insertafter" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used with <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>.</p>
+<p>If specified, the line will be inserted after the last match of the specified regular expression.</p>
+<p>A special value <code class="ansible-value docutils literal notranslate"><span class="pre">EOF</span></code> is available for inserting the line at the end of the file.</p>
+<p>If the specified regular expression has no matches, <code class="ansible-value docutils literal notranslate"><span class="pre">EOF</span></code> will be used instead.</p>
+<p>May not be used with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-backrefs"><span class="std std-ref"><span class="pre">backrefs</span></span></a></strong></code>.</p>
+<p>Defaults to <code class="ansible-value docutils literal notranslate"><span class="pre">EOF</span></code> when neither <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertafter"><span class="std std-ref"><span class="pre">insertafter</span></span></a></strong></code> nor <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertbefore"><span class="std std-ref"><span class="pre">insertbefore</span></span></a></strong></code> is specified.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-insertbefore"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-insertbefore"><strong>insertbefore</strong></p>
+<a class="ansibleOptionLink" href="#parameter-insertbefore" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Used with <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>.</p>
+<p>If specified, the line will be inserted before the last match of the specified regular expression.</p>
+<p>A special value <code class="ansible-value docutils literal notranslate"><span class="pre">BOF</span></code> is available for inserting the line at the beginning of the file.</p>
+<p>If the specified regular expression has no matches, the line will be inserted at the end of the file.</p>
+<p>May not be used with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-backrefs"><span class="std std-ref"><span class="pre">backrefs</span></span></a></strong></code>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-line"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-line"><strong>line</strong></p>
+<a class="ansibleOptionLink" href="#parameter-line" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Required for <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>. The line to insert/replace into the file.</p>
+<p>If <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-backrefs"><span class="std std-ref"><span class="pre">backrefs</span></span></a></strong></code> is set, may contain backreferences that will get expanded with the <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-regex"><span class="std std-ref"><span class="pre">regex</span></span></a></strong></code> capture groups if the regex matches.</p>
+<p>Be aware that the line is processed first on the controller and thus is dependent on yaml quoting rules. Any double quoted line will have control characters, such as <code class="docutils literal notranslate"><span class="pre">\\r\\n</span></code>, expanded. To print such characters literally, use single or no quotes.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-newline"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-newline"><strong>newline</strong></p>
+<a class="ansibleOptionLink" href="#parameter-newline" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Specifies the line separator style to use for the modified file.</p>
+<p>This defaults to the windows line separator <code class="docutils literal notranslate"><span class="pre">\\r\\n</span></code>.</p>
+<p>Note that the indicated line separator will be used for file output regardless of the original line separator that appears in the input file.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;unix&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;windows&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-path"></div>
+<div class="ansibleOptionAnchor" id="parameter-dest"></div>
+<div class="ansibleOptionAnchor" id="parameter-destfile"></div>
+<div class="ansibleOptionAnchor" id="parameter-name"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-path"><span id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-name"></span><span id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-destfile"></span><span id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-dest"></span><strong>path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: dest, destfile, name</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">path</span> / <span class="ansible-option-required">required</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The path of the file to modify.</p>
+<p>Note that the Windows path delimiter <code class="docutils literal notranslate"><span class="pre">\\</span></code> must be escaped as <code class="docutils literal notranslate"><span class="pre">\\\\</span></code> when the line is double quoted.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-regex"></div>
+<div class="ansibleOptionAnchor" id="parameter-regexp"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-regexp"><span id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-regex"></span><strong>regex</strong></p>
+<a class="ansibleOptionLink" href="#parameter-regex" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-aliases">aliases: regexp</span></p>
+<p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The regular expression to look for in every line of the file.</p>
+<p>For <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=present</span></span></a></code>, the pattern to replace if found; only the last line found will be replaced.</p>
+<p>For <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=absent</span></span></a></code>, the pattern of the line to remove.</p>
+<p>Uses .NET compatible regular expressions, see <a class="reference external" href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference">https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference</a>.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-state"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><strong>state</strong></p>
+<a class="ansibleOptionLink" href="#parameter-state" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether the line should be there or not.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">&quot;absent&quot;</span></code></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">&quot;present&quot;</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-validate"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-parameter-validate"><strong>validate</strong></p>
+<a class="ansibleOptionLink" href="#parameter-validate" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Validation to run before copying into place.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">%s</span></code> in the command to indicate the current file to validate.</p>
+<p>The command is passed securely so shell features like expansion and pipes will not work.</p>
+</div></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/assemble_module.html#ansible-collections-ansible-builtin-assemble-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.assemble</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.assemble</strong> module.</p>
+</dd>
+<dt><a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.lineinfile</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.lineinfile</strong> module.</p>
+</dd>
+<dt><a class="reference internal" href="win_copy_module.html#ansible-collections-ansible-windows-win-copy-module"><span class="std std-ref">ansible.windows.win_copy</span></a></dt><dd><p>Copies files to remote locations on windows hosts.</p>
+</dd>
+<dt><a class="reference internal" href="win_template_module.html#ansible-collections-ansible-windows-win-template-module"><span class="std std-ref">ansible.windows.win_template</span></a></dt><dd><p>Template a file out to a remote server.</p>
+</dd>
+</dl>
+</div>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Insert path without converting \r\n</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">c:\file.txt</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">c:\return\new</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Replace a line matching a regex</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\example.conf</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'^name='</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="s">'name=JohnDoe'</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove a line matching a regex</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\example.conf</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'^name='</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ensure the localhost entry is correct</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\example.conf</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'^127\.0\.0\.1'</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="s">'127.0.0.1</span><span class="nv"> </span><span class="s">localhost'</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Uncomment and set a Listen directive</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\httpd.conf</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'^Listen</span><span class="nv"> </span><span class="s">'</span>
+<span class="w">    </span><span class="nt">insertafter</span><span class="p">:</span><span class="w"> </span><span class="s">'^#Listen</span><span class="nv"> </span><span class="s">'</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Listen 8080</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Insert a comment before a services entry</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\services</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'^#</span><span class="nv"> </span><span class="s">port</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">http'</span>
+<span class="w">    </span><span class="nt">insertbefore</span><span class="p">:</span><span class="w"> </span><span class="s">'^www.*80/tcp'</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="s">'#</span><span class="nv"> </span><span class="s">port</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">http</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">default'</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create file if it doesn't exist with a specific encoding</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\utf16.txt</span>
+<span class="w">    </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">encoding</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">utf-16</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">This is a utf-16 encoded file</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Add a line to a file and ensure the resulting file uses unix line separators</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\testfile.txt</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Line added to file</span>
+<span class="w">    </span><span class="nt">newline</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unix</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Update a line using backrefs</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_lineinfile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\example.conf</span>
+<span class="w">    </span><span class="nt">backrefs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">'(^name=)'</span>
+<span class="w">    </span><span class="nt">line</span><span class="p">:</span><span class="w"> </span><span class="s">'$1JohnDoe'</span>
+</pre></div>
+</div>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible devel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
+<table class="longtable ansible-option-table docutils align-default" style="width: 100%">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-backup_file"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-return-backup-file"><strong>backup_file</strong></p>
+<a class="ansibleOptionLink" href="#return-backup_file" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Name of the backup file that was created.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> if <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-backup"><span class="std std-ref"><span class="pre">backup=true</span></span></a></code> and a change was made</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;C:\\Path\\To\\File.txt.11540.20150212-220915.bak&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-encoding"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-return-encoding"><strong>encoding</strong></p>
+<a class="ansibleOptionLink" href="#return-encoding" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The encoding that was used to read from and write to the file.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;utf-8&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-found"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-return-found"><strong>found</strong></p>
+<a class="ansibleOptionLink" href="#return-found" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The number of lines that matched and were removed.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> <code class="ansible-option-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-win-lineinfile-module-parameter-state"><span class="std std-ref"><span class="pre">state=absent</span></span></a></code></p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">1</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-lineinfile-module-return-msg"><strong>msg</strong></p>
+<a class="ansibleOptionLink" href="#return-msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>A short description of the change that was made.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;line</span> <span class="pre">added&quot;</span></code></p>
+</div></td>
+</tr>
+</tbody>
+</table>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Brian Lloyd (&#64;brianlloyd)</p></li>
+</ul>
+</section>
+<section id="collection-links">
+<h3>Collection links<a class="headerlink" href="#collection-links" title="Link to this heading"></a></h3>
+<ul class="ansible-links">
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc" rel="noopener external" target="_blank">Issue Tracker</a></span></li>
+<li><span><a aria-role="button" class="ansible-link reference external" href="https://github.com/ansible-collections/ansible.windows" rel="noopener external" target="_blank">Repository (Sources)</a></span></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          
+
+<footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="win_inet_proxy_module.html" class="btn btn-neutral float-left" title="ansible.windows.win_inet_proxy module – Manages proxy settings for WinINet and Internet Explorer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="win_listen_ports_facts_module.html" class="btn btn-neutral float-right" title="ansible.windows.win_listen_ports_facts module – Recopilates the facts of the listening ports of the machine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ansible contributors.</p>
+  </div>
+
+  
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script><!-- extra footer elements for Ansible beyond RTD Sphinx Theme -->
+
+</body>
+</html>
