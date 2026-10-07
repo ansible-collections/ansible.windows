@@ -1,184 +1,573 @@
 ---
-- ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter T; $AnsiVol = Get-Volume -DriveLetter T; "$($AnsiPart.Size),$($AnsiVol.Size)"
-  register: shell_result
+- name: Get information about the pristine test volume
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: pristine_volume_info
 
-- name: Assert volume size is 0 for pristine volume
-  assert:
+- name: Assert the test volume is pristine
+  ansible.builtin.assert:
     that:
-      - shell_result.stdout | trim == "2096037888,0"
+      - pristine_volume_info.exists
+      - pristine_volume_info is not changed
+      - pristine_volume_info.volumes | length == 1
+      - pristine_volume_info.volumes[0].size == 0
 
-- name: Get partition access path
-  ansible.windows.win_shell: (Get-Partition -DriveLetter T).AccessPaths[1]
-  register: shell_partition_result
+- name: Query a missing volume label
+  ansible.windows.win_format_info:
+    label: '{{ win_format_test_label }}Missing'
+  register: missing_label_info
+
+- name: Query a missing volume path
+  ansible.windows.win_format_info:
+    path: '\\?\Volume{00000000-0000-0000-0000-000000000000}\'
+  register: missing_path_info
+
+- name: Assert missing selectors return empty information
+  ansible.builtin.assert:
+    that:
+      - missing_label_info is not changed
+      - missing_path_info is not changed
+      - not missing_label_info.exists
+      - not missing_path_info.exists
+      - missing_label_info.volumes == []
+      - missing_path_info.volumes == []
+
+- name: Reject an action without a target
+  ansible.windows.win_format:
+  ignore_errors: true
+  register: missing_target
+
+- name: Reject an invalid drive letter in the action module
+  ansible.windows.win_format:
+    drive_letter: 'AB'
+  ignore_errors: true
+  register: invalid_format_drive_letter
+
+- name: Reject an invalid drive letter in the info module
+  ansible.windows.win_format_info:
+    drive_letter: 'AB'
+  ignore_errors: true
+  register: invalid_info_drive_letter
+
+- name: Reject mutually exclusive info selectors
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    label: "{{ win_format_test_label }}"
+  ignore_errors: true
+  register: info_mutex_result
+
+- name: Reject formatting a missing volume
+  ansible.windows.win_format:
+    label: '{{ win_format_test_label }}Missing'
+  ignore_errors: true
+  register: missing_format_target
+
+- name: Assert target validation failures
+  ansible.builtin.assert:
+    that:
+      - missing_target is failed
+      - missing_target.msg is search('one of the following is required')
+      - invalid_format_drive_letter is failed
+      - invalid_info_drive_letter is failed
+      - invalid_format_drive_letter.msg == 'The parameter drive_letter should be a single character A-Z'
+      - invalid_info_drive_letter.msg == invalid_format_drive_letter.msg
+      - info_mutex_result is failed
+      - info_mutex_result.msg is search('parameters are mutually exclusive')
+      - missing_format_target is failed
+      - missing_format_target.msg == 'Unable to locate a volume matching the specified drive_letter, path or label'
 
 - name: Try to format using mutually exclusive parameters
-  win_format:
-    drive_letter: T
-    path: "{{ shell_partition_result.stdout | trim }}"
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    path: 'C:\'
   register: format_mutex_result
-  ignore_errors: True
+  ignore_errors: true
 
-- assert:
+- name: Assert target parameters are mutually exclusive
+  ansible.builtin.assert:
     that:
       - format_mutex_result is failed
-      - 'format_mutex_result.msg == "parameters are mutually exclusive: drive_letter, path, label"'
+      - >-
+        format_mutex_result.msg == "parameters are mutually exclusive: drive_letter, path, label"
 
-- name: Format volume and assign label (check)
-  win_format:
-    drive_letter: T
-    new_label: Formatted
-    # Fails on Server 2025 with generic error. May be fixed in a future update
-    # but for now we don't test this scenario.
-    # full: True
+- name: Format volume and assign label in check mode
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: "{{ win_format_test_label }}"
+    # Quick format keeps fixture setup independent of full-format storage-provider failures.
     allocation_unit_size: 8192
   register: format_result_check
-  check_mode: True
+  check_mode: true
 
-- ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter T; $AnsiVol = Get-Volume -DriveLetter T; "$($AnsiPart.Size),$($AnsiVol.Size),$($AnsiVol.FileSystemLabel),$((Get-CimInstance -ClassName Win32_Volume -Filter "DriveLetter = 'T:'" -Property BlockSize).BlockSize)"
-  register: formatted_value_result_check
+- name: Get volume information after the check-mode format
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: volume_info_check
 
 - name: Format volume and assign label
-  win_format:
-    drive_letter: T
-    new_label: Formatted
-    # full: True
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: "{{ win_format_test_label }}"
     allocation_unit_size: 8192
   register: format_result
 
-- ansible.windows.win_shell: $AnsiPart = Get-Partition -DriveLetter T; $AnsiVol = Get-Volume -DriveLetter T; "$($AnsiPart.Size),$($AnsiVol.Size),$($AnsiVol.FileSystemLabel),$((Get-CimInstance -ClassName Win32_Volume -Filter "DriveLetter = 'T:'" -Property BlockSize).BlockSize)"
-  register: formatted_value_result
+- name: Get volume information after formatting
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: formatted_volume_info
 
-- assert:
+- name: Get volume information by path
+  ansible.windows.win_format_info:
+    path: "{{ formatted_volume_info.volumes[0].path }}"
+  register: formatted_volume_info_by_path
+
+- name: Get volume information by label
+  ansible.windows.win_format_info:
+    label: "{{ win_format_test_label }}"
+  register: formatted_volume_info_by_label
+
+- name: Run idempotently when selected by path
+  ansible.windows.win_format:
+    path: "{{ formatted_volume_info.volumes[0].path }}"
+  register: format_by_path
+
+- name: Run idempotently when selected by label
+  ansible.windows.win_format:
+    label: "{{ win_format_test_label }}"
+  register: format_by_label
+
+- name: Assert check mode and format results
+  ansible.builtin.assert:
     that:
       - format_result_check is changed
       - format_result is changed
-      - formatted_value_result_check.stdout | trim == "2096037888,0,,"
-      - formatted_value_result.stdout | trim == "2096037888,2096029696,Formatted,8192"
+      - volume_info_check.volumes[0].size == 0
+      - not volume_info_check.volumes[0].file_system
+      - (volume_info_check.volumes[0].file_system_label | default('', true)) == ''
+      - formatted_volume_info.exists
+      - formatted_volume_info.volumes | length == 1
+      - formatted_volume_info.volumes[0].file_system == 'NTFS'
+      - formatted_volume_info.volumes[0].file_system_label == win_format_test_label
+      - formatted_volume_info.volumes[0].allocation_unit_size == 8192
+      - formatted_volume_info is not changed
+      - formatted_volume_info_by_path is not changed
+      - formatted_volume_info_by_label is not changed
+      - formatted_volume_info.volumes[0].size > 1073741824
+      - formatted_volume_info.volumes[0].size < 2097152000
+      - formatted_volume_info.volumes[0].size_remaining > 0
+      - formatted_volume_info.volumes[0].size_remaining <= formatted_volume_info.volumes[0].size
+      - formatted_volume_info.volumes[0].drive_type == 'Fixed'
+      - formatted_volume_info.volumes[0].health_status is string
+      - formatted_volume_info.volumes[0].operational_status is sequence
+      - formatted_volume_info_by_path.volumes[0].path == formatted_volume_info.volumes[0].path
+      - formatted_volume_info_by_label.volumes | selectattr('drive_letter', 'equalto', win_format_test_drive_letter) | list | length == 1
+      - format_by_path is not changed
+      - format_by_label is not changed
 
-- name: Format NTFS volume with integrity streams enabled
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Gather formatted volume information in check mode
+  ansible.windows.win_format_info:
+    path: "{{ formatted_volume_info.volumes[0].path }}"
+  check_mode: true
+  register: info_check_mode
+
+- name: Assert info check mode returns the current values without changes
+  ansible.builtin.assert:
+    that:
+      - info_check_mode is not changed
+      - info_check_mode.exists
+      - info_check_mode.volumes | length == 1
+      - info_check_mode.volumes[0].path == formatted_volume_info_by_path.volumes[0].path
+      - info_check_mode.volumes[0].file_system == 'NTFS'
+      - info_check_mode.volumes[0].file_system_label == win_format_test_label
+      - info_check_mode.volumes[0].allocation_unit_size == 8192
+
+- name: Create a file to detect accidental formatting
+  ansible.windows.win_copy:
+    dest: '{{ win_format_test_drive_letter }}:\format-preservation-test.txt'
+    content: Preserve this file during rejected and check-mode formats.
+
+- name: Predict a full format of the auxiliary volume in check mode
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_aux_drive_letter }}"
     file_system: ntfs
-    integrity_streams: True
-  ignore_errors: True
+    new_label: "{{ win_format_test_label }}"
+    full: true
+  check_mode: true
+  register: auxiliary_full_format_check
+
+- name: Gather auxiliary volume information after the check-mode full format
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_aux_drive_letter }}"
+  register: auxiliary_full_format_check_info
+
+- name: Assert check-mode full format leaves the auxiliary volume pristine
+  ansible.builtin.assert:
+    that:
+      - auxiliary_full_format_check is changed
+      - auxiliary_full_format_check_info is not changed
+      - auxiliary_full_format_check_info.exists
+      - auxiliary_full_format_check_info.volumes | length == 1
+      - auxiliary_full_format_check_info.volumes[0].size == 0
+      - not auxiliary_full_format_check_info.volumes[0].file_system
+      - not auxiliary_full_format_check_info.volumes[0].file_system_label
+
+- name: Quick format the auxiliary test VHD with a duplicate label
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_aux_drive_letter }}"
+    file_system: ntfs
+    new_label: "{{ win_format_test_label }}"
+    full: false
+  register: duplicate_label_format
+
+- name: Gather both volumes matching the duplicate label
+  ansible.windows.win_format_info:
+    label: "{{ win_format_test_label }}"
+  register: duplicate_label_info
+
+- name: Reject force formatting by an ambiguous label
+  ansible.windows.win_format:
+    label: "{{ win_format_test_label }}"
+    force: true
+  register: ambiguous_format
+  ignore_errors: true
+
+- name: Gather volumes after the ambiguous format was rejected
+  ansible.windows.win_format_info:
+    label: "{{ win_format_test_label }}"
+  register: duplicate_label_info_after
+
+- name: Check the file survived the rejected ambiguous format
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\format-preservation-test.txt'
+  register: ambiguous_format_file
+
+- name: Assert duplicate labels are readable but cannot target a format
+  ansible.builtin.assert:
+    that:
+      - duplicate_label_format is changed
+      - duplicate_label_info is not changed
+      - duplicate_label_info.exists
+      - duplicate_label_info.volumes | length == 2
+      - duplicate_label_info.volumes | map(attribute='drive_letter') | sort | list == [win_format_test_drive_letter, win_format_aux_drive_letter] | sort
+      - duplicate_label_info.volumes | map(attribute='file_system') | unique | list == ['NTFS']
+      - ambiguous_format is failed
+      - ambiguous_format is not changed
+      - ambiguous_format.msg is search('matches more than one volume')
+      - duplicate_label_info_after.volumes | map(attribute='path') | sort | list == duplicate_label_info.volumes | map(attribute='path') | sort | list
+      - duplicate_label_info_after.volumes | map(attribute='file_system') | unique | list == ['NTFS']
+      - duplicate_label_info_after.volumes | map(attribute='file_system_label') | unique | list == [win_format_test_label]
+      - duplicate_label_info_after.volumes | sort(attribute='path') | map(attribute='allocation_unit_size') | list == duplicate_label_info.volumes | sort(attribute='path') | map(attribute='allocation_unit_size') | list
+      - ambiguous_format_file.stat.exists
+
+- name: Try to enable integrity streams on NTFS
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    integrity_streams: true
+  ignore_errors: true
   register: ntfs_integrity_streams
 
-- assert:
+- name: Assert integrity streams are rejected for NTFS
+  ansible.builtin.assert:
     that:
       - ntfs_integrity_streams is failed
-      - 'ntfs_integrity_streams.msg == "Integrity streams can be enabled only on ReFS volumes. You specified: ntfs"'
+      - >-
+        ntfs_integrity_streams.msg == "Integrity streams can be enabled only on ReFS volumes. You specified: NTFS"
 
-- name: Format volume (require force_format for specifying different file system)
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Require force when changing the file system
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
     file_system: fat32
-  ignore_errors: True
+  ignore_errors: true
   register: require_force_format
 
-- assert:
+- name: Assert force is required to change the file system
+  ansible.builtin.assert:
     that:
       - require_force_format is failed
-      - 'require_force_format.msg == "Force format must be specified since target file system: fat32 is different from the current file system of the volume: ntfs"'
+      - require_force_format.msg is search('Force format must be specified')
 
-- name: Format volume (forced) (check)
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-    file_system: refs
-    force: True
-  check_mode: True
-  ignore_errors: True
-  register: not_pristine_forced_check
+- name: Require force when specifying format-only options on an existing volume
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    full: true
+  ignore_errors: true
+  register: require_force_format_options
 
-- name: Format volume (forced)
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-    file_system: refs
-    force: True
-  register: not_pristine_forced
-
-- name: Format volume (forced) (idempotence will not work)
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-    file_system: refs
-    force: True
-  register: not_pristine_forced_idem_fails
-
-- name: Format volume (idempotence)
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-    file_system: refs
-  register: not_pristine_forced_idem
-
-- assert:
+- name: Assert force is required for format-only options
+  ansible.builtin.assert:
     that:
-      - not_pristine_forced_check is changed
-      - not_pristine_forced is changed
-      - not_pristine_forced_idem_fails is changed
-      - not_pristine_forced_idem is not changed
+      - require_force_format_options is failed
+      - require_force_format_options.msg == "Force format must be specified to format non-pristine volumes"
 
-- name: Add a file
+- name: Format volume as ReFS in check mode with force
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: refs
+    force: true
+  check_mode: true
+  register: forced_format_check
+
+- name: Gather volume information after force formatting in check mode
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: forced_format_check_info
+
+- name: Check the file survives a force format in check mode
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\format-preservation-test.txt'
+  register: forced_format_check_file
+
+- name: Assert a force format in check mode preserves the existing volume and data
+  ansible.builtin.assert:
+    that:
+      - forced_format_check is changed
+      - forced_format_check_info is not changed
+      - forced_format_check_info.volumes[0].file_system == 'NTFS'
+      - forced_format_check_info.volumes[0].file_system_label == win_format_test_label
+      - forced_format_check_info.volumes[0].allocation_unit_size == 8192
+      - forced_format_check_file.stat.exists
+      - forced_format_check_file.stat.checksum == ambiguous_format_file.stat.checksum
+
+- name: Format volume as ReFS with force
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: refs
+    force: true
+  register: forced_format
+
+- name: Format volume as ReFS with force again
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: refs
+    new_label: "{{ win_format_test_label }}"
+    integrity_streams: true
+    force: true
+  register: forced_format_again
+
+- name: Gather information about the force-formatted ReFS volume
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: refs_volume_info
+
+- name: Check that force formatting removed the previous file
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\format-preservation-test.txt'
+  register: forced_format_file
+
+- name: Format volume without force when its file system already matches
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: refs
+  register: same_file_system_format
+
+- name: Create a file before changing only the volume label
   ansible.windows.win_file:
-    path: T:\path\to\directory
-    state: directory
+    path: '{{ win_format_test_drive_letter }}:\label-preservation-test.txt'
+    state: touch
 
-- name: Format volume with file inside without force and same fs
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-  register: format_volume_without_force_same_fs
+- name: Change only the volume label in check mode
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: '{{ win_format_test_label }}Renamed'
+  check_mode: true
+  register: label_change_check
 
-- name: Format volume (forced) - to test case for files existing and a different fs
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Gather volume information after the check-mode label change
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: label_change_check_info
+
+- name: Check the file survives a label-only update in check mode
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\label-preservation-test.txt'
+  register: label_change_check_file
+
+- name: Assert check mode predicts a label change without applying it
+  ansible.builtin.assert:
+    that:
+      - label_change_check is changed
+      - label_change_check_info.volumes[0].file_system_label == refs_volume_info.volumes[0].file_system_label
+      - label_change_check_info.volumes[0].file_system == 'ReFS'
+      - label_change_check_file.stat.exists
+
+- name: Change the label of an existing volume without formatting it
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: '{{ win_format_test_label }}Renamed'
+  register: label_change
+
+- name: Repeat the label-only update idempotently
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: '{{ win_format_test_label }}Renamed'
+  register: label_change_again
+
+- name: Get volume information after changing its label
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: relabeled_volume_info
+
+- name: Verify the file survives a label-only change
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\label-preservation-test.txt'
+  register: label_preservation_file
+
+- name: Assert force-format behavior and label-only update
+  ansible.builtin.assert:
+    that:
+      - forced_format_check is changed
+      - forced_format is changed
+      - forced_format_again is changed
+      - same_file_system_format is not changed
+      - refs_volume_info.volumes[0].file_system == 'ReFS'
+      - not forced_format_file.stat.exists
+      - label_change is changed
+      - label_change_again is not changed
+      - relabeled_volume_info.volumes[0].file_system == 'ReFS'
+      - relabeled_volume_info.volumes[0].file_system_label == win_format_test_label ~ 'Renamed'
+      - label_preservation_file.stat.exists
+
+- name: Clear the volume label without formatting
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    new_label: ''
+  register: cleared_label
+
+- name: Gather information about the volume with an empty label
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: cleared_label_info
+
+- name: Assert an empty label is supported
+  ansible.builtin.assert:
+    that:
+      - cleared_label is changed
+      - cleared_label_info.volumes[0].file_system_label == ''
+      - cleared_label_info.volumes[0].file_system == 'ReFS'
+
+- name: Format the volume as NTFS with force
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
     file_system: ntfs
-    force: True
+    force: true
 
-- name: Add a file
+- name: Create a file before testing force requirements on a populated volume
   ansible.windows.win_file:
-    path: T:\path\to\directory
+    path: '{{ win_format_test_drive_letter }}:\path\to\directory'
     state: directory
   register: add_file_to_volume
 
-- name: Format volume with file inside without force
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Try to change the file system without force on a populated volume
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
     file_system: refs
   register: format_volume_without_force
-  ignore_errors: True
+  ignore_errors: true
 
-- name: Format volume with file inside with force
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
-    force: True
+- name: Format the volume with force
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    force: true
   register: format_volume_with_force
 
-- assert:
+- name: Assert force is required to format a populated volume
+  ansible.builtin.assert:
     that:
       - add_file_to_volume is changed
       - format_volume_without_force is failed
-      - format_volume_without_force_same_fs is not changed
-      - 'format_volume_without_force.msg == "Force format must be specified to format non-pristine volumes"'
+      - format_volume_without_force.msg == "Force format must be specified to format non-pristine volumes"
       - format_volume_with_force is changed
 
-- name: Reformat using different alu without force format
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Require force when changing allocation unit size
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
     allocation_unit_size: 8192
     file_system: ntfs
   register: reformat_using_alu_without_force
-  ignore_errors: True
+  ignore_errors: true
 
-- assert:
-    that:
-      - reformat_using_alu_without_force is failed
-
-- name: Reformat using different alu using force format
-  win_format:
-    path: "{{ shell_partition_result.stdout | trim }}"
+- name: Format using a different allocation unit size with force
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
     allocation_unit_size: 8192
     file_system: ntfs
-    force: True
+    force: true
   register: reformat_using_alu_with_force
 
-- assert:
+- name: Get the final volume information
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: final_volume_info
+
+- name: Assert allocation unit size behavior
+  ansible.builtin.assert:
     that:
+      - reformat_using_alu_without_force is failed
       - reformat_using_alu_with_force is changed
+      - final_volume_info.volumes[0].file_system == 'NTFS'
+      - final_volume_info.volumes[0].allocation_unit_size == 8192
+
+- name: Repeat the requested allocation unit size idempotently
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: ntfs
+    allocation_unit_size: 8192
+  register: same_allocation_unit_size
+
+- name: Reject compression with an unsupported NTFS allocation unit size
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: ntfs
+    allocation_unit_size: 8192
+    compress: true
+    force: true
+  register: invalid_compression_allocation
+  ignore_errors: true
+
+- name: Reject compression on a non-NTFS target
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: refs
+    compress: true
+    force: true
+  register: invalid_compression_file_system
+  ignore_errors: true
+
+- name: Assert allocation unit idempotence and compression validation
+  ansible.builtin.assert:
+    that:
+      - same_allocation_unit_size is not changed
+      - invalid_compression_allocation is failed
+      - invalid_compression_allocation.msg == 'NTFS compression is not supported for allocation unit sizes above 4096'
+      - invalid_compression_file_system is failed
+      - invalid_compression_file_system.msg is search('Compression can be enabled only on NTFS')
+
+- name: Format NTFS with compression and large file record segments
+  ansible.windows.win_format:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+    file_system: ntfs
+    allocation_unit_size: 4096
+    compress: true
+    large_frs: true
+    force: true
+  register: ntfs_format_options
+
+- name: Gather volume information after formatting with NTFS options
+  ansible.windows.win_format_info:
+    drive_letter: "{{ win_format_test_drive_letter }}"
+  register: ntfs_format_options_info
+
+- name: Gather compression attributes of the formatted volume root
+  ansible.windows.win_stat:
+    path: '{{ win_format_test_drive_letter }}:\'
+    get_checksum: false
+    get_size: false
+  register: ntfs_volume_root
+
+- name: Assert NTFS formatting options were applied
+  ansible.builtin.assert:
+    that:
+      - ntfs_format_options is changed
+      - ntfs_format_options_info.volumes[0].file_system == 'NTFS'
+      - ntfs_format_options_info.volumes[0].allocation_unit_size == 4096
+      - ntfs_volume_root.stat.attributes is search('Compressed')
