@@ -143,15 +143,18 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
 <li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
-<li><p><a class="reference internal" href="#examples" id="id3">Examples</a></p></li>
-<li><p><a class="reference internal" href="#return-values" id="id4">Return Values</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id4">See Also</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id5">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id6">Return Values</a></p></li>
 </ul>
 </nav>
 <section id="synopsis">
 <h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Calls <code class="docutils literal notranslate"><span class="pre">dsc</span> <span class="pre">config</span> <span class="pre">set</span></code> or <code class="docutils literal notranslate"><span class="pre">dsc</span> <span class="pre">config</span> <span class="pre">test</span></code> using <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config"><span class="std std-ref"><span class="pre">config</span></span></a></strong></code> as the configuration document.</p></li>
-<li><p>This module assumes that <code class="docutils literal notranslate"><span class="pre">dsc</span></code> can be found using <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> environment variable, and <code class="docutils literal notranslate"><span class="pre">dsc</span></code> itself relies on <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> for resource discovery. Manipulate the environment variable directly if <code class="docutils literal notranslate"><span class="pre">dsc</span></code> is not already discoverable using <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code>.</p></li>
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">dsc</span> <span class="pre">config</span> <span class="pre">set</span></code> using <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config"><span class="std std-ref"><span class="pre">config</span></span></a></strong></code> or <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><span class="std std-ref"><span class="pre">config_file</span></span></a></strong></code> as the configuration document.</p></li>
+<li><p>The module is tested against Microsoft DSC 3.3. Older 3.x releases work as long as the options that map to newer DSC features, such as <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-ignore-settings-file"><span class="std std-ref"><span class="pre">ignore_settings_file</span></span></a></strong></code>, are not used.</p></li>
+<li><p>By default <code class="docutils literal notranslate"><span class="pre">dsc</span></code> must be discoverable through the <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> environment variable, which <code class="docutils literal notranslate"><span class="pre">dsc</span></code> itself also uses to discover resources. Use <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-executable"><span class="std std-ref"><span class="pre">executable</span></span></a></strong></code> to run a specific <code class="docutils literal notranslate"><span class="pre">dsc.exe</span></code> and <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-resource-path"><span class="std std-ref"><span class="pre">resource_path</span></span></a></strong></code> to control where resources are discovered.</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -168,16 +171,25 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-chdir"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-chdir"><strong>chdir</strong></p>
+<a class="ansibleOptionLink" href="#parameter-chdir" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Set the specified path as the working directory of the <code class="docutils literal notranslate"><span class="pre">dsc</span></code> process.</p>
+<p>When <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config"><span class="std std-ref"><span class="pre">config</span></span></a></strong></code> is used, <code class="docutils literal notranslate"><span class="pre">dsc</span></code> reads the document from stdin and sets <code class="xref std std-envvar docutils literal notranslate"><span class="pre">DSC_CONFIG_ROOT</span></code> to this directory, so relative paths of <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Include</span></code> resources are resolved from here. When <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><span class="std std-ref"><span class="pre">config_file</span></span></a></strong></code> is used, they are resolved from the directory containing the file instead.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-config"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-config"><strong>config</strong></p>
 <a class="ansibleOptionLink" href="#parameter-config" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>The DSC configuration document to set or test.</p>
 <p>See <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/concepts/configuration-documents/overview?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/concepts/configuration-documents/overview?view=dsc-3.0</a> for an overview of how to author a configuration document.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">$schema</span></code> top-level property may be omitted. If so, it will default to <code class="docutils literal notranslate"><span class="pre">https://aka.ms/dsc/schemas/v3/bundled/config/document.json</span></code></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">$schema</span></code> top-level property may be omitted. If so, it will default to <code class="docutils literal notranslate"><span class="pre">https://aka.ms/dsc/schemas/v3/bundled/config/document.json</span></code>. Nested configuration documents, for example the properties of a <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Group</span></code> resource, must include their own <code class="docutils literal notranslate"><span class="pre">$schema</span></code>.</p>
 <p>One of <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config"><span class="std std-ref"><span class="pre">config</span></span></a></strong></code> or <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><span class="std std-ref"><span class="pre">config_file</span></span></a></strong></code> must be specified.</p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-config_file"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><strong>config_file</strong></p>
 <a class="ansibleOptionLink" href="#parameter-config_file" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
 </div></td>
@@ -187,12 +199,47 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>One of <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config"><span class="std std-ref"><span class="pre">config</span></span></a></strong></code> or <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><span class="std std-ref"><span class="pre">config_file</span></span></a></strong></code> must be specified.</p>
 </div></td>
 </tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-executable"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-executable"><strong>executable</strong></p>
+<a class="ansibleOptionLink" href="#parameter-executable" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Path to the <code class="docutils literal notranslate"><span class="pre">dsc</span></code> executable to run.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">dsc.exe</span></code> is searched for through the <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. Installations through WinGet place it in <code class="docutils literal notranslate"><span class="pre">%LOCALAPPDATA%\Microsoft\WinGet\Links</span></code>, which may not be part of <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> for a remote session.</p>
+<p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;dsc.exe&quot;</span></code></p>
+</div></td>
+</tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-ignore_settings_file"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-ignore-settings-file"><strong>ignore_settings_file</strong></p>
+<a class="ansibleOptionLink" href="#parameter-ignore_settings_file" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Ignore the DSC settings and policy files when running the command.</p>
+<p>This corresponds to the <code class="docutils literal notranslate"><span class="pre">--ignore-settings-file</span></code> DSC commandline option and requires DSC 3.3.0 or later, older releases fail with exit code 2 when this is set.</p>
+<p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-parameters"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-parameters"><strong>parameters</strong></p>
 <a class="ansibleOptionLink" href="#parameter-parameters" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Runtime parameter values.</p>
 <p>This corresponds to the <code class="docutils literal notranslate"><span class="pre">--parameters</span></code> commandline option.</p>
+<p>Can be combined with <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-parameters-file"><span class="std std-ref"><span class="pre">parameters_file</span></span></a></strong></code> on DSC 3.2.0 or later, the values set here take precedence for parameters that are defined in both.</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-parameters_file"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-parameters-file"><strong>parameters_file</strong></p>
+<a class="ansibleOptionLink" href="#parameter-parameters_file" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Path on the target host to a JSON or YAML file with runtime parameter values.</p>
+<p>The file must contain a top-level <code class="docutils literal notranslate"><span class="pre">parameters</span></code> object with the values.</p>
+<p>This corresponds to the <code class="docutils literal notranslate"><span class="pre">--parameters-file</span></code> DSC commandline option.</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
@@ -204,16 +251,35 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p>A local <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-parameter-config-file"><span class="std std-ref"><span class="pre">config_file</span></span></a></strong></code> cannot be used with async tasks, the file will need to be pre-transferred to the target host.</p>
 <p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
 <ul class="simple">
-<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">false</span></code></p></li>
-<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">true</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-default-bold docutils literal notranslate"><strong><span class="pre">false</span></strong></code> <span class="ansible-option-choices-default-mark">← (default)</span></p></li>
+<li><p><code class="ansible-option-choices-entry docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-resource_path"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-resource-path"><strong>resource_path</strong></p>
+<a class="ansibleOptionLink" href="#parameter-resource_path" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=path</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>List of directories <code class="docutils literal notranslate"><span class="pre">dsc</span></code> searches for resource manifests, set as the <code class="xref std std-envvar docutils literal notranslate"><span class="pre">DSC_RESOURCE_PATH</span></code> environment variable of the <code class="docutils literal notranslate"><span class="pre">dsc</span></code> process.</p>
+<p>When set, <code class="docutils literal notranslate"><span class="pre">dsc</span></code> only discovers resource manifests in these directories, include the DSC installation directory if the built-in resources are needed. The executables of resources are still located through <code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code> on DSC 3.3.0 or later, older releases only look for them in these directories.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-system_root"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-system-root"><strong>system_root</strong></p>
+<a class="ansibleOptionLink" href="#parameter-system_root" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">path</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Path to the root of the operating system to target when it is not the running one, for example an offline image.</p>
+<p>This corresponds to the <code class="docutils literal notranslate"><span class="pre">--system-root</span></code> DSC commandline option.</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-trace_level"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-parameter-trace-level"><strong>trace_level</strong></p>
 <a class="ansibleOptionLink" href="#parameter-trace_level" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
-<td><div class="ansible-option-cell"><p>Specify level of tracing output, which are returned in <code class="ansible-return-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-return-stderr-lines"><span class="std std-ref"><span class="pre">stderr_lines</span></span></a></code>.</p>
+<td><div class="ansible-option-cell"><p>Specify level of tracing output, which is returned in <code class="ansible-return-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-return-stderr-lines"><span class="std std-ref"><span class="pre">stderr_lines</span></span></a></code>.</p>
+<p>Messages of level <code class="docutils literal notranslate"><span class="pre">WARN</span></code> are also reported as Ansible warnings.</p>
 <p>This corresponds to the <code class="docutils literal notranslate"><span class="pre">--trace-level</span></code> DSC commandline option.</p>
 <p class="ansible-option-line"><strong class="ansible-option-choices">Choices:</strong></p>
 <ul class="simple">
@@ -228,8 +294,34 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </tbody>
 </table>
 </section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">dsc</span></code> process runs as the user Ansible connects with. If that user does not have the rights a resource needs, <code class="docutils literal notranslate"><span class="pre">become</span></code> may be able to help.</p></li>
+<li><p>A configuration document can require a security context through the <code class="docutils literal notranslate"><span class="pre">securityContext</span></code> key of its top-level <code class="docutils literal notranslate"><span class="pre">directives</span></code> property, with the value <code class="ansible-value docutils literal notranslate"><span class="pre">elevated</span></code> or <code class="ansible-value docutils literal notranslate"><span class="pre">restricted</span></code>. <code class="docutils literal notranslate"><span class="pre">dsc</span></code> checks this before it invokes any resource and the task fails with exit code 2 when the <code class="docutils literal notranslate"><span class="pre">dsc</span></code> process does not run in that context.</p></li>
+<li><p>In check mode the module runs <code class="docutils literal notranslate"><span class="pre">dsc</span> <span class="pre">config</span> <span class="pre">set</span> <span class="pre">--what-if</span></code>, which reports the changes that would be made without changing the system. This requires DSC 3.1.0 or later. Resources without native what-if support are simulated from their test operation, but group resources such as <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Group</span></code> and <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Include</span></code> and resources that declare <code class="docutils literal notranslate"><span class="pre">implementsPretest</span></code> do not support what-if and fail the task with exit code 2.</p></li>
+<li><p>The changed status is derived from the <code class="docutils literal notranslate"><span class="pre">changedProperties</span></code> of each resource. The nested results of group resources such as <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Group</span></code> and <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC/Include</span></code> are walked recursively so a group is only reported as changed when one of its resources changed.</p></li>
+<li><p>When run with diff mode, the diff lists every resource with its name and type. Resources that changed also include the properties that changed and group resources contain a nested <code class="docutils literal notranslate"><span class="pre">resources</span></code> list.</p></li>
+<li><p>Warnings emitted by <code class="docutils literal notranslate"><span class="pre">dsc</span></code> are reported as Ansible warnings and the last error emitted by <code class="docutils literal notranslate"><span class="pre">dsc</span></code> is included in <code class="ansible-return-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-return-msg"><span class="std std-ref"><span class="pre">msg</span></span></a></code> when the command fails.</p></li>
+</ul>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="win_dsc_module.html#ansible-collections-ansible-windows-win-dsc-module"><span class="std std-ref">ansible.windows.win_dsc</span></a></dt><dd><p>Invokes a PowerShell DSC configuration.</p>
+</dd>
+<dt><a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/config/document?view=dsc-3.0">DSC configuration document schema</a></dt><dd><p>Reference documentation for configuration documents, including the <code class="docutils literal notranslate"><span class="pre">directives</span></code> property.</p>
+</dd>
+</dl>
+</div>
+</section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install DSC3 using WinGet</span>
 <span class="w">  </span><span class="nt">ansible.windows.win_command</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">argv</span><span class="p">:</span>
@@ -274,11 +366,68 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Microsoft.VisualStudio.Component.Windows11SDK.22621</span>
 <span class="w">  </span><span class="nt">vars</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">vs_product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BuildTools</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Require an elevated session and DSC 3.3 or later before configuring the registry</span>
+<span class="w">  </span><span class="nt">ansible.windows.dsc3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">directives</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">securityContext</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elevated</span>
+<span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">'&gt;=3.3.0'</span>
+<span class="w">      </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Example key</span>
+<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Microsoft.Windows/Registry</span>
+<span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">keyPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HKLM\Software\Example</span>
+<span class="w">            </span><span class="nt">_exist</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dsc_result</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reboot when a resource requires it</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_reboot</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dsc_result.reboot_required</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run a specific dsc executable with additional resource directories</span>
+<span class="w">  </span><span class="nt">ansible.windows.dsc3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">executable</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_env.ProgramFiles</span> <span class="cp">}}</span><span class="s">\WinGet\Links\dsc.exe'</span>
+<span class="w">    </span><span class="nt">resource_path</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">ansible_env.ProgramFiles</span> <span class="cp">}}</span><span class="s">\DSC'</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\DscResources</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Custom resource</span>
+<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Contoso/Example</span>
+<span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Include a configuration document from a directory on the target</span>
+<span class="w">  </span><span class="nt">ansible.windows.dsc3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">chdir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\dsc\configs</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Base configuration</span>
+<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Microsoft.DSC/Include</span>
+<span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">configurationFile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base.dsc.config.yaml</span>
+<span class="w">            </span><span class="nt">parametersFile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base.parameters.yaml</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Apply a configuration with parameters from a file and the playbook</span>
+<span class="w">  </span><span class="nt">ansible.windows.dsc3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\dsc\configs\web.dsc.config.yaml</span>
+<span class="w">    </span><span class="nt">remote_config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">parameters_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\dsc\configs\web.parameters.yaml</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">siteName</span><span class="p">:</span><span class="w"> </span><span class="s">'</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">'</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Preview the changes DSC would make without applying them</span>
+<span class="w">  </span><span class="nt">ansible.windows.dsc3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">files/baseline.dsc.config.yaml</span>
+<span class="w">  </span><span class="nt">check_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">diff</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">register</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dsc_preview</span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
 <p>Common return values are documented <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/reference_appendices/common_return_values.html#common-return-values" title="(in Ansible devel)"><span class="xref std std-ref">here</span></a>, the following are the fields unique to this module:</p>
 <table class="longtable ansible-option-table docutils align-default" style="width: 100%">
 <thead>
@@ -288,6 +437,27 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </thead>
 <tbody>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-execution_type"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-execution-type"><strong>execution_type</strong></p>
+<a class="ansibleOptionLink" href="#return-execution_type" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p><code class="ansible-value docutils literal notranslate"><span class="pre">actual</span></code> when the configuration was set and <code class="ansible-value docutils literal notranslate"><span class="pre">whatIf</span></code> when the module ran in check mode.</p>
+<p>Not returned by DSC releases before 3.2.0.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;actual&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-msg"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-msg"><strong>msg</strong></p>
+<a class="ansibleOptionLink" href="#return-msg" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Error message when <code class="docutils literal notranslate"><span class="pre">dsc</span></code> fails.</p>
+<p>Contains the exit code with its meaning and the last error message emitted by <code class="docutils literal notranslate"><span class="pre">dsc</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> failure</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;dsc</span> <span class="pre">config</span> <span class="pre">set</span> <span class="pre">failed</span> <span class="pre">with</span> <span class="pre">exit</span> <span class="pre">code</span> <span class="pre">2</span> <span class="pre">(DSC</span> <span class="pre">error):</span> <span class="pre">Security</span> <span class="pre">context:</span> <span class="pre">Elevated</span> <span class="pre">security</span> <span class="pre">context</span> <span class="pre">required&quot;</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-rc"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-rc"><strong>rc</strong></p>
 <a class="ansibleOptionLink" href="#return-rc" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">integer</span></p>
 </div></td>
@@ -296,33 +466,82 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-reboot_required"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-reboot-required"><strong>reboot_required</strong></p>
+<a class="ansibleOptionLink" href="#return-reboot_required" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">boolean</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Whether a resource reported that the system needs to be restarted to complete the configuration.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">false</span></code></p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-restart_requirements"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-restart-requirements"><strong>restart_requirements</strong></p>
+<a class="ansibleOptionLink" href="#return-restart_requirements" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=dictionary</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The restart requirements reported by the resources, aggregated from <code class="docutils literal notranslate"><span class="pre">executionInformation.restartRequired</span></code>.</p>
+<p>Each entry contains a <code class="docutils literal notranslate"><span class="pre">system</span></code>, <code class="docutils literal notranslate"><span class="pre">service</span></code> or <code class="docutils literal notranslate"><span class="pre">process</span></code> key.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">[{&quot;system&quot;:</span> <span class="pre">&quot;Windows&quot;},</span> <span class="pre">{&quot;service&quot;:</span> <span class="pre">&quot;Spooler&quot;}]</span></code></p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-result"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-result"><strong>result</strong></p>
 <a class="ansibleOptionLink" href="#return-result" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
 <td><div class="ansible-option-cell"><p>Result object returned by <code class="docutils literal notranslate"><span class="pre">dsc</span></code>.</p>
-<p>The exact schema of this object depends on the command used to invoke <code class="docutils literal notranslate"><span class="pre">dsc</span></code>. For example, <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0</a> or <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/test?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/test?view=dsc-3.0</a>.</p>
+<p>See <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0</a> for the schema of this object.</p>
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
-<div class="ansibleOptionAnchor" id="return-result/metadata"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-result-metadata"><strong>metadata</strong></p>
-<a class="ansibleOptionLink" href="#return-result/metadata" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+<div class="ansibleOptionAnchor" id="return-result/executionInformation"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-result-executioninformation"><strong>executionInformation</strong></p>
+<a class="ansibleOptionLink" href="#return-result/executionInformation" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
 </div></td>
-<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Details regarding the DSC execution.</p>
-<p>See <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/metadata/microsoft.dsc/properties?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/metadata/microsoft.dsc/properties?view=dsc-3.0</a>.</p>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Details regarding the DSC execution such as the operation, the execution type, the timings, the security context and the restart requirements reported by resources.</p>
+<p>Returned by DSC 3.2.0 and later, older releases only return <code class="ansible-return-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-return-result-metadata"><span class="std std-ref"><span class="pre">result.metadata</span></span></a></code>.</p>
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
 </div></td>
 </tr>
 <tr class="row-odd"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-result/metadata"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-result-metadata"><strong>metadata</strong></p>
+<a class="ansibleOptionLink" href="#return-result/metadata" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">dictionary</span></p>
+</div></td>
+<td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>Details regarding the DSC execution under the <code class="docutils literal notranslate"><span class="pre">Microsoft.DSC</span></code> key.</p>
+<p>See <a class="reference external" href="https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/metadata/microsoft.dsc/properties?view=dsc-3.0">https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/metadata/microsoft.dsc/properties?view=dsc-3.0</a>.</p>
+<p>Since DSC 3.2.0 this is a deprecated copy of <code class="ansible-return-value docutils literal notranslate"><a class="reference internal" href="#ansible-collections-ansible-windows-dsc3-module-return-result-executioninformation"><span class="std std-ref"><span class="pre">result.executionInformation</span></span></a></code> that DSC will stop returning in a future major version.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+</div></td>
+</tr>
+<tr class="row-even"><td><div class="ansible-option-indent"></div><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-result/results"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-result-results"><strong>results</strong></p>
 <a class="ansibleOptionLink" href="#return-result/results" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
 <td><div class="ansible-option-indent-desc"></div><div class="ansible-option-cell"><p>List of results from each resource that were configured.</p>
-<p>The schema of each item depends on the DSC operation used, and the resource’s type.</p>
+<p>The schema of each item depends on the resource’s type.</p>
 <p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
 </div></td>
 </tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-security_context"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-security-context"><strong>security_context</strong></p>
+<a class="ansibleOptionLink" href="#return-security_context" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The security context <code class="docutils literal notranslate"><span class="pre">dsc</span></code> ran in, either <code class="ansible-value docutils literal notranslate"><span class="pre">elevated</span></code> or <code class="ansible-value docutils literal notranslate"><span class="pre">restricted</span></code>.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> success</p>
+<p class="ansible-option-line ansible-option-sample"><strong class="ansible-option-sample-bold">Sample:</strong> <code class="ansible-option-sample docutils literal notranslate"><span class="pre">&quot;elevated&quot;</span></code></p>
+</div></td>
+</tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="return-stderr"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-stderr"><strong>stderr</strong></p>
+<a class="ansibleOptionLink" href="#return-stderr" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>Raw output of <code class="docutils literal notranslate"><span class="pre">dsc</span></code> on stderr, which contains the logging and tracing messages.</p>
+<p class="ansible-option-line"><strong class="ansible-option-returned-bold">Returned:</strong> always</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="return-stderr_lines"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-dsc3-module-return-stderr-lines"><strong>stderr_lines</strong></p>
 <a class="ansibleOptionLink" href="#return-stderr_lines" title="Permalink to this return value"></a><p class="ansible-option-type-line"><span class="ansible-option-type">list</span> / <span class="ansible-option-elements">elements=string</span></p>
 </div></td>
