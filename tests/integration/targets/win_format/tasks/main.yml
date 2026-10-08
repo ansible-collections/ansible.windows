@@ -1,7 +1,151 @@
 ---
-- name: Check if Format-Volume is supported
-  ansible.windows.win_shell: if (Get-Command -Name Format-Volume -ErrorAction SilentlyContinue) { $true } else { $false }
-  register: module_present
+- name: Check storage capabilities and reserved drive letters
+  ansible.windows.win_powershell:
+    path: files/prechecks.ps1
+  register: win_format_prechecks
 
-- include_tasks: pre_test.yml
-  when: module_present.stdout | trim | bool
+- name: Run win_format tests when Format-Volume is available
+  when: win_format_prechecks.result.supported
+  block:
+    - name: Get existing volumes
+      ansible.windows.win_format_info:
+      register: existing_volume_info
+
+    - name: Find available drive letters for the test volumes
+      ansible.builtin.set_fact:
+        win_format_available_drive_letters: >-
+          {{ ['T', 'U', 'V', 'W', 'X', 'Y', 'Z'] |
+             difference(win_format_prechecks.result.reserved_letters +
+             (existing_volume_info.volumes | selectattr('drive_letter') |
+              map(attribute='drive_letter') | map('upper') | list)) | sort }}
+
+    - name: Ensure two drive letters are available for the test volumes
+      ansible.builtin.assert:
+        that:
+          - existing_volume_info is not changed
+          - existing_volume_info.exists
+          - existing_volume_info.volumes | length > 0
+          - win_format_available_drive_letters | length >= 2
+        fail_msg: Two unused drive letters are required for the win_format integration test.
+
+    - name: Create an owned directory for the test images
+      ansible.windows.win_tempfile:
+        path: "{{ remote_tmp_dir }}"
+        prefix: win_format-
+        state: directory
+      register: win_format_temp_dir
+
+    - name: Set up test volume paths
+      ansible.builtin.set_fact:
+        win_format_test_drive_letter: "{{ win_format_available_drive_letters[0] }}"
+        win_format_aux_drive_letter: "{{ win_format_available_drive_letters[1] }}"
+        win_format_test_vhdx: '{{ win_format_temp_dir.path }}\AnsiblePart.vhdx'
+        win_format_aux_vhdx: '{{ win_format_temp_dir.path }}\AnsibleAux.vhdx'
+        win_format_test_label: "Ansible{{ (win_format_temp_dir.path | regex_replace('[^A-Za-z0-9]', ''))[-12:] }}"
+
+    - name: Confirm the selected drive letters are unused
+      ansible.windows.win_format_info:
+        drive_letter: "{{ item }}"
+      loop: "{{ [win_format_test_drive_letter, win_format_aux_drive_letter] }}"
+      register: unused_drive_info
+
+    - name: Assert the selected drive letters are unused
+      ansible.builtin.assert:
+        that:
+          - unused_drive_info is not changed
+          - unused_drive_info.results | selectattr('exists', 'equalto', true) | list | length == 0
+
+    - name: Copy VHDX creation script
+      ansible.windows.win_template:
+        src: partition_creation_script.j2
+        dest: '{{ win_format_temp_dir.path }}\partition_creation_script.txt'
+
+    - name: Create test partitions
+      ansible.windows.win_command:
+        argv:
+          - diskpart.exe
+          - /s
+          - '{{ win_format_temp_dir.path }}\partition_creation_script.txt'
+
+    - name: Verify the selected volumes belong to the owned VHD images
+      ansible.windows.win_powershell:
+        path: files/verify_test_volume.ps1
+        parameters:
+          VhdxPath: "{{ item.path }}"
+          DriveLetter: "{{ item.letter }}"
+      loop:
+        - path: "{{ win_format_test_vhdx }}"
+          letter: "{{ win_format_test_drive_letter }}"
+        - path: "{{ win_format_aux_vhdx }}"
+          letter: "{{ win_format_aux_drive_letter }}"
+      register: win_format_owned_volumes
+
+    - name: Run win_format tests
+      ansible.builtin.import_tasks: tests.yml
+
+  always:
+    - name: Clean up owned test VHDs
+      when: win_format_test_vhdx is defined
+      block:
+        - name: Detach each test VHD independently
+          ansible.windows.win_powershell:
+            path: files/detach_vhd.ps1
+            parameters:
+              VhdxPath: "{{ item }}"
+          loop: "{{ [win_format_test_vhdx, win_format_aux_vhdx] }}"
+          register: win_format_detach_results
+          # Attempt both images and report failures after the independent cleanup steps.
+          ignore_errors: true
+
+        - name: Remove each detached test VHD independently
+          ansible.windows.win_file:
+            path: "{{ item.item }}"
+            state: absent
+          loop: "{{ win_format_detach_results.results }}"
+          when: item is not failed
+          register: win_format_remove_results
+          ignore_errors: true
+
+        - name: Check that both test VHD files were removed
+          ansible.windows.win_stat:
+            path: "{{ item }}"
+          loop: "{{ [win_format_test_vhdx, win_format_aux_vhdx] }}"
+          register: win_format_cleanup_info
+          ignore_errors: true
+
+    - name: Remove the owned test directory after successful image cleanup
+      ansible.windows.win_file:
+        path: "{{ win_format_temp_dir.path }}"
+        state: absent
+      when:
+        - win_format_temp_dir is defined
+        - win_format_temp_dir.path is defined
+        - win_format_detach_results is not defined or win_format_detach_results is not failed
+        - win_format_remove_results is not defined or win_format_remove_results is not failed
+      register: win_format_remove_dir
+      ignore_errors: true
+
+    - name: Check that the owned directory was removed
+      ansible.windows.win_stat:
+        path: "{{ win_format_temp_dir.path }}"
+      when: win_format_temp_dir is defined and win_format_temp_dir.path is defined
+      register: win_format_cleanup_dir
+      ignore_errors: true
+
+    - name: Assert test image cleanup succeeded
+      ansible.builtin.assert:
+        that:
+          - win_format_detach_results is not failed
+          - win_format_remove_results is not failed
+          - win_format_cleanup_info is not failed
+          - win_format_cleanup_info.results | selectattr('stat.exists', 'equalto', true) | list | length == 0
+        fail_msg: Test VHD cleanup failed. Check the detach, removal, and verification results above.
+      when: win_format_test_vhdx is defined
+
+    - name: Assert the owned test directory was removed
+      ansible.builtin.assert:
+        that:
+          - win_format_remove_dir is not failed
+          - win_format_cleanup_dir is not failed
+          - not win_format_cleanup_dir.stat.exists
+      when: win_format_temp_dir is defined and win_format_temp_dir.path is defined
