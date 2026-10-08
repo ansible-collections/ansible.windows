@@ -1,0 +1,114 @@
+---
+- name: Check if Format-Volume is supported
+  ansible.windows.win_shell: if (Get-Command -Name Format-Volume -ErrorAction SilentlyContinue) { $true } else { $false }
+  register: format_volume_supported
+  changed_when: false
+
+- name: Run win_format tests when Format-Volume is available
+  when: format_volume_supported.stdout | trim | bool
+  block:
+    - name: Get existing volumes to select an unused drive letter
+      ansible.windows.win_format_info:
+      register: existing_volume_info
+
+    - name: Find available drive letters for the test volume
+      ansible.builtin.set_fact:
+        win_format_available_drive_letters: >-
+          {{ ['T', 'U', 'V', 'W', 'X', 'Y', 'Z'] |
+             difference(existing_volume_info.volumes |
+             selectattr('drive_letter') | map(attribute='drive_letter') | map('upper') | list) }}
+
+    - name: Ensure two drive letters are available for the test volumes
+      ansible.builtin.assert:
+        that:
+          - existing_volume_info is not changed
+          - existing_volume_info.exists
+          - existing_volume_info.volumes | length > 0
+          - win_format_available_drive_letters | length >= 2
+        fail_msg: Two unused drive letters are required for the win_format integration test.
+
+    - name: Set up test volume paths
+      ansible.builtin.set_fact:
+        win_format_test_drive_letter: "{{ win_format_available_drive_letters | first }}"
+        win_format_aux_drive_letter: "{{ win_format_available_drive_letters[1] }}"
+        win_format_test_vhdx: '{{ remote_tmp_dir }}\AnsiblePart.vhdx'
+        win_format_aux_vhdx: '{{ remote_tmp_dir }}\AnsibleAux.vhdx'
+        win_format_test_label: "Ansible{{ (remote_tmp_dir | regex_replace('[^A-Za-z0-9]', ''))[-12:] }}"
+
+    - name: Confirm the selected drive letters are unused
+      ansible.windows.win_format_info:
+        drive_letter: "{{ item }}"
+      loop: "{{ [win_format_test_drive_letter, win_format_aux_drive_letter] }}"
+      register: unused_drive_info
+
+    - name: Assert the selected drive letters are unused
+      ansible.builtin.assert:
+        that:
+          - unused_drive_info is not changed
+          - unused_drive_info.results | selectattr('exists', 'equalto', true) | list | length == 0
+
+    - name: Copy VHDX creation script
+      ansible.windows.win_template:
+        src: partition_creation_script.j2
+        dest: '{{ remote_tmp_dir }}\partition_creation_script.txt'
+
+    - name: Create test partition
+      ansible.windows.win_command:
+        argv:
+          - diskpart.exe
+          - /s
+          - '{{ remote_tmp_dir }}\partition_creation_script.txt'
+
+    - name: Run win_format tests
+      ansible.builtin.import_tasks: tests.yml
+
+  always:
+    - name: Clean up owned test VHDs
+      when: win_format_test_vhdx is defined
+      block:
+        - name: Detach each test VHD independently
+          ansible.windows.win_powershell:
+            parameters:
+              VhdxPath: "{{ item }}"
+            script: |
+              param([string]$VhdxPath)
+
+              $Ansible.Changed = $false
+              if (Test-Path -LiteralPath $VhdxPath) {
+                  $disk_image = Get-DiskImage -ImagePath $VhdxPath -ErrorAction Stop
+                  if ($disk_image.Attached) {
+                      Dismount-DiskImage -ImagePath $VhdxPath -ErrorAction Stop
+                      $Ansible.Changed = $true
+                  }
+                  if ((Get-DiskImage -ImagePath $VhdxPath -ErrorAction Stop).Attached) {
+                      throw "Test VHD '$VhdxPath' is still attached."
+                  }
+              }
+          loop: "{{ [win_format_test_vhdx, win_format_aux_vhdx] }}"
+          register: win_format_detach_results
+          # Continue to the remaining cleanup steps, then report any failure below.
+          ignore_errors: true
+
+        - name: Remove each test VHD independently
+          ansible.windows.win_file:
+            path: "{{ item }}"
+            state: absent
+          loop: "{{ [win_format_test_vhdx, win_format_aux_vhdx] }}"
+          register: win_format_remove_results
+          ignore_errors: true
+
+        - name: Check that both test VHD files were removed
+          ansible.windows.win_stat:
+            path: "{{ item }}"
+          loop: "{{ [win_format_test_vhdx, win_format_aux_vhdx] }}"
+          register: win_format_cleanup_info
+          ignore_errors: true
+
+        - name: Assert test VHD cleanup succeeded
+          ansible.builtin.assert:
+            that:
+              - win_format_detach_results is not failed
+              - win_format_remove_results is not failed
+              - win_format_cleanup_info is not failed
+              - win_format_cleanup_info.results | selectattr('stat.exists', 'equalto', true) | list | length == 0
+            fail_msg: Test VHD cleanup failed. Check the detach, removal, and verification results above.

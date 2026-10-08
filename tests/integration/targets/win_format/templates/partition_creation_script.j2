@@ -1,0 +1,23 @@
+create vdisk file="{{ win_format_test_vhdx }}" maximum=2000 type=expandable
+
+select vdisk file="{{ win_format_test_vhdx }}"
+
+attach vdisk
+
+convert mbr
+
+create partition primary
+
+assign letter="{{ win_format_test_drive_letter }}"
+
+create vdisk file="{{ win_format_aux_vhdx }}" maximum=64 type=fixed
+
+select vdisk file="{{ win_format_aux_vhdx }}"
+
+attach vdisk
+
+convert mbr
+
+create partition primary
+
+assign letter="{{ win_format_aux_drive_letter }}"
