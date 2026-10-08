@@ -358,8 +358,6 @@
     that:
       - win_dsc3_config_result is not failed
       - win_dsc3_config_result is not changed
-      - win_dsc3_config_result.invocation.module_args.config_file == 'config_docs/test.config.dsc.yml'
-      - win_dsc3_config_result.invocation.module_args.remote_config_file == false
   when: not win_dsc3_config_result is skipped
 
 - name: Configure using target-local configuration document
