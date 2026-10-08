@@ -1,4 +1,3 @@
 ---
-# TODO: Bump to v3.3.0/DSC-3.3.0-x86_64-pc-windows-msvc.zip once DSC 3.3 is generally available.
-win_dsc3_zip_url: https://github.com/PowerShell/DSC/releases/download/v3.3.0-rc.2/DSC-3.3.0-rc.2-x86_64-pc-windows-msvc.zip
+win_dsc3_zip_url: https://github.com/PowerShell/DSC/releases/download/v3.3.0/DSC-3.3.0-x86_64-pc-windows-msvc.zip
 test_dsc3_install_path: '{{ remote_tmp_dir }}\dsc'
