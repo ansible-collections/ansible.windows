@@ -11,7 +11,6 @@ $spec = @{
         chdir = @{ type = "path" }
         config = @{ type = "dict" }
         config_file = @{ type = "path" }
-        directives = @{ type = "dict" }
         executable = @{ type = "path"; default = "dsc.exe" }
         ignore_settings_file = @{ type = "bool"; default = $false }
         parameters = @{ type = "dict" }
@@ -24,14 +23,12 @@ $spec = @{
             choices = @("error", "warn", "info", "debug", "trace")
             default = "warn"
         }
-        what_if = @{ type = "bool"; default = $false }
     }
     required_one_of = @(
         , @("config", "config_file")
     )
     mutually_exclusive = @(
-        @("config", "config_file"),
-        @("directives", "config_file")
+        , @("config", "config_file")
     )
     supports_check_mode = $true
 }
@@ -225,27 +222,14 @@ function Resolve-DscResultNode {
         $outcome.RestartRequired = @($restartRequired)
     }
 
-    # Group resources nest their results. Microsoft.DSC/Include returns a bare list of results from test while
-    # Microsoft.DSC/Group and the set operation of all group resources return the list in the after/actual state.
-    $children = $null
-    if (Test-DscNestedResult $result) {
-        $children = @($result)
-    }
-    else {
-        foreach ($stateName in @('afterState', 'actualState')) {
-            $state = Get-DscProperty $result $stateName
-            if (Test-DscNestedResult $state) {
-                $children = @($state)
-                break
-            }
-        }
-    }
-
-    if ($null -ne $children) {
+    # Group resources such as Microsoft.DSC/Group and Microsoft.DSC/Include return the results of their nested
+    # resources as the after state.
+    $afterState = Get-DscProperty $result 'afterState'
+    if (Test-DscNestedResult $afterState) {
         $outcome.Before.resources = @()
         $outcome.After.resources = @()
 
-        foreach ($child in $children) {
+        foreach ($child in @($afterState)) {
             $childOutcome = Resolve-DscResultNode -Node $child
             if ($childOutcome.Changed) {
                 $outcome.Changed = $true
@@ -258,112 +242,39 @@ function Resolve-DscResultNode {
         return $outcome
     }
 
-    $resultProperties = @()
-    if ($result -is [System.Management.Automation.PSCustomObject]) {
-        $resultProperties = @($result.PSObject.Properties.Name)
-    }
-
-    if ('inDesiredState' -in $resultProperties -or 'differingProperties' -in $resultProperties) {
-        # Result of a test operation.
-        $inDesiredState = Get-DscProperty $result 'inDesiredState'
-        $changedProperties = ConvertTo-DscArray (Get-DscProperty $result 'differingProperties')
-        $outcome.Changed = if ($null -ne $inDesiredState) { -not [bool]$inDesiredState } else { $changedProperties.Count -gt 0 }
-        $beforeState = Get-DscProperty $result 'actualState'
-        $afterState = Get-DscProperty $result 'desiredState'
-    }
-    elseif ('beforeState' -in $resultProperties -or 'afterState' -in $resultProperties) {
-        # Result of a set operation.
-        $changedProperties = ConvertTo-DscArray (Get-DscProperty $result 'changedProperties')
-        $outcome.Changed = $changedProperties.Count -gt 0
-        $beforeState = Get-DscProperty $result 'beforeState'
-        $afterState = Get-DscProperty $result 'afterState'
-    }
-    else {
-        return $outcome
-    }
-
+    $changedProperties = ConvertTo-DscArray (Get-DscProperty $result 'changedProperties')
     if ($changedProperties.Count -gt 0) {
-        $outcome.Before.properties = Select-DscDiff $beforeState $changedProperties
+        $outcome.Changed = $true
+        $outcome.Before.properties = Select-DscDiff (Get-DscProperty $result 'beforeState') $changedProperties
         $outcome.After.properties = Select-DscDiff $afterState $changedProperties
     }
 
     return $outcome
 }
 
-function ConvertFrom-DscTrace {
+function Get-DscTraceMessage {
     <#
     .SYNOPSIS
-    Parses the stderr output of dsc when run with --trace-format=json. Each line is a JSON object with the level
-    and message, lines that aren't JSON (for example output of adapters) are kept as is.
+    Gets the messages of a trace level from the plaintext stderr output of dsc, where each trace line looks like
+    '2025-01-01T00:00:00.000000Z  WARN The message'. This is best effort, lines that don't match are ignored.
     #>
     param (
         [AllowNull()]
         [AllowEmptyString()]
         [String]
-        $Stderr
+        $Stderr,
+
+        [Parameter(Mandatory)]
+        [String]
+        $Level
     )
 
-    $entries = [System.Collections.Generic.List[Object]]::new()
-    if (-not $Stderr) {
-        return , $entries
-    }
-
-    # Messages emitted before dsc configures its trace format may contain ANSI colour sequences.
-    $ansiPattern = [String][Char]27 + '\[[0-9;]*m'
-
     foreach ($line in ($Stderr -split "`r?`n")) {
-        if (-not $line.Trim()) {
-            continue
+        if ($line -match "^\d{4}-\d{2}-\d{2}T\S+\s+$Level\s+(?<message>.+)$") {
+            $Matches.message.Trim()
         }
-
-        $level = $null
-        $message = $line -replace $ansiPattern, ''
-        if ($line.TrimStart().StartsWith('{')) {
-            try {
-                $trace = ConvertFrom-Json -InputObject $line -ErrorAction Stop
-                $traceLevel = Get-DscProperty $trace 'level'
-                $fields = Get-DscProperty $trace 'fields'
-
-                # Messages of dsc itself use 'message', the ones relayed from resources use 'trace_message'.
-                $traceMessage = $null
-                if ($fields -is [System.Management.Automation.PSCustomObject]) {
-                    foreach ($fieldName in @('message', 'trace_message')) {
-                        $traceMessage = Get-DscProperty $fields $fieldName
-                        if ($null -ne $traceMessage) {
-                            break
-                        }
-                    }
-                    if ($null -eq $traceMessage) {
-                        $stringField = $fields.PSObject.Properties | Where-Object { $_.Value -is [String] } | Select-Object -First 1
-                        if ($stringField) {
-                            $traceMessage = $stringField.Value
-                        }
-                    }
-                }
-
-                if ($null -ne $traceLevel -and $null -ne $traceMessage) {
-                    $level = ([String]$traceLevel).ToUpperInvariant()
-                    $message = [String]$traceMessage
-                }
-            }
-            catch {
-                # Not a trace line, keep the raw value.
-                $level = $null
-            }
-        }
-
-        $entries.Add([PSCustomObject]@{
-                Level = $level
-                Message = $message
-                Raw = ($line -replace $ansiPattern, '')
-            })
     }
-
-    return , $entries
 }
-
-$whatIf = $module.Params.what_if
-$configSubcommand = if ($module.CheckMode -and -not $whatIf) { "test" } else { "set" }
 
 if ($module.Params.config_file) {
     $configFilePath = $module.Params.config_file
@@ -377,21 +288,6 @@ else {
         $configDoc['$schema'] = $defaultSchema
     }
 
-    if ($null -ne $module.Params.directives) {
-        $docDirectives = $configDoc['directives']
-        if ($null -eq $docDirectives) {
-            $docDirectives = @{}
-            $configDoc['directives'] = $docDirectives
-        }
-        elseif ($docDirectives -isnot [System.Collections.IDictionary]) {
-            $module.FailJson("The directives property of config must be a dictionary when the directives option is also set")
-        }
-
-        foreach ($key in $module.Params.directives.Keys) {
-            $docDirectives[$key] = $module.Params.directives[$key]
-        }
-    }
-
     $configFilePath = "-"
     $inputObject = ConvertTo-Json -InputObject $configDoc -Depth 100 -Compress
 }
@@ -402,7 +298,7 @@ if ($module.Params.chdir -and -not (Test-Path -LiteralPath $module.Params.chdir 
 
 # Build the argument list, the global options come first, then the config options, then the subcommand and its options.
 $dscArgs = [System.Collections.Generic.List[String]]::new()
-$dscArgs.Add("--trace-format=json")
+$dscArgs.Add("--trace-format=plaintext")
 $dscArgs.Add("--progress-format=none")
 $dscArgs.Add("--trace-level=$($module.Params.trace_level)")
 if ($module.Params.ignore_settings_file) {
@@ -422,10 +318,10 @@ if ($module.Params.system_root) {
     $dscArgs.Add("--system-root=$($module.Params.system_root)")
 }
 
-$dscArgs.Add($configSubcommand)
+$dscArgs.Add("set")
 $dscArgs.Add("--file=$configFilePath")
 $dscArgs.Add("--output-format=json")
-if ($configSubcommand -eq "set" -and $whatIf) {
+if ($module.CheckMode) {
     $dscArgs.Add("--what-if")
 }
 
@@ -442,11 +338,6 @@ if ($module.Params.chdir) {
 if ($module.Params.resource_path) {
     # The Environment parameter replaces the whole environment of the process so it must be seeded from the current one.
     $environment = [System.Environment]::GetEnvironmentVariables()
-    foreach ($key in @($environment.Keys)) {
-        if ($key -eq 'DSC_RESOURCE_PATH') {
-            $environment.Remove($key)
-        }
-    }
     $environment['DSC_RESOURCE_PATH'] = @($module.Params.resource_path) -join ';'
     $processParams.Environment = $environment
 }
@@ -459,40 +350,20 @@ catch {
 }
 
 $rc = [int]$dscReturn.ExitCode
-$trace = ConvertFrom-DscTrace -Stderr $dscReturn.Stderr
-
 $module.Result.rc = $rc
 $module.Result.stderr = $dscReturn.Stderr
-$module.Result.stderr_lines = @($trace | ForEach-Object {
-        if ($_.Level) { "$($_.Level) $($_.Message)" } else { $_.Raw }
-    })
 
-$seenWarnings = [System.Collections.Generic.HashSet[String]]::new()
-foreach ($entry in $trace) {
-    if ($entry.Level -ne 'WARN') {
-        continue
-    }
-
-    # Resources relay their own trace messages prefixed with their process id, dedupe those across resources.
-    $key = $entry.Message -replace '^PID \d+: ', ''
-    if ($seenWarnings.Add($key)) {
-        $module.Warn($entry.Message)
-    }
+foreach ($warning in (Get-DscTraceMessage -Stderr $dscReturn.Stderr -Level WARN)) {
+    $module.Warn($warning)
 }
 
 if ($rc -ne 0) {
     $codeName = if ($dscExitCodeNames.ContainsKey($rc)) { $dscExitCodeNames[$rc] } else { "unknown error" }
-    $errors = @($trace | Where-Object { $_.Level -eq 'ERROR' })
-    $detail = if ($errors.Count -gt 0) {
-        $errors[-1].Message
-    }
-    elseif ($trace.Count -gt 0) {
-        $trace[$trace.Count - 1].Raw
-    }
+    $msg = "dsc config set failed with exit code $rc ($codeName)"
 
-    $msg = "dsc config $configSubcommand failed with exit code $rc ($codeName)"
-    if ($detail) {
-        $msg += ": $detail"
+    $errors = @(Get-DscTraceMessage -Stderr $dscReturn.Stderr -Level ERROR)
+    if ($errors.Count -gt 0) {
+        $msg += ": $($errors[-1])"
     }
     $module.FailJson($msg)
 }
@@ -506,10 +377,6 @@ catch {
 $module.Result.result = $dscResult
 
 $executionInfo = Get-DscExecutionInfo $dscResult
-$operation = [String](Get-DscProperty $executionInfo 'operation')
-if ($operation -notin @('set', 'test')) {
-    $module.FailJson("Unexpected operation result of type '$operation'")
-}
 $module.Result.security_context = Get-DscProperty $executionInfo 'securityContext'
 $module.Result.execution_type = Get-DscProperty $executionInfo 'executionType'
 
@@ -543,7 +410,7 @@ else {
             }
         })
 }
-$module.Result.restart_required = $restartEntries
+$module.Result.restart_requirements = $restartEntries
 $module.Result.reboot_required = @($restartEntries | Where-Object {
         $_ -is [System.Management.Automation.PSCustomObject] -and $null -ne $_.PSObject.Properties['system']
     }).Count -gt 0

@@ -10,9 +10,9 @@ module: dsc3
 short_description: Sets or checks DSC v3 configuration state
 version_added: '3.4.0'
 description:
-    - Calls C(dsc config set) or C(dsc config test) using O(config) or O(config_file) as the configuration document.
+    - Calls C(dsc config set) using O(config) or O(config_file) as the configuration document.
     - The module is tested against Microsoft DSC 3.3. Older 3.x releases work as long as the options that map to
-      newer DSC features, such as O(directives) or O(ignore_settings_file), are not used.
+      newer DSC features, such as O(ignore_settings_file), are not used.
     - By default C(dsc) must be discoverable through the E(PATH) environment variable, which C(dsc) itself also
       uses to discover resources. Use O(executable) to run a specific C(dsc.exe) and O(resource_path) to control
       where resources are discovered.
@@ -45,20 +45,6 @@ options:
             - This corresponds to the C(--file) DSC commandline option.
             - One of O(config) or O(config_file) must be specified.
         type: path
-    directives:
-        description:
-            - Directives that control how C(dsc) processes the configuration document.
-            - The values are merged into the top-level C(directives) property of O(config) and override any keys
-              already defined there.
-            - Supported directives are C(resourceDiscovery) with the values V(preDeployment) or V(duringDeployment),
-              C(securityContext) with the values V(current), V(elevated) or V(restricted) and C(version) with a
-              semantic version requirement for the DSC engine, for example V(>=3.3.0).
-            - Directives for a single resource instance, such as C(requireAdapter) and C(securityContext), are set
-              in the C(directives) property of that resource in O(config).
-            - Requires DSC 3.2.0 or later, older releases reject the document with exit code 2.
-            - Cannot be used with O(config_file), add the directives to the configuration document instead.
-        type: dict
-        version_added: '3.9.0'
     executable:
         description:
             - Path to the C(dsc) executable to run.
@@ -124,33 +110,24 @@ options:
         type: str
         choices: [ error, warn, info, debug, trace ]
         default: warn
-    what_if:
-        description:
-            - Run C(dsc config set --what-if) instead of C(dsc config set) to report the changes that would be made
-              without changing anything.
-            - Applies in both normal and check mode and sets RV(execution_type) to V(whatIf).
-            - Requires DSC 3.1.0 or later. Resources without native what-if support are simulated from their test
-              operation, but group resources such as C(Microsoft.DSC/Group) and resources that declare
-              C(implementsPretest) fail with exit code 2.
-        type: bool
-        default: false
-        version_added: '3.9.0'
 notes:
-    - The C(dsc) process runs as the user Ansible connects with, use C(become) to run it elevated. A
-      C(securityContext) directive of V(elevated) or V(restricted) is validated by C(dsc) before any resource is
-      invoked and fails the task with exit code 2 when it is not satisfied.
-    - In check mode the module runs C(dsc config test), or C(dsc config set --what-if) when O(what_if) is set,
-      and never changes the system.
-    - The changed status is derived from the C(changedProperties) of each resource for the set operation and
-      from C(inDesiredState) for the test operation. The nested results of group resources such as
-      C(Microsoft.DSC/Group) and C(Microsoft.DSC/Include) are walked recursively so a group is only reported as
-      changed when one of its resources changed.
+    - The C(dsc) process runs as the user Ansible connects with. If that user does not have the rights a resource
+      needs, C(become) may be able to help.
+    - A configuration document can require a security context through the C(securityContext) key of its top-level
+      C(directives) property, with the value V(elevated) or V(restricted). C(dsc) checks this before it invokes
+      any resource and the task fails with exit code 2 when the C(dsc) process does not run in that context.
+    - In check mode the module runs C(dsc config set --what-if), which reports the changes that would be made
+      without changing the system. This requires DSC 3.1.0 or later. Resources without native what-if support are
+      simulated from their test operation, but group resources such as C(Microsoft.DSC/Group) and
+      C(Microsoft.DSC/Include) and resources that declare C(implementsPretest) do not support what-if and fail
+      the task with exit code 2.
+    - The changed status is derived from the C(changedProperties) of each resource. The nested results of group
+      resources such as C(Microsoft.DSC/Group) and C(Microsoft.DSC/Include) are walked recursively so a group is
+      only reported as changed when one of its resources changed.
     - When run with diff mode, the diff lists every resource with its name and type. Resources that changed also
       include the properties that changed and group resources contain a nested C(resources) list.
     - Warnings emitted by C(dsc) are reported as Ansible warnings and the last error emitted by C(dsc) is included
       in RV(msg) when the command fails.
-    - Setting the security context through C(metadata.Microsoft.DSC) in the configuration document is deprecated
-      since DSC 3.2.0 and results in a warning, use O(directives) instead.
 seealso:
     - module: ansible.windows.win_dsc
     - name: DSC configuration document schema
@@ -207,29 +184,20 @@ EXAMPLES = r"""
 - name: Require an elevated session and DSC 3.3 or later before configuring the registry
   ansible.windows.dsc3:
     config:
+      directives:
+        securityContext: elevated
+        version: '>=3.3.0'
       resources:
         - name: Example key
           type: Microsoft.Windows/Registry
           properties:
             keyPath: HKLM\Software\Example
             _exist: true
-    directives:
-      securityContext: elevated
-      version: '>=3.3.0'
-  become: true
-  become_method: runas
-  become_user: SYSTEM
   register: dsc_result
 
 - name: Reboot when a resource requires it
   ansible.windows.win_reboot:
   when: dsc_result.reboot_required
-
-- name: Preview the changes DSC would make without applying them
-  ansible.windows.dsc3:
-    config: "{{ lookup('ansible.builtin.file', 'baseline.dsc.config.yaml') | from_yaml }}"
-    what_if: true
-  register: dsc_preview
 
 - name: Run a specific dsc executable with additional resource directories
   ansible.windows.dsc3:
@@ -263,21 +231,20 @@ EXAMPLES = r"""
     parameters:
       siteName: '{{ inventory_hostname }}'
 
-- name: Check whether the system is in the desired state and show the differences
+- name: Preview the changes DSC would make without applying them
   ansible.windows.dsc3:
     config_file: files/baseline.dsc.config.yaml
   check_mode: true
   diff: true
-  register: dsc_test
+  register: dsc_preview
 """
 
 RETURN = r"""
 result:
     description:
         - Result object returned by C(dsc).
-        - The exact schema of this object depends on the command used to invoke C(dsc).
-          For example, U(https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0)
-          or U(https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/test?view=dsc-3.0).
+        - See U(https://learn.microsoft.com/en-us/powershell/dsc/reference/schemas/outputs/config/set?view=dsc-3.0)
+          for the schema of this object.
     type: dict
     returned: success
     contains:
@@ -297,7 +264,7 @@ result:
         results:
             description:
                 - List of results from each resource that were configured.
-                - The schema of each item depends on the DSC operation used, and the resource's type.
+                - The schema of each item depends on the resource's type.
             type: list
 
 rc:
@@ -315,18 +282,17 @@ msg:
 
 stderr:
     description:
-        - Raw output of C(dsc) on stderr, which contains the trace messages as JSON lines.
+        - Raw output of C(dsc) on stderr, which contains the logging and tracing messages.
     type: str
     returned: always
 
 stderr_lines:
     description:
-        - Logging and tracing messages from C(dsc), each prefixed with the level of the message.
+        - Logging and tracing messages from C(dsc).
         - May be empty if no messages were emitted at the levels allowed by O(trace_level).
     type: list
     elements: str
     returned: always
-    sample: ["WARN Using 'Microsoft.DSC' metadata to specify required security context is deprecated."]
 
 reboot_required:
     description:
@@ -336,7 +302,7 @@ reboot_required:
     sample: false
     version_added: '3.9.0'
 
-restart_required:
+restart_requirements:
     description:
         - The restart requirements reported by the resources, aggregated from C(executionInformation.restartRequired).
         - Each entry contains a C(system), C(service) or C(process) key.
@@ -356,7 +322,7 @@ security_context:
 
 execution_type:
     description:
-        - V(actual) when the configuration was set or tested and V(whatIf) when O(what_if) was used.
+        - V(actual) when the configuration was set and V(whatIf) when the module ran in check mode.
         - Not returned by DSC releases before 3.2.0.
     type: str
     returned: success

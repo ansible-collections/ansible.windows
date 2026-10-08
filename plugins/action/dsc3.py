@@ -39,9 +39,6 @@ class ActionModule(ActionBase):
                 if module_args.get('config', None):
                     raise AnsibleActionFail("parameters are mutually exclusive: config, config_file")
 
-                if module_args.get('directives', None):
-                    raise AnsibleActionFail("parameters are mutually exclusive: directives, config_file")
-
                 if self._task.async_val:
                     raise AnsibleActionFail("async operations are not supported with local config_file")
 

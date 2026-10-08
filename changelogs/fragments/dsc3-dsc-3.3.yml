@@ -1,14 +1,19 @@
+breaking_changes:
+  - >-
+    dsc3 - Check mode now runs ``dsc config set --what-if`` instead of ``dsc config test`` so the reported changes
+    align with what ``dsc`` would do. Group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include``
+    do not support what-if and fail in check mode.
 minor_changes:
   - >-
-    dsc3 - Add the ``directives``, ``what_if``, ``parameters_file``, ``system_root``, ``ignore_settings_file``,
-    ``resource_path``, ``chdir`` and ``executable`` options to support Microsoft DSC 3.3.
+    dsc3 - Add the ``parameters_file``, ``system_root``, ``ignore_settings_file``, ``resource_path``, ``chdir`` and
+    ``executable`` options to support Microsoft DSC 3.3.
   - >-
-    dsc3 - Return ``reboot_required``, ``restart_required``, ``security_context`` and ``execution_type``, surface
+    dsc3 - Return ``reboot_required``, ``restart_requirements``, ``security_context`` and ``execution_type``, surface
     DSC warning messages as Ansible warnings and include the DSC error message in ``msg`` when ``dsc`` fails.
 bugfixes:
   - >-
-    dsc3 - Derive ``changed`` in check mode from the ``inDesiredState`` result and walk the nested results of group
-    resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` instead of reporting every group as changed.
+    dsc3 - Walk the nested results of group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include``
+    instead of reporting every group as changed.
   - >-
     dsc3 - Read the execution details from ``executionInformation`` with a fallback to the deprecated
     ``metadata.Microsoft.DSC`` property that DSC will remove in a future release.

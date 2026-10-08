@@ -67,7 +67,7 @@
           # The test hosts run as an administrator.
           - win_dsc3_echo_result.security_context == 'elevated'
           - win_dsc3_echo_result.reboot_required == false
-          - win_dsc3_echo_result.restart_required == []
+          - win_dsc3_echo_result.restart_requirements == []
       when: not win_dsc3_echo_result is skipped
 
 - name: Configure multiple resources
@@ -176,6 +176,8 @@
         that:
           - win_dsc3_check_with_change_result is not failed
           - win_dsc3_check_with_change_result is changed
+          - win_dsc3_check_with_change_result.execution_type == 'whatIf'
+          - win_dsc3_check_with_change_result.result.executionInformation.operation == 'set'
           - win_dsc3_check_with_change_result.diff.before.resources[0].name == "Check mode"
           - win_dsc3_check_with_change_result.diff.before.resources[0].type == "Ansible.Windows.Debug/Fake"
           - win_dsc3_check_with_change_result.diff.after.resources[0].name == "Check mode"
@@ -259,7 +261,7 @@
           - win_dsc3_unknown_resource_result.rc == 2
           - "'exit code 2 (DSC error)' in win_dsc3_unknown_resource_result.msg"
           - "'Ansible.Windows.Debug/Unknown' in win_dsc3_unknown_resource_result.msg"
-          - win_dsc3_unknown_resource_result.stderr_lines | select('match', '^ERROR ') | list | length > 0
+          - win_dsc3_unknown_resource_result.stderr_lines | select('search', ' ERROR ') | list | length > 0
       when: not win_dsc3_unknown_resource_result is skipped
 
 - name: Configure using invalid config doc
@@ -325,7 +327,7 @@
         that:
           - win_dsc3_debug_logging_result is not failed
           - win_dsc3_debug_logging_result.stderr_lines | length > 0
-          - win_dsc3_debug_logging_result.stderr_lines | select('match', '^INFO ') | list | length > 0
+          - win_dsc3_debug_logging_result.stderr_lines | select('search', ' INFO ') | list | length > 0
       when: not win_dsc3_debug_logging_result is skipped
 
 - name: Configure using imported configuration document
@@ -356,6 +358,8 @@
     that:
       - win_dsc3_config_result is not failed
       - win_dsc3_config_result is not changed
+      - win_dsc3_config_result.invocation.module_args.config_file == 'config_docs/test.config.dsc.yml'
+      - win_dsc3_config_result.invocation.module_args.remote_config_file == false
   when: not win_dsc3_config_result is skipped
 
 - name: Configure using target-local configuration document
@@ -434,13 +438,9 @@
       - win_dsc3_async_result.execution_type == 'actual'
   when: not win_dsc3_async_result is skipped
 
-- name: Check mode with group resource and no changes
-  vars:
-    state:
-      a: a
-      b: b
+- name: Check mode with group resource
   block:
-    - name: Check mode with group resource and no changes
+    - name: Check mode with group resource
       ansible.windows.dsc3:
         config:
           resources:
@@ -449,66 +449,23 @@
               properties:
                 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
                 resources:
-                  - name: Nested fake
-                    type: Ansible.Windows.Debug/Fake
-                    properties: '{{ state }}'
+                  - name: Nested echo
+                    type: Microsoft.DSC.Debug/Echo
+                    properties:
+                      output: group
       environment:
         PATH: '{{ test_dsc3_path_env }}'
-        FAKE_BEFORE_STATE: '{{ state | to_json }}'
-        FAKE_AFTER_STATE: '{{ state | to_json }}'
       check_mode: true
-      diff: true
-      register: win_dsc3_group_no_change_result
+      register: win_dsc3_group_check_result
+      ignore_errors: true
 
-    - name: Verify check mode with group resource and no changes
+    # Group resources do not support what-if.
+    - name: Verify check mode with group resource
       ansible.builtin.assert:
         that:
-          - win_dsc3_group_no_change_result is not failed
-          - win_dsc3_group_no_change_result is not changed
-          - win_dsc3_group_no_change_result.diff.after.resources[0].type == 'Microsoft.DSC/Group'
-          - win_dsc3_group_no_change_result.diff.after.resources[0].resources[0].name == 'Nested fake'
-      when: not win_dsc3_group_no_change_result is skipped
-
-- name: Check mode with group resource and changes
-  vars:
-    state_current:
-      a: a
-      b: null
-    state_wanted:
-      a: a
-      b: b
-    state_diff_after:
-      b: b
-  block:
-    - name: Check mode with group resource and changes
-      ansible.windows.dsc3:
-        config:
-          resources:
-            - name: Group
-              type: Microsoft.DSC/Group
-              properties:
-                $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
-                resources:
-                  - name: Nested fake
-                    type: Ansible.Windows.Debug/Fake
-                    properties: '{{ state_wanted }}'
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_BEFORE_STATE: '{{ state_current | to_json }}'
-      check_mode: true
-      diff: true
-      register: win_dsc3_group_change_result
-
-    - name: Verify check mode with group resource and changes
-      ansible.builtin.assert:
-        that:
-          - win_dsc3_group_change_result is not failed
-          - win_dsc3_group_change_result is changed
-          - win_dsc3_group_change_result.diff.before.resources[0].name == 'Group'
-          - win_dsc3_group_change_result.diff.before.resources[0].resources[0].name == 'Nested fake'
-          - win_dsc3_group_change_result.diff.before.resources[0].resources[0].type == 'Ansible.Windows.Debug/Fake'
-          - win_dsc3_group_change_result.diff.after.resources[0].resources[0].properties == state_diff_after
-      when: not win_dsc3_group_change_result is skipped
+          - win_dsc3_group_check_result is failed
+          - win_dsc3_group_check_result.rc == 2
+      when: not win_dsc3_group_check_result is skipped
 
 - name: Configure group resource
   vars:
@@ -571,8 +528,8 @@
           - win_dsc3_restart_system_result is not failed
           - win_dsc3_restart_system_result is changed
           - win_dsc3_restart_system_result.reboot_required == true
-          - win_dsc3_restart_system_result.restart_required | length == 1
-          - win_dsc3_restart_system_result.restart_required[0].system == 'fake'
+          - win_dsc3_restart_system_result.restart_requirements | length == 1
+          - win_dsc3_restart_system_result.restart_requirements[0].system == 'fake'
           - win_dsc3_restart_system_result.result.executionInformation.restartRequired | length == 1
       when: not win_dsc3_restart_system_result is skipped
 
@@ -601,22 +558,22 @@
           - win_dsc3_restart_service_result is not failed
           - win_dsc3_restart_service_result is changed
           - win_dsc3_restart_service_result.reboot_required == false
-          - win_dsc3_restart_service_result.restart_required | length == 1
-          - win_dsc3_restart_service_result.restart_required[0].service == 'spooler'
+          - win_dsc3_restart_service_result.restart_requirements | length == 1
+          - win_dsc3_restart_service_result.restart_requirements[0].service == 'spooler'
       when: not win_dsc3_restart_service_result is skipped
 
 # The test hosts run as an administrator so the elevated security context is satisfied.
 - name: Configure with elevated security context directive
   ansible.windows.dsc3:
     config:
+      directives:
+        securityContext: elevated
+        version: '>=3.2.0'
       resources:
         - name: Elevated echo
           type: Microsoft.DSC.Debug/Echo
           properties:
             output: elevated
-    directives:
-      securityContext: elevated
-      version: '>=3.2.0'
   environment:
     PATH: '{{ test_dsc3_path_env }}'
   register: win_dsc3_directive_elevated_result
@@ -628,98 +585,6 @@
       - win_dsc3_directive_elevated_result.security_context == 'elevated'
       - win_dsc3_directive_elevated_result.result.executionInformation.securityContext == 'elevated'
   when: not win_dsc3_directive_elevated_result is skipped
-
-- name: Configure with restricted security context directive
-  ansible.windows.dsc3:
-    config:
-      resources:
-        - name: Restricted echo
-          type: Microsoft.DSC.Debug/Echo
-          properties:
-            output: restricted
-    directives:
-      securityContext: restricted
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_directive_restricted_result
-  ignore_errors: true
-
-- name: Verify configure with restricted security context directive
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_directive_restricted_result is failed
-      - win_dsc3_directive_restricted_result.rc == 2
-      - "'Restricted security context required' in win_dsc3_directive_restricted_result.msg"
-  when: not win_dsc3_directive_restricted_result is skipped
-
-- name: Configure with unsatisfiable version directive
-  ansible.windows.dsc3:
-    config:
-      resources:
-        - name: Version echo
-          type: Microsoft.DSC.Debug/Echo
-          properties:
-            output: version
-    directives:
-      version: '>=99.0.0'
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_directive_version_result
-  ignore_errors: true
-
-- name: Verify configure with unsatisfiable version directive
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_directive_version_result is failed
-      - win_dsc3_directive_version_result.rc == 2
-      - "'requires DSC version' in win_dsc3_directive_version_result.msg"
-  when: not win_dsc3_directive_version_result is skipped
-
-- name: Configure with directives in the config and the option
-  ansible.windows.dsc3:
-    config:
-      directives:
-        securityContext: restricted
-        version: '>=3.2.0'
-      resources:
-        - name: Merged directives echo
-          type: Microsoft.DSC.Debug/Echo
-          properties:
-            output: merged
-    directives:
-      securityContext: elevated
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_directive_merge_result
-
-- name: Verify configure with directives in the config and the option
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_directive_merge_result is not failed
-      - win_dsc3_directive_merge_result.security_context == 'elevated'
-  when: not win_dsc3_directive_merge_result is skipped
-
-- name: Configure with resource discovery during deployment and unknown resource
-  ansible.windows.dsc3:
-    config:
-      resources:
-        - name: Bad
-          type: Ansible.Windows.Debug/Unknown
-          properties: {}
-    directives:
-      resourceDiscovery: duringDeployment
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_directive_discovery_result
-  ignore_errors: true
-
-- name: Verify configure with resource discovery during deployment and unknown resource
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_directive_discovery_result is failed
-      - win_dsc3_directive_discovery_result.rc == 2
-      - "'Ansible.Windows.Debug/Unknown' in win_dsc3_directive_discovery_result.msg"
-  when: not win_dsc3_directive_discovery_result is skipped
 
 - name: Configure with deprecated security context metadata
   ansible.windows.dsc3:
@@ -740,87 +605,8 @@
   ansible.builtin.assert:
     that:
       - win_dsc3_deprecated_metadata_result is not failed
-      - win_dsc3_deprecated_metadata_result.stderr_lines | select('match', '^WARN .*deprecated') | list | length > 0
+      - win_dsc3_deprecated_metadata_result.stderr_lines | select('search', ' WARN .*deprecated') | list | length > 0
   when: not win_dsc3_deprecated_metadata_result is skipped
-
-- name: Expect failure when specifying directives and local config_file together
-  ansible.windows.dsc3:
-    config_file: config_docs/test.config.dsc.yml
-    directives:
-      securityContext: current
-  register: win_dsc3_directives_local_file_result
-  ignore_errors: true
-
-- name: Assert failure message when specifying directives and local config_file together
-  ansible.builtin.assert:
-    that:
-      - >-
-        win_dsc3_directives_local_file_result.msg == "parameters are mutually exclusive: directives, config_file"
-
-- name: Expect failure when specifying directives and target-local config_file together
-  ansible.windows.dsc3:
-    config_file: '{{ test_dsc3_config_docs_path }}\test.config.dsc.yml'
-    remote_config_file: true
-    directives:
-      securityContext: current
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_directives_remote_file_result
-  ignore_errors: true
-
-- name: Assert failure message when specifying directives and target-local config_file together
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_directives_remote_file_result is failed
-      - >-
-        win_dsc3_directives_remote_file_result.msg == "parameters are mutually exclusive: directives, config_file"
-  when: not win_dsc3_directives_remote_file_result is skipped
-
-- name: Configure with what-if
-  ansible.windows.dsc3:
-    config:
-      resources:
-        - name: What-if echo
-          type: Microsoft.DSC.Debug/Echo
-          properties:
-            output: what-if
-    what_if: true
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  register: win_dsc3_what_if_result
-
-- name: Verify configure with what-if
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_what_if_result is not failed
-      - win_dsc3_what_if_result is not changed
-      - win_dsc3_what_if_result.execution_type == 'whatIf'
-      - win_dsc3_what_if_result.result.executionInformation.operation == 'set'
-      - win_dsc3_what_if_result.result.executionInformation.executionType == 'whatIf'
-  when: not win_dsc3_what_if_result is skipped
-
-- name: Configure with what-if in check mode
-  ansible.windows.dsc3:
-    config:
-      resources:
-        - name: What-if echo
-          type: Microsoft.DSC.Debug/Echo
-          properties:
-            output: what-if
-    what_if: true
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  check_mode: true
-  register: win_dsc3_what_if_check_result
-
-- name: Verify configure with what-if in check mode
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_what_if_check_result is not failed
-      - win_dsc3_what_if_check_result is not changed
-      - win_dsc3_what_if_check_result.execution_type == 'whatIf'
-      - win_dsc3_what_if_check_result.result.executionInformation.operation == 'set'
-  when: not win_dsc3_what_if_check_result is skipped
 
 - name: Configure using resource found through resource_path
   ansible.windows.dsc3:
@@ -942,30 +728,6 @@
       - win_dsc3_include_result is not changed
       - win_dsc3_include_result.result.results[0].type == 'Microsoft.DSC/Include'
   when: not win_dsc3_include_result is skipped
-
-- name: Check mode using include with chdir
-  ansible.windows.dsc3:
-    chdir: '{{ test_dsc3_config_docs_path }}'
-    config:
-      resources:
-        - name: Include test document
-          type: Microsoft.DSC/Include
-          properties:
-            configurationFile: test.config.dsc.yml
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
-  check_mode: true
-  diff: true
-  register: win_dsc3_include_check_result
-
-- name: Verify check mode using include with chdir
-  ansible.builtin.assert:
-    that:
-      - win_dsc3_include_check_result is not failed
-      - win_dsc3_include_check_result is not changed
-      - win_dsc3_include_check_result.diff.after.resources[0].type == 'Microsoft.DSC/Include'
-      - win_dsc3_include_check_result.diff.after.resources[0].resources[0].name == 'Simple echo'
-  when: not win_dsc3_include_check_result is skipped
 
 - name: Expect failure with nonexistent chdir
   ansible.windows.dsc3:
