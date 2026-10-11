@@ -1,0 +1,191 @@
+---
+- name: Prepare and test disk information with guaranteed cleanup
+  block:
+    - name: Prepare the testing environment
+      block:
+        - name: Check storage capabilities and fixture safety
+          ansible.windows.win_powershell:
+            path: files/prechecks.ps1
+            error_action: stop
+
+        - name: Create an owned directory for disk fixtures
+          ansible.windows.win_tempfile:
+            prefix: win_disk_info-
+            state: directory
+          register: win_disk_info_temp_dir
+
+        - name: Record the owned image paths
+          ansible.builtin.set_fact:
+            win_disk_info_images:
+              - '{{ win_disk_info_temp_dir.path }}\mbr.vhdx'
+              - '{{ win_disk_info_temp_dir.path }}\gpt.vhdx'
+
+        - name: Copy the image creation script
+          ansible.windows.win_template:
+            src: create_images.j2
+            dest: '{{ win_disk_info_temp_dir.path }}\create_images.txt'
+
+        - name: Create directories for isolated provider regression tests
+          ansible.windows.win_file:
+            path: '{{ win_disk_info_temp_dir.path }}\{{ item }}'
+            state: directory
+          loop:
+            - plugins\modules
+            - plugins\module_utils
+            - regressions
+
+        - name: Copy the actual implementation for isolated regression tests
+          ansible.windows.win_copy:
+            src: "{{ role_path }}/../../../../plugins/{{ item.source }}"
+            dest: '{{ win_disk_info_temp_dir.path }}\plugins\{{ item.destination }}'
+          loop:
+            - source: modules/win_disk_info.ps1
+              destination: modules\win_disk_info.ps1
+            - source: module_utils/Disk.psm1
+              destination: module_utils\Disk.psm1
+
+        - name: Copy the provider and fixture regression scripts
+          ansible.windows.win_copy:
+            src: files/
+            dest: '{{ win_disk_info_temp_dir.path }}\regressions\'
+
+        - name: Create and attach the owned images
+          ansible.windows.win_command:
+            argv:
+              - diskpart.exe
+              - /s
+              - '{{ win_disk_info_temp_dir.path }}\create_images.txt'
+
+        - name: Verify the images expose owned RAW disks
+          ansible.windows.win_powershell:
+            path: files/verify_owned_disk.ps1
+            error_action: stop
+            parameters:
+              ImagePath: "{{ item }}"
+              RequireRaw: true
+          loop: "{{ win_disk_info_images }}"
+          register: win_disk_info_owned_disks
+
+        - name: Record the verified disk identities
+          ansible.builtin.set_fact:
+            win_disk_info_mbr_disk: "{{ win_disk_info_owned_disks.results[0].result }}"
+            win_disk_info_gpt_disk: "{{ win_disk_info_owned_disks.results[1].result }}"
+
+        - name: Initialize the owned disks with different partition styles
+          ansible.windows.win_initialize_disk:
+            path: "{{ item.path }}"
+            style: "{{ item.style }}"
+          loop:
+            - path: "{{ win_disk_info_mbr_disk.path }}"
+              style: mbr
+            - path: "{{ win_disk_info_gpt_disk.path }}"
+              style: gpt
+
+        - name: Recheck owned disk identities before creating partitions
+          ansible.windows.win_powershell:
+            path: files/verify_owned_disk.ps1
+            error_action: stop
+            parameters:
+              ImagePath: "{{ item }}"
+          loop: "{{ win_disk_info_images }}"
+          register: win_disk_info_partition_disks
+
+        - name: Assert disk identities remained stable
+          ansible.builtin.assert:
+            that:
+              - item.result.number == item.previous.number
+              - item.result.path == item.previous.path
+              - item.result.size == item.previous.size
+          loop:
+            - result: "{{ win_disk_info_partition_disks.results[0].result }}"
+              previous: "{{ win_disk_info_mbr_disk }}"
+            - result: "{{ win_disk_info_partition_disks.results[1].result }}"
+              previous: "{{ win_disk_info_gpt_disk }}"
+
+        - name: Record the initialized disk identities
+          ansible.builtin.set_fact:
+            win_disk_info_mbr_disk: "{{ win_disk_info_partition_disks.results[0].result }}"
+            win_disk_info_gpt_disk: "{{ win_disk_info_partition_disks.results[1].result }}"
+
+        - name: Create a data partition on each owned disk without a drive letter
+          ansible.windows.win_partition:
+            disk_number: "{{ item.number }}"
+            partition_size: 32 MiB
+          loop: "{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}"
+
+        - name: Record independent partition state for both owned disks
+          ansible.windows.win_partition_info:
+            disk_number: "{{ item.number }}"
+          loop: "{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}"
+          register: win_disk_info_expected_partitions
+
+    - name: Run the disk information tests
+      block:
+        - name: Execute the shared discovery test sequence
+          ansible.builtin.import_tasks: tests.yml
+
+  always:
+    - name: Detach each owned image independently
+      ansible.windows.win_powershell:
+        path: files/detach_vhd.ps1
+        error_action: stop
+        parameters:
+          ImagePath: "{{ item }}"
+      loop: "{{ win_disk_info_images | default([]) }}"
+      register: win_disk_info_detach
+      ignore_errors: true
+
+    - name: Remove each successfully detached image
+      ansible.windows.win_file:
+        path: "{{ item.item }}"
+        state: absent
+      loop: "{{ win_disk_info_detach.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: item is not failed
+      register: win_disk_info_remove_images
+      ignore_errors: true
+
+    - name: Verify every owned image file was removed
+      ansible.windows.win_stat:
+        path: "{{ item }}"
+      loop: "{{ win_disk_info_images | default([]) }}"
+      register: win_disk_info_cleanup_images
+      ignore_errors: true
+
+    - name: Remove the owned directory after successful image cleanup
+      ansible.windows.win_file:
+        path: "{{ win_disk_info_temp_dir.path }}"
+        state: absent
+      when:
+        - win_disk_info_temp_dir is defined and win_disk_info_temp_dir.path is defined
+        - win_disk_info_detach is not failed
+        - win_disk_info_remove_images is not failed
+        - win_disk_info_cleanup_images is not failed
+        - win_disk_info_cleanup_images.results | selectattr('stat.exists', 'equalto', true) | list | length == 0
+      register: win_disk_info_remove_directory
+      ignore_errors: true
+
+    - name: Verify the owned directory was removed
+      ansible.windows.win_stat:
+        path: "{{ win_disk_info_temp_dir.path }}"
+      when: win_disk_info_temp_dir is defined and win_disk_info_temp_dir.path is defined
+      register: win_disk_info_cleanup_directory
+      ignore_errors: true
+
+    - name: Assert independent image cleanup succeeded
+      ansible.builtin.assert:
+        that:
+          - win_disk_info_detach is not failed
+          - win_disk_info_remove_images is not failed
+          - win_disk_info_cleanup_images is not failed
+          - win_disk_info_cleanup_images.results | selectattr('stat.exists', 'equalto', true) | list | length == 0
+      when: win_disk_info_images is defined
+
+    - name: Assert the owned directory was removed
+      ansible.builtin.assert:
+        that:
+          - win_disk_info_remove_directory is not failed
+          - win_disk_info_cleanup_directory is not failed
+          - not win_disk_info_cleanup_directory.stat.exists
+      when: win_disk_info_temp_dir is defined and win_disk_info_temp_dir.path is defined

@@ -1,0 +1,3 @@
+shippable/windows/group2
+needs/file/plugins/modules/win_disk_info.ps1
+needs/file/plugins/module_utils/Disk.psm1

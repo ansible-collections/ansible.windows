@@ -1,0 +1,5 @@
+{% for image in win_disk_info_images %}
+create vdisk file="{{ image }}" maximum=128 type=expandable
+select vdisk file="{{ image }}"
+attach vdisk
+{% endfor %}
