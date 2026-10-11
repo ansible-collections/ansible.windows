@@ -1,0 +1,309 @@
+---
+- name: Verify provider errors and fixture safeguards in an isolated PowerShell process
+  ansible.windows.win_command:
+    argv:
+      - powershell.exe
+      - -NoProfile
+      - -NonInteractive
+      - -ExecutionPolicy
+      - Bypass
+      - -File
+      - '{{ win_disk_info_temp_dir.path }}\regressions\regressions.ps1'
+      - -CollectionPath
+      - '{{ win_disk_info_temp_dir.path }}'
+  changed_when: false
+
+- name: List all disks with detailed information
+  ansible.windows.win_disk_info: {}
+  register: all_disks
+- name: Assert list results and both owned disk identities
+  ansible.builtin.assert:
+    that:
+      - all_disks is not changed
+      - all_disks.exists
+      - all_disks.disks | type_debug == "list"
+      - all_disks.ansible_facts is not defined
+      - all_disks.disks | map(attribute="number") | list == all_disks.disks | map(attribute="number")
+        | sort | list
+      - win_disk_info_mbr_disk.number in (all_disks.disks | map(attribute="number") | list)
+      - win_disk_info_gpt_disk.number in (all_disks.disks | map(attribute="number") | list)
+- name: Retrieve each owned disk by number
+  ansible.windows.win_disk_info:
+    disk_number: '{{ item.number }}'
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  register: owned_disk_info
+- name: Retrieve independent basic disk state
+  ansible.windows.win_initialize_disk_info:
+    disk_number: '{{ item.number }}'
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  register: independent_disk_info
+- name: Assert owned disk values against independent state
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.exists
+      - item.disks | length == 1
+      - item.disks[0].number == item.item.number
+      - item.disks[0].path == item.item.path
+      - item.disks[0].size == item.item.size
+      - item.disks[0].partition_count == (win_disk_info_expected_partitions.results[ansible_loop.index0].partitions
+        | length)
+      - item.disks[0].size == independent_disk_info.results[ansible_loop.index0].disks[0].size
+      - item.disks[0].partition_style == independent_disk_info.results[ansible_loop.index0].disks[0].partition_style
+      - item.disks[0].read_only == independent_disk_info.results[ansible_loop.index0].disks[0].is_read_only
+      - >-
+        item.disks[0].partitions | map(attribute="number") | list == win_disk_info_expected_partitions.results[ansible_loop.index0].partitions
+        | map(attribute="partition_number") | list
+  loop: '{{ owned_disk_info.results }}'
+  loop_control:
+    extended: true
+- name: Record the owned disk results
+  ansible.builtin.set_fact:
+    mbr_info: '{{ owned_disk_info.results[0].disks[0] }}'
+    gpt_info: '{{ owned_disk_info.results[1].disks[0] }}'
+- name: Assert mixed partition styles use their own fields
+  ansible.builtin.assert:
+    that:
+      - mbr_info.partition_style == "MBR"
+      - gpt_info.partition_style == "GPT"
+      - mbr_info.partitions | length > 0
+      - gpt_info.partitions | length > 0
+      - mbr_info.partitions | selectattr("mbr_type", "defined") | list | length == mbr_info.partitions
+        | length
+      - mbr_info.partitions | selectattr("gpt_type", "defined") | list | length == 0
+      - gpt_info.partitions | selectattr("gpt_type", "defined") | list | length == gpt_info.partitions
+        | length
+      - gpt_info.partitions | selectattr("mbr_type", "defined") | list | length == 0
+- name: Assert owned partition sizes and nullable drive letters
+  ansible.builtin.assert:
+    that:
+      - item.size > 0
+      - item.number | type_debug == "int"
+      - item.drive_letter is none
+      - item.access_paths | type_debug == "list"
+      - item.volumes | type_debug == "list"
+  loop: '{{ mbr_info.partitions + gpt_info.partitions }}'
+- name: Retrieve owned disks by unique_id
+  ansible.windows.win_disk_info:
+    unique_id: '{{ item.unique_id }}'
+    filter: []
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  register: disk_by_unique_id
+- name: Assert unique_id selects the correct disk without optional sections
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.exists
+      - item.disks | length == 1
+      - item.disks[0].number == item.item.number
+      - item.disks[0].path == item.item.path
+      - item.disks[0].physical_disk is not defined
+      - item.disks[0].physical_disks is not defined
+      - item.disks[0].virtual_disk is not defined
+      - item.disks[0].partitions is not defined
+      - item.disks[0].win32_disk_drive is not defined
+  loop: '{{ disk_by_unique_id.results }}'
+- name: Retrieve owned disks by path
+  ansible.windows.win_disk_info:
+    path: '{{ item.path }}'
+    filter: []
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  register: disk_by_path
+- name: Assert path selects the correct disk without optional sections
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.exists
+      - item.disks | length == 1
+      - item.disks[0].number == item.item.number
+      - item.disks[0].path == item.item.path
+      - item.disks[0].physical_disk is not defined
+      - item.disks[0].physical_disks is not defined
+      - item.disks[0].virtual_disk is not defined
+      - item.disks[0].partitions is not defined
+      - item.disks[0].win32_disk_drive is not defined
+  loop: '{{ disk_by_path.results }}'
+- name: Read each owned disk with all sections in check mode
+  ansible.windows.win_disk_info:
+    disk_number: '{{ item.number }}'
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  check_mode: true
+  register: owned_disk_check
+- name: Assert complete check-mode results preserve the owned disk state
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.exists
+      - item.ansible_facts is not defined
+      - item.disks == owned_disk_info.results[ansible_loop.index0].disks
+  loop: '{{ owned_disk_check.results }}'
+  loop_control:
+    extended: true
+- name: Repeat discovery of both owned disks
+  ansible.windows.win_disk_info:
+    disk_number: '{{ item.number }}'
+  loop: '{{ [win_disk_info_mbr_disk, win_disk_info_gpt_disk] }}'
+  register: owned_disk_again
+- name: Assert repeated discovery is unchanged
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.disks == owned_disk_info.results[ansible_loop.index0].disks
+  loop: '{{ owned_disk_again.results }}'
+  loop_control:
+    extended: true
+- name: Read each optional section independently
+  ansible.windows.win_disk_info:
+    filter:
+      - '{{ item }}'
+  loop:
+    - physical_disk
+    - virtual_disk
+    - win32_disk_drive
+    - partitions
+    - volumes
+  register: section_info
+- name: Assert each filter preserves base disk identities
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - item.exists
+      - item.disks | map(attribute="number") | list == all_disks.disks | map(attribute="number") | list
+  loop: '{{ section_info.results }}'
+- name: Record independently filtered results
+  ansible.builtin.set_fact:
+    physical_only: '{{ section_info.results[0].disks }}'
+    virtual_only: '{{ section_info.results[1].disks }}'
+    win32_only: '{{ section_info.results[2].disks }}'
+    partitions_only: '{{ section_info.results[3].disks }}'
+    volumes_only: '{{ section_info.results[4].disks }}'
+- name: Assert virtual-only discovery works without physical output
+  ansible.builtin.assert:
+    that:
+      - >-
+        (item.virtual_disk is none and all_disks.disks[ansible_loop.index0].virtual_disk is none) or (item.virtual_disk
+        is not none and all_disks.disks[ansible_loop.index0].virtual_disk is not none and item.virtual_disk.unique_id
+        == all_disks.disks[ansible_loop.index0].virtual_disk.unique_id)
+      - item.physical_disk is not defined
+      - item.physical_disks is not defined
+      - item.win32_disk_drive is not defined
+      - item.partitions is not defined
+  loop: '{{ virtual_only }}'
+  loop_control:
+    extended: true
+- name: Assert physical-disk cardinality and independent filtering
+  ansible.builtin.assert:
+    that:
+      - item.physical_disks | type_debug == "list"
+      - item.virtual_disk is not defined
+      - item.partitions is not defined
+      - >-
+        (item.physical_disks | length == 1 and item.physical_disk == item.physical_disks[0]) or (item.physical_disks
+        | length != 1 and item.physical_disk is none)
+  loop: '{{ physical_only }}'
+- name: Assert physical-disk return types
+  ansible.builtin.assert:
+    that:
+      - item.size is none or item.size >= 0
+      - item.operational_status | type_debug == "list"
+      - item.supported_usages | type_debug == "list"
+      - item.health_status is none or item.health_status is string
+  loop: '{{ physical_only | map(attribute="physical_disks") | flatten }}'
+- name: Assert Win32 disk associations match OS disk numbers
+  ansible.builtin.assert:
+    that:
+      - item.win32_disk_drive is none or item.win32_disk_drive.index == item.number
+      - item.partitions is not defined
+      - item.virtual_disk is not defined
+  loop: '{{ win32_only }}'
+- name: Assert partition-only queries exclude volume data
+  ansible.builtin.assert:
+    that:
+      - item.volumes is not defined
+      - item.access_paths | type_debug == "list"
+      - item.drive_letter is none or item.drive_letter is string
+  loop: '{{ partitions_only | map(attribute="partitions") | flatten }}'
+- name: Assert volume queries include partition lists
+  ansible.builtin.assert:
+    that:
+      - item.partitions | type_debug == "list"
+  loop: '{{ volumes_only }}'
+- name: Assert volume queries include volume lists
+  ansible.builtin.assert:
+    that:
+      - item.volumes | type_debug == "list"
+  loop: '{{ volumes_only | map(attribute="partitions") | flatten }}'
+- name: Assert actual volume values and types
+  ansible.builtin.assert:
+    that:
+      - item.path is string
+      - item.path | length > 0
+      - item.size is none or item.size >= 0
+      - item.size_remaining is none or item.size_remaining >= 0
+      - item.allocation_unit_size is none or item.allocation_unit_size >= 0
+      - item.type is none or item.type is string
+      - item.label is none or item.label is string
+      - item.health_status is none or item.health_status is string
+  loop: '{{ volumes_only | map(attribute="partitions") | flatten | map(attribute="volumes") | flatten
+    }}'
+- name: Query missing disk identities
+  ansible.windows.win_disk_info:
+    disk_number: '{{ item.disk_number | default(omit) }}'
+    unique_id: '{{ item.unique_id | default(omit) }}'
+    path: '{{ item.path | default(omit) }}'
+  loop:
+    - disk_number: '{{ (all_disks.disks | map(attribute="number") | max) + 1 }}'
+    - unique_id: '{{ win_disk_info_temp_dir.path }}-missing-disk'
+    - path: '{{ win_disk_info_temp_dir.path }}-missing-path'
+  register: missing_disks
+- name: Assert missing identities return successful empty lists
+  ansible.builtin.assert:
+    that:
+      - item is not changed
+      - not item.exists
+      - item.disks == []
+      - item.ansible_facts is not defined
+  loop: '{{ missing_disks.results }}'
+- name: Query a missing disk in check mode
+  ansible.windows.win_disk_info:
+    path: '{{ win_disk_info_temp_dir.path }}-missing-path'
+  check_mode: true
+  register: missing_disk_check
+- name: Assert missing check-mode results are empty and unchanged
+  ansible.builtin.assert:
+    that:
+      - missing_disk_check is not changed
+      - not missing_disk_check.exists
+      - missing_disk_check.disks == []
+- name: Reject invalid disk selectors
+  ansible.windows.win_disk_info:
+    disk_number: '{{ item.disk_number | default(omit) }}'
+    unique_id: '{{ item.unique_id | default(omit) }}'
+    path: '{{ item.path | default(omit) }}'
+  loop:
+    - disk_number: -1
+    - unique_id: ''
+    - path: ' '
+    - disk_number: 0
+      path: not-a-disk
+  ignore_errors: true
+  register: invalid_selectors
+- name: Assert every invalid selector failed before changing state
+  ansible.builtin.assert:
+    that:
+      - item is failed
+      - item is not changed
+      - item.msg | length > 0
+  loop: '{{ invalid_selectors.results }}'
+- name: Reject an unknown information filter
+  ansible.windows.win_disk_info:
+    filter:
+      - not-a-section
+  ignore_errors: true
+  register: invalid_filter
+- name: Assert invalid filter validation
+  ansible.builtin.assert:
+    that:
+      - invalid_filter is failed
+      - invalid_filter is not changed
+      - '"not-a-section" in invalid_filter.msg'
