@@ -304,6 +304,21 @@ To check whether it is installed, run <code class="code docutils literal notrans
 </div></td>
 </tr>
 <tr class="row-even"><td><div class="ansible-option-cell">
+<div class="ansibleOptionAnchor" id="parameter-validate"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-template-module-parameter-validate"><strong>validate</strong></p>
+<a class="ansibleOptionLink" href="#parameter-validate" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
+<p><em class="ansible-option-versionadded">added in ansible.windows 3.9.0</em></p>
+</div></td>
+<td><div class="ansible-option-cell"><p>The validation command to run against the rendered template before it is copied to <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-template-module-parameter-dest"><span class="std std-ref"><span class="pre">dest</span></span></a></strong></code>.</p>
+<p>The rendered template is transferred to a temporary directory on the remote host and its path is substituted into the command wherever the placeholder <code class="docutils literal notranslate"><span class="pre">%s</span></code> appears. Every occurrence of <code class="docutils literal notranslate"><span class="pre">%s</span></code> is replaced, all other <code class="docutils literal notranslate"><span class="pre">%</span></code> characters are left as is.</p>
+<p>The substituted path is already quoted for PowerShell so it is safe to use with destinations that contain spaces or backslashes. Do not add quotes of your own around <code class="docutils literal notranslate"><span class="pre">%s</span></code>.</p>
+<p>The command is run on the remote Windows host using the configured connection and PowerShell shell. Pipelines and other shell syntax can be used.</p>
+<p>If the command exits with a non-zero return code the task fails and <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-template-module-parameter-dest"><span class="std std-ref"><span class="pre">dest</span></span></a></strong></code> is left untouched.</p>
+<p>The temporary copy of the rendered template is removed once the command has run.</p>
+<p>This option is ignored when the task is run in check mode, as the command could have side effects on the remote host.</p>
+<p>The command only runs when the rendered content would be copied to <code class="ansible-option docutils literal notranslate"><strong><a class="reference internal" href="#ansible-collections-ansible-windows-win-template-module-parameter-dest"><span class="std std-ref"><span class="pre">dest</span></span></a></strong></code>, consistent with <a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/template_module.html#ansible-collections-ansible-builtin-template-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.template</span></a>.</p>
+</div></td>
+</tr>
+<tr class="row-odd"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-variable_end_string"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-template-module-parameter-variable-end-string"><strong>variable_end_string</strong></p>
 <a class="ansibleOptionLink" href="#parameter-variable_end_string" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -311,7 +326,7 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <p class="ansible-option-line"><strong class="ansible-option-default-bold">Default:</strong> <code class="ansible-option-default docutils literal notranslate"><span class="pre">&quot;}}&quot;</span></code></p>
 </div></td>
 </tr>
-<tr class="row-odd"><td><div class="ansible-option-cell">
+<tr class="row-even"><td><div class="ansible-option-cell">
 <div class="ansibleOptionAnchor" id="parameter-variable_start_string"></div><p class="ansible-option-title" id="ansible-collections-ansible-windows-win-template-module-parameter-variable-start-string"><strong>variable_start_string</strong></p>
 <a class="ansibleOptionLink" href="#parameter-variable_start_string" title="Permalink to this option"></a><p class="ansible-option-type-line"><span class="ansible-option-type">string</span></p>
 </div></td>
@@ -344,6 +359,8 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <dl class="simple">
 <dt><a class="reference internal" href="win_copy_module.html#ansible-collections-ansible-windows-win-copy-module"><span class="std std-ref">ansible.windows.win_copy</span></a></dt><dd><p>Copies files to remote locations on windows hosts.</p>
 </dd>
+<dt><a class="reference internal" href="win_shell_module.html#ansible-collections-ansible-windows-win-shell-module"><span class="std std-ref">ansible.windows.win_shell</span></a></dt><dd><p>Execute shell commands on target hosts.</p>
+</dd>
 <dt><a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.copy</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.copy</strong> module.</p>
 </dd>
 <dt><a class="reference external" href="https://docs.ansible.com/projects/ansible/devel/collections/ansible/builtin/template_module.html#ansible-collections-ansible-builtin-template-module" title="(in Ansible devel)"><span class="xref std std-ref">ansible.builtin.template</span></a></dt><dd><p>The official documentation on the <strong>ansible.builtin.template</strong> module.</p>
@@ -370,6 +387,24 @@ To check whether it is installed, run <code class="code docutils literal notrans
 <span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unix/config.conf.j2</span>
 <span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\share\unix\config.conf</span>
 <span class="w">    </span><span class="nt">trim_blocks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Render an nginx config, only writing it out once nginx has validated it</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_template</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx.conf.j2</span>
+<span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\nginx\conf\nginx.conf</span>
+<span class="w">    </span><span class="nt">validate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\nginx\nginx.exe -t -c %s</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Render a JSON file, only writing it out if it parses</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_template</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app.json.j2</span>
+<span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Program Files\App\app.json</span>
+<span class="w">    </span><span class="nt">validate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Get-Content -LiteralPath %s -Raw | ConvertFrom-Json | Out-Null</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Render a PowerShell script, only writing it out if it has no syntax errors</span>
+<span class="w">  </span><span class="nt">ansible.windows.win_template</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">src</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bootstrap.ps1.j2</span>
+<span class="w">    </span><span class="nt">dest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">C:\Temp\bootstrap.ps1</span>
+<span class="w">    </span><span class="nt">validate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$null = [ScriptBlock]::Create((Get-Content -LiteralPath %s -Raw))</span>
 </pre></div>
 </div>
 </section>
