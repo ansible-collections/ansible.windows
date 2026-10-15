@@ -1,4 +1,10 @@
-win_dns_record_zone: test.ansible.local
-win_dns_record_revzone: 0.0.255.in-addr.arpa
-win_dns_record_revzone_network: 255.0.0.0/24
+---
+# Disable on a preconfigured DNS server to prevent fixture feature installation.
+win_dns_record_manage_dns_feature: true
+# Opt in only for an isolated test DC with DNS already installed and feature management disabled.
+win_dns_record_allow_domain_controller: false
+# Override with a second Windows host to exercise genuine remote-server authentication.
+win_dns_record_execution_host: '{{ inventory_hostname }}'
+# Enable only for an intentional failed run that verifies the always cleanup path.
+win_dns_record_inject_failure: false
 win_dns_zone_scope: external

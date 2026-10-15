@@ -1,0 +1,325 @@
+---
+- name: Predict creating a zone-qualified owner through explicit server selection
+  ansible.windows.win_dns_record:
+    name: 'remote-owner.{{ win_dns_record_zone }}.'
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.10
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  check_mode: true
+  register: win_dns_record_remote_check
+
+- name: Verify check mode did not create the owner
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_absent
+
+- name: Assert the predicted creation preserved actual state
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_remote_check is changed
+      - not win_dns_record_remote_absent.exists
+      - win_dns_record_remote_absent.records == []
+
+- name: Create a zone-qualified owner through explicit server selection
+  ansible.windows.win_dns_record:
+    name: 'remote-owner.{{ win_dns_record_zone }}.'
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.10
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_create
+
+- name: Query the created relative owner independently on the DNS host
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_info
+
+- name: Read the same fully qualified owner in check mode through server selection
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: 'remote-owner.{{ win_dns_record_zone }}.'
+    type: A
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  check_mode: true
+  register: win_dns_record_remote_info_check
+
+- name: Repeat creation using the relative owner
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.10
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_repeat
+
+- name: Assert owner equivalence and repeated-operation behavior
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_remote_create is changed
+      - win_dns_record_remote_repeat is not changed
+      - win_dns_record_remote_info is not changed
+      - win_dns_record_remote_info.exists
+      - win_dns_record_remote_info.records | length == 1
+      - win_dns_record_remote_info.records[0].name == 'remote-owner'
+      - win_dns_record_remote_info.records[0].record_values == ['192.0.2.10']
+      - win_dns_record_remote_info.records[0].ttl == 3600
+      - not win_dns_record_remote_info.records[0].aging
+      - win_dns_record_remote_info.records[0].timestamp == None
+      - win_dns_record_remote_info_check.records == win_dns_record_remote_info.records
+      - win_dns_record_remote_info_check is not changed
+      - win_dns_record_remote_info.ansible_facts is not defined
+
+- name: Predict replacing the remote address
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.11
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  check_mode: true
+  register: win_dns_record_remote_update_check
+
+- name: Verify a predicted update preserved the address
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_unchanged
+
+- name: Replace the remote address
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.11
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_update
+
+- name: Repeat replacing the remote address
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    value: 192.0.2.11
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_update_repeat
+
+- name: Verify the remote update independently
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_updated
+
+- name: Assert the replacement and its idempotency
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_remote_update_check is changed
+      - win_dns_record_remote_unchanged.records == win_dns_record_remote_info.records
+      - win_dns_record_remote_update is changed
+      - win_dns_record_remote_update_repeat is not changed
+      - win_dns_record_remote_updated.records[0].record_values == ['192.0.2.11']
+
+- name: Predict removing the remote owner
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    state: absent
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  check_mode: true
+  register: win_dns_record_remote_delete_check
+
+- name: Verify a predicted deletion preserved the record
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_preserved
+
+- name: Remove the remote owner
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    state: absent
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_delete
+
+- name: Repeat removing the remote owner
+  ansible.windows.win_dns_record:
+    name: remote-owner
+    zone: '{{ win_dns_record_zone }}'
+    type: A
+    state: absent
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_remote_delete_repeat
+
+- name: Verify the owner is absent
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_remote_deleted
+
+- name: Assert deletion, check mode, and repeated deletion
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_remote_delete_check is changed
+      - win_dns_record_remote_preserved.records == win_dns_record_remote_updated.records
+      - win_dns_record_remote_delete is changed
+      - win_dns_record_remote_delete_repeat is not changed
+      - not win_dns_record_remote_deleted.exists
+      - win_dns_record_remote_deleted.records == []
+
+- name: Create an SRV record with a non-default TTL
+  ansible.windows.win_dns_record:
+    name: remote-srv
+    zone: '{{ win_dns_record_zone }}'
+    type: SRV
+    value: target.example.test
+    priority: 3
+    weight: 2
+    port: 443
+    ttl: 7200
+  register: win_dns_record_srv_create
+
+- name: Repeat the SRV creation
+  ansible.windows.win_dns_record:
+    name: remote-srv
+    zone: '{{ win_dns_record_zone }}'
+    type: SRV
+    value: target.example.test
+    priority: 3
+    weight: 2
+    port: 443
+    ttl: 7200
+  register: win_dns_record_srv_repeat
+
+- name: Read the SRV record
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-srv
+    type: SRV
+  register: win_dns_record_srv_info
+
+- name: Assert first-run SRV values and idempotency
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_srv_create is changed
+      - win_dns_record_srv_repeat is not changed
+      - win_dns_record_srv_info.records[0].ttl == 7200
+      - win_dns_record_srv_info.records[0].record_values == ['target.example.test.']
+      - win_dns_record_srv_info.records[0].data.port == 443
+      - win_dns_record_srv_info.records[0].data.priority == 3
+      - win_dns_record_srv_info.records[0].data.weight == 2
+
+- name: List SRV records using only a type filter
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    type: SRV
+  register: win_dns_record_srv_filtered
+
+- name: Query an owner that does not exist
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: missing-owner
+    type: A
+  register: win_dns_record_missing_owner
+
+- name: Assert type-only and missing-owner queries
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_srv_filtered is not changed
+      - win_dns_record_srv_filtered.records == win_dns_record_srv_info.records
+      - win_dns_record_missing_owner is not changed
+      - not win_dns_record_missing_owner.exists
+      - win_dns_record_missing_owner.records == []
+
+- name: List all record types in the owned zone
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+  register: win_dns_record_all_info
+
+- name: Assert unfiltered information includes owned records and zone records
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_all_info.exists
+      - win_dns_record_all_info is not changed
+      - "'remote-srv' in win_dns_record_all_info.records | map(attribute='name') | list"
+      - "'SOA' in win_dns_record_all_info.records | map(attribute='type') | list"
+
+- name: Create a record through explicit server and scope selection
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-scope
+    type: A
+    value: 192.0.2.12
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+    zone_scope: '{{ win_dns_zone_scope }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_scoped_create
+
+- name: Repeat creation through explicit server and scope selection
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-scope
+    type: A
+    value: 192.0.2.12
+    computer_name: '{{ win_dns_record_fixture.result.computer_name }}'
+    zone_scope: '{{ win_dns_zone_scope }}'
+  delegate_to: '{{ win_dns_record_execution_host }}'
+  register: win_dns_record_scoped_repeat
+
+- name: Query the selected scope independently on the DNS host
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-scope
+    type: A
+    zone_scope: '{{ win_dns_zone_scope }}'
+  register: win_dns_record_scoped_info
+
+- name: Query the default scope to verify isolation
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: remote-scope
+    type: A
+  register: win_dns_record_default_scope_info
+
+- name: Assert scope selection and repeated creation
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_scoped_create is changed
+      - win_dns_record_scoped_repeat is not changed
+      - win_dns_record_scoped_info.records | length == 1
+      - win_dns_record_scoped_info.records[0].record_values == ['192.0.2.12']
+      - not win_dns_record_default_scope_info.exists
+      - win_dns_record_default_scope_info.records == []
+
+- name: Query a nonexistent zone to verify provider errors remain failures
+  ansible.windows.win_dns_record_info:
+    zone: 'missing-{{ win_dns_record_zone }}'
+    name: remote-owner
+    type: A
+  register: win_dns_record_missing_zone_info
+  ignore_errors: true
+
+- name: Assert a missing zone was not reported as an empty successful query
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_missing_zone_info is failed

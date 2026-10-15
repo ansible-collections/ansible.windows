@@ -18,10 +18,16 @@ author:
  - John Nelson (@johnboy2)
 requirements:
   - This module requires Windows 8, Server 2012, or newer.
+seealso:
+  - module: ansible.windows.win_dns_record_info
+  - module: ansible.windows.win_dns_zone
 options:
   name:
     description:
-    - The name of the record.
+    - The record owner, relative to O(zone), or its fully qualified name within that zone.
+    - A matching zone suffix is removed before querying or modifying the record.
+    - Use C(@) or the zone's fully qualified name for a record at the zone apex.
+    - An absolute name ending in a period must belong to O(zone).
     required: yes
     type: str
   port:
@@ -29,12 +35,14 @@ options:
     - The port number of the record.
     - Required when C(type=SRV).
     - Supported only for C(type=SRV).
+    - Valid range is 0 - 65535.
     type: int
   priority:
     description:
     - The priority number for each service in SRV record.
     - Required when C(type=SRV).
     - Supported only for C(type=SRV).
+    - Valid range is 0 - 65535.
     type: int
   state:
     description:
@@ -47,8 +55,6 @@ options:
     - The "time to live" of the record, in seconds.
     - Ignored when C(state=absent).
     - Valid range is 1 - 31557600.
-    - Note that an Active Directory forest can specify a minimum TTL, and will
-      dynamically "round up" other values to that minimum.
     default: 3600
     type: int
   aging:
@@ -60,6 +66,7 @@ options:
   allow_update_any:
     description:
     - Specifies if any authenticated user can update the record.
+    - Applies when creating a record. Changing this option does not modify permissions on an existing record.
     - If set to C(true), any authenticated user can update the record.
     - If set to C(false), only the account that created the record or accounts
       with appropriate permissions can update it.
@@ -81,8 +88,8 @@ options:
   value:
     description:
     - The value(s) to specify. Required when C(state=present).
-    - When C(type=PTR) only the partial part of the IP should be given.
-    - Multiple values can be passed when C(type=NS)
+    - For C(type=PTR), supply the target host name here and the partial IP address in O(name).
+    - Multiple values can be supplied for record types that permit multiple records at the same owner.
     aliases: [ values ]
     default: []
     type: list
@@ -92,6 +99,7 @@ options:
     - Weightage given to each service record in SRV record.
     - Required when C(type=SRV).
     - Supported only for C(type=SRV).
+    - Valid range is 0 - 65535.
     type: int
   zone:
     description:
@@ -111,6 +119,8 @@ options:
       - You can specify an IP address or any value that resolves to an IP
         address, such as a fully qualified domain name (FQDN), host name, or
         NETBIOS name.
+      - The execution host requires the C(DnsServer) PowerShell module and permission to manage records on this server.
+      - When using WinRM through another host, configure authentication that permits access to the DNS server.
     type: str
 '''
 
@@ -192,10 +202,8 @@ EXAMPLES = r'''
     state: present
     type: "NS"
     values:
-      - 10.0.0.1
-      - 10.0.0.2
-      - 10.0.0.3
-      - 10.0.0.4
+      - ns1.example.com
+      - ns2.example.com
     zone: "example.com"
 
 # Demonstrate creating a TXT record
@@ -212,7 +220,7 @@ EXAMPLES = r'''
 
 - name: Create database server record
   ansible.windows.win_dns_record:
-    name: "cgyl1404p.amer.example.com"
+    name: "cgyl1404p"
     type: "A"
     value: "10.1.1.1"
     zone: "amer.example.com"

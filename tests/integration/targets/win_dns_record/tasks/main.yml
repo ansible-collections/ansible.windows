@@ -1,12 +1,144 @@
-# We do an explicit OS version check here *INSTEAD OF* the usual test for
-# cmdlet existence. That's because a cmdlet test here won't work without first
-# installing the DNS feature, but we don't want to install the feature on OS'
-# that can't be supported anyway. Hence this fallback to an explicit OS version
-# test.
-- name: check OS version is supported
-  ansible.windows.win_shell: 'if ([Environment]::OSVersion.Version -ge [Version]"6.2") { $true } else { $false }'
-  register: os_supported
+---
+- name: Prepare and test DNS records with guaranteed cleanup
+  block:
+    - name: Prepare the testing environment
+      block:
+        - name: Reset fixture ownership flags
+          ansible.builtin.set_fact:
+            win_dns_record_zones_reserved: false
+            win_dns_record_temp_owned: false
+            win_dns_record_initial_feature:
+              features: []
 
-- name: run tests on supported hosts
-  import_tasks: tests.yml
-  when: os_supported.stdout | trim | bool
+        - name: Check fixture safety and choose unique zone names
+          ansible.windows.win_powershell:
+            path: files/prechecks.ps1
+            error_action: stop
+            parameters:
+              AllowDomainController: '{{ win_dns_record_allow_domain_controller | bool }}'
+              ManageDnsFeature: '{{ win_dns_record_manage_dns_feature | bool }}'
+          register: win_dns_record_fixture
+
+        - name: Record owned zone names
+          ansible.builtin.set_fact:
+            win_dns_record_zone: '{{ win_dns_record_fixture.result.zone }}'
+            win_dns_record_revzone: '{{ win_dns_record_fixture.result.reverse_zone }}'
+
+        - name: Record whether the DNS feature was already installed
+          ansible.windows.win_feature_info:
+            name: DNS
+          register: win_dns_record_initial_feature
+
+        - name: Check whether this environment permits DNS feature installation
+          ansible.builtin.assert:
+            that:
+              - win_dns_record_initial_feature.features | length == 1
+              - win_dns_record_initial_feature.features[0].installed or win_dns_record_manage_dns_feature | bool
+            fail_msg: DNS must already be installed when fixture feature management is disabled.
+
+        - name: Install the DNS fixture feature when required
+          ansible.windows.win_feature:
+            name: DNS
+            state: present
+          register: win_dns_record_dns_install
+          when: not win_dns_record_initial_feature.features[0].installed
+
+        - name: Reboot if installing DNS requires it
+          ansible.windows.win_reboot:
+          when: win_dns_record_dns_install.reboot_required | default(false)
+
+        - name: Check DNS tools and authentication on the execution host
+          ansible.windows.win_powershell:
+            path: files/check_execution_host.ps1
+            error_action: stop
+            parameters:
+              ComputerName: '{{ win_dns_record_fixture.result.computer_name }}'
+              RequireRemoteHost: '{{ win_dns_record_execution_host != inventory_hostname }}'
+          delegate_to: '{{ win_dns_record_execution_host }}'
+
+        - name: Refuse existing zones and zone files
+          ansible.windows.win_powershell:
+            path: files/reserve_zones.ps1
+            error_action: stop
+            parameters:
+              ZoneNames: ['{{ win_dns_record_zone }}', '{{ win_dns_record_revzone }}']
+              DnsDirectory: '{{ win_dns_record_fixture.result.dns_directory }}'
+
+        - name: Record exclusive ownership before creating the zones
+          ansible.builtin.set_fact:
+            win_dns_record_zones_reserved: true
+
+        - name: Create the owned forward and reverse zones
+          ansible.windows.win_dns_zone:
+            name: '{{ item }}'
+            type: primary
+            replication: none
+            state: present
+          loop:
+            - '{{ win_dns_record_zone }}'
+            - '{{ win_dns_record_revzone }}'
+
+        - name: Create an owned directory for isolated regression tests
+          ansible.windows.win_tempfile:
+            prefix: win_dns_record-
+            state: directory
+          register: win_dns_record_temp
+
+        - name: Record ownership of the regression directory
+          ansible.builtin.set_fact:
+            win_dns_record_temp_owned: true
+
+        - name: Create implementation directories for the regression process
+          ansible.windows.win_file:
+            path: '{{ win_dns_record_temp.path }}\plugins\{{ item }}'
+            state: directory
+          loop: [modules, module_utils]
+
+        - name: Copy the actual modules and utility for isolated regressions
+          ansible.windows.win_copy:
+            src: '{{ role_path }}/../../../../plugins/{{ item }}'
+            dest: '{{ win_dns_record_temp.path }}\plugins\{{ item | replace("/", "\\") }}'
+          loop:
+            - modules/win_dns_record.ps1
+            - modules/win_dns_record_info.ps1
+            - module_utils/Dns.psm1
+
+        - name: Copy the isolated regression script and fixture guards
+          ansible.windows.win_copy:
+            src: 'files/{{ item }}.ps1'
+            dest: '{{ win_dns_record_temp.path }}\{{ item }}.ps1'
+          loop: [regressions, prechecks, reserve_zones, verify_cleanup, check_execution_host]
+
+    - name: Run the tests
+      block:
+        - name: Inject an optional failure to exercise fixture cleanup
+          ansible.builtin.fail:
+            msg: Intentional fixture failure; always cleanup must remove every owned resource and restore the DNS feature.
+          when: win_dns_record_inject_failure | bool
+
+        - name: Exercise record types and diff behavior
+          ansible.builtin.import_tasks: tests.yml
+
+        - name: Exercise input validation without losing existing records
+          ansible.builtin.import_tasks: tests-validation.yml
+
+        - name: Exercise explicit server selection and zone-qualified owners
+          ansible.builtin.import_tasks: tests-remote.yml
+
+        - name: Run isolated provider boundary regressions
+          ansible.windows.win_command:
+            argv:
+              - powershell.exe
+              - -NoProfile
+              - -NonInteractive
+              - -ExecutionPolicy
+              - Bypass
+              - -File
+              - '{{ win_dns_record_temp.path }}\regressions.ps1'
+              - -CollectionPath
+              - '{{ win_dns_record_temp.path }}'
+          changed_when: false
+
+  always:
+    - name: Clean up owned fixtures and restore the DNS feature
+      ansible.builtin.import_tasks: clean.yml
