@@ -1,234 +1,228 @@
-- name: "TYPE=DHCID - creation (check mode)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+---
+- name: TYPE=DHCID - creation (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="
+    value: AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=
     type: DHCID
   register: cmd_result
-  check_mode: yes
-
-- name: "TYPE=DHCID - creation get results (check mode)"
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=DHCID - creation get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - creation check results (check mode)"
-  assert:
+- name: TYPE=DHCID - creation check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: "TYPE=DHCID - creation"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=DHCID - creation
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="
+    value: AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - creation get results"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DhcId"
+- name: TYPE=DHCID - creation get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - creation check results"
-  assert:
+- name: TYPE=DHCID - creation check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=\r\n'
-
-- name: "TYPE=DHCID - creation (idempotent)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="]
+- name: TYPE=DHCID - creation (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="
+    value: AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - creation get results (idempotent)"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DhcId"
+- name: TYPE=DHCID - creation get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - creation check results (idempotent)"
-  assert:
+- name: TYPE=DHCID - creation check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=\r\n'
-
-- name: "TYPE=DHCID - update value (check mode)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="]
+- name: TYPE=DHCID - update value (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     type: DHCID
   register: cmd_result
-  check_mode: yes
-
-- name: "TYPE=DHCID - update value get results (check mode)"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DhcId"
+  check_mode: true
+- name: TYPE=DHCID - update value get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update value check results (check mode)"
-  assert:
+- name: TYPE=DHCID - update value check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=\r\n'
-
-- name: "TYPE=DHCID - update value"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA="]
+- name: TYPE=DHCID - update value
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - update value get results"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DhcId"
+- name: TYPE=DHCID - update value get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update value check results"
-  assert:
+- name: TYPE=DHCID - update value check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=\r\n'
-
-- name: "TYPE=DHCID - update value (idempotent)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="]
+- name: TYPE=DHCID - update value (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - update value get results (idempotent)"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty RecordData | Select-Object -ExpandProperty DhcId"
+- name: TYPE=DHCID - update value get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update value check results (idempotent)"
-  assert:
+- name: TYPE=DHCID - update value check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=\r\n'
-
-- name: "TYPE=DHCID - update TTL (check mode)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="]
+- name: TYPE=DHCID - update TTL (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     ttl: 7200
     type: DHCID
   register: cmd_result
-  check_mode: yes
-
-- name: "TYPE=DHCID - update TTL get results (check mode)"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+  check_mode: true
+- name: TYPE=DHCID - update TTL get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update TTL check results (check mode)"
-  assert:
+- name: TYPE=DHCID - update TTL check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '3600\r\n'
-
-- name: "TYPE=DHCID - update TTL"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="ttl") | list == [3600]
+- name: TYPE=DHCID - update TTL
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     ttl: 7200
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - update TTL get results"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+- name: TYPE=DHCID - update TTL get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update TTL check results"
-  assert:
+- name: TYPE=DHCID - update TTL check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: "TYPE=DHCID - update TTL (idempotent)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=DHCID - update TTL (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
-    value: "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No="
+    value: AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=
     ttl: 7200
     type: DHCID
   register: cmd_result
-
-- name: "TYPE=DHCID - update TTL get results (idempotent)"
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore | Select-Object -ExpandProperty TimeToLive | Select-Object -ExpandProperty TotalSeconds"
+- name: TYPE=DHCID - update TTL get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - update TTL check results (idempotent)"
-  assert:
+- name: TYPE=DHCID - update TTL check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: "TYPE=DHCID - remove record (check mode)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=DHCID - remove record (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
     type: DHCID
     state: absent
   register: cmd_result
-  check_mode: yes
-
-- name: "TYPE=DHCID - remove record get results (check mode)"
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=DHCID - remove record get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - remove record check results (check mode)"
-  assert:
+- name: TYPE=DHCID - remove record check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'exists\r\n'
-
-- name: "TYPE=DHCID - remove record"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.exists == true
+      - cmd_result_actual.records | length > 0
+- name: TYPE=DHCID - remove record
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
     type: DHCID
     state: absent
   register: cmd_result
-
-- name: "TYPE=DHCID - remove record get results"
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=DHCID - remove record get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - remove record check results"
-  assert:
+- name: TYPE=DHCID - remove record check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: "TYPE=DHCID - remove record (idempotent)"
-  win_dns_record:
-    zone: "{{ win_dns_record_zone }}"
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=DHCID - remove record (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
     name: testdhcid
     type: DHCID
     state: absent
   register: cmd_result
-
-- name: "TYPE=DHCID - remove record get results (idempotent)"
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testdhcid' -RRType DHCID -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=DHCID - remove record get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testdhcid
+    type: DHCID
   register: cmd_result_actual
-  changed_when: false
-
-- name: "TYPE=DHCID - remove record check results (idempotent)"
-  assert:
+- name: TYPE=DHCID - remove record check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'absent\r\n'
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0

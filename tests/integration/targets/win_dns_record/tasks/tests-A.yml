@@ -1,257 +1,280 @@
-- name: 'TYPE=A - creation (check mode)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 1.2.3.4, type: A }
+---
+- name: TYPE=A - creation (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 1.2.3.4
+    type: A
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=A - creation get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=A - creation get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - creation check results (check mode)'
-  assert:
+- name: TYPE=A - creation check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=A - creation'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 1.2.3.4, type: A }
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=A - creation
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 1.2.3.4
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - creation get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - creation get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - creation check results'
-  assert:
+- name: TYPE=A - creation check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '1.2.3.4\r\n'
-
-- name: 'TYPE=A - creation (idempotent)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 1.2.3.4, type: A }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["1.2.3.4"]
+- name: TYPE=A - creation (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 1.2.3.4
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - creation get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - creation get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - creation check results (idempotent)'
-  assert:
+- name: TYPE=A - creation check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '1.2.3.4\r\n'
-
-- name: 'TYPE=A - Add Zone Scope'
-  ansible.windows.win_shell: Add-DnsServerZoneScope -ZoneName '{{ win_dns_record_zone }}' -Name '{{ win_dns_zone_scope }}'
-
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["1.2.3.4"]
+- name: TYPE=A - Add Zone Scope
+  ansible.windows.win_powershell:
+    path: files/create_scope.ps1
+    error_action: stop
+    parameters:
+      ZoneName: '{{ win_dns_record_zone }}'
+      Name: '{{ win_dns_zone_scope }}'
 - name: 'TYPE=A - creation zone scope '
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 5.6.7.8, type: A, zone_scope: '{{ win_dns_zone_scope }}'}
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    type: A
+    zone_scope: '{{ win_dns_zone_scope }}'
   register: cmd_result
-
-- name: 'TYPE=A - creation get results zone scope'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -ZoneScope '{{ win_dns_zone_scope }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - creation get results zone scope
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    zone_scope: '{{ win_dns_zone_scope }}'
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - creation check results zone scope'
-  assert:
+- name: TYPE=A - creation check results zone scope
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '5.6.7.8\r\n'
-
-- name: 'TYPE=A - creation zone scope (idempotent)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 5.6.7.8, type: A, zone_scope: '{{ win_dns_zone_scope }}' }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["5.6.7.8"]
+- name: TYPE=A - creation zone scope (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    type: A
+    zone_scope: '{{ win_dns_zone_scope }}'
   register: cmd_result
-
-- name: 'TYPE=A - creation get results zone scope (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -ZoneScope '{{ win_dns_zone_scope }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - creation get results zone scope (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    zone_scope: '{{ win_dns_zone_scope }}'
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - creation check results zone scope (idempotent)'
-  assert:
+- name: TYPE=A - creation check results zone scope (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '5.6.7.8\r\n'
-
-- name: 'TYPE=A - update address (check mode)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 5.6.7.8, type: A }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["5.6.7.8"]
+- name: TYPE=A - update address (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    type: A
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=A - update address get results (check mode)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+  check_mode: true
+- name: TYPE=A - update address get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update address check results (check mode)'
-  assert:
+- name: TYPE=A - update address check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '1.2.3.4\r\n'
-
-- name: 'TYPE=A - update address'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 5.6.7.8, type: A }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["1.2.3.4"]
+- name: TYPE=A - update address
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - update address get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - update address get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update address check results'
-  assert:
+- name: TYPE=A - update address check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '5.6.7.8\r\n'
-
-- name: 'TYPE=A - update address (idempotent)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, value: 5.6.7.8, type: A }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["5.6.7.8"]
+- name: TYPE=A - update address (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - update address get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddressToString"
+- name: TYPE=A - update address get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update address check results (idempotent)'
-  assert:
+- name: TYPE=A - update address check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '5.6.7.8\r\n'
-
-- name: 'TYPE=A - update TTL (check mode)'
-  win_dns_record:
-    {
-      zone: '{{ win_dns_record_zone }}',
-      name: test1,
-      value: 5.6.7.8,
-      ttl: 7200,
-      type: A,
-    }
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["5.6.7.8"]
+- name: TYPE=A - update TTL (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    ttl: 7200
+    type: A
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=A - update TTL get results (check mode)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+  check_mode: true
+- name: TYPE=A - update TTL get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update TTL check results (check mode)'
-  assert:
+- name: TYPE=A - update TTL check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '3600\r\n'
-
-- name: 'TYPE=A - update TTL'
-  win_dns_record:
-    {
-      zone: '{{ win_dns_record_zone }}',
-      name: test1,
-      value: 5.6.7.8,
-      ttl: 7200,
-      type: A,
-    }
+      - cmd_result_actual.records | map(attribute="ttl") | list == [3600]
+- name: TYPE=A - update TTL
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    ttl: 7200
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - update TTL get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+- name: TYPE=A - update TTL get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update TTL check results'
-  assert:
+- name: TYPE=A - update TTL check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: 'TYPE=A - update TTL (idempotent)'
-  win_dns_record:
-    {
-      zone: '{{ win_dns_record_zone }}',
-      name: test1,
-      value: 5.6.7.8,
-      ttl: 7200,
-      type: A,
-    }
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=A - update TTL (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    value: 5.6.7.8
+    ttl: 7200
+    type: A
   register: cmd_result
-
-- name: 'TYPE=A - update TTL get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+- name: TYPE=A - update TTL get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - update TTL check results (idempotent)'
-  assert:
+- name: TYPE=A - update TTL check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: 'TYPE=A - remove record (check mode)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, type: A, state: absent }
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=A - remove record (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
+    state: absent
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=A - remove record get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=A - remove record get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - remove record check results (check mode)'
-  assert:
+- name: TYPE=A - remove record check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'exists\r\n'
-
-- name: 'TYPE=A - remove record'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, type: A, state: absent }
+      - cmd_result_actual.exists == true
+      - cmd_result_actual.records | length > 0
+- name: TYPE=A - remove record
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=A - remove record get results'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=A - remove record get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - remove record check results'
-  assert:
+- name: TYPE=A - remove record check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=A - remove record (idempotent)'
-  win_dns_record:
-    { zone: '{{ win_dns_record_zone }}', name: test1, type: A, state: absent }
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=A - remove record (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=A - remove record get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'test1' -RRType A -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=A - remove record get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: test1
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - remove record check results (idempotent)'
-  assert:
+- name: TYPE=A - remove record check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-# tests for aging
-# -----------------------------------------------------------------------------
-# create aging record
-- name: 'TYPE=A - add aging record'
-  win_dns_record:
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=A - add aging record
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testaging
     value: 1.2.3.4
@@ -259,20 +282,19 @@
     type: A
     state: present
   register: cmd_result
-
-- name: 'Type=A - check if record is actually aging'
-  ansible.windows.win_command: powershell.exe "If ($null -ne (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testaging' -RRType A).Timestamp) {'aging'} else {'not aging'}"
+- name: Type=A - check if record is actually aging
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testaging
+    type: A
   register: cmd_result_actual
-
-- name: 'TYPE=A - check aging record results'
+- name: TYPE=A - check aging record results
   ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'aging\r\n'
-
-# check idempotency
-- name: 'TYPE=A - check aging record (idempotency)'
-  win_dns_record:
+      - cmd_result_actual.records | map(attribute="aging") | list == [true]
+- name: TYPE=A - check aging record (idempotency)
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testaging
     value: 1.2.3.4
@@ -280,15 +302,12 @@
     type: A
     state: present
   register: cmd_result
-
-- name: 'TYPE=A - check aging record'
+- name: TYPE=A - check aging record
   ansible.builtin.assert:
     that:
       - cmd_result is not changed
-
-# change aging attribute
-- name: 'TYPE=A - aging record (change aging)'
-  win_dns_record:
+- name: TYPE=A - aging record (change aging)
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testaging
     aging: false
@@ -296,42 +315,38 @@
     type: A
     state: present
   register: cmd_result
-
 - name: Type=A - check if record is not aging
-  ansible.windows.win_command: powershell.exe "If ($null -ne (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testaging' -RRType A).Timestamp) {'aging'} else {'not aging'}"
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testaging
+    type: A
   register: cmd_result_actual
-
-- name: 'TYPE=A - check not aging record results'
+- name: TYPE=A - check not aging record results
   ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'not aging\r\n'
-
-# remove record again
-- name: 'TYPE=A - remove record'
-  win_dns_record:
+      - cmd_result_actual.records | map(attribute="aging") | list == [false]
+- name: TYPE=A - remove record
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testaging
     type: A
     state: absent
   register: cmd_result
-
-- name: 'TYPE=A - remove record get results'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'testaging' -RRType A -Node -ErrorAction:Ignore) {'exists'} else {'absent'}"
+- name: TYPE=A - remove record get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: testaging
+    type: A
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=A - remove record check results'
+- name: TYPE=A - remove record check results
   ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-# -----------------------------------------------------------------------------
-
-# tests for allow_update_any
-# -----------------------------------------------------------------------------
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
 - name: 'TYPE=A - add record with allow_update_any: true'
-  win_dns_record:
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testallowupdateany
     value: 1.2.3.4
@@ -339,14 +354,12 @@
     type: A
     state: present
   register: cmd_result
-
 - name: 'TYPE=A - check add record with allow_update_any: true results'
   ansible.builtin.assert:
     that:
       - cmd_result is changed
-
 - name: 'TYPE=A - check record with allow_update_any: true (idempotency)'
-  win_dns_record:
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testallowupdateany
     value: 1.2.3.4
@@ -354,22 +367,18 @@
     type: A
     state: present
   register: cmd_result
-
 - name: 'TYPE=A - check record with allow_update_any: true (idempotency) results'
   ansible.builtin.assert:
     that:
       - cmd_result is not changed
-
-- name: 'TYPE=A - remove record with allow_update_any'
-  win_dns_record:
+- name: TYPE=A - remove record with allow_update_any
+  ansible.windows.win_dns_record:
     zone: '{{ win_dns_record_zone }}'
     name: testallowupdateany
     type: A
     state: absent
   register: cmd_result
-
-- name: 'TYPE=A - check remove record with allow_update_any results'
+- name: TYPE=A - check remove record with allow_update_any results
   ansible.builtin.assert:
     that:
       - cmd_result is changed
-# -----------------------------------------------------------------------------

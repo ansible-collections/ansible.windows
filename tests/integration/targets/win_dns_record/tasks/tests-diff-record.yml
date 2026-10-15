@@ -1,0 +1,88 @@
+---
+- name: Read the record before predicting a change
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: '{{ win_dns_record_diff_case.name }}'
+    type: '{{ win_dns_record_diff_case.type }}'
+  register: win_dns_record_diff_before
+
+- name: Predict the record change and its diff
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: '{{ win_dns_record_diff_case.name }}'
+    type: '{{ win_dns_record_diff_case.type }}'
+    state: '{{ win_dns_record_diff_case.state | default("present") }}'
+    value: '{{ win_dns_record_diff_case.value | default(omit) }}'
+    ttl: '{{ win_dns_record_diff_case.ttl | default(omit) }}'
+    port: '{{ win_dns_record_diff_case.port | default(omit) }}'
+    priority: '{{ win_dns_record_diff_case.priority | default(omit) }}'
+    weight: '{{ win_dns_record_diff_case.weight | default(omit) }}'
+  check_mode: true
+  diff: true
+  register: win_dns_record_diff_check
+
+- name: Read the record after check mode
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: '{{ win_dns_record_diff_case.name }}'
+    type: '{{ win_dns_record_diff_case.type }}'
+  register: win_dns_record_diff_after_check
+
+- name: Apply the record change and capture its diff
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: '{{ win_dns_record_diff_case.name }}'
+    type: '{{ win_dns_record_diff_case.type }}'
+    state: '{{ win_dns_record_diff_case.state | default("present") }}'
+    value: '{{ win_dns_record_diff_case.value | default(omit) }}'
+    ttl: '{{ win_dns_record_diff_case.ttl | default(omit) }}'
+    port: '{{ win_dns_record_diff_case.port | default(omit) }}'
+    priority: '{{ win_dns_record_diff_case.priority | default(omit) }}'
+    weight: '{{ win_dns_record_diff_case.weight | default(omit) }}'
+  diff: true
+  register: win_dns_record_diff_apply
+
+- name: Read the actual record after applying the change
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: '{{ win_dns_record_diff_case.name }}'
+    type: '{{ win_dns_record_diff_case.type }}'
+  register: win_dns_record_diff_after
+
+- name: Assert matching diffs and unchanged state during check mode
+  vars:
+    record_newline: "\n"
+    expected_before: >-
+      {{ ('[' ~ win_dns_record_zone ~ '] ' ~ win_dns_record_diff_case.name ~ ' ' ~ win_dns_record_diff_case.before ~ record_newline)
+         if win_dns_record_diff_case.before else '' }}
+    expected_after: >-
+      {{ ('[' ~ win_dns_record_zone ~ '] ' ~ win_dns_record_diff_case.name ~ ' ' ~ win_dns_record_diff_case.after ~ record_newline)
+         if win_dns_record_diff_case.after else '' }}
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_diff_check is changed
+      - win_dns_record_diff_apply is changed
+      - win_dns_record_diff_after_check.records == win_dns_record_diff_before.records
+      - win_dns_record_diff_check.diff.before == expected_before
+      - win_dns_record_diff_apply.diff.before == expected_before
+      - win_dns_record_diff_check.diff.after == expected_after
+      - win_dns_record_diff_apply.diff.after == expected_after
+      - win_dns_record_diff_after.exists == (win_dns_record_diff_case.state | default('present') == 'present')
+      - win_dns_record_diff_after.records | length == (1 if win_dns_record_diff_after.exists else 0)
+
+- name: Assert the actual TTL and value match the diff
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_diff_after.records[0].ttl == win_dns_record_diff_case.ttl | default(3600)
+      - win_dns_record_diff_after.records[0].record_values == [win_dns_record_diff_case.value]
+  when: win_dns_record_diff_after.exists
+
+- name: Assert the actual SRV fields match the diff
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_diff_after.records[0].data.port == win_dns_record_diff_case.port
+      - win_dns_record_diff_after.records[0].data.priority == win_dns_record_diff_case.priority
+      - win_dns_record_diff_after.records[0].data.weight == win_dns_record_diff_case.weight
+  when:
+    - win_dns_record_diff_after.exists
+    - win_dns_record_diff_case.type == 'SRV'
