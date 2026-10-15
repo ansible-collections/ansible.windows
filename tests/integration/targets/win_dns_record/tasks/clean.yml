@@ -1,17 +1,117 @@
-- name: Remove test zone, if present
-  ansible.windows.win_shell: |
-    $zone = '{{ item }}'
-    $fail_on_missing = '{{ fail_on_missing | default(true) }}'
+---
+- name: Wait for connectivity before cleaning up owned fixtures
+  ansible.builtin.wait_for_connection:
+    timeout: '{{ win_dns_record_cleanup_timeout | default(120) }}'
+    connect_timeout: 10
+    sleep: 5
+  when: >-
+    win_dns_record_zones_reserved | default(false) or
+    win_dns_record_temp_owned | default(false) or
+    win_dns_record_initial_feature.features | default([]) | length == 1
+  register: win_dns_record_cleanup_connection
+  ignore_errors: true
+  ignore_unreachable: true
 
-    Trap { If (-not $fail_on_missing) { continue } }
-    Remove-DnsServerZone -Name $zone -Force
-    
-    # win_file could also do this, but it would need to know where the
-    # SystemRoot is located via fact gathering, which we cannot assume.
-    Trap { If (-not $fail_on_missing) { continue } }
-    Remove-Item -Path $env:SystemRoot\system32\dns\$zone.dns
-
-    $true  # so pipeline exits cleanly if an error was ignored above
+- name: Remove each owned zone independently
+  ansible.windows.win_dns_zone:
+    name: '{{ item }}'
+    state: absent
   loop:
-    - '{{ win_dns_record_zone }}'
-    - '{{ win_dns_record_revzone }}'
+    - '{{ win_dns_record_zone | default("") }}'
+    - '{{ win_dns_record_revzone | default("") }}'
+  when: win_dns_record_zones_reserved | default(false)
+  register: win_dns_record_zone_cleanup
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Remove zone files only after successful zone removal
+  ansible.windows.win_file:
+    path: '{{ win_dns_record_fixture.result.dns_directory }}\{{ item.item }}.dns'
+    state: absent
+  loop: '{{ win_dns_record_zone_cleanup.results | default([]) }}'
+  when:
+    - win_dns_record_zones_reserved | default(false)
+    - item is succeeded
+    - item is not unreachable
+    - not item.skipped | default(false)
+  register: win_dns_record_file_cleanup
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Verify owned zones and zone files were removed
+  ansible.windows.win_powershell:
+    path: files/verify_cleanup.ps1
+    error_action: stop
+    parameters:
+      ZoneNames: ['{{ win_dns_record_zone }}', '{{ win_dns_record_revzone }}']
+      DnsDirectory: '{{ win_dns_record_fixture.result.dns_directory }}'
+  when: win_dns_record_zones_reserved | default(false)
+  register: win_dns_record_cleanup_verification
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Remove the owned regression directory
+  ansible.windows.win_file:
+    path: '{{ win_dns_record_temp.path }}'
+    state: absent
+  when: win_dns_record_temp_owned | default(false)
+  register: win_dns_record_temp_cleanup
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Restore an initially absent DNS feature
+  ansible.windows.win_feature:
+    name: DNS
+    state: absent
+  when:
+    - win_dns_record_initial_feature.features | default([]) | length == 1
+    - not win_dns_record_initial_feature.features[0].installed
+    - win_dns_record_manage_dns_feature | bool
+  register: win_dns_record_feature_cleanup
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Verify the owned regression directory was removed
+  ansible.windows.win_stat:
+    path: '{{ win_dns_record_temp.path }}'
+  when: win_dns_record_temp_owned | default(false)
+  register: win_dns_record_temp_verification
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Reboot if removing the fixture feature requires it
+  ansible.windows.win_reboot:
+  when: win_dns_record_feature_cleanup.reboot_required | default(false)
+  register: win_dns_record_cleanup_reboot
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Verify the DNS feature was restored to its initial state
+  ansible.windows.win_feature_info:
+    name: DNS
+  when: win_dns_record_initial_feature.features | default([]) | length == 1
+  register: win_dns_record_feature_verification
+  ignore_errors: true
+  ignore_unreachable: true
+
+- name: Assert that every cleanup operation succeeded
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_zone_cleanup is succeeded and win_dns_record_zone_cleanup is not unreachable
+      - >-
+        win_dns_record_zone_cleanup.results | default([]) | selectattr('unreachable', 'defined') |
+        selectattr('unreachable') | list | length == 0
+      - win_dns_record_file_cleanup is succeeded and win_dns_record_file_cleanup is not unreachable
+      - >-
+        win_dns_record_file_cleanup.results | default([]) | selectattr('unreachable', 'defined') |
+        selectattr('unreachable') | list | length == 0
+      - win_dns_record_cleanup_verification is succeeded and win_dns_record_cleanup_verification is not unreachable
+      - win_dns_record_temp_cleanup is succeeded and win_dns_record_temp_cleanup is not unreachable
+      - win_dns_record_feature_cleanup is succeeded and win_dns_record_feature_cleanup is not unreachable
+      - win_dns_record_cleanup_reboot is succeeded and win_dns_record_cleanup_reboot is not unreachable
+      - win_dns_record_temp_verification is succeeded and win_dns_record_temp_verification is not unreachable
+      - not (win_dns_record_temp_verification.stat.exists | default(false))
+      - win_dns_record_feature_verification is succeeded and win_dns_record_feature_verification is not unreachable
+      - >-
+        win_dns_record_initial_feature.features | default([]) | length != 1 or
+        win_dns_record_feature_verification.features[0].installed == win_dns_record_initial_feature.features[0].installed

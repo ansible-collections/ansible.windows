@@ -1,0 +1,11 @@
+bugfixes:
+  - win_dns_record - Normalize zone-qualified record owners before querying or modifying DNS records.
+  - >-
+    win_dns_record - Preserve DNS lookup errors and verify requested record values, TTL, aging, and SRV fields
+    after mutations instead of reporting success when nothing was written.
+  - win_dns_record - Apply the requested TTL when creating SRV records and retain single-value lists during target-name normalization.
+  - win_dns_record - Compare TXT values case-sensitively, normalize equivalent IP addresses, and avoid duplicate writes for repeated values.
+  - win_dns_record - Validate SRV port, priority, and weight before changing records and include these fields consistently in normal and check-mode diffs.
+  - win_dns_record - Clarify that allow_update_any applies only when creating records and remove the unrelated dynamic Active Directory object TTL warning.
+minor_changes:
+  - Added win_dns_record_info to list Windows DNS records and retrieve records by owner and type.
