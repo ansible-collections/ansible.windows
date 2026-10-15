@@ -1,0 +1,72 @@
+---
+- name: Create an SRV record for invalid replacement tests
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: validation-srv
+    type: SRV
+    value: old.example.test
+    port: 443
+    priority: 3
+    weight: 2
+
+- name: Read the original SRV record
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: validation-srv
+    type: SRV
+  register: win_dns_record_validation_before
+
+- name: Reject invalid SRV replacements and deletions in normal and check mode
+  vars:
+    invalid_fields:
+      - {port: -1}
+      - {port: 65536}
+      - {priority: -1}
+      - {priority: 65536}
+      - {weight: -1}
+      - {weight: 65536}
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: validation-srv
+    type: SRV
+    state: '{{ item[2] }}'
+    value: '{{ "new.example.test" if item[2] == "present" else omit }}'
+    port: '{{ item[0].port | default(443) }}'
+    priority: '{{ item[0].priority | default(3) }}'
+    weight: '{{ item[0].weight | default(2) }}'
+  loop: '{{ invalid_fields | product([true, false], ["present", "absent"]) | list }}'
+  check_mode: '{{ item[1] }}'
+  register: win_dns_record_invalid_srv
+  ignore_errors: true
+
+- name: Assert every invalid replacement failed input validation
+  ansible.builtin.assert:
+    that:
+      - item is failed
+      - "'must be between 0 and 65535' in item.msg"
+  loop: '{{ win_dns_record_invalid_srv.results }}'
+  loop_control:
+    label: '{{ item.item }}'
+
+- name: Read the SRV record after rejected replacements
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: validation-srv
+    type: SRV
+  register: win_dns_record_validation_after
+
+- name: Assert invalid input preserved the original record
+  ansible.builtin.assert:
+    that:
+      - win_dns_record_validation_before.records | length == 1
+      - win_dns_record_validation_after.records == win_dns_record_validation_before.records
+
+- name: Remove the SRV validation record
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: validation-srv
+    type: SRV
+    state: absent
+    port: 443
+    priority: 3
+    weight: 2

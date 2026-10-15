@@ -1,277 +1,353 @@
-- name: 'TYPE=NS - creation (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-mirror.example.com, type: NS}
+---
+- name: TYPE=NS - creation (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-mirror.example.com
+    type: NS
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - creation get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=NS - creation get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results (check mode)'
-  assert:
+- name: TYPE=NS - creation check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=NS- creation'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-mirror.example.com, type: NS}
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=NS- creation
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-mirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - creation get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - creation get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results'
-  assert:
+- name: TYPE=NS - creation check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'ansible-mirror.example.com.\r\n'
-
-- name: 'TYPE=NS - creation (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-mirror.example.com, type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-mirror.example.com."]
+- name: TYPE=NS - creation (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-mirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - creation get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - creation get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results (idempotent)'
-  assert:
+- name: TYPE=NS - creation check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'ansible-mirror.example.com.\r\n'
-
-
-- name: 'TYPE=NS - update address (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-mirror.example.com."]
+- name: TYPE=NS - update address (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    type: NS
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - update address get results (check mode)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+  check_mode: true
+- name: TYPE=NS - update address get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update address check results (check mode)'
-  assert:
+- name: TYPE=NS - update address check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'ansible-mirror.example.com.\r\n'
-
-- name: 'TYPE=NS - update address'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-mirror.example.com."]
+- name: TYPE=NS - update address
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - update address get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - update address get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update address check results'
-  assert:
+- name: TYPE=NS - update address check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'ansible-altmirror.example.com.\r\n'
-
-- name: 'TYPE=NS - update address (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-altmirror.example.com."]
+- name: TYPE=NS - update address (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - update address get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - update address get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update address check results (idempotent)'
-  assert:
+- name: TYPE=NS - update address check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'ansible-altmirror.example.com.\r\n'
-
-
-- name: 'TYPE=NS - update TTL (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, ttl: 7200, type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-altmirror.example.com."]
+- name: TYPE=NS - update TTL (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    ttl: 7200
+    type: NS
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - update TTL get results (check mode)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+  check_mode: true
+- name: TYPE=NS - update TTL get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update TTL check results (check mode)'
-  assert:
+- name: TYPE=NS - update TTL check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '3600\r\n'
-
-- name: 'TYPE=NS - update TTL'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, ttl: 7200, type: NS}
+      - cmd_result_actual.records | map(attribute="ttl") | list == [3600]
+- name: TYPE=NS - update TTL
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    ttl: 7200
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - update TTL get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+- name: TYPE=NS - update TTL get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update TTL check results'
-  assert:
+- name: TYPE=NS - update TTL check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: 'TYPE=NS - update TTL (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: ansible-altmirror.example.com, ttl: 7200, type: NS}
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=NS - update TTL (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value: ansible-altmirror.example.com
+    ttl: 7200
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - update TTL get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty TimeToLive | Select -ExpandProperty TotalSeconds"
+- name: TYPE=NS - update TTL get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - update TTL check results (idempotent)'
-  assert:
+- name: TYPE=NS - update TTL check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == '7200\r\n'
-
-- name: 'TYPE=NS - remove record (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.records | map(attribute="ttl") | list == [7200]
+- name: TYPE=NS - remove record (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - remove record get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=NS - remove record get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results (check mode)'
-  assert:
+- name: TYPE=NS - remove record check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'exists\r\n'
-
-- name: 'TYPE=NS - remove record'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.exists == true
+      - cmd_result_actual.records | length > 0
+- name: TYPE=NS - remove record
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=NS - remove record get results'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=NS - remove record get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results'
-  assert:
+- name: TYPE=NS - remove record check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=NS - remove record (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=NS - remove record (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=NS - remove record get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=NS - remove record get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results (idempotent)'
-  assert:
+- name: TYPE=NS - remove record check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=NS - creation with multiple values (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: [ansible-mirror.example.com, ansible-altmirror.example.com, ansiblull-mirror.example.com], type: NS}
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=NS - creation with multiple values (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value:
+      - ansible-mirror.example.com
+      - ansible-altmirror.example.com
+      - ansiblull-mirror.example.com
+    type: NS
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - creation get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=NS - creation get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results (check mode)'
-  assert:
+- name: TYPE=NS - creation check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=NS - creation with multiple values'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: [ansible-mirror.example.com, ansible-altmirror.example.com, ansiblull-mirror.example.com], type: NS}
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=NS - creation with multiple values
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value:
+      - ansible-mirror.example.com
+      - ansible-altmirror.example.com
+      - ansiblull-mirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - creation get results'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - creation get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results'
-  assert:
+- name: TYPE=NS - creation check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'ansible-mirror.example.com.\r\nansible-altmirror.example.com.\r\nansiblull-mirror.example.com.\r\n'
-
-- name: 'TYPE=NS - creation with multiple values (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, value: [ansible-mirror.example.com, ansible-altmirror.example.com, ansiblull-mirror.example.com], type: NS}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-altmirror.example.com.", "ansible-mirror.example.com.",
+        "ansiblull-mirror.example.com."]
+- name: TYPE=NS - creation with multiple values (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    value:
+      - ansible-mirror.example.com
+      - ansible-altmirror.example.com
+      - ansiblull-mirror.example.com
+    type: NS
   register: cmd_result
-
-- name: 'TYPE=NS - creation get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore | Select -ExpandProperty RecordData | Select -ExpandProperty NameServer"
+- name: TYPE=NS - creation get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - creation check results (idempotent)'
-  assert:
+- name: TYPE=NS - creation check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'ansible-mirror.example.com.\r\nansible-altmirror.example.com.\r\nansiblull-mirror.example.com.\r\n'
-
-- name: 'TYPE=NS - remove record (check mode)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.records | map(attribute="record_values") | flatten | sort == ["ansible-altmirror.example.com.", "ansible-mirror.example.com.",
+        "ansiblull-mirror.example.com."]
+- name: TYPE=NS - remove record (check mode)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-  check_mode: yes
-
-- name: 'TYPE=NS - remove record get results (check mode)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+  check_mode: true
+- name: TYPE=NS - remove record get results (check mode)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results (check mode)'
-  assert:
+- name: TYPE=NS - remove record check results (check mode)
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'exists\r\n'
-
-- name: 'TYPE=NS - remove record'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.exists == true
+      - cmd_result_actual.records | length > 0
+- name: TYPE=NS - remove record
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=NS - remove record get results'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=NS - remove record get results
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results'
-  assert:
+- name: TYPE=NS - remove record check results
+  ansible.builtin.assert:
     that:
       - cmd_result is changed
-      - cmd_result_actual.stdout == 'absent\r\n'
-
-- name: 'TYPE=NS - remove record (idempotent)'
-  win_dns_record: {zone: '{{ win_dns_record_zone }}', name: z, type: NS, state: absent}
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0
+- name: TYPE=NS - remove record (idempotent)
+  ansible.windows.win_dns_record:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
+    state: absent
   register: cmd_result
-
-- name: 'TYPE=NS - remove record get results (idempotent)'
-  ansible.windows.win_command: powershell.exe "If (Get-DnsServerResourceRecord -ZoneName '{{ win_dns_record_zone }}' -Name 'z' -RRType NS -Node -ErrorAction:Ignore) { 'exists' } else { 'absent' }"
+- name: TYPE=NS - remove record get results (idempotent)
+  ansible.windows.win_dns_record_info:
+    zone: '{{ win_dns_record_zone }}'
+    name: z
+    type: NS
   register: cmd_result_actual
-  changed_when: false
-
-- name: 'TYPE=NS - remove record check results (idempotent)'
-  assert:
+- name: TYPE=NS - remove record check results (idempotent)
+  ansible.builtin.assert:
     that:
       - cmd_result is not changed
-      - cmd_result_actual.stdout == 'absent\r\n'
+      - cmd_result_actual.exists == false
+      - cmd_result_actual.records | length == 0

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #AnsibleRequires -CSharpUtil Ansible.Basic
+#AnsibleRequires -PowerShell ansible_collections.ansible.windows.plugins.module_utils.Dns
 
 $spec = @{
     options = @{
@@ -40,6 +41,14 @@ $zone = $module.Params.zone
 $zone_scope = $module.Params.zone_scope
 $dns_computer_name = $module.Params.computer_name
 
+try {
+    $name = ConvertTo-AnsibleWindowsDnsRecordName -Name $name -Zone $zone
+    $zone = $zone.TrimEnd('.')
+}
+catch {
+    $module.FailJson("Invalid DNS record name or zone: $($_.Exception.Message)", $_)
+}
+
 $extra_args = @{}
 $extra_args_new_records = @{}
 
@@ -67,49 +76,45 @@ else {
     }
 }
 
-# TODO: add warning for forest minTTL override -- see https://docs.microsoft.com/en-us/windows/desktop/ad/configuration-of-ttl-limits
+if ($type -eq 'SRV') {
+    foreach ($parameter in 'port', 'priority', 'weight') {
+        if ($module.Params.$parameter -lt 0 -or $module.Params.$parameter -gt 65535) {
+            $module.FailJson("Parameter '$parameter' must be between 0 and 65535")
+        }
+    }
+}
+
 if ($ttl -lt 1 -or $ttl -gt 31557600) {
     $module.FailJson("Parameter 'ttl' must be between 1 and 31557600")
 }
 
 $ttl = New-TimeSpan -Seconds $ttl
 
-if (($type -eq 'CNAME' -or $type -eq 'NS' -or $type -eq 'PTR' -or $type -eq 'SRV') -and $null -ne $values -and $values.Count -gt 0 -and $zone[-1] -ne '.') {
-    # CNAMEs and PTRs should be '.'-terminated, or record matching will fail
-    $values = $values | ForEach-Object {
-        if ($_ -Like "*.") { $_ } else { "$_." }
-    }
+try {
+    $values = ConvertTo-AnsibleWindowsDnsRecordValue -Type $type -Value $values
 }
-
-$record_argument_name = @{
-    A = "IPv4Address"
-    AAAA = "IPv6Address"
-    CNAME = "HostNameAlias"
-    DHCID = "DhcpIdentifier"
-    # MX = "MailExchange"
-    NS = "NameServer"
-    PTR = "PtrDomainName"
-    SRV = "DomainName"
-    TXT = "DescriptiveText"
-}[$type]
-
-function Get-DnsServerResourceRecordDataPropertyName {
-    Switch -Exact ($type) {
-        'DHCID' {
-            'DhcId'
-        }
-        default {
-            $record_argument_name
-        }
-    }
+catch {
+    $module.FailJson("Invalid DNS $type record value: $($_.Exception.Message)", $_)
 }
+$desired_values = @($values)
+
+$record_data_property = Get-AnsibleWindowsDnsRecordDataPropertyName -Type $type
+$record_argument_name = $record_data_property
+if ($type -eq 'DHCID') { $record_argument_name = 'DhcpIdentifier' }
 
 $changes = @{
     before = ""
     after = ""
 }
 
-$records = Get-DnsServerResourceRecord -ZoneName $zone -Name $name -RRType $type -Node -ErrorAction:Ignore @extra_args | Sort-Object
+$query_args = @{ ZoneName = $zone; Name = $name; RRType = $type; Node = $true }
+foreach ($key in $extra_args.Keys) { $query_args[$key] = $extra_args[$key] }
+try {
+    $records = @(Get-AnsibleWindowsDnsRecord -Arguments $query_args | Sort-Object)
+}
+catch {
+    $module.FailJson("Error reading DNS $type resource $name in zone ${zone}: $($_.Exception.Message)", $_)
+}
 
 if ($null -ne $records) {
     # We use [Hashtable]$required_values below as a set rather than a map.
@@ -117,6 +122,7 @@ if ($null -ne $records) {
     # items as each is processed, whatever remains at the end is missing
     # content (that needs to be added).
     $required_values = @{}
+    if ($type -eq 'TXT') { $required_values = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal) }
     foreach ($value in $values) {
         $required_values[$value.ToString()] = $null
     }
@@ -125,56 +131,49 @@ if ($null -ne $records) {
         # check, if record is aging
         $record_aging_old = ($null -ne $record.Timestamp)
 
-        $record_value = $record.RecordData.$(Get-DnsServerResourceRecordDataPropertyName).ToString()
+        $record_value = Get-AnsibleWindowsDnsRecordValue -Record $record
         if ((-Not $required_values.ContainsKey($record_value)) -Or (-Not $record_aging_old -eq $aging)) {
-            $record | Remove-DnsServerResourceRecord -ZoneName $zone -Force -WhatIf:$module.CheckMode @extra_args
-            $changes.before += "[$zone{0}] $($record.HostName) $($record.TimeToLive.TotalSeconds) IN $type $record_value`n" `
-                -f ("", "/$zone_scope")[$null -ne $zone_scope]
+            try {
+                $record | Remove-DnsServerResourceRecord -ZoneName $zone -Force -WhatIf:$module.CheckMode @extra_args -ErrorAction Stop
+            }
+            catch {
+                $module.FailJson("Error removing DNS $type resource $name in zone ${zone}: $($_.Exception.Message)", $_)
+            }
+            $changes.before += Format-AnsibleWindowsDnsRecord -Record $record -Zone $zone -ZoneScope $zone_scope
             $module.Result.changed = $true
         }
         else {
-            if ($type -eq 'SRV') {
-                $record_port_old = $record.RecordData.Port.ToString()
-                $record_priority_old = $record.RecordData.Priority.ToString()
-                $record_weight_old = $record.RecordData.Weight.ToString()
-
-                if ($record.TimeToLive -ne $ttl -or $port -ne $record_port_old -or $priority -ne $record_priority_old -or $weight -ne $record_weight_old) {
-                    $new_record = [CimInstance]::new($record)
-                    $new_record.TimeToLive = $ttl
+            $needs_update = $record.TimeToLive -ne $ttl
+            if ($type -eq 'SRV' -and ($record.RecordData.Port -ne $port -or
+                    $record.RecordData.Priority -ne $priority -or $record.RecordData.Weight -ne $weight)) {
+                $needs_update = $true
+            }
+            if ($needs_update) {
+                $new_record = [CimInstance]::new($record)
+                $new_record.TimeToLive = $ttl
+                if ($type -eq 'SRV') {
                     $new_record.RecordData.Port = $port
                     $new_record.RecordData.Priority = $priority
                     $new_record.RecordData.Weight = $weight
-                    Set-DnsServerResourceRecord -ZoneName $zone -OldInputObject $record -NewInputObject $new_record -WhatIf:$module.CheckMode @extra_args
-
-                    $changes.before += -join @(
-                        "[$zone{0}] $($record.HostName) $($record.TimeToLive.TotalSeconds) IN " `
-                            -f ("", "/$zone_scope")[$null -ne $zone_scope]
-                        "$type $record_value $record_port_old $record_weight_old $record_priority_old`n"
-                    )
-                    $changes.after += "[$zone{0}] $($record.HostName) $($ttl.TotalSeconds) IN $type $record_value $port $weight $priority`n" `
-                        -f ("", "/$zone_scope")[$null -ne $zone_scope]
-                    $module.Result.changed = $true
                 }
-            }
-            else {
-                # This record matches one of the values; but does it match the TTL?
-                if ($record.TimeToLive -ne $ttl) {
-                    $new_record = [CimInstance]::new($record)
-                    $new_record.TimeToLive = $ttl
-                    Set-DnsServerResourceRecord -ZoneName $zone -OldInputObject $record -NewInputObject $new_record -WhatIf:$module.CheckMode @extra_args
-                    $changes.before += "[$zone{0}] $($record.HostName) $($record.TimeToLive.TotalSeconds) IN $type $record_value`n" `
-                        -f ("", "/$zone_scope")[$null -ne $zone_scope]
-                    $changes.after += "[$zone{0}] $($record.HostName) $($ttl.TotalSeconds) IN $type $record_value`n" `
-                        -f ("", "/$zone_scope")[$null -ne $zone_scope]
-                    $module.Result.changed = $true
+                try {
+                    Set-DnsServerResourceRecord -ZoneName $zone -OldInputObject $record -NewInputObject $new_record `
+                        -WhatIf:$module.CheckMode @extra_args -ErrorAction Stop
                 }
+                catch {
+                    $module.FailJson("Error updating DNS $type resource $name in zone ${zone}: $($_.Exception.Message)", $_)
+                }
+                $changes.before += Format-AnsibleWindowsDnsRecord -Record $record -Zone $zone -ZoneScope $zone_scope
+                $changes.after += Format-AnsibleWindowsDnsRecord -Record $new_record -Zone $zone -ZoneScope $zone_scope
+                $module.Result.changed = $true
             }
             # Cross this one off the list, so we don't try adding it late
-            $required_values.Remove($record_value)
-            # Whatever is left in $required_values needs to be added
-            $values = $required_values.Keys
+            $null = $required_values.Remove($record_value)
         }
     }
+    # Whatever is left needs to be added, including when the provider returned no records.
+    # TXT strings can shadow dictionary properties; call their getters directly.
+    $values = @($required_values.get_Keys())
 }
 
 if ($null -ne $values -and $values.Count -gt 0) {
@@ -189,18 +188,23 @@ if ($null -ne $values -and $values.Count -gt 0) {
         }
         try {
             if ($type -eq 'SRV') {
-                Add-DnsServerResourceRecord -SRV -Name $name -ZoneName $zone @srv_args @extra_args @extra_args_new_records -WhatIf:$module.CheckMode
+                Add-DnsServerResourceRecord -SRV -Name $name -ZoneName $zone -TimeToLive $ttl @srv_args @extra_args @extra_args_new_records `
+                    -WhatIf:$module.CheckMode -ErrorAction Stop
             }
             else {
                 Add-DnsServerResourceRecord -Name $name -ZoneName $zone -TimeToLive $ttl @splat_args -WhatIf:$module.CheckMode `
-                    @extra_args @extra_args_new_records
+                    @extra_args @extra_args_new_records -ErrorAction Stop
             }
         }
         catch {
             $module.FailJson("Error adding DNS $type resource $name in zone $zone with value $value", $_)
         }
-        $changes.after += "[$zone{0}] $name $($ttl.TotalSeconds) IN $type $value`n" `
-            -f ("", "/$zone_scope")[$null -ne $zone_scope]
+        $predicted_data = @{ $record_data_property = $value }
+        if ($type -eq 'SRV') { $predicted_data.Port = $port; $predicted_data.Priority = $priority; $predicted_data.Weight = $weight }
+        $predicted_record = [pscustomobject]@{
+            HostName = $name; RecordType = $type; TimeToLive = $ttl; RecordData = [pscustomobject]$predicted_data
+        }
+        $changes.after += Format-AnsibleWindowsDnsRecord -Record $predicted_record -Zone $zone -ZoneScope $zone_scope
     }
     $module.Result.changed = $true
 }
@@ -212,17 +216,40 @@ if ($module.CheckMode) {
 }
 else {
     # Real changes
-    $records_end = Get-DnsServerResourceRecord -ZoneName $zone -Name $name -RRType $type -Node -ErrorAction:Ignore @extra_args | Sort-Object
+    try {
+        $records_end = @(Get-AnsibleWindowsDnsRecord -Arguments $query_args | Sort-Object)
+    }
+    catch {
+        $module.FailJson("Error verifying DNS $type resource $name in zone ${zone}: $($_.Exception.Message)", $_)
+    }
+    $remaining_values = @{}
+    if ($type -eq 'TXT') { $remaining_values = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal) }
+    foreach ($value in $desired_values) { $remaining_values[$value.ToString()] = $null }
+    $verified = $records_end.Count -eq $remaining_values.get_Count()
+    foreach ($record in $records_end) {
+        $record_value = Get-AnsibleWindowsDnsRecordValue -Record $record
+        if (-not $remaining_values.ContainsKey($record_value) -or ($null -ne $record.Timestamp) -ne $aging -or
+            $record.TimeToLive -ne $ttl) {
+            $verified = $false
+        }
+        if ($type -eq 'SRV' -and ($record.RecordData.Port -ne $port -or
+                $record.RecordData.Priority -ne $priority -or $record.RecordData.Weight -ne $weight)) {
+            $verified = $false
+        }
+        $null = $remaining_values.Remove($record_value)
+    }
+    if (-not $verified -or $remaining_values.get_Count()) {
+        $module.FailJson("The requested DNS records did not match the values, TTL, aging, or SRV fields after the operation for $name in zone $zone. " +
+            'Check the DNS server, permissions, and remote authentication.')
+    }
     $module.Diff.before = @(
         $records | ForEach-Object {
-            "[$zone{0}] $($_.HostName) $($_.TimeToLive.TotalSeconds) IN $type $($_.RecordData.$(Get-DnsServerResourceRecordDataPropertyName).ToString())`n" `
-                -f ("", "/$zone_scope")[$null -ne $zone_scope]
+            Format-AnsibleWindowsDnsRecord -Record $_ -Zone $zone -ZoneScope $zone_scope
         }
     ) -join ''
     $module.Diff.after = @(
         $records_end | ForEach-Object {
-            "[$zone{0}] $($_.HostName) $($_.TimeToLive.TotalSeconds) IN $type $($_.RecordData.$(Get-DnsServerResourceRecordDataPropertyName).ToString())`n" `
-                -f ("", "/$zone_scope")[$null -ne $zone_scope]
+            Format-AnsibleWindowsDnsRecord -Record $_ -Zone $zone -ZoneScope $zone_scope
         }
     ) -join ''
 }
