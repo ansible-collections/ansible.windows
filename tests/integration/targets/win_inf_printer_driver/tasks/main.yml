@@ -1,0 +1,7 @@
+---
+- name: Test the built-in driver install and removal lifecycle
+  ansible.builtin.include_tasks: builtin.yml
+
+# Third-party tests require a hosted INF package, re-enable once it is available.
+# - name: Test third-party driver-store removal and remove_all
+#   ansible.builtin.include_tasks: thirdparty.yml
