@@ -1,10 +1,11 @@
 namespace: ansible
 name: windows
-version: 3.9.0
+version: 3.9.1
 readme: README.md
 authors:
   - Jordan Borean @jborean93
   - Matt Davis @nitzmahone
+  - Hen Yaish @yaish25491
 description: |
   Ansible collection for core Windows plugins.
 license_file: COPYING

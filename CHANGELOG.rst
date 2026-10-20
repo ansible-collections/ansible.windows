@@ -4,6 +4,43 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.9.1
+======
+
+Release Summary
+---------------
+
+Release summary for v3.9.1, migrating modules from community.windows, adding information modules, and enhancing DNS record handling, template validation, and Windows Update reliability.
+
+Minor Changes
+-------------
+
+- Add official support for Ansible 2.22
+- Added win_dns_record_info to list Windows DNS records and retrieve records by owner and type.
+- dsc3 - Add the ``parameters_file``, ``system_root``, ``ignore_settings_file``, ``resource_path``, ``chdir`` and ``executable`` options to support Microsoft DSC 3.3.
+- dsc3 - Return ``reboot_required``, ``restart_requirements``, ``security_context`` and ``execution_type``, surface DSC warning messages as Ansible warnings and include the DSC error message in ``msg`` when ``dsc`` fails.
+- win_template - Add the ``validate`` option to run a command against the rendered template on the remote host before it is copied to ``dest``. The path of the rendered template is substituted into the command in place of ``%s`` and is quoted for PowerShell so paths containing spaces are handled correctly. If the command fails ``dest`` is left untouched - https://github.com/ansible-collections/ansible.windows/issues/50
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- dsc3 - Check mode now runs ``dsc config set --what-if`` instead of ``dsc config test`` so the reported changes align with what ``dsc`` would do. Group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` do not support what-if and fail in check mode.
+
+Bugfixes
+--------
+
+- dsc3 - Map all DSC exit codes to a readable failure message and document ``remote_config_file`` as defaulting to ``false``, matching the existing behaviour.
+- dsc3 - Read the execution details from ``executionInformation`` with a fallback to the deprecated ``metadata.Microsoft.DSC`` property that DSC will remove in a future release.
+- dsc3 - Walk the nested results of group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` instead of reporting every group as changed.
+- win_dns_record - Apply the requested TTL when creating SRV records and retain single-value lists during target-name normalization.
+- win_dns_record - Clarify that allow_update_any applies only when creating records and remove the unrelated dynamic Active Directory object TTL warning.
+- win_dns_record - Compare TXT values case-sensitively, normalize equivalent IP addresses, and avoid duplicate writes for repeated values.
+- win_dns_record - Normalize zone-qualified record owners before querying or modifying DNS records.
+- win_dns_record - Preserve DNS lookup errors and verify requested record values, TTL, aging, and SRV fields after mutations instead of reporting success when nothing was written.
+- win_dns_record - Preserve TXT values such as ``Count`` and ``Keys`` that collide with PowerShell dictionary properties.
+- win_dns_record - Validate SRV port, priority, and weight before changing records and include these fields consistently in normal and check-mode diffs.
+- win_updates - Do not detect a reboot loop when Windows Update reissues an update with a newer revision.
+
 v3.8.0
 ======
 
