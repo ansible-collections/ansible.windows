@@ -4,6 +4,14 @@ Ansible Windows Release Notes
 
 .. contents:: Topics
 
+v3.9.2
+======
+
+Release Summary
+---------------
+
+Release summary for v3.9.2,  It's a copy of 3.9.0/1 but with the tags being aligned.
+
 v3.9.1
 ======
 
