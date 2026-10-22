@@ -1278,3 +1278,9 @@ releases:
     - release-summary.yml
     - win_updates-reissued-revisions.yml
     release_date: '2026-10-20'
+  3.9.2:
+    changes:
+      release_summary: Release summary for v3.9.2,  It's a copy of 3.9.0/1 but with the tags being aligned.
+    fragments:
+    - release-summary.yml
+    release_date: '2026-10-21'
