@@ -26,6 +26,32 @@
     - reboot_timeout_not_int is failed
     - '"Invalid value given for ''reboot_timeout''" in reboot_timeout_not_int.msg'
 
+- name: failure with maximum_retries_on_failed_updates not an int
+  win_updates:
+    maximum_retries_on_failed_updates: a
+  register: maximum_retries_not_int
+  ignore_errors: yes
+
+- assert:
+    that:
+    - maximum_retries_not_int is failed
+    - '"Invalid value given for ''maximum_retries_on_failed_updates''" in maximum_retries_not_int.msg'
+
+- name: search updates with maximum_retries_on_failed_updates as a templated string
+  win_updates:
+    category_names: '*'
+    state: searched
+    maximum_retries_on_failed_updates: "{{ maximum_retries }}"
+    _operation: test
+  vars:
+    maximum_retries: '2'
+  register: maximum_retries_templated
+  ignore_errors: yes
+
+- assert:
+    that:
+    - not maximum_retries_templated is failed
+
 - name: failure on async with reboot=True
   win_updates:
     reboot: True
