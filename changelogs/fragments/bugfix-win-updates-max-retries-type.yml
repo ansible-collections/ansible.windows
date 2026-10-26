@@ -1,0 +1,2 @@
+bugfixes:
+  - win_updates - Validate ``maximum_retries_on_failed_updates`` as an integer before comparing it with the retry counter.

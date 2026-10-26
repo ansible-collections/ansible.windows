@@ -658,6 +658,79 @@ def test_repeated_update(monkeypatch):
     assert actual['updates']['501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a']['failure_msg'] == 'Unknown WUA HRESULT -1 (UNKNOWN 0xFFFFFFFF)'
 
 
+def test_maximum_retries_on_failed_updates_accepts_string(monkeypatch):
+    actual = run_action(monkeypatch, 'install_no_reboot.txt', {
+        'reject_list': ['KB2267602'],
+        'maximum_retries_on_failed_updates': '3',
+    })
+
+    assert not actual.get('failed', False)
+    assert actual['installed_update_count'] == 3
+
+
+def test_maximum_retries_on_failed_updates_string_preserves_loop_detection(monkeypatch):
+    reboot_mock = MagicMock()
+    reboot_mock.return_value = {'failed': False}
+    monkeypatch.setattr(win_updates, 'reboot_host', reboot_mock)
+
+    actual = run_action(monkeypatch, 'repeated_update.txt', {
+        'category_names': ['*'],
+        'reboot': True,
+        'maximum_retries_on_failed_updates': '1',
+    })
+
+    assert actual['failed']
+    assert 'An update loop was detected' in actual['msg']
+
+
+def test_maximum_retries_on_failed_updates_string_allows_retry(monkeypatch):
+    reboot_mock = MagicMock()
+    reboot_mock.return_value = {'failed': False}
+    monkeypatch.setattr(win_updates, 'reboot_host', reboot_mock)
+
+    update_id = '501ef1af-14f0-4cb5-aa9b-aa340b9f9d2a'
+
+    def update_result(revision_number, reboot_required=False):
+        result = win_updates.UpdateResult()
+        result.updates = {
+            update_id: {
+                'title': 'Windows Update',
+                'kb': [],
+                'categories': [],
+                'revision_number': revision_number,
+            },
+        }
+        result.selected_updates = {update_id}
+        result.install_results = {
+            update_id: {
+                'result_code': 2,
+                'reboot_required': reboot_required,
+                'hresult': 0,
+            },
+        }
+        result.changed = True
+        result.reboot_required = reboot_required
+        return result
+
+    update_results = iter([
+        update_result(200, reboot_required=True),
+        update_result(200),
+        win_updates.UpdateResult(),
+    ])
+    plugin = win_updates_init({
+        'category_names': ['*'],
+        'reboot': True,
+        'maximum_retries_on_failed_updates': '2',
+    })
+    monkeypatch.setattr(plugin, '_run_updates', lambda *args, **kwargs: next(update_results))
+
+    actual = plugin.run()
+
+    assert reboot_mock.call_count == 1
+    assert not actual.get('failed', False)
+    assert actual['installed_update_count'] == 1
+
+
 def test_reissued_update(monkeypatch):
     reboot_mock = MagicMock()
     reboot_mock.return_value = {'failed': False}

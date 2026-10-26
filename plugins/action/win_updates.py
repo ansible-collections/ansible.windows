@@ -692,7 +692,13 @@ class ActionModule(ActionBase):
         except TypeError as e:
             raise AnsibleActionFail("Invalid value given for 'reboot_timeout': %s." % to_native(e))
 
+        try:
+            maximum_retries_on_failed_updates = check_type_int(self._task.args.get('maximum_retries_on_failed_updates', 1))
+        except TypeError as e:
+            raise AnsibleActionFail("Invalid value given for 'maximum_retries_on_failed_updates': %s." % to_native(e))
+
         module_options = self._task.args.copy()
+        module_options['maximum_retries_on_failed_updates'] = maximum_retries_on_failed_updates
 
         operation_val = module_options.pop('_operation', None)
         for_testing = False
