@@ -1,0 +1,143 @@
+---
+- name: Run the third-party driver-store tests
+  vars:
+    driver_dir: '{{ remote_tmp_dir }}\win_inf_printer_driver'
+  block:
+    - name: Download the third-party driver archive
+      ansible.windows.win_get_url:
+        url: "{{ test_inf_printer_thirdparty_url }}"
+        dest: '{{ remote_tmp_dir }}\driver.zip'
+
+    - name: Extract the third-party driver archive
+      ansible.windows.win_shell: Expand-Archive -LiteralPath '{{ remote_tmp_dir }}\driver.zip' -DestinationPath '{{ driver_dir }}' -Force
+
+    - name: List installed drivers before the tests
+      ansible.windows.win_powershell: &list_drivers
+        parameters:
+          Names: "{{ test_inf_printer_thirdparty_names }}"
+        script: |
+          param($Names)
+          $Ansible.Result = @(Get-PrinterDriver -Name $Names -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+      register: drivers_before
+
+    - name: Remove any leftover drivers from a previous run
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ item }}"
+        state: absent
+        remove_from_driver_store: true
+        remove_all: true
+      loop: "{{ test_inf_printer_thirdparty_names }}"
+      when: drivers_before.result != []
+
+    - name: List installed drivers after cleanup
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_cleanup
+
+    - name: Assert no drivers are present before the tests
+      ansible.builtin.assert:
+        that:
+          - drivers_after_cleanup.result == []
+
+    - name: Install both drivers in check mode
+      ansible.windows.win_inf_printer_driver:
+        inf_file: '{{ driver_dir }}\{{ test_inf_printer_thirdparty_inf }}'
+        driver_name: "{{ item }}"
+        state: present
+      loop: "{{ test_inf_printer_thirdparty_names }}"
+      check_mode: true
+      register: install_check
+
+    - name: List installed drivers after the check-mode install
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_install_check
+
+    - name: Assert the check-mode install reported a change but installed nothing
+      ansible.builtin.assert:
+        that:
+          - install_check is changed
+          - drivers_after_install_check.result == []
+
+    - name: Install both drivers from the shared INF
+      ansible.windows.win_inf_printer_driver:
+        inf_file: '{{ driver_dir }}\{{ test_inf_printer_thirdparty_inf }}'
+        driver_name: "{{ item }}"
+        state: present
+      loop: "{{ test_inf_printer_thirdparty_names }}"
+
+    - name: List installed drivers after install
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_install
+
+    - name: Assert both drivers are installed
+      ansible.builtin.assert:
+        that:
+          - (drivers_after_install.result | sort) == (test_inf_printer_thirdparty_names | sort)
+
+    - name: Purge the shared driver store in check mode
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ test_inf_printer_thirdparty_names[0] }}"
+        state: absent
+        remove_from_driver_store: true
+        remove_all: true
+      check_mode: true
+      register: purge_check
+
+    - name: List installed drivers after the check-mode purge
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_purge_check
+
+    - name: Assert the check-mode purge reported a change but removed nothing
+      ansible.builtin.assert:
+        that:
+          - purge_check is changed
+          - (drivers_after_purge_check.result | sort) == (test_inf_printer_thirdparty_names | sort)
+
+    - name: Fail to purge the shared driver store without remove_all
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ test_inf_printer_thirdparty_names[0] }}"
+        state: absent
+        remove_from_driver_store: true
+      register: reject
+      failed_when: "'Set remove_all=true to remove them all from the driver store' not in reject.msg"
+
+    - name: List installed drivers after the rejected purge
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_reject
+
+    - name: Assert the rejected purge removed nothing
+      ansible.builtin.assert:
+        that:
+          - (drivers_after_reject.result | sort) == (test_inf_printer_thirdparty_names | sort)
+
+    - name: Purge the shared driver store for all drivers
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ test_inf_printer_thirdparty_names[0] }}"
+        state: absent
+        remove_from_driver_store: true
+        remove_all: true
+      register: purge
+
+    - name: List installed drivers after the purge
+      ansible.windows.win_powershell: *list_drivers
+      register: drivers_after_purge
+
+    - name: Assert the purge removed every driver sharing the INF
+      ansible.builtin.assert:
+        that:
+          - purge is changed
+          - drivers_after_purge.result == []
+
+  always:
+    - name: Remove any leftover third-party drivers
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ item }}"
+        state: absent
+        remove_from_driver_store: true
+        remove_all: true
+      loop: "{{ test_inf_printer_thirdparty_names }}"
+      ignore_errors: true
+
+    - name: Remove the driver staging directory
+      ansible.windows.win_file:
+        path: "{{ driver_dir }}"
+        state: absent
