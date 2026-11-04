@@ -26,13 +26,9 @@ Minor Changes
 - Add official support for Ansible 2.22
 - Added win_dns_record_info to list Windows DNS records and retrieve records by owner and type.
 - dsc3 - Add the ``parameters_file``, ``system_root``, ``ignore_settings_file``, ``resource_path``, ``chdir`` and ``executable`` options to support Microsoft DSC 3.3.
+- dsc3 - Check mode now runs ``dsc config set --what-if`` instead of ``dsc config test`` so the reported changes align with what ``dsc`` would do. Group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` do not support what-if and fail in check mode.
 - dsc3 - Return ``reboot_required``, ``restart_requirements``, ``security_context`` and ``execution_type``, surface DSC warning messages as Ansible warnings and include the DSC error message in ``msg`` when ``dsc`` fails.
 - win_template - Add the ``validate`` option to run a command against the rendered template on the remote host before it is copied to ``dest``. The path of the rendered template is substituted into the command in place of ``%s`` and is quoted for PowerShell so paths containing spaces are handled correctly. If the command fails ``dest`` is left untouched - https://github.com/ansible-collections/ansible.windows/issues/50
-
-Breaking Changes / Porting Guide
---------------------------------
-
-- dsc3 - Check mode now runs ``dsc config set --what-if`` instead of ``dsc config test`` so the reported changes align with what ``dsc`` would do. Group resources such as ``Microsoft.DSC/Group`` and ``Microsoft.DSC/Include`` do not support what-if and fail in check mode.
 
 Bugfixes
 --------
