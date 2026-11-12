@@ -1,5 +1,5 @@
 # PSResourceGet is not part of Windows PowerShell 5.1, this checks the module can install it.
-# It is removed from the host to do that, so it is only run where PowerShellGet v2 can
+# It is removed from the host to do that, so it is only run where PowerShellGet can
 # install and uninstall it. It is put back at the end for any tests that run after this.
 - name: get the PowerShell version and PowerShellGet state
   win_powershell:
@@ -8,6 +8,8 @@
       @{
           Major = $PSVersionTable.PSVersion.Major
           HasInstallModule = [bool](Get-Command -Name Install-Module -ErrorAction SilentlyContinue)
+          CanInstallPrerelease = [bool](Get-Command -Name Install-Module -ErrorAction SilentlyContinue |
+              Where-Object { $_.Parameters.ContainsKey('AllowPrerelease') })
       }
   register: host_info
 
@@ -64,6 +66,16 @@
     failed_when: >-
       missing_range is not failed or
       'exact version' not in missing_range.msg
+
+  - name: fail to install a prerelease of PSResourceGet when PowerShellGet cannot
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+      prerelease: true
+    register: bootstrap_prerelease
+    failed_when: >-
+      bootstrap_prerelease is not failed or
+      'does not support it' not in bootstrap_prerelease.msg
+    when: not host_info.output[0].CanInstallPrerelease
 
   - name: install PSResourceGet in check mode
     win_psresource:

@@ -9,8 +9,8 @@ DOCUMENTATION:
     - This module is the PSResourceGet equivalent of C(community.windows.win_psmodule),
       which only works with PowerShellGet v2.
     - PSResourceGet is included with PowerShell 7.4 and newer. On Windows PowerShell 5.1 it is not, but this module
-      can install it. Set O(name) to V(Microsoft.PowerShell.PSResourceGet) and it is installed with PowerShellGet v2,
-      which is part of Windows PowerShell 5.1. See the examples.
+      can install it. Set O(name) to V(Microsoft.PowerShell.PSResourceGet) and it is installed with the C(PowerShellGet) module,
+      which comes with Windows PowerShell 5.1. See the examples.
   version_added: 3.10.0
   options:
     name:
@@ -19,8 +19,9 @@ DOCUMENTATION:
         - Wildcard characters are not supported.
         - If more than one name is set, O(version) applies to all of them.
         - V(Microsoft.PowerShell.PSResourceGet) is special. If PSResourceGet is not installed yet, the module installs it
-          with PowerShellGet v2 and then continues with any other names. This needs O(state=present) or O(state=latest),
-          and O(version) must be an exact version if it is set. In check mode other names are not checked until
+          with C(Install-Module) from PowerShellGet and then continues with any other names. This needs O(state=present) or O(state=latest),
+          and O(version) must be an exact version if it is set. O(prerelease) needs PowerShellGet 1.6.0 or newer, as the
+          1.0.0.1 that comes with Windows PowerShell 5.1 cannot install prereleases. In check mode other names are not checked until
           PSResourceGet is installed.
       type: list
       elements: str

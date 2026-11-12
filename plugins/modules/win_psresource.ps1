@@ -55,7 +55,7 @@ if ($module.Params.username) {
 }
 
 # PSResourceGet can install itself when it is asked for by name. It is installed
-# through PowerShellGet v2 as PSResourceGet is not there to do it.
+# through the PowerShellGet module as PSResourceGet is not there to do it.
 $psResourceGetName = 'Microsoft.PowerShell.PSResourceGet'
 $bootstrapped = $false
 
@@ -79,6 +79,11 @@ catch {
     }
     if ($version -and $version -notmatch '^\d+(\.\d+){1,3}$') {
         $module.FailJson("version must be an exact version like 1.2.3 to install $psResourceGetName, got '$version'.")
+    }
+
+    if ($prerelease -and -not $installModule.Parameters.ContainsKey('AllowPrerelease')) {
+        # The PowerShellGet 1.0.0.1 that comes with Windows PowerShell 5.1 cannot install prereleases.
+        $module.FailJson("Cannot install a prerelease of $psResourceGetName as the installed PowerShellGet does not support it. Update PowerShellGet to 1.6.0 or newer, or install a release.")
     }
 
     $bootstrapped = $true
