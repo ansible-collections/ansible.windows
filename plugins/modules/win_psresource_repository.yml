@@ -73,6 +73,13 @@ DOCUMENTATION:
   requirements:
     - Microsoft.PowerShell.PSResourceGet 1.0.0 or newer
   notes:
+    - Repositories are registered per user. The C(scope) option of M(ansible.windows.win_psresource) only chooses where
+      resources are installed and does not affect repositories. Resources installed for all users can be used by every
+      user without a repository, the repository is only needed by the account that installs or updates them.
+    - To manage the repositories of another account, run the task with C(become) as that account. SYSTEM and the
+      service accounts can be used without a password, see the examples.
+    - This module does not copy repositories to other profiles. The Default profile, which new users start from,
+      cannot be reached with C(become).
     - Removing a repository that is not registered, or setting options to the values they already have, does not report a change.
     - PSResourceGet may normalise O(uri), for example by following a redirect. The module compares the parsed URI
       with the registered one, so use the value returned by M(ansible.windows.win_psresource_repository_info)
@@ -124,6 +131,15 @@ EXAMPLES: |
       credential_info:
         vault_name: MyVault
         secret_name: PrivateRepoSecret
+
+  - name: Register a repository for the SYSTEM account, which has its own repositories
+    ansible.windows.win_psresource_repository:
+      name: MyRepository
+      uri: https://nuget.example.com/v3/index.json
+      trusted: true
+    become: true
+    become_method: ansible.builtin.runas
+    become_user: SYSTEM
 
   - name: Unregister a repository
     ansible.windows.win_psresource_repository:
