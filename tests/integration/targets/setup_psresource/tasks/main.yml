@@ -1,0 +1,14 @@
+- name: ensure Microsoft.PowerShell.PSResourceGet is installed
+  ansible.windows.win_powershell:
+    script: |
+      $Ansible.Changed = $false
+      $installed = Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet |
+        Where-Object { $_.Version -ge [Version]'1.0.0' }
+      if ($installed) {
+        return
+      }
+
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+      Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope AllUsers -Force -AllowClobber
+      $Ansible.Changed = $true

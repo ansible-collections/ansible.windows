@@ -1,0 +1,219 @@
+- name: create folder to use as a local repository
+  win_file:
+    path: '{{ remote_tmp_dir }}\psresource_repo'
+    state: directory
+
+- block:
+  - name: ensure repository is not registered
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent
+
+  - name: register repository in check mode
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      uri: '{{ remote_tmp_dir }}\psresource_repo'
+      trusted: true
+      priority: 20
+    register: register_check
+    check_mode: true
+    diff: true
+
+  - name: get repository info after check mode
+    win_psresource_repository_info:
+      name: AnsibleTestRepo
+    register: register_check_info
+
+  - name: assert register in check mode did not register the repository
+    assert:
+      that:
+      - register_check is changed
+      - register_check.diff.before == {}
+      - register_check.diff.after.name == 'AnsibleTestRepo'
+      - register_check_info.repositories == []
+
+  - name: register repository
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      uri: '{{ remote_tmp_dir }}\psresource_repo'
+      trusted: true
+      priority: 20
+    register: register_repo
+    diff: true
+
+  - name: get repository info
+    win_psresource_repository_info:
+      name: AnsibleTestRepo
+    register: register_info
+
+  - name: assert repository was registered
+    assert:
+      that:
+      - register_repo is changed
+      - register_info.repositories | length == 1
+      - register_info.repositories[0].name == 'AnsibleTestRepo'
+      - register_info.repositories[0].uri.startswith('file:///')
+      - register_info.repositories[0].trusted == True
+      - register_info.repositories[0].priority == 20
+      - register_info.repositories[0].api_version == 'Local'
+      - register_info.repositories[0].credential_info is none
+
+  - name: register repository again
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      uri: '{{ remote_tmp_dir }}\psresource_repo'
+      trusted: true
+      priority: 20
+    register: register_again
+
+  - name: assert registering again is idempotent
+    assert:
+      that:
+      - not register_again is changed
+
+  - name: update only some properties in check mode
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      trusted: false
+      priority: 40
+    register: update_check
+    check_mode: true
+    diff: true
+
+  - name: assert update in check mode reports the change
+    assert:
+      that:
+      - update_check is changed
+      - update_check.diff.before.trusted == True
+      - update_check.diff.after.trusted == False
+      - update_check.diff.after.priority == 40
+
+  - name: update only some properties
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      trusted: false
+      priority: 40
+    register: update_repo
+
+  - name: get repository info after update
+    win_psresource_repository_info:
+      name: AnsibleTestRepo
+    register: update_info
+
+  - name: assert only the requested properties changed
+    assert:
+      that:
+      - update_repo is changed
+      - update_info.repositories[0].trusted == False
+      - update_info.repositories[0].priority == 40
+      - update_info.repositories[0].uri == register_info.repositories[0].uri
+
+  - name: update properties again
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      trusted: false
+      priority: 40
+    register: update_again
+
+  - name: assert updating again is idempotent
+    assert:
+      that:
+      - not update_again is changed
+
+  - name: get info using wildcards and a name that does not exist
+    win_psresource_repository_info:
+      name:
+      - AnsibleTest*
+      - ThisRepoDoesNotExist
+    register: wildcard_info
+
+  - name: assert info with wildcards works
+    assert:
+      that:
+      - not wildcard_info is changed
+      - wildcard_info.repositories | length == 1
+      - wildcard_info.repositories[0].name == 'AnsibleTestRepo'
+
+  - name: get info for a repository that does not exist
+    win_psresource_repository_info:
+      name: ThisRepoDoesNotExist
+    register: missing_info
+
+  - name: assert missing repository returns an empty list
+    assert:
+      that:
+      - missing_info.repositories == []
+
+  - name: fail to register a new repository without a uri
+    win_psresource_repository:
+      name: AnsibleTestRepoNoUri
+    register: no_uri
+    failed_when: >-
+      no_uri is not failed or
+      'uri is required' not in no_uri.msg
+
+  - name: fail with a name containing wildcards
+    win_psresource_repository:
+      name: AnsibleTest*
+      state: absent
+    register: wildcard_name
+    failed_when: >-
+      wildcard_name is not failed or
+      'wildcard' not in wildcard_name.msg
+
+  - name: fail with an invalid priority
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      priority: 101
+    register: bad_priority
+    failed_when: >-
+      bad_priority is not failed or
+      'priority must be between 0 and 100' not in bad_priority.msg
+
+  - name: unregister repository in check mode
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent
+    register: absent_check
+    check_mode: true
+
+  - name: get repository info after unregister in check mode
+    win_psresource_repository_info:
+      name: AnsibleTestRepo
+    register: absent_check_info
+
+  - name: assert unregister in check mode did not remove the repository
+    assert:
+      that:
+      - absent_check is changed
+      - absent_check_info.repositories | length == 1
+
+  - name: unregister repository
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent
+    register: absent_repo
+
+  - name: unregister repository again
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent
+    register: absent_again
+
+  - name: get repository info after unregister
+    win_psresource_repository_info:
+      name: AnsibleTestRepo
+    register: absent_info
+
+  - name: assert repository was unregistered
+    assert:
+      that:
+      - absent_repo is changed
+      - not absent_again is changed
+      - absent_info.repositories == []
+
+  always:
+  - name: ensure test repository is unregistered
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent

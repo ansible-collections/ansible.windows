@@ -1,0 +1,131 @@
+# PSResourceGet is not part of Windows PowerShell 5.1, this checks the module can install it.
+# It is removed from the host to do that, so it is only run where PowerShellGet can
+# install and uninstall it. It is put back at the end for any tests that run after this.
+- name: get the PowerShell version and PowerShellGet state
+  win_powershell:
+    script: |
+      $Ansible.Changed = $false
+      @{
+          Major = $PSVersionTable.PSVersion.Major
+          HasInstallModule = [bool](Get-Command -Name Install-Module -ErrorAction SilentlyContinue)
+          CanInstallPrerelease = [bool](Get-Command -Name Install-Module -ErrorAction SilentlyContinue |
+              Where-Object { $_.Parameters.ContainsKey('AllowPrerelease') })
+      }
+  register: host_info
+
+- name: run the tests on Windows PowerShell with PowerShellGet
+  when:
+  - host_info.output[0].Major == 5
+  - host_info.output[0].HasInstallModule
+  block:
+  - name: remove PSResourceGet if it is installed
+    win_powershell:
+      script: |
+        $ErrorActionPreference = 'Stop'
+        $Ansible.Changed = $false
+
+        # Uninstall-Module does not remove a copy that PSResourceGet installed itself, so delete the folders.
+        $found = @(Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet |
+            Where-Object { $_.ModuleBase -notlike "$env:SystemRoot*" -and $_.ModuleBase -notlike "$env:ProgramFiles\PowerShell\*" })
+        foreach ($m in $found) {
+            $moduleFolder = Split-Path -Path $m.ModuleBase -Parent
+            if (Test-Path -LiteralPath $moduleFolder) {
+                Remove-Item -LiteralPath $moduleFolder -Recurse -Force
+                $Ansible.Changed = $true
+            }
+        }
+
+  - name: check PSResourceGet is gone
+    win_powershell:
+      script: |
+        $Ansible.Changed = $false
+        @(Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet).Count
+    register: removed
+    failed_when: removed.output[0] != 0
+
+  - name: fail to install another resource while PSResourceGet is missing
+    win_psresource:
+      name: AnsibleTestPSResource
+    register: missing_other
+    failed_when: >-
+      missing_other is not failed or
+      'Microsoft.PowerShell.PSResourceGet module version 1.0.0 or newer is required' not in missing_other.msg
+
+  - name: fail to uninstall PSResourceGet while it is missing
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+      state: absent
+    register: missing_absent
+    failed_when: missing_absent is not failed
+
+  - name: fail with a version range while PSResourceGet is missing
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+      version: '[1.0,2.0)'
+    register: missing_range
+    failed_when: >-
+      missing_range is not failed or
+      'exact version' not in missing_range.msg
+
+  - name: fail to install a prerelease of PSResourceGet when PowerShellGet cannot
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+      prerelease: true
+    register: bootstrap_prerelease
+    failed_when: >-
+      bootstrap_prerelease is not failed or
+      'does not support it' not in bootstrap_prerelease.msg
+    when: not host_info.output[0].CanInstallPrerelease
+
+  - name: install PSResourceGet in check mode
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+    register: bootstrap_check
+    check_mode: true
+
+  - name: check PSResourceGet was not installed by check mode
+    win_powershell:
+      script: |
+        $Ansible.Changed = $false
+        @(Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet).Count
+    register: after_check
+
+  - name: assert check mode did not install PSResourceGet
+    assert:
+      that:
+      - bootstrap_check is changed
+      - bootstrap_check.resources[0].action == 'installed'
+      - after_check.output[0] == 0
+
+  - name: install PSResourceGet
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+    register: bootstrap
+
+  - name: install PSResourceGet again
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+    register: bootstrap_again
+
+  - name: get information about PSResourceGet
+    win_psresource_info:
+      name: Microsoft.PowerShell.PSResourceGet
+    register: bootstrap_info
+
+  - name: assert PSResourceGet was installed once
+    assert:
+      that:
+      - bootstrap is changed
+      - bootstrap.resources[0].action == 'installed'
+      - bootstrap.resources[0].versions | length == 1
+      - not bootstrap_again is changed
+      - bootstrap_again.resources[0].action == 'none'
+      - bootstrap_info.resources | length >= 1
+
+  always:
+  - name: make sure PSResourceGet is installed for any tests that run after this
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+    when:
+    - host_info.output[0].Major == 5
+    - host_info.output[0].HasInstallModule

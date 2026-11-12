@@ -1,0 +1,408 @@
+- name: create folder to use as a local repository
+  win_file:
+    path: '{{ remote_tmp_dir }}\psresource_repo'
+    state: directory
+
+- block:
+  - name: register local repository
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      uri: '{{ remote_tmp_dir }}\psresource_repo'
+      trusted: true
+
+  - name: publish test modules to the local repository
+    win_powershell:
+      parameters:
+        Repository: AnsibleTestRepo
+        Root: '{{ remote_tmp_dir }}\psresource_build'
+      script: |
+        param($Repository, $Root)
+
+        $ErrorActionPreference = 'Stop'
+        $Ansible.Changed = $false
+        foreach ($v in '1.0.0', '2.0.0', '3.0.0-beta1') {
+            $parts = $v -split '-'
+            $dir = Join-Path $Root "AnsibleTestPSResource_$v\AnsibleTestPSResource"
+            $null = New-Item -Path $dir -ItemType Directory -Force
+            Set-Content -LiteralPath "$dir\AnsibleTestPSResource.psm1" -Value 'function Get-AnsibleTestValue { 1 }'
+            # The manifest is written by hand as New-ModuleManifest cannot set a prerelease label
+            # on Windows PowerShell 5.1.
+            $prerelease = if ($parts[1]) { "Prerelease = '$($parts[1])'" } else { '' }
+            Set-Content -LiteralPath "$dir\AnsibleTestPSResource.psd1" -Value @"
+        @{
+            RootModule = 'AnsibleTestPSResource.psm1'
+            ModuleVersion = '$($parts[0])'
+            GUID = '$([Guid]::NewGuid())'
+            Author = 'Ansible'
+            Description = 'Module used for the win_psresource tests'
+            FunctionsToExport = @('Get-AnsibleTestValue')
+            PrivateData = @{ PSData = @{ $prerelease } }
+        }
+        "@
+            Publish-PSResource -Path $dir -Repository $Repository
+        }
+
+  - name: ensure the test module is not installed
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: absent
+
+  - name: install exact version in check mode
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      repository: AnsibleTestRepo
+    register: install_check
+    check_mode: true
+
+  - name: get info after install in check mode
+    win_psresource_info:
+      name: AnsibleTestPSResource
+    register: install_check_info
+
+  - name: assert install in check mode did not install anything
+    assert:
+      that:
+      - install_check is changed
+      - install_check.resources[0].action == 'installed'
+      - install_check.resources[0].versions == []
+      - install_check_info.resources == []
+
+  - name: install exact version
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      repository: AnsibleTestRepo
+    register: install
+
+  - name: install exact version again
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      repository: AnsibleTestRepo
+    register: install_again
+
+  - name: install without a version when one is installed
+    win_psresource:
+      name: AnsibleTestPSResource
+      repository: AnsibleTestRepo
+    register: install_any
+
+  - name: get info after install
+    win_psresource_info:
+      name: AnsibleTestPSResource
+    register: install_info
+
+  - name: assert install is correct and idempotent
+    assert:
+      that:
+      - install is changed
+      - install.resources[0].name == 'AnsibleTestPSResource'
+      - install.resources[0].action == 'installed'
+      - install.resources[0].versions == ['1.0.0']
+      - not install_again is changed
+      - install_again.resources[0].action == 'none'
+      - not install_any is changed
+      - install_info.resources | length == 1
+      - install_info.resources[0].name == 'AnsibleTestPSResource'
+      - install_info.resources[0].type == 'Module'
+      - install_info.resources[0].version == '1.0.0'
+      - install_info.resources[0].full_version == '1.0.0'
+      - install_info.resources[0].prerelease is none
+      - install_info.resources[0].is_prerelease == False
+      - install_info.resources[0].repository == 'AnsibleTestRepo'
+      - install_info.resources[0].author == 'Ansible'
+      - install_info.resources[0].installed_date is string
+
+  - name: update to latest in check mode
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      repository: AnsibleTestRepo
+    register: latest_check
+    check_mode: true
+
+  - name: assert latest in check mode reports an update
+    assert:
+      that:
+      - latest_check is changed
+      - latest_check.resources[0].action == 'updated'
+      - latest_check.resources[0].versions == ['1.0.0']
+
+  - name: update to latest
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      repository: AnsibleTestRepo
+    register: latest
+
+  - name: update to latest again
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      repository: AnsibleTestRepo
+    register: latest_again
+
+  - name: get info for versions in a range
+    win_psresource_info:
+      name: AnsibleTestPSResource
+      version: '[2.0.0,)'
+    register: latest_info
+
+  - name: assert latest installed the newest release and ignored the prerelease
+    assert:
+      that:
+      - latest is changed
+      - latest.resources[0].action == 'updated'
+      - "'2.0.0' in latest.resources[0].versions"
+      - "'3.0.0-beta1' not in latest.resources[0].versions"
+      - not latest_again is changed
+      - latest_info.resources | length == 1
+      - latest_info.resources[0].version == '2.0.0'
+
+  - name: update to latest including prereleases
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      prerelease: true
+      repository: AnsibleTestRepo
+    register: latest_pre
+
+  - name: get info for the prerelease
+    win_psresource_info:
+      name: AnsibleTestPSResource
+      version: 3.0.0-beta1
+    register: latest_pre_info
+
+  - name: assert latest with prerelease installed the prerelease
+    assert:
+      that:
+      - latest_pre is changed
+      - "'3.0.0-beta1' in latest_pre.resources[0].versions"
+      - latest_pre_info.resources | length == 1
+      - latest_pre_info.resources[0].version == '3.0.0'
+      - latest_pre_info.resources[0].prerelease == 'beta1'
+      - latest_pre_info.resources[0].full_version == '3.0.0-beta1'
+      - latest_pre_info.resources[0].is_prerelease == True
+
+  - name: publish a newer prerelease with the same version but a different label
+    win_powershell:
+      parameters:
+        Repository: AnsibleTestRepo
+        Root: '{{ remote_tmp_dir }}\psresource_build'
+      script: |
+        param($Repository, $Root)
+
+        $ErrorActionPreference = 'Stop'
+        $dir = Join-Path $Root 'AnsibleTestPSResource_3.0.0-beta2\AnsibleTestPSResource'
+        $null = New-Item -Path $dir -ItemType Directory -Force
+        Set-Content -LiteralPath "$dir\AnsibleTestPSResource.psm1" -Value 'function Get-AnsibleTestValue { 1 }'
+        Set-Content -LiteralPath "$dir\AnsibleTestPSResource.psd1" -Value @"
+        @{
+            RootModule = 'AnsibleTestPSResource.psm1'
+            ModuleVersion = '3.0.0'
+            GUID = '$([Guid]::NewGuid())'
+            Author = 'Ansible'
+            Description = 'Module used for the win_psresource tests'
+            FunctionsToExport = @('Get-AnsibleTestValue')
+            PrivateData = @{ PSData = @{ Prerelease = 'beta2' } }
+        }
+        "@
+        Publish-PSResource -Path $dir -Repository $Repository
+
+  - name: update to latest including prereleases when only the prerelease label changed
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      prerelease: true
+      repository: AnsibleTestRepo
+    register: latest_label
+
+  - name: update to latest including prereleases again
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: latest
+      prerelease: true
+      repository: AnsibleTestRepo
+    register: latest_label_again
+
+  - name: assert a changed prerelease label is picked up and then settles
+    assert:
+      that:
+      - latest_label is changed
+      - latest_label.resources[0].action == 'updated'
+      - "'3.0.0-beta2' in latest_label.resources[0].versions"
+      - "'3.0.0-beta1' not in latest_label.resources[0].versions"
+      - not latest_label_again is changed
+
+  - name: get info filtered by type
+    win_psresource_info:
+      name: AnsibleTest*
+      type: script
+    register: type_info
+
+  - name: assert type filter excludes modules
+    assert:
+      that:
+      - type_info.resources == []
+
+  - name: uninstall one version in check mode
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      state: absent
+    register: absent_version_check
+    check_mode: true
+
+  - name: uninstall one version
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      state: absent
+    register: absent_version
+
+  - name: uninstall one version again
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      state: absent
+    register: absent_version_again
+
+  - name: assert only the requested version was uninstalled
+    assert:
+      that:
+      - absent_version_check is changed
+      - absent_version_check.resources[0].versions | length == 3
+      - absent_version is changed
+      - absent_version.resources[0].action == 'uninstalled'
+      - "'1.0.0' not in absent_version.resources[0].versions"
+      - "'2.0.0' in absent_version.resources[0].versions"
+      - not absent_version_again is changed
+
+  - name: uninstall all versions
+    win_psresource:
+      name:
+      - AnsibleTestPSResource
+      - AnsibleTestPSResourceNotInstalled
+      state: absent
+    register: absent_all
+
+  - name: uninstall all versions again
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: absent
+    register: absent_all_again
+
+  - name: get info after uninstall
+    win_psresource_info:
+      name: AnsibleTestPSResource
+    register: absent_info
+
+  - name: assert all versions were uninstalled
+    assert:
+      that:
+      - absent_all is changed
+      - absent_all.resources | length == 2
+      - absent_all.resources[0].action == 'uninstalled'
+      - absent_all.resources[0].versions == []
+      - absent_all.resources[1].action == 'none'
+      - not absent_all_again is changed
+      - absent_info.resources == []
+
+  - name: install within a version range
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: '[1.0,2.0)'
+      repository: AnsibleTestRepo
+    register: install_range
+
+  - name: assert install within a range picked a matching version
+    assert:
+      that:
+      - install_range is changed
+      - install_range.resources[0].versions == ['1.0.0']
+
+  - name: reinstall always reports a change
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: 1.0.0
+      repository: AnsibleTestRepo
+      reinstall: true
+    register: reinstall
+
+  - name: assert reinstall
+    assert:
+      that:
+      - reinstall is changed
+      - reinstall.resources[0].action == 'reinstalled'
+      - reinstall.resources[0].versions == ['1.0.0']
+
+  - name: fail to install a resource that does not exist
+    win_psresource:
+      name: AnsibleTestPSResourceDoesNotExist
+      repository: AnsibleTestRepo
+    register: missing
+    failed_when: missing is not failed
+
+  - name: fail to update a resource that does not exist
+    win_psresource:
+      name: AnsibleTestPSResourceDoesNotExist
+      state: latest
+      repository: AnsibleTestRepo
+    register: missing_latest
+    failed_when: >-
+      missing_latest is not failed or
+      'could not be found' not in missing_latest.msg
+
+  - name: fail with a name containing wildcards
+    win_psresource:
+      name: AnsibleTest*
+    register: wildcard
+    failed_when: >-
+      wildcard is not failed or
+      'wildcard' not in wildcard.msg
+
+  - name: fail with a malformed version
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: '[bad'
+    register: bad_version
+    failed_when: bad_version is not failed
+
+  - name: fail with a malformed version range
+    win_psresource:
+      name: AnsibleTestPSResource
+      version: '(1.0)'
+    register: bad_range
+    failed_when: >-
+      bad_range is not failed or
+      'not a valid version or NuGet version range' not in bad_range.msg
+
+  - name: fail with a version range that has reversed bounds
+    win_psresource_info:
+      name: AnsibleTestPSResource
+      version: '[2.0,1.0]'
+    register: reversed_range
+    failed_when: >-
+      reversed_range is not failed or
+      'not a valid version or NuGet version range' not in reversed_range.msg
+
+  - name: fail to uninstall PSResourceGet with this module
+    win_psresource:
+      name: Microsoft.PowerShell.PSResourceGet
+      state: absent
+    register: absent_self
+    failed_when: >-
+      absent_self is not failed or
+      'cannot be uninstalled' not in absent_self.msg
+
+  always:
+  - name: uninstall the test module
+    win_psresource:
+      name: AnsibleTestPSResource
+      state: absent
+
+  - name: unregister local repository
+    win_psresource_repository:
+      name: AnsibleTestRepo
+      state: absent

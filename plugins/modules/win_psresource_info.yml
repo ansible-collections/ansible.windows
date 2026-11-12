@@ -1,0 +1,217 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_psresource_info
+  short_description: Gather information about installed PowerShell resources
+  description:
+    - Gather information about PowerShell modules and scripts installed with C(Microsoft.PowerShell.PSResourceGet).
+    - This module is the PSResourceGet equivalent of C(community.windows.win_psmodule_info),
+      which only works with PowerShellGet v2.
+    - Only resources installed by PSResourceGet or PowerShellGet are returned. Use C(Get-Module -ListAvailable)
+      to find modules that were copied to a module path by other means.
+  version_added: 3.10.0
+  options:
+    name:
+      description:
+        - The names of the resources to retrieve.
+        - Supports wildcard patterns like V(?) for single character matching
+          and V(*) for multiple character matching.
+        - If omitted, all installed resources are returned.
+      type: list
+      elements: str
+      default:
+        - '*'
+    version:
+      description:
+        - Only return resources whose version matches this value.
+        - This can be an exact version like V(1.2.3) or a NuGet version range like V([1.0,2.0)).
+        - See L(NuGet version ranges,https://learn.microsoft.com/nuget/concepts/package-versioning#version-ranges)
+          for the range syntax. A malformed version or range fails the task.
+      type: str
+    type:
+      description:
+        - Only return resources of this type.
+      type: str
+      choices: [module, script]
+    scope:
+      description:
+        - Only search for resources installed in this scope.
+        - If not set, both scopes are searched.
+      type: str
+      choices: [currentuser, allusers]
+    path:
+      description:
+        - Search for resources in this folder instead of the default install locations.
+      type: path
+  requirements:
+    - Microsoft.PowerShell.PSResourceGet 1.0.0 or newer
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: N/A
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_psresource
+    - module: ansible.windows.win_psresource_repository_info
+  author:
+    - Mathieu Fortin (@mfortin)
+
+EXAMPLES: |
+  - name: Get all installed resources
+    ansible.windows.win_psresource_info:
+    register: all_resources
+
+  - name: Get information about a specific module
+    ansible.windows.win_psresource_info:
+      name: Pester
+    register: pester_info
+
+  - name: Get installed Az modules that are at least version 10
+    ansible.windows.win_psresource_info:
+      name: Az.*
+      version: '[10.0,)'
+
+  - name: Get all installed scripts for all users
+    ansible.windows.win_psresource_info:
+      type: script
+      scope: allusers
+
+  - name: Find resources that were installed from the PSGallery repository
+    ansible.builtin.set_fact:
+      gallery_resources: "{{ all_resources.resources | selectattr('repository', 'eq', 'PSGallery') | list }}"
+
+RETURN:
+  resources:
+    description:
+      - A list of installed resources, or an empty list if there are none.
+      - A resource that is installed in multiple versions is returned once for each version.
+    returned: always
+    type: list
+    elements: dict
+    contains:
+      name:
+        description: The name of the resource.
+        returned: always
+        type: str
+        sample: Pester
+      type:
+        description: The type of the resource, like V(Module) or V(Script).
+        returned: always
+        type: str
+        sample: Module
+      version:
+        description: The version of the resource without any prerelease label.
+        returned: always
+        type: str
+        sample: 5.7.1
+      prerelease:
+        description: The prerelease label of the version, or V(null) if it is not a prerelease.
+        returned: always
+        type: str
+        sample: beta1
+      is_prerelease:
+        description: Whether the installed version is a prerelease.
+        returned: always
+        type: bool
+        sample: false
+      full_version:
+        description: The version including the prerelease label, like V(1.0.0-beta1).
+        returned: always
+        type: str
+        sample: 5.7.1
+      repository:
+        description: The name of the repository the resource was installed from.
+        returned: always
+        type: str
+        sample: PSGallery
+      repository_source_location:
+        description: The location of the repository at the time the resource was installed.
+        returned: always
+        type: str
+        sample: https://www.powershellgallery.com/api/v2
+      installed_location:
+        description: The folder the resource is installed in.
+        returned: always
+        type: str
+        sample: C:\Program Files\PowerShell\Modules
+      installed_date:
+        description: When the resource was installed, as an ISO 8601 UTC timestamp.
+        returned: always
+        type: str
+        sample: '2026-06-08T15:36:27Z'
+      published_date:
+        description: When the version was published, as an ISO 8601 UTC timestamp.
+        returned: always
+        type: str
+        sample: '2025-08-05T01:44:18Z'
+      updated_date:
+        description: When the resource was last updated in the repository, as an ISO 8601 UTC timestamp.
+        returned: always
+        type: str
+        sample: null
+      author:
+        description: The author of the resource.
+        returned: always
+        type: str
+        sample: Pester Team
+      company_name:
+        description: The company that owns the resource.
+        returned: always
+        type: str
+        sample: Pester
+      copyright:
+        description: The copyright statement of the resource.
+        returned: always
+        type: str
+        sample: Copyright (c) Pester Team
+      description:
+        description: The description of the resource.
+        returned: always
+        type: str
+        sample: Pester provides a framework for running BDD style tests.
+      license_uri:
+        description: The URI of the license of the resource.
+        returned: always
+        type: str
+        sample: https://www.apache.org/licenses/LICENSE-2.0.txt
+      project_uri:
+        description: The URI of the project page of the resource.
+        returned: always
+        type: str
+        sample: https://github.com/pester/Pester
+      icon_uri:
+        description: The URI of the icon of the resource.
+        returned: always
+        type: str
+        sample: null
+      release_notes:
+        description: The release notes of the resource.
+        returned: always
+        type: str
+        sample: null
+      tags:
+        description: The tags of the resource.
+        returned: always
+        type: list
+        elements: str
+        sample: [testing, tdd, PSModule]
+      dependencies:
+        description: The resources this resource depends on.
+        returned: always
+        type: list
+        elements: dict
+        contains:
+          name:
+            description: The name of the dependency.
+            type: str
+            sample: Az.Accounts
+          version_range:
+            description: The NuGet version range required of the dependency, or V(null) for any version.
+            type: str
+            sample: '[2.0.0, )'
