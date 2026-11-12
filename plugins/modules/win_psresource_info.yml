@@ -27,7 +27,7 @@ DOCUMENTATION:
         - Only return resources whose version matches this value.
         - This can be an exact version like V(1.2.3) or a NuGet version range like V([1.0,2.0)).
         - See L(NuGet version ranges,https://learn.microsoft.com/nuget/concepts/package-versioning#version-ranges)
-          for the range syntax.
+          for the range syntax. A malformed version or range fails the task.
       type: str
     type:
       description:

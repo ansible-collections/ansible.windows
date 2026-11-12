@@ -59,7 +59,7 @@ DOCUMENTATION:
         - The SecretManagement vault and secret used to authenticate with the repository.
         - The secret itself is stored in the vault, not in the repository registration.
         - The C(Microsoft.PowerShell.SecretManagement) module and a registered vault are needed
-          to use the credential.
+          to use the credential. The task fails if the module is not installed.
       type: dict
       suboptions:
         vault_name:

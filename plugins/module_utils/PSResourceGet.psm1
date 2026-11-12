@@ -15,6 +15,26 @@ function Import-AnsiblePSResourceGet {
     }
 }
 
+function Test-AnsiblePSResourceVersion {
+    <#
+    .SYNOPSIS
+    Checks a version or NuGet version range is accepted by PSResourceGet.
+    Returns an error message if it is not, or $null if it is valid.
+    .DESCRIPTION
+    This asks the cmdlet itself so what is allowed never differs from PSResourceGet.
+    #>
+    param([string]$Version)
+
+    try {
+        # The name can't match anything, only the -Version argument is checked.
+        $null = Get-InstalledPSResource -Name '__ansible_version_check__' -Version $Version -ErrorAction SilentlyContinue
+    }
+    catch {
+        return "version '$Version' is not a valid version or NuGet version range. Use an exact version like 1.2.3 " +
+        "or a range like [1.0,2.0), with square brackets to include a bound and parentheses to exclude it."
+    }
+}
+
 function ConvertTo-AnsiblePSResourceDate {
     <#
     .SYNOPSIS
@@ -122,5 +142,5 @@ function ConvertTo-AnsiblePSResourceInfo {
     }
 }
 
-Export-ModuleMember -Function Import-AnsiblePSResourceGet, ConvertTo-AnsiblePSResourceRepositoryInfo, `
+Export-ModuleMember -Function Import-AnsiblePSResourceGet, Test-AnsiblePSResourceVersion, ConvertTo-AnsiblePSResourceRepositoryInfo, `
     ConvertTo-AnsiblePSResourceInfo, Get-AnsiblePSResourceVersionString

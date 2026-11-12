@@ -27,6 +27,13 @@ catch {
     $module.FailJson($_.Exception.Message, $_)
 }
 
+if ($module.Params.version) {
+    $versionError = Test-AnsiblePSResourceVersion -Version $module.Params.version
+    if ($versionError) {
+        $module.FailJson($versionError)
+    }
+}
+
 $getParams = @{
     Name = $module.Params.name
     # A name that matches nothing is not an error for an info module.

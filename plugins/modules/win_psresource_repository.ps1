@@ -52,6 +52,11 @@ if ($null -ne $priority -and ($priority -lt 0 -or $priority -gt 100)) {
     $module.FailJson("priority must be between 0 and 100, got $priority.")
 }
 
+if ($state -eq 'present' -and $credentialInfo -and
+    -not (Get-Module -ListAvailable -Name Microsoft.PowerShell.SecretManagement)) {
+    $module.FailJson("credential_info needs the Microsoft.PowerShell.SecretManagement module to read the secret, but it is not installed.")
+}
+
 $desiredUri = $null
 if ($uri) {
     if (-not [Uri]::TryCreate($uri, [UriKind]::Absolute, [ref]$desiredUri)) {
