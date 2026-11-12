@@ -70,7 +70,9 @@ try {
 catch {
     $importError = $_
     if ($state -eq 'absent' -or $names -notcontains $psResourceGetName) {
-        $module.FailJson("$($importError.Exception.Message) Install it first, or include '$psResourceGetName' in name to install it with this module.", $importError)
+        $msg = "$($importError.Exception.Message) Install it first, " +
+        "or include '$psResourceGetName' in name to install it with this module."
+        $module.FailJson($msg, $importError)
     }
 
     $installModule = Get-Command -Name Install-Module -ErrorAction SilentlyContinue
@@ -83,7 +85,10 @@ catch {
 
     if ($prerelease -and -not $installModule.Parameters.ContainsKey('AllowPrerelease')) {
         # The PowerShellGet 1.0.0.1 that comes with Windows PowerShell 5.1 cannot install prereleases.
-        $module.FailJson("Cannot install a prerelease of $psResourceGetName as the installed PowerShellGet does not support it. Update PowerShellGet to 1.6.0 or newer, or install a release.")
+        $module.FailJson(
+            "Cannot install a prerelease of $psResourceGetName as the installed PowerShellGet does not support it. " +
+            "Update PowerShellGet to 1.6.0 or newer, or install a release."
+        )
     }
 
     $bootstrapped = $true
