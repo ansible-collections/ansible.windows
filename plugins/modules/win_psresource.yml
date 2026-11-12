@@ -1,0 +1,216 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_psresource
+  short_description: Install, update, or remove PowerShell modules and scripts
+  description:
+    - Installs, updates, or uninstalls PowerShell modules and scripts using C(Microsoft.PowerShell.PSResourceGet).
+    - This module is the PSResourceGet equivalent of C(community.windows.win_psmodule),
+      which only works with PowerShellGet v2.
+    - The module does not install PSResourceGet itself. PowerShell 7.4 and newer include it. For Windows PowerShell 5.1
+      it must be installed first, for example with M(ansible.windows.win_powershell) or M(ansible.windows.win_package).
+  version_added: 3.10.0
+  options:
+    name:
+      description:
+        - The names of the resources to manage.
+        - Wildcard characters are not supported.
+        - If more than one name is set, O(version) applies to all of them.
+      type: list
+      elements: str
+      required: true
+    state:
+      description:
+        - If V(present), the resource is installed if no matching version is installed.
+        - If V(latest), the resource is installed, or updated if a newer matching version is available in a repository.
+        - If V(absent), the resource is uninstalled. All versions are removed unless O(version) is set.
+      type: str
+      choices: [absent, latest, present]
+      default: present
+    version:
+      description:
+        - The version of the resource to manage.
+        - This can be an exact version like V(1.2.3) or a NuGet version range like V([1.0,2.0)).
+        - See L(NuGet version ranges,https://learn.microsoft.com/nuget/concepts/package-versioning#version-ranges)
+          for the range syntax. Unlike PowerShellGet v2 there are no separate minimum and maximum version options.
+        - With O(state=present) any installed version that matches counts as installed.
+        - With O(state=latest) the newest version that matches the range is installed.
+        - With O(state=absent) only the versions that match are uninstalled.
+      type: str
+    prerelease:
+      description:
+        - Whether prerelease versions are considered when installing or updating.
+        - Has no effect on O(state=absent).
+      type: bool
+      default: false
+    repository:
+      description:
+        - The name of the repository to install from.
+        - If not set, all registered repositories are searched in priority order.
+      type: str
+    scope:
+      description:
+        - The scope to install to, or to look for installed resources in.
+        - If not set, installing uses the PSResourceGet default of V(currentuser) and
+          looking for installed resources searches both scopes.
+        - V(allusers) requires the module to run with administrator rights.
+      type: str
+      choices: [currentuser, allusers]
+    trust_repository:
+      description:
+        - Install from a repository that is not trusted without prompting.
+        - Needed for untrusted repositories, such as PSGallery by default, as the prompt cannot be answered interactively.
+        - You can also mark the repository as trusted with M(ansible.windows.win_psresource_repository).
+      type: bool
+      default: false
+    reinstall:
+      description:
+        - Install the resource even if a matching version is already installed, overwriting it.
+        - Only used with O(state=present). The task reports a change each time it runs.
+      type: bool
+      default: false
+    accept_license:
+      description:
+        - Accept the license of the resource and any dependencies.
+        - Needed for resources that require license acceptance, as the prompt cannot be answered interactively.
+        - Whether a license must be accepted cannot be detected in check mode.
+      type: bool
+      default: false
+    no_clobber:
+      description:
+        - Prevent installing a resource with commands that have the same names as commands that already exist.
+      type: bool
+      default: false
+    skip_dependency_check:
+      description:
+        - Skip dependency checks when installing, updating, or uninstalling a resource.
+      type: bool
+      default: false
+    authenticode_check:
+      description:
+        - Require installed files to have a valid Authenticode signature.
+      type: bool
+      default: false
+    username:
+      description:
+        - The username to authenticate with against a private repository.
+        - Must be used with O(password).
+        - Consider O(ansible.windows.win_psresource_repository#module:credential_info) to register a repository with a SecretManagement vault.
+      type: str
+    password:
+      description:
+        - The password to authenticate with against a private repository.
+        - Must be used with O(username).
+      type: str
+  requirements:
+    - Microsoft.PowerShell.PSResourceGet 1.0.0 or newer
+  notes:
+    - Resources are installed for the account the module runs as unless O(scope=allusers) is used.
+    - PowerShellGet v2 and PSResourceGet install resources to the same locations, so a resource installed with
+      one can be found by the other.
+    - O(state=latest) installs the newer version alongside the existing ones. Older versions stay installed,
+      use O(state=absent) with O(version) to remove them.
+    - In check mode, the returned C(versions) are the versions that are currently installed.
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: none
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_psresource_info
+    - module: ansible.windows.win_psresource_repository
+    - module: ansible.windows.win_psresource_repository_info
+  author:
+    - Mathieu Fortin (@mfortin)
+
+EXAMPLES: |
+  - name: Install a module
+    ansible.windows.win_psresource:
+      name: Pester
+      trust_repository: true
+
+  - name: Install an exact version of a module for all users
+    ansible.windows.win_psresource:
+      name: Pester
+      version: 5.7.1
+      scope: allusers
+      trust_repository: true
+
+  - name: Install a module within a version range
+    ansible.windows.win_psresource:
+      name: Az.Accounts
+      version: '[2.0,3.0)'
+      trust_repository: true
+
+  - name: Install multiple modules from a specific repository
+    ansible.windows.win_psresource:
+      name:
+        - PSReadLine
+        - PSScriptAnalyzer
+      repository: MyRepository
+
+  - name: Install or update a module to the newest version
+    ansible.windows.win_psresource:
+      name: Pester
+      state: latest
+      trust_repository: true
+
+  - name: Install the newest version including prereleases
+    ansible.windows.win_psresource:
+      name: PSReadLine
+      state: latest
+      prerelease: true
+      trust_repository: true
+
+  - name: Install a module that requires the license to be accepted
+    ansible.windows.win_psresource:
+      name: ModuleWithLicense
+      accept_license: true
+      trust_repository: true
+
+  - name: Uninstall all versions of a module
+    ansible.windows.win_psresource:
+      name: Pester
+      state: absent
+
+  - name: Uninstall one version of a module
+    ansible.windows.win_psresource:
+      name: Pester
+      version: 5.6.0
+      state: absent
+
+RETURN:
+  resources:
+    description:
+      - The result for each of the names in O(name), in the same order.
+    returned: always
+    type: list
+    elements: dict
+    contains:
+      name:
+        description: The name of the resource.
+        returned: always
+        type: str
+        sample: Pester
+      action:
+        description:
+          - What the module did for this resource.
+          - V(none) if nothing needed to change, otherwise V(installed), V(updated), V(reinstalled), or V(uninstalled).
+          - In check mode this is what the module would do.
+        returned: always
+        type: str
+        sample: installed
+      versions:
+        description:
+          - The versions of the resource that are installed after the module ran, including any prerelease label.
+          - In check mode these are the versions that are currently installed.
+        returned: always
+        type: list
+        elements: str
+        sample: ['5.7.1']

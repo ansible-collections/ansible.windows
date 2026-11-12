@@ -1,0 +1,112 @@
+# Copyright: (c) 2026, Ansible Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  module: win_psresource_repository_info
+  short_description: Gather information about PSResourceGet repositories
+  description:
+    - Gather information about all or specific repositories registered with
+      C(Microsoft.PowerShell.PSResourceGet).
+    - This module is the PSResourceGet equivalent of C(community.windows.win_psrepository_info),
+      which only works with PowerShellGet v2.
+    - Repositories are registered per user, so the result reflects the repositories of the
+      account the module runs as.
+  version_added: 3.10.0
+  options:
+    name:
+      description:
+        - The names of the repositories to retrieve.
+        - Supports wildcard patterns like V(?) for single character matching
+          and V(*) for multiple character matching.
+        - If omitted, all repositories are returned.
+      type: list
+      elements: str
+      default:
+        - '*'
+  requirements:
+    - Microsoft.PowerShell.PSResourceGet 1.0.0 or newer
+  extends_documentation_fragment:
+    - ansible.builtin.action_common_attributes
+  attributes:
+    check_mode:
+      support: full
+    diff_mode:
+      support: N/A
+    platform:
+      platforms:
+        - windows
+  seealso:
+    - module: ansible.windows.win_psresource_repository
+    - module: ansible.windows.win_psresource_info
+    - module: ansible.windows.win_psresource
+  author:
+    - Mathieu Fortin (@mfortin)
+
+EXAMPLES: |
+  - name: Get information about all repositories
+    ansible.windows.win_psresource_repository_info:
+    register: repo_info
+
+  - name: Get information about the PSGallery repository
+    ansible.windows.win_psresource_repository_info:
+      name: PSGallery
+    register: gallery_info
+
+  - name: Get information about repositories matching a pattern
+    ansible.windows.win_psresource_repository_info:
+      name:
+        - MyCompany*
+        - Internal?
+
+RETURN:
+  repositories:
+    description:
+      - A list of repositories found, or an empty list if there are none.
+    returned: always
+    type: list
+    elements: dict
+    contains:
+      name:
+        description: The name of the repository.
+        returned: always
+        type: str
+        sample: PSGallery
+      uri:
+        description: The location used to find and retrieve resources.
+        returned: always
+        type: str
+        sample: https://www.powershellgallery.com/api/v2
+      trusted:
+        description: Whether the repository is trusted.
+        returned: always
+        type: bool
+        sample: false
+      priority:
+        description:
+          - The priority of the repository, from V(0) to V(100).
+          - Repositories with a lower number are searched first.
+        returned: always
+        type: int
+        sample: 50
+      api_version:
+        description:
+          - The API version of the repository.
+          - Known values are V(Unknown), V(V2), V(V3), V(Local), V(NugetServer), and V(ContainerRegistry).
+        returned: always
+        type: str
+        sample: V2
+      credential_info:
+        description:
+          - The SecretManagement vault and secret used to authenticate with the repository.
+          - V(null) if no credential information is configured.
+        returned: always
+        type: dict
+        contains:
+          vault_name:
+            description: The name of the SecretManagement vault.
+            type: str
+            sample: MyVault
+          secret_name:
+            description: The name of the secret in the vault.
+            type: str
+            sample: MyRepoSecret
