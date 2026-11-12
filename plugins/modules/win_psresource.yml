@@ -9,7 +9,7 @@ DOCUMENTATION:
     - This module is the PSResourceGet equivalent of C(community.windows.win_psmodule),
       which only works with PowerShellGet v2.
     - The module does not install PSResourceGet itself. PowerShell 7.4 and newer include it. For Windows PowerShell 5.1
-      it must be installed first, for example with M(ansible.windows.win_powershell) or M(ansible.windows.win_package).
+      it must be installed first. See the examples for a task that does this with M(ansible.windows.win_powershell).
   version_added: 3.10.0
   options:
     name:
@@ -130,6 +130,21 @@ DOCUMENTATION:
     - Mathieu Fortin (@mfortin)
 
 EXAMPLES: |
+  - name: Install PSResourceGet if it is missing, needed on Windows PowerShell 5.1
+    ansible.windows.win_powershell:
+      script: |
+        $Ansible.Changed = $false
+        $installed = Get-Module -ListAvailable -Name Microsoft.PowerShell.PSResourceGet |
+          Where-Object { $_.Version -ge [Version]'1.0.0' }
+        if ($installed) {
+          return
+        }
+
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+        Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope AllUsers -Force -AllowClobber
+        $Ansible.Changed = $true
+
   - name: Install a module
     ansible.windows.win_psresource:
       name: Pester
