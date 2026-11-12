@@ -39,73 +39,49 @@ $prerelease = $module.Params.prerelease
 $repository = $module.Params.repository
 $scope = $module.Params.scope
 
-# Hide the progress bars, they only add noise to the module output.
+$psResourceGetName = 'Microsoft.PowerShell.PSResourceGet'
+
 $ProgressPreference = 'SilentlyContinue'
 
-foreach ($name in $names) {
-    if ([WildcardPattern]::ContainsWildcardCharacters($name)) {
-        $module.FailJson("The resource name '$name' cannot contain wildcard characters.")
+#region Functions
+
+function Write-CmdletWarning {
+    param($Warning)
+
+    foreach ($w in $Warning) {
+        $module.Warn($w.Message)
     }
 }
 
-$credential = $null
-if ($module.Params.username) {
-    $securePassword = [System.Net.NetworkCredential]::new('', $module.Params.password).SecurePassword
-    $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $module.Params.username, $securePassword
-}
+function Assert-CanInstallPSResourceGet {
+    <#
+    .SYNOPSIS
+    Fails the module if PSResourceGet cannot be installed with the options given.
+    #>
+    param($InstallModuleCommand, $ImportError)
 
-# PSResourceGet can install itself when it is asked for by name. It is installed
-# through the PowerShellGet module as PSResourceGet is not there to do it.
-$psResourceGetName = 'Microsoft.PowerShell.PSResourceGet'
-$bootstrapped = $false
-
-if ($state -eq 'absent' -and $names -contains $psResourceGetName) {
-    # Its files are in use as the module is loaded, so removing them would leave a broken install.
-    $module.FailJson("$psResourceGetName cannot be uninstalled with this module as it is in use. Use Uninstall-Module in a separate task.")
-}
-
-try {
-    Import-AnsiblePSResourceGet
-}
-catch {
-    $importError = $_
-    if ($state -eq 'absent' -or $names -notcontains $psResourceGetName) {
-        $msg = "$($importError.Exception.Message) Install it first, " +
-        "or include '$psResourceGetName' in name to install it with this module."
-        $module.FailJson($msg, $importError)
+    if (-not $InstallModuleCommand) {
+        $module.FailJson("Cannot install $psResourceGetName as Install-Module from PowerShellGet is not available.", $ImportError)
     }
 
-    $installModule = Get-Command -Name Install-Module -ErrorAction SilentlyContinue
-    if (-not $installModule) {
-        $module.FailJson("Cannot install $psResourceGetName as the Install-Module command from PowerShellGet is not available.", $importError)
-    }
+    # Install-Module only understands exact versions.
     if ($version -and $version -notmatch '^\d+(\.\d+){1,3}$') {
         $module.FailJson("version must be an exact version like 1.2.3 to install $psResourceGetName, got '$version'.")
     }
 
-    if ($prerelease -and -not $installModule.Parameters.ContainsKey('AllowPrerelease')) {
-        # The PowerShellGet 1.0.0.1 that comes with Windows PowerShell 5.1 cannot install prereleases.
+    # The PowerShellGet 1.0.0.1 in Windows PowerShell 5.1 has no -AllowPrerelease.
+    if ($prerelease -and -not $InstallModuleCommand.Parameters.ContainsKey('AllowPrerelease')) {
         $module.FailJson(
             "Cannot install a prerelease of $psResourceGetName as the installed PowerShellGet does not support it. " +
             "Update PowerShellGet to 1.6.0 or newer, or install a release."
         )
     }
+}
 
-    $bootstrapped = $true
-    if ($module.CheckMode) {
-        # Nothing else can be checked as the module needed for that is not installed.
-        $others = @($names | Where-Object { $_ -ne $psResourceGetName })
-        if ($others.Count -gt 0) {
-            $module.Warn("Check mode cannot check '$($others -join "', '")' until $psResourceGetName is installed.")
-        }
-        $module.Result.changed = $true
-        $module.Result.resources = @(@{ name = $psResourceGetName; action = 'installed'; versions = @() })
-        $module.ExitJson()
-    }
-
+function Install-PSResourceGetWithPowerShellGet {
     $installParams = @{
         Name = $psResourceGetName
-        # Also installs the NuGet package provider without prompting if it is needed.
+        # -Force also installs the NuGet provider without prompting.
         Force = $true
         AllowClobber = $true
         ErrorAction = 'Stop'
@@ -118,43 +94,23 @@ catch {
     if ($credential) { $installParams.Credential = $credential }
 
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        # The PowerShell Gallery needs TLS 1.2, older hosts do not use it by default.
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor
+        [Net.SecurityProtocolType]::Tls12
         Install-Module @installParams
     }
     catch {
         $module.FailJson("Failed to install ${psResourceGetName}: $($_.Exception.Message)", $_)
     }
-    foreach ($w in $cmdWarnings) { $module.Warn($w.Message) }
-    $module.Result.changed = $true
-
-    try {
-        Import-AnsiblePSResourceGet
-    }
-    catch {
-        $module.FailJson("Installed $psResourceGetName but could not load it: $($_.Exception.Message)", $_)
-    }
+    Write-CmdletWarning -Warning $cmdWarnings
 }
 
-if ($version) {
-    $versionError = Test-AnsiblePSResourceVersion -Version $version
-    if ($versionError) {
-        $module.FailJson($versionError)
-    }
-}
-
-Function Write-CmdletWarning {
-    param($Warning)
-    foreach ($w in $Warning) {
-        $module.Warn($w.Message)
-    }
-}
-
-Function Get-InstalledResource {
+function Get-InstalledResource {
     param([string]$Name, [string]$Version)
 
     $getParams = @{
         Name = $Name
-        # A resource that isn't installed is not an error, a malformed version still throws.
+        # Not being installed is not an error here, but a malformed version still throws.
         ErrorAction = 'SilentlyContinue'
     }
     if ($Version) { $getParams.Version = $Version }
@@ -168,7 +124,19 @@ Function Get-InstalledResource {
     }
 }
 
-Function Get-LatestAvailableResource {
+function Get-VersionList {
+    param($Resources)
+
+    [string[]]@(foreach ($resource in $Resources) {
+            Get-AnsiblePSResourceVersionString -Resource $resource
+        })
+}
+
+function Get-LatestAvailableResource {
+    <#
+    .SYNOPSIS
+    Finds the newest version that Install-PSResource and Update-PSResource would pick.
+    #>
     param([string]$Name, [string]$Version)
 
     $findParams = @{
@@ -186,43 +154,42 @@ Function Get-LatestAvailableResource {
     catch {
         $module.FailJson("Failed to find resource '$Name' in a repository: $($_.Exception.Message)", $_)
     }
-
     if ($found.Count -eq 0) {
         return
     }
 
-    # Find-PSResource returns the newest version from every repository, but installing
-    # and updating use the first repository that has the resource by priority. Only
-    # consider the repository they would use or the task never settles on a version.
+    # Find-PSResource returns the newest version from every repository, but installing and
+    # updating use the first repository with the resource, by priority. Only look at that
+    # one, otherwise the task keeps trying to reach a version it will never install.
     $priorities = @{}
     foreach ($repo in @(Get-PSResourceRepository -ErrorAction SilentlyContinue)) {
         $priorities[$repo.Name] = [int]$repo.Priority
     }
-    $chosenRepo = $null
-    $chosenPriority = 0
+
+    $defaultPriority = 50
+    $preferred = $null
+    $preferredPriority = 0
     foreach ($candidate in $found) {
-        $priority = if ($priorities.ContainsKey($candidate.Repository)) { $priorities[$candidate.Repository] } else { 50 }
-        if ($null -eq $chosenRepo -or $priority -lt $chosenPriority) {
-            $chosenRepo = $candidate.Repository
-            $chosenPriority = $priority
+        $priority = $defaultPriority
+        if ($priorities.ContainsKey($candidate.Repository)) {
+            $priority = $priorities[$candidate.Repository]
+        }
+        if ($null -eq $preferred -or $priority -lt $preferredPriority) {
+            $preferred = $candidate.Repository
+            $preferredPriority = $priority
         }
     }
 
-    # Releases sort ahead of prereleases of the same version.
+    # A release is newer than a prerelease of the same version.
     $found |
-        Where-Object { $_.Repository -eq $chosenRepo } |
+        Where-Object { $_.Repository -eq $preferred } |
         Sort-Object -Property @{ Expression = { $_.Version }; Descending = $true },
         @{ Expression = { [bool]$_.IsPrerelease }; Descending = $false },
         @{ Expression = { [string]$_.Prerelease }; Descending = $true } |
         Select-Object -First 1
 }
 
-Function Get-VersionList {
-    param($Resources)
-    , @(foreach ($resource in $Resources) { Get-AnsiblePSResourceVersionString -Resource $resource })
-}
-
-Function Invoke-Install {
+function Invoke-Install {
     param([string]$Name, [string]$Version, [switch]$Update, [switch]$ForceReinstall)
 
     $params = @{
@@ -251,112 +218,201 @@ Function Invoke-Install {
         }
     }
     catch {
-        $action = if ($Update) { 'update' } else { 'install' }
-        $module.FailJson("Failed to $action resource '$Name': $($_.Exception.Message)", $_)
+        $verb = if ($Update) { 'update' } else { 'install' }
+        $module.FailJson("Failed to $verb resource '$Name': $($_.Exception.Message)", $_)
     }
     Write-CmdletWarning -Warning $cmdWarnings
 }
 
-$results = [System.Collections.Generic.List[Object]]::new()
+function Invoke-Uninstall {
+    param([string]$Name)
 
-foreach ($name in $names) {
-    $action = 'none'
-    $installed = @(Get-InstalledResource -Name $name -Version $version)
-
-    if ($state -eq 'absent') {
-        if ($installed.Count -gt 0) {
-            $action = 'uninstalled'
-            if (-not $module.CheckMode) {
-                $uninstallParams = @{
-                    Name = $name
-                    ErrorAction = 'Stop'
-                    WarningVariable = 'cmdWarnings'
-                }
-                if ($version) { $uninstallParams.Version = $version }
-                if ($scope) { $uninstallParams.Scope = $scope }
-                if ($module.Params.skip_dependency_check) { $uninstallParams.SkipDependencyCheck = $true }
-                try {
-                    Uninstall-PSResource @uninstallParams
-                }
-                catch {
-                    $module.FailJson("Failed to uninstall resource '$name': $($_.Exception.Message)", $_)
-                }
-                Write-CmdletWarning -Warning $cmdWarnings
-            }
-        }
+    $params = @{
+        Name = $Name
+        ErrorAction = 'Stop'
+        WarningVariable = 'cmdWarnings'
     }
-    elseif ($state -eq 'present') {
-        if ($installed.Count -eq 0) {
-            $action = 'installed'
-        }
-        elseif ($module.Params.reinstall) {
-            $action = 'reinstalled'
-        }
+    if ($version) { $params.Version = $version }
+    if ($scope) { $params.Scope = $scope }
+    if ($module.Params.skip_dependency_check) { $params.SkipDependencyCheck = $true }
 
-        if ($action -ne 'none' -and -not $module.CheckMode) {
-            Invoke-Install -Name $name -Version $version
-        }
+    try {
+        Uninstall-PSResource @params
+    }
+    catch {
+        $module.FailJson("Failed to uninstall resource '$Name': $($_.Exception.Message)", $_)
+    }
+    Write-CmdletWarning -Warning $cmdWarnings
+}
+
+# Each of these makes the change needed for one name and returns what it did (or would
+# do in check mode): none, installed, updated, reinstalled or uninstalled.
+
+function Invoke-AbsentState {
+    param([string]$Name)
+
+    if (@(Get-InstalledResource -Name $Name -Version $version).Count -eq 0) {
+        return 'none'
+    }
+    if (-not $module.CheckMode) {
+        Invoke-Uninstall -Name $Name
+    }
+    'uninstalled'
+}
+
+function Invoke-PresentState {
+    param([string]$Name)
+
+    if (@(Get-InstalledResource -Name $Name -Version $version).Count -eq 0) {
+        $action = 'installed'
+    }
+    elseif ($module.Params.reinstall) {
+        $action = 'reinstalled'
     }
     else {
-        # latest, work out the newest version that is available and see if it is installed.
-        $latest = Get-LatestAvailableResource -Name $name -Version $version
-        if (-not $latest) {
-            $module.FailJson("Resource '$name' was not found in any repository.")
-        }
-
-        $latestVersion = Get-AnsiblePSResourceVersionString -Resource $latest
-        $hasLatest = @(
-            $installed | Where-Object { (Get-AnsiblePSResourceVersionString -Resource $_) -eq $latestVersion }
-        ).Count -gt 0
-        $allInstalled = @(Get-InstalledResource -Name $name)
-        $anyInstalled = $allInstalled.Count -gt 0
-
-        # Update-PSResource and Install-PSResource treat versions that only differ by prerelease
-        # label, like 3.0.0-beta1 and 3.0.0-beta2, as the same so they do nothing. Reinstalling
-        # the exact version is the only way to switch between them.
-        $labelOnly = -not $hasLatest -and @($allInstalled | Where-Object { $_.Version -eq $latest.Version }).Count -gt 0
-
-        if (-not $anyInstalled) {
-            $action = 'installed'
-        }
-        elseif (-not $hasLatest) {
-            $action = 'updated'
-        }
-
-        if ($action -ne 'none' -and -not $module.CheckMode) {
-            if ($labelOnly) {
-                Invoke-Install -Name $name -Version $latestVersion -ForceReinstall
-            }
-            else {
-                $versionsBefore = Get-VersionList -Resources $allInstalled
-                Invoke-Install -Name $name -Version $version -Update:($action -eq 'updated')
-                if ($action -eq 'updated') {
-                    # Only report a change if the update installed a version that was not there before.
-                    $versionsAfter = Get-VersionList -Resources (Get-InstalledResource -Name $name)
-                    if (@($versionsAfter | Where-Object { $versionsBefore -notcontains $_ }).Count -eq 0) {
-                        $action = 'none'
-                    }
-                }
-            }
-        }
+        return 'none'
     }
 
-    if ($bootstrapped -and $name -eq $psResourceGetName -and $action -eq 'none') {
-        # Installed above, before the checks here could see that it was missing.
+    if (-not $module.CheckMode) {
+        Invoke-Install -Name $Name -Version $version
+    }
+    $action
+}
+
+function Invoke-LatestState {
+    param([string]$Name)
+
+    $latest = Get-LatestAvailableResource -Name $Name -Version $version
+    if (-not $latest) {
+        $module.FailJson("Resource '$Name' was not found in any repository.")
+    }
+    $latestVersion = Get-AnsiblePSResourceVersionString -Resource $latest
+
+    $matching = @(Get-InstalledResource -Name $Name -Version $version)
+    $allInstalled = @(Get-InstalledResource -Name $Name)
+
+    $hasLatest = @($matching | Where-Object {
+            (Get-AnsiblePSResourceVersionString -Resource $_) -eq $latestVersion
+        }).Count -gt 0
+    if ($hasLatest) {
+        return 'none'
+    }
+
+    $action = if ($allInstalled.Count -eq 0) { 'installed' } else { 'updated' }
+    if ($module.CheckMode) {
+        return $action
+    }
+
+    # Update-PSResource and Install-PSResource see versions that only differ by prerelease label,
+    # like 3.0.0-beta1 and 3.0.0-beta2, as the same version and do nothing. Reinstalling the exact
+    # version is the only way to switch between them.
+    $differsByLabelOnly = @($allInstalled | Where-Object { $_.Version -eq $latest.Version }).Count -gt 0
+    if ($differsByLabelOnly) {
+        Invoke-Install -Name $Name -Version $latestVersion -ForceReinstall
+        return $action
+    }
+
+    $before = Get-VersionList -Resources $allInstalled
+    Invoke-Install -Name $Name -Version $version -Update:($action -eq 'updated')
+    if ($action -eq 'updated') {
+        # Update-PSResource can finish without installing anything. Only report a change
+        # if a version turned up that was not there before.
+        $after = Get-VersionList -Resources (Get-InstalledResource -Name $Name)
+        if (@($after | Where-Object { $before -notcontains $_ }).Count -eq 0) {
+            return 'none'
+        }
+    }
+    $action
+}
+
+#endregion
+
+foreach ($name in $names) {
+    if ([WildcardPattern]::ContainsWildcardCharacters($name)) {
+        $module.FailJson("The resource name '$name' cannot contain wildcard characters.")
+    }
+}
+
+$credential = $null
+if ($module.Params.username) {
+    $securePassword = [System.Net.NetworkCredential]::new('', $module.Params.password).SecurePassword
+    $credential = [PSCredential]::new($module.Params.username, $securePassword)
+}
+
+# PSResourceGet can install itself when it is asked for by name. PowerShellGet does that
+# as there is no PSResourceGet to do it with yet.
+if ($state -eq 'absent' -and $names -contains $psResourceGetName) {
+    # Its files are in use while the module runs, removing them would leave a broken install.
+    $module.FailJson("$psResourceGetName cannot be uninstalled with this module as it is in use. Use Uninstall-Module in a separate task.")
+}
+
+$installedPSResourceGet = $false
+try {
+    Import-AnsiblePSResourceGet
+}
+catch {
+    $importError = $_
+    if ($state -eq 'absent' -or $names -notcontains $psResourceGetName) {
+        $module.FailJson(
+            "$($importError.Exception.Message) Install it first, or include '$psResourceGetName' in name to install it with this module.",
+            $importError
+        )
+    }
+
+    $installModuleCommand = Get-Command -Name Install-Module -ErrorAction SilentlyContinue
+    Assert-CanInstallPSResourceGet -InstallModuleCommand $installModuleCommand -ImportError $importError
+
+    if ($module.CheckMode) {
+        # The other names cannot be checked as there is no PSResourceGet to check them with.
+        $others = @($names | Where-Object { $_ -ne $psResourceGetName })
+        if ($others.Count -gt 0) {
+            $module.Warn("Check mode cannot check '$($others -join "', '")' until $psResourceGetName is installed.")
+        }
+        $module.Result.changed = $true
+        $module.Result.resources = @(@{ name = $psResourceGetName; action = 'installed'; versions = @() })
+        $module.ExitJson()
+    }
+
+    Install-PSResourceGetWithPowerShellGet
+    $installedPSResourceGet = $true
+    $module.Result.changed = $true
+
+    try {
+        Import-AnsiblePSResourceGet
+    }
+    catch {
+        $module.FailJson("Installed $psResourceGetName but could not load it: $($_.Exception.Message)", $_)
+    }
+}
+
+if ($version) {
+    $versionError = Test-AnsiblePSResourceVersion -Version $version
+    if ($versionError) {
+        $module.FailJson($versionError)
+    }
+}
+
+$results = foreach ($name in $names) {
+    $action = switch ($state) {
+        'absent' { Invoke-AbsentState -Name $name }
+        'present' { Invoke-PresentState -Name $name }
+        'latest' { Invoke-LatestState -Name $name }
+    }
+
+    if ($installedPSResourceGet -and $name -eq $psResourceGetName -and $action -eq 'none') {
+        # It was installed above, before it could be checked here.
         $action = 'installed'
     }
     if ($action -ne 'none') {
         $module.Result.changed = $true
     }
 
-    # In check mode this is the current state as nothing was changed.
-    $after = Get-InstalledResource -Name $name
-
-    $results.Add(@{
-            name = $name
-            action = $action
-            versions = (Get-VersionList -Resources $after)
-        })
+    @{
+        name = $name
+        action = $action
+        # In check mode nothing was changed, so this is what is installed now.
+        versions = @(Get-VersionList -Resources (Get-InstalledResource -Name $name))
+    }
 }
 
 $module.Result.resources = @($results)

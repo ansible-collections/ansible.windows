@@ -9,8 +9,8 @@ function Import-AnsiblePSResourceGet {
     [CmdletBinding()]
     param()
 
-    $module = Import-Module -Name Microsoft.PowerShell.PSResourceGet -MinimumVersion 1.0.0 -PassThru -ErrorAction SilentlyContinue
-    if (-not $module) {
+    $psResourceGet = Import-Module -Name Microsoft.PowerShell.PSResourceGet -MinimumVersion 1.0.0 -PassThru -ErrorAction SilentlyContinue
+    if (-not $psResourceGet) {
         throw 'The Microsoft.PowerShell.PSResourceGet module version 1.0.0 or newer is required but was not found.'
     }
 }

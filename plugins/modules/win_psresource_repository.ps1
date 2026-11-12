@@ -38,51 +38,30 @@ $priority = $module.Params.priority
 $apiVersion = $module.Params.api_version
 $credentialInfo = $module.Params.credential_info
 
-try {
-    Import-AnsiblePSResourceGet
-}
-catch {
-    $module.FailJson($_.Exception.Message, $_)
+function Get-CredentialInfoObject {
+    [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new($credentialInfo.vault_name, $credentialInfo.secret_name)
 }
 
-if ([WildcardPattern]::ContainsWildcardCharacters($name)) {
-    $module.FailJson("The repository name '$name' cannot contain wildcard characters.")
-}
-if ($null -ne $priority -and ($priority -lt 0 -or $priority -gt 100)) {
-    $module.FailJson("priority must be between 0 and 100, got $priority.")
-}
-
-if ($state -eq 'present' -and $credentialInfo -and
-    -not (Get-Module -ListAvailable -Name Microsoft.PowerShell.SecretManagement)) {
-    $module.FailJson("credential_info needs the Microsoft.PowerShell.SecretManagement module to read the secret, but it is not installed.")
-}
-
-$desiredUri = $null
-if ($uri) {
-    if (-not [Uri]::TryCreate($uri, [UriKind]::Absolute, [ref]$desiredUri)) {
-        $module.FailJson("uri '$uri' is not a valid absolute URI or path.")
+function Get-ExpectedCredentialInfo {
+    if ($credentialInfo) {
+        @{ vault_name = $credentialInfo.vault_name; secret_name = $credentialInfo.secret_name }
     }
 }
 
-$repo = Get-PSResourceRepository -Name $name -ErrorAction SilentlyContinue
-$before = if ($repo) { ConvertTo-AnsiblePSResourceRepositoryInfo -Repository $repo } else { @{} }
-$after = $before.Clone()
-
-if ($state -eq 'absent') {
-    if ($repo) {
-        if (-not $module.CheckMode) {
-            try {
-                Unregister-PSResourceRepository -Name $name -ErrorAction Stop
-            }
-            catch {
-                $module.FailJson("Failed to unregister repository '$name': $($_.Exception.Message)", $_)
-            }
+function Invoke-Unregister {
+    if (-not $module.CheckMode) {
+        try {
+            Unregister-PSResourceRepository -Name $name -ErrorAction Stop
         }
-        $after = @{}
-        $module.Result.changed = $true
+        catch {
+            $module.FailJson("Failed to unregister repository '$name': $($_.Exception.Message)", $_)
+        }
     }
+    $module.Result.changed = $true
 }
-elseif (-not $repo) {
+
+function Invoke-Register {
+    # PSGallery is registered with its own switch and cannot be given a uri.
     $isPSGallery = $name -eq 'PSGallery' -and -not $uri
     if (-not $uri -and -not $isPSGallery) {
         $module.FailJson("uri is required when registering a new repository other than 'PSGallery'.")
@@ -96,10 +75,7 @@ elseif (-not $repo) {
         $registerParams.Name = $name
         $registerParams.Uri = $desiredUri
         if ($apiVersion) { $registerParams.ApiVersion = $apiVersion }
-        if ($credentialInfo) {
-            $registerParams.CredentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new(
-                $credentialInfo.vault_name, $credentialInfo.secret_name)
-        }
+        if ($credentialInfo) { $registerParams.CredentialInfo = Get-CredentialInfoObject }
     }
     if ($trusted) { $registerParams.Trusted = $true }
     if ($null -ne $priority) { $registerParams.Priority = $priority }
@@ -112,68 +88,107 @@ elseif (-not $repo) {
             $module.FailJson("Failed to register repository '$name': $($_.Exception.Message)", $_)
         }
     }
+    $module.Result.changed = $true
 
-    $after = @{
+    # What the diff shows in check mode, a real run reads the repository back at the end.
+    $defaultPriority = 50
+    @{
         name = $name
         uri = if ($isPSGallery) { 'https://www.powershellgallery.com/api/v2' } else { $uri }
         trusted = [bool]$trusted
-        priority = if ($null -ne $priority) { $priority } else { 50 }
-        api_version = if ($apiVersion) { $apiVersion } else { $null }
-        credential_info = if ($credentialInfo) {
-            @{ vault_name = $credentialInfo.vault_name; secret_name = $credentialInfo.secret_name }
-        }
-        else { $null }
+        priority = if ($null -ne $priority) { $priority } else { $defaultPriority }
+        api_version = $apiVersion
+        credential_info = Get-ExpectedCredentialInfo
     }
-    $module.Result.changed = $true
 }
-else {
+
+function Invoke-Update {
+    param($Repository, $Expected)
+
+    # Only the options that were set are compared, the rest are left as they are.
     $setParams = @{}
 
-    if ($desiredUri -and $desiredUri.AbsoluteUri -ne $repo.Uri.AbsoluteUri) {
+    if ($desiredUri -and $desiredUri.AbsoluteUri -ne $Repository.Uri.AbsoluteUri) {
         $setParams.Uri = $desiredUri
-        $after.uri = $uri
+        $Expected.uri = $uri
     }
-    if ($null -ne $trusted -and $trusted -ne [bool]$repo.Trusted) {
+    if ($null -ne $trusted -and $trusted -ne [bool]$Repository.Trusted) {
         $setParams.Trusted = $trusted
-        $after.trusted = $trusted
+        $Expected.trusted = $trusted
     }
-    if ($null -ne $priority -and $priority -ne $repo.Priority) {
+    if ($null -ne $priority -and $priority -ne $Repository.Priority) {
         $setParams.Priority = $priority
-        $after.priority = $priority
+        $Expected.priority = $priority
     }
-    if ($apiVersion -and $apiVersion -ne $repo.ApiVersion.ToString()) {
+    if ($apiVersion -and $apiVersion -ne $Repository.ApiVersion.ToString()) {
         $setParams.ApiVersion = $apiVersion
-        $after.api_version = $apiVersion
+        $Expected.api_version = $apiVersion
     }
     if ($credentialInfo) {
-        $current = $repo.CredentialInfo
+        $current = $Repository.CredentialInfo
         if (-not $current -or
             $current.VaultName -ne $credentialInfo.vault_name -or
             $current.SecretName -ne $credentialInfo.secret_name) {
-            $setParams.CredentialInfo = [Microsoft.PowerShell.PSResourceGet.UtilClasses.PSCredentialInfo]::new(
-                $credentialInfo.vault_name, $credentialInfo.secret_name)
-            $after.credential_info = @{
-                vault_name = $credentialInfo.vault_name
-                secret_name = $credentialInfo.secret_name
-            }
+            $setParams.CredentialInfo = Get-CredentialInfoObject
+            $Expected.credential_info = Get-ExpectedCredentialInfo
         }
     }
 
-    if ($setParams.Count -gt 0) {
-        if (-not $module.CheckMode) {
-            try {
-                Set-PSResourceRepository -Name $name @setParams -ErrorAction Stop
-            }
-            catch {
-                $module.FailJson("Failed to update repository '$name': $($_.Exception.Message)", $_)
-            }
-        }
-        $module.Result.changed = $true
+    if ($setParams.Count -eq 0) {
+        return
     }
+    if (-not $module.CheckMode) {
+        try {
+            Set-PSResourceRepository -Name $name @setParams -ErrorAction Stop
+        }
+        catch {
+            $module.FailJson("Failed to update repository '$name': $($_.Exception.Message)", $_)
+        }
+    }
+    $module.Result.changed = $true
+}
+
+try {
+    Import-AnsiblePSResourceGet
+}
+catch {
+    $module.FailJson($_.Exception.Message, $_)
+}
+
+if ([WildcardPattern]::ContainsWildcardCharacters($name)) {
+    $module.FailJson("The repository name '$name' cannot contain wildcard characters.")
+}
+if ($null -ne $priority -and ($priority -lt 0 -or $priority -gt 100)) {
+    $module.FailJson("priority must be between 0 and 100, got $priority.")
+}
+if ($state -eq 'present' -and $credentialInfo -and
+    -not (Get-Module -ListAvailable -Name Microsoft.PowerShell.SecretManagement)) {
+    $module.FailJson("credential_info needs the Microsoft.PowerShell.SecretManagement module to read the secret, but it is not installed.")
+}
+
+$desiredUri = $null
+if ($uri -and -not [Uri]::TryCreate($uri, [UriKind]::Absolute, [ref]$desiredUri)) {
+    $module.FailJson("uri '$uri' is not a valid absolute URI or path.")
+}
+
+$repo = Get-PSResourceRepository -Name $name -ErrorAction SilentlyContinue
+$before = if ($repo) { ConvertTo-AnsiblePSResourceRepositoryInfo -Repository $repo } else { @{} }
+$after = $before.Clone()
+
+if ($state -eq 'absent') {
+    if ($repo) {
+        Invoke-Unregister
+        $after = @{}
+    }
+}
+elseif ($repo) {
+    Invoke-Update -Repository $repo -Expected $after
+}
+else {
+    $after = Invoke-Register
 }
 
 if ($module.Result.changed -and -not $module.CheckMode -and $state -eq 'present') {
-    # Report what the repository actually looks like after the change.
     $updated = Get-PSResourceRepository -Name $name -ErrorAction SilentlyContinue
     if ($updated) {
         $after = ConvertTo-AnsiblePSResourceRepositoryInfo -Repository $updated
