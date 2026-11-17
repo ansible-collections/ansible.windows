@@ -37,6 +37,17 @@ options:
         type: list
         elements: str
         default: [ CriticalUpdates, SecurityUpdates, UpdateRollups ]
+    reject_category_names:
+        description:
+        - A scalar or list of categories to reject updates from. To get the list
+          of categories, run the module with C(state=searched). The category must
+          be the full category string, but is case insensitive.
+        - Some possible categories are Application, Connectors, Critical Updates,
+          Definition Updates, Developer Kits, Feature Packs, Guidance, Security
+          Updates, Service Packs, Tools, Update Rollups, Updates, and Upgrades.
+        type: list
+        elements: str
+        default: []
     skip_optional:
         description:
         - Skip optional updates where the update has BrowseOnly set by Microsoft.
@@ -172,6 +183,18 @@ EXAMPLES = r"""
     # connection.
     ansible_ssh_args: -o ControlMaster=no -o ServerAliveInterval=30
 
+- name: Install all security, critical, and rollup updates except Office 2016 updates without a scheduled task
+  ansible.windows.win_updates:
+    category_names:
+      - SecurityUpdates
+      - CriticalUpdates
+      - UpdateRollups
+    reject_category_names:
+      - Office 2016
+  become: true
+  become_method: runas
+  become_user: SYSTEM
+
 - name: Install all security, critical, and rollup updates without a scheduled task
   ansible.windows.win_updates:
     category_names:
@@ -293,7 +316,7 @@ updates:
 
 filtered_updates:
     description: Updates that were found but were filtered based on
-      I(blacklist), I(whitelist) or I(category_names). The return value is in
+      I(blacklist), I(whitelist), I(category_names) or I(reject_category_names). The return value is in
       the same form as I(updates).
     returned: success
     type: dict
@@ -302,7 +325,7 @@ filtered_updates:
         filtered_reasons:
             description:
             - A list of reasons why the update has been filtered.
-            - Can be C(accept_list), C(reject_list), C(hidden), C(category_names), or C(skip_optional).
+            - Can be C(accept_list), C(reject_list), C(hidden), C(category_names), C(reject_category_names) or C(skip_optional).
             type: list
             elements: str
             sample:

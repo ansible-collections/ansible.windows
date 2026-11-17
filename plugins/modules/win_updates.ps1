@@ -17,6 +17,11 @@ $spec = @{
             elements = 'str'
             default = 'CriticalUpdates', 'SecurityUpdates', 'UpdateRollups'
         }
+        reject_category_names = @{
+            type = 'list'
+            elements = 'str'
+            default = []
+        }
         log_path = @{ type = 'path' }
         reject_list = @{ type = 'list'; elements = 'str' }
         server_selection = @{ type = 'str'; choices = 'default', 'managed_server', 'windows_update'; default = 'default' }
@@ -1055,6 +1060,10 @@ Function Install-WindowsUpdate {
         $Category,
 
         [Parameter(Mandatory)]
+        [String[]]
+        $RejectCategory,
+
+        [Parameter(Mandatory)]
         [String]
         $ServerSelection,
 
@@ -1823,6 +1832,14 @@ namespace Ansible.Windows.WinUpdates
                 break
             }
         }
+
+        $categoryReject = $false
+        foreach ($matchCat in $Category) {
+            if ($matchCat -eq '*' -or $updateInfo.categories -ieq $matchCat) {
+                $categoryReject = $true
+                break
+            }
+        }
         $matchList = ($updateInfo.title + $updateInfo.kb)
 
         $filteredReasons = [System.Collections.Generic.List[String]]@()
@@ -1837,6 +1854,9 @@ namespace Ansible.Windows.WinUpdates
         }
         if (-not $categoryMatch) {
             $filteredReasons.Add('category_names')
+        }
+        if ($categoryReject) {
+            $filteredReasons.Add('reject_category_names')
         }
 
         if ($SkipOptional) {
@@ -2067,6 +2087,19 @@ $categoryNames = $module.Params.category_names | ForEach-Object -Process {
     }
 }
 
+$rejectCategoryNames = $module.Params.reject_category_names | ForEach-Object -Process {
+    switch -exact ($_) {
+        CriticalUpdates { 'Critical Updates' }
+        DefinitionUpdates { 'Definition Updates' }
+        DeveloperKits { 'Developer Kits' }
+        FeaturePacks { 'Feature Packs' }
+        SecurityUpdates { 'Security Updates' }
+        ServicePacks { 'Service Packs' }
+        UpdateRollups { 'Update Rollups' }
+        default { $_ }
+    }
+}
+
 <#
 Most of the Windows Update Agent API will not run under a remote token which is typically what a WinRM process is.
 We can use a scheduled task to change the logon to a batch/service logon allowing us to bypass that restriction if
@@ -2176,6 +2209,7 @@ else {
 
 $updateParameters = @{
     Category = $categoryNames
+    RejectCategory = $rejectCategoryNames
     Accept = @(if ($module.Params.accept_list) { $module.Params.accept_list })
     Reject = @(if ($module.Params.reject_list) { $module.Params.reject_list })
     ServerSelection = $module.Params.server_selection
