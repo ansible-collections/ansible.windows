@@ -93,6 +93,12 @@
           - state.result.drivers | length == 2
           - state.result.packages | length == 1
 
+    - name: Install the x86 driver with the same name
+      ansible.windows.win_inf_printer_driver:
+        inf_file: '{{ driver_dir }}\x86\{{ test_inf_printer_thirdparty_inf }}'
+        driver_name: "{{ series_ii }}"
+        printer_env: x86
+
     - name: Unregister one driver without removing the package
       ansible.windows.win_inf_printer_driver:
         driver_name: "{{ series_ii }}"
@@ -103,21 +109,17 @@
       ansible.windows.win_powershell: *get_state
       register: state
 
-    - name: Assert the package was kept
+    - name: Assert only the x64 driver was unregistered and the packages were kept
       ansible.builtin.assert:
         that:
           - unregister is changed
-          - state.result.drivers | length == 1
-          - state.result.packages | length == 1
+          - state.result.drivers == [test_inf_printer_thirdparty_names[1] ~ ' (Windows x64)', series_ii ~ ' (Windows NT x86)']
+          - state.result.packages | length == 2
 
-    - name: Install the x64 and x86 drivers with the same name
+    - name: Register the x64 driver again
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\{{ item }}\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
         driver_name: "{{ series_ii }}"
-        printer_env: "{{ item }}"
-      loop:
-        - x64
-        - x86
 
     - name: Get the state before the purge
       ansible.windows.win_powershell: *get_state

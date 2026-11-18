@@ -101,15 +101,13 @@ function Uninstall-Driver {
             # A shared driver package cannot be deleted from the store while more than one
             # driver references it, so unregister every driver first and only pass
             # -RemoveFromDriverStore on the final removal, once the package is unreferenced.
+            # Piping a driver to Remove-PrinterDriver also removes same-name drivers in other environments,
+            # so each driver is removed by its escaped name and environment instead.
             for ($i = 0; $i -lt $drivers_to_remove.Count; $i++) {
-                if ($remove_from_driver_store -and ($i -eq ($drivers_to_remove.Count - 1))) {
-                    # -RemoveFromDriverStore requires -Name, which accepts wildcards and does not bind PrinterEnvironment from the pipeline.
-                    $escapedName = [WildcardPattern]::Escape($drivers_to_remove[$i].Name)
-                    Remove-PrinterDriver -Name $escapedName -PrinterEnvironment $printer_environment -RemoveFromDriverStore -ErrorAction Stop
-                }
-                else {
-                    $drivers_to_remove[$i] | Remove-PrinterDriver -ErrorAction Stop
-                }
+                $escapedName = [WildcardPattern]::Escape($drivers_to_remove[$i].Name)
+                $isLast = $i -eq ($drivers_to_remove.Count - 1)
+                Remove-PrinterDriver -Name $escapedName -PrinterEnvironment $printer_environment `
+                    -RemoveFromDriverStore:($remove_from_driver_store -and $isLast) -ErrorAction Stop
             }
         }
         catch {
