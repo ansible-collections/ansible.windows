@@ -2,7 +2,17 @@
 test_inf_printer_builtin_inf: C:\Windows\INF\prnge001.inf
 test_inf_printer_builtin_name: Generic / Text Only
 
-test_inf_printer_thirdparty_url: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/win_inf_printer_driver/HP-Color-LaserJet-Series-II.zip
+# Microsoft-signed prnhp001.inf packages (version 6.1.7233.1) from the Microsoft Update Catalog.
+# The CDN file name is the SHA1 of the CAB, and the SHA256 checksum is verified on download.
+test_inf_printer_thirdparty_packages:
+  x64:
+    # Update ID bf986da1-fa01-4479-ac75-5093a7990a39
+    url: https://catalog.s.download.windowsupdate.com/c/msdownload/update/driver/drvs/2018/12/drivers_af41d239df5205c515b59d342f910a4a916e54b9.cab
+    checksum: 0a5da3bf0a0173dffea6609881b2f3f7b56888ce72b9b332e465f678168fef15
+  x86:
+    # Update ID 59c79a46-d370-4c92-9c2e-272f3e21c401
+    url: https://catalog.s.download.windowsupdate.com/c/msdownload/update/driver/drvs/2018/12/drivers_4bee03adf747b5c582c267ac34d97bff53143255.cab
+    checksum: db2192b709060013dbb7347476f1d07d6ae7265fb5a5068c62cf807ce124ce49
 test_inf_printer_thirdparty_inf: prnhp001.inf
 test_inf_printer_thirdparty_names:
   - HP LaserJet Series II

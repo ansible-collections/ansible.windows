@@ -6,6 +6,47 @@
   register: no_inf
   failed_when: "no_inf.msg != 'state is present but all of the following are missing: inf_file'"
 
+- name: Fail to install from a missing INF file
+  ansible.windows.win_inf_printer_driver:
+    driver_name: "{{ test_inf_printer_builtin_name }}"
+    inf_file: '{{ remote_tmp_dir }}\missing.inf'
+    state: present
+  register: missing_inf
+  failed_when: >-
+    missing_inf is changed
+    or not (missing_inf.msg | default('')).startswith('Cannot find or access the driver INF file')
+
+- name: Fail to install a driver that is not defined in the INF file
+  ansible.windows.win_inf_printer_driver:
+    driver_name: Ansible Undefined Driver
+    inf_file: "{{ test_inf_printer_builtin_inf }}"
+    state: present
+  register: invalid_inf
+  failed_when: >-
+    invalid_inf is changed
+    or not (invalid_inf.msg | default('')).startswith('Error installing printer driver')
+
+- name: Test that a failed driver query is not reported as an absent driver
+  block:
+    - name: Stop the print spooler
+      ansible.windows.win_service:
+        name: Spooler
+        state: stopped
+        force_dependent_services: true
+
+    - name: Remove a driver while the print spooler is stopped
+      ansible.windows.win_inf_printer_driver:
+        driver_name: "{{ test_inf_printer_builtin_name }}"
+        state: absent
+      register: spooler_stopped
+      failed_when: "'Failed to query printer drivers' not in spooler_stopped.msg | default('')"
+
+  always:
+    - name: Start the print spooler
+      ansible.windows.win_service:
+        name: Spooler
+        state: started
+
 - name: Run the built-in driver lifecycle
   module_defaults:
     ansible.windows.win_inf_printer_driver:
@@ -54,6 +95,7 @@
     - name: Install the driver
       ansible.windows.win_inf_printer_driver:
         state: present
+      diff: true
       register: install
 
     - name: Get the driver state after install
@@ -64,6 +106,8 @@
       ansible.builtin.assert:
         that:
           - install is changed
+          - install.diff.before == ''
+          - install.diff.after == test_inf_printer_builtin_name ~ ' (Windows x64)\n'
           - state_after_install.result == test_inf_printer_builtin_name
 
     - name: Install the driver again
@@ -75,6 +119,23 @@
       ansible.builtin.assert:
         that:
           - install_again is not changed
+
+    - name: Remove a driver using a wildcard pattern as the name
+      ansible.windows.win_inf_printer_driver:
+        driver_name: Generic*
+        state: absent
+        remove_from_driver_store: true
+      register: remove_wildcard
+
+    - name: Get the driver state after the wildcard remove
+      ansible.windows.win_powershell: *get_state
+      register: state_after_remove_wildcard
+
+    - name: Assert the wildcard pattern did not match the driver
+      ansible.builtin.assert:
+        that:
+          - remove_wildcard is not changed
+          - state_after_remove_wildcard.result == test_inf_printer_builtin_name
 
     - name: Remove the driver in check mode
       ansible.windows.win_inf_printer_driver:
@@ -95,6 +156,7 @@
     - name: Remove the driver
       ansible.windows.win_inf_printer_driver:
         state: absent
+      diff: true
       register: remove
 
     - name: Get the driver state after remove
@@ -105,6 +167,8 @@
       ansible.builtin.assert:
         that:
           - remove is changed
+          - remove.diff.before == test_inf_printer_builtin_name ~ ' (Windows x64)\n'
+          - remove.diff.after == ''
           - state_after_remove.result != test_inf_printer_builtin_name
 
     - name: Remove the driver again
@@ -122,3 +186,12 @@
       ansible.windows.win_inf_printer_driver:
         driver_name: "{{ test_inf_printer_builtin_name }}"
         state: absent
+
+    - name: Get the driver state after cleanup
+      ansible.windows.win_powershell: *get_state
+      register: state_after_final_cleanup
+
+    - name: Assert the built-in driver was cleaned up
+      ansible.builtin.assert:
+        that:
+          - state_after_final_cleanup.result != test_inf_printer_builtin_name

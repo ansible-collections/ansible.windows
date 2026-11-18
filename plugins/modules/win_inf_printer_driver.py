@@ -16,6 +16,7 @@ description:
 version_added: 3.9.0
 requirements:
   - This module requires Windows 8, Windows Server 2012, or newer.
+  - The connecting user must be an administrator. Installing a driver requires the C(SeLoadDriverPrivilege) privilege.
 options:
   inf_file:
     description:
@@ -27,6 +28,7 @@ options:
     description:
       - Name of the printer driver as defined in the INF file.
       - This must match the driver name in the INF file exactly.
+      - The name is compared literally and is not treated as a wildcard pattern.
     type: str
     required: true
   printer_env:
@@ -39,7 +41,8 @@ options:
     default: x64
   state:
     description:
-      - When V(present), the driver is installed.
+      - When V(present), the driver is installed if no driver with the same O(driver_name) is registered for O(printer_env).
+      - An existing driver is not upgraded or replaced, even when O(inf_file) refers to a different INF file or driver version.
       - When V(absent), the driver is removed.
     type: str
     choices:
@@ -50,6 +53,7 @@ options:
     description:
       - When removing a driver, also remove the driver package from the Windows driver store.
       - When V(false), only the printer driver is unregistered and the package remains in the driver store.
+      - Only the package for O(printer_env) is removed; a package for another architecture is not affected.
       - Only used when O(state=absent).
     type: bool
     default: false
@@ -62,6 +66,10 @@ options:
       - Only used when O(state=absent) and O(remove_from_driver_store=true).
     type: bool
     default: false
+notes:
+  - The driver package can only be removed from the driver store while a driver from that package is registered.
+    If a driver was unregistered with O(remove_from_driver_store=false), its package remains in the driver store
+    and this module cannot remove it. Use C(pnputil.exe /delete-driver) to remove such a package.
 author:
   - daBONDi (@daBONDi)
   - nsjoseph (@nsjoseph)

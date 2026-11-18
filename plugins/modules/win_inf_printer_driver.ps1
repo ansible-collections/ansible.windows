@@ -59,7 +59,6 @@ function Install-Driver {
         $driver_object.SupportedPlatform = $printer_environment
         $driver_object.Version = 3
         $return_value = $driver_class.AddPrinterDriver($driver_object)
-        $null = $driver_class.Put()
         if ($return_value.ReturnValue -ne 0) {
             $module.FailJson("Error installing printer driver with WMI object. Return code: $($return_value.ReturnValue).")
         }
@@ -80,7 +79,13 @@ function Uninstall-Driver {
 
     if ($remove_from_driver_store) {
         # Removing the package from the driver store affects every driver that shares the same INF file.
-        $sharing_drivers = @(Get-PrinterDriver | Where-Object { $_.InfPath -eq $TargetDriver.InfPath })
+        try {
+            $sharing_drivers = @(Get-PrinterDriver -PrinterEnvironment $printer_environment -ErrorAction Stop |
+                    Where-Object { $_.InfPath -eq $TargetDriver.InfPath })
+        }
+        catch {
+            $module.FailJson("Failed to query printer drivers sharing '$($TargetDriver.InfPath)': $($_.Exception.Message)", $_)
+        }
         if (($sharing_drivers.Count -gt 1) -and (-not $remove_all)) {
             $module.FailJson("The INF file '$($TargetDriver.InfPath)' is used by $($sharing_drivers.Count) printer drivers. " +
                 'Set remove_all=true to remove them all from the driver store, ' +
@@ -98,10 +103,12 @@ function Uninstall-Driver {
             # -RemoveFromDriverStore on the final removal, once the package is unreferenced.
             for ($i = 0; $i -lt $drivers_to_remove.Count; $i++) {
                 if ($remove_from_driver_store -and ($i -eq ($drivers_to_remove.Count - 1))) {
-                    $drivers_to_remove[$i] | Remove-PrinterDriver -RemoveFromDriverStore
+                    # -RemoveFromDriverStore requires -Name, which accepts wildcards and does not bind PrinterEnvironment from the pipeline.
+                    $escapedName = [WildcardPattern]::Escape($drivers_to_remove[$i].Name)
+                    Remove-PrinterDriver -Name $escapedName -PrinterEnvironment $printer_environment -RemoveFromDriverStore -ErrorAction Stop
                 }
                 else {
-                    $drivers_to_remove[$i] | Remove-PrinterDriver
+                    $drivers_to_remove[$i] | Remove-PrinterDriver -ErrorAction Stop
                 }
             }
         }
@@ -113,7 +120,14 @@ function Uninstall-Driver {
     return $drivers_to_remove
 }
 
-$existing_driver = Get-PrinterDriver -Name $driver_name -PrinterEnvironment $printer_environment -ErrorAction SilentlyContinue
+# Filter by exact name, as Get-PrinterDriver -Name accepts wildcards.
+try {
+    $existing_driver = Get-PrinterDriver -PrinterEnvironment $printer_environment -ErrorAction Stop |
+        Where-Object { $_.Name -eq $driver_name }
+}
+catch {
+    $module.FailJson("Failed to query printer drivers: $($_.Exception.Message)", $_)
+}
 
 if (($state -eq 'present') -and (-not $existing_driver)) {
     Install-Driver
