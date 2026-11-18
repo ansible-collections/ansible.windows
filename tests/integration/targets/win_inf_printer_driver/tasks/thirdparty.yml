@@ -24,6 +24,30 @@
               $null = expand.exe -F:* "{{ remote_tmp_dir }}\$arch.cab" "{{ driver_dir }}\$arch"
           }
 
+    - name: Get the state before the tests
+      ansible.windows.win_powershell: &get_state
+        parameters:
+          Names: "{{ test_inf_printer_thirdparty_names }}"
+          InfName: "{{ test_inf_printer_thirdparty_inf }}"
+          Exclude: "{{ preexisting_packages | default([]) }}"
+        script: |
+          param($Names, $InfName, $Exclude)
+          $Ansible.Changed = $false
+          $drivers = Get-PrinterDriver | Where-Object Name -in $Names
+          $packages = Get-WindowsDriver -Online | Where-Object { (Split-Path $_.OriginalFileName -Leaf) -eq $InfName } |
+              ForEach-Object { Split-Path (Split-Path $_.OriginalFileName) -Leaf } |
+              Where-Object { $_ -notin $Exclude }
+          $Ansible.Result = @{
+              drivers = @($drivers | ForEach-Object { "$($_.Name) ($($_.PrinterEnvironment))" } | Sort-Object)
+              packages = @($packages)
+          }
+      register: state
+
+    # Windows images ship a legacy copy of this INF as a third-party package, which must be left alone.
+    - name: Record the packages that existed before the tests
+      ansible.builtin.set_fact:
+        preexisting_packages: "{{ state.result.packages }}"
+
     - name: Install both x64 drivers in check mode
       ansible.windows.win_inf_printer_driver:
         inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
@@ -33,20 +57,7 @@
       register: install_check
 
     - name: Get the state after the check-mode install
-      ansible.windows.win_powershell: &get_state
-        parameters:
-          Names: "{{ test_inf_printer_thirdparty_names }}"
-          InfName: "{{ test_inf_printer_thirdparty_inf }}"
-        script: |
-          param($Names, $InfName)
-          $Ansible.Changed = $false
-          # Get-WindowsDriver -Online lists third-party packages only, so the inbox copy of the INF is excluded.
-          $drivers = Get-PrinterDriver | Where-Object Name -in $Names
-          $packages = Get-WindowsDriver -Online | Where-Object { (Split-Path $_.OriginalFileName -Leaf) -eq $InfName }
-          $Ansible.Result = @{
-              drivers = @($drivers | ForEach-Object { "$($_.Name) ($($_.PrinterEnvironment))" } | Sort-Object)
-              packages = @($packages | ForEach-Object { Split-Path (Split-Path $_.OriginalFileName) -Leaf })
-          }
+      ansible.windows.win_powershell: *get_state
       register: state
 
     - name: Assert the check-mode install installed nothing
