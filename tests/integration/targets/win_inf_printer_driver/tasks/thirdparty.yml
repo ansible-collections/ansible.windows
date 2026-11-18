@@ -2,7 +2,13 @@
 - name: Run the third-party driver-store tests
   vars:
     driver_dir: '{{ remote_tmp_dir }}\win_inf_printer_driver'
+    x64_inf: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
+    x86_inf: '{{ driver_dir }}\x86\{{ test_inf_printer_thirdparty_inf }}'
     series_ii: "{{ test_inf_printer_thirdparty_names[0] }}"
+    series_ii_x64: "{{ series_ii }} (Windows x64)"
+    series_ii_x86: "{{ series_ii }} (Windows NT x86)"
+    color_4500_x64: "{{ test_inf_printer_thirdparty_names[1] }} (Windows x64)"
+    thirdparty_drivers: "{{ test_inf_printer_thirdparty_packages.keys() | product(test_inf_printer_thirdparty_names) | list }}"
   block:
     - name: Download the third-party driver packages
       ansible.windows.win_get_url:
@@ -18,46 +24,54 @@
 
     - name: Extract the third-party driver packages
       ansible.windows.win_powershell:
-        script: |
-          foreach ($arch in 'x64', 'x86') {
-              $null = New-Item -Path "{{ driver_dir }}\$arch" -ItemType Directory -Force
-              $null = expand.exe -F:* "{{ remote_tmp_dir }}\$arch.cab" "{{ driver_dir }}\$arch"
-          }
-
-    - name: Get the state before the tests
-      ansible.windows.win_powershell: &get_state
         parameters:
-          Names: "{{ test_inf_printer_thirdparty_names }}"
-          InfName: "{{ test_inf_printer_thirdparty_inf }}"
-          Exclude: "{{ preexisting_packages | default([]) }}"
+          Source: "{{ remote_tmp_dir }}"
+          Destination: "{{ driver_dir }}"
+          Architectures: "{{ test_inf_printer_thirdparty_packages.keys() | list }}"
         script: |
-          param($Names, $InfName, $Exclude)
-          $Ansible.Changed = $false
-          $drivers = Get-PrinterDriver | Where-Object Name -in $Names
-          $packages = Get-WindowsDriver -Online | Where-Object { (Split-Path $_.OriginalFileName -Leaf) -eq $InfName } |
-              ForEach-Object { Split-Path (Split-Path $_.OriginalFileName) -Leaf } |
-              Where-Object { $_ -notin $Exclude }
-          $Ansible.Result = @{
-              drivers = @($drivers | ForEach-Object { "$($_.Name) ($($_.PrinterEnvironment))" } | Sort-Object)
-              packages = @($packages)
+          param($Source, $Destination, $Architectures)
+          foreach ($arch in $Architectures) {
+              $null = New-Item -Path "$Destination\$arch" -ItemType Directory -Force
+              $output = expand.exe -F:* "$Source\$arch.cab" "$Destination\$arch"
+              if ($LASTEXITCODE) {
+                  throw "expand.exe failed to extract $arch.cab ($LASTEXITCODE): $output"
+              }
           }
-      register: state
 
-    # Windows images ship a legacy copy of this INF as a third-party package, which must be left alone.
-    - name: Record the packages that existed before the tests
-      ansible.builtin.set_fact:
-        preexisting_packages: "{{ state.result.packages }}"
+    - name: Ensure the third-party drivers and packages are absent before the tests
+      ansible.windows.win_inf_printer_driver: &remove_thirdparty
+        driver_name: "{{ item[1] }}"
+        printer_env: "{{ item[0] }}"
+        state: absent
+        remove_from_driver_store: true
+        remove_all: true
+      loop: "{{ thirdparty_drivers }}"
 
     - name: Install both x64 drivers in check mode
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: "{{ x64_inf }}"
         driver_name: "{{ item }}"
       loop: "{{ test_inf_printer_thirdparty_names }}"
       check_mode: true
       register: install_check
 
     - name: Get the state after the check-mode install
-      ansible.windows.win_powershell: *get_state
+      ansible.windows.win_powershell: &get_state
+        parameters:
+          Names: "{{ test_inf_printer_thirdparty_names }}"
+          InfName: "{{ test_inf_printer_thirdparty_inf }}"
+          Version: "{{ test_inf_printer_thirdparty_version }}"
+        script: |
+          param($Names, $InfName, $Version)
+          $Ansible.Changed = $false
+          $drivers = Get-PrinterDriver -ErrorAction Stop | Where-Object Name -in $Names
+          $packages = Get-WindowsDriver -Online -ErrorAction Stop |
+              Where-Object { (Split-Path $_.OriginalFileName -Leaf) -eq $InfName -and $_.Version -eq $Version }
+          $Ansible.Result = @{
+              drivers = @($drivers | ForEach-Object { "$($_.Name) ($($_.PrinterEnvironment))" } | Sort-Object)
+              # Driver store folders are named <inf>_<architecture>_<hash>.
+              packages = @($packages | ForEach-Object { (Split-Path (Split-Path $_.OriginalFileName) -Leaf).Split('_')[1] } | Sort-Object)
+          }
       register: state
 
     - name: Assert the check-mode install installed nothing
@@ -69,14 +83,14 @@
 
     - name: Install both x64 drivers from the shared INF
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: "{{ x64_inf }}"
         driver_name: "{{ item }}"
       loop: "{{ test_inf_printer_thirdparty_names }}"
       register: install
 
     - name: Install both x64 drivers again
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: "{{ x64_inf }}"
         driver_name: "{{ item }}"
       loop: "{{ test_inf_printer_thirdparty_names }}"
       register: install_again
@@ -85,21 +99,22 @@
       ansible.windows.win_powershell: *get_state
       register: state
 
-    - name: Assert both drivers were installed from one package
+    - name: Assert both drivers were installed once from one package
       ansible.builtin.assert:
         that:
           - install is changed
           - install_again is not changed
-          - state.result.drivers | length == 2
-          - state.result.packages | length == 1
+          - state.result.drivers == [color_4500_x64, series_ii_x64]
+          - state.result.packages == ['amd64']
 
     - name: Install the x86 driver with the same name
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\x86\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: "{{ x86_inf }}"
         driver_name: "{{ series_ii }}"
         printer_env: x86
+      register: install_x86
 
-    - name: Unregister one driver without removing the package
+    - name: Unregister the x64 driver without removing the package
       ansible.windows.win_inf_printer_driver:
         driver_name: "{{ series_ii }}"
         state: absent
@@ -109,21 +124,18 @@
       ansible.windows.win_powershell: *get_state
       register: state
 
-    - name: Assert only the x64 driver was unregistered and the packages were kept
+    - name: Assert only the x64 driver was unregistered and both packages were kept
       ansible.builtin.assert:
         that:
+          - install_x86 is changed
           - unregister is changed
-          - state.result.drivers == [test_inf_printer_thirdparty_names[1] ~ ' (Windows x64)', series_ii ~ ' (Windows NT x86)']
-          - state.result.packages | length == 2
+          - state.result.drivers == [color_4500_x64, series_ii_x86]
+          - state.result.packages == ['amd64', 'x86']
 
     - name: Register the x64 driver again
       ansible.windows.win_inf_printer_driver:
-        inf_file: '{{ driver_dir }}\x64\{{ test_inf_printer_thirdparty_inf }}'
+        inf_file: "{{ x64_inf }}"
         driver_name: "{{ series_ii }}"
-
-    - name: Get the state before the purge
-      ansible.windows.win_powershell: *get_state
-      register: state_before_purge
 
     - name: Fail to purge the shared x64 package without remove_all
       ansible.windows.win_inf_printer_driver:
@@ -131,7 +143,7 @@
         state: absent
         remove_from_driver_store: true
       register: reject
-      failed_when: "'Set remove_all=true' not in reject.msg | default('')"
+      failed_when: "'Set remove_all=true' not in reject.msg"
 
     - name: Purge the shared x64 package in check mode
       ansible.windows.win_inf_printer_driver:
@@ -146,13 +158,12 @@
       ansible.windows.win_powershell: *get_state
       register: state
 
-    - name: Assert nothing was removed
+    - name: Assert the rejected and check-mode purges removed nothing
       ansible.builtin.assert:
         that:
           - purge_check is changed
-          - state.result == state_before_purge.result
-          - state.result.drivers | length == 3
-          - state.result.packages | length == 2
+          - state.result.drivers == [color_4500_x64, series_ii_x86, series_ii_x64]
+          - state.result.packages == ['amd64', 'x86']
 
     - name: Purge the shared x64 package
       ansible.windows.win_inf_printer_driver:
@@ -170,25 +181,19 @@
       ansible.builtin.assert:
         that:
           - purge is changed
-          - state.result.drivers == [series_ii ~ ' (Windows NT x86)']
-          - state.result.packages | length == 1
-          - "'_x86_' in state.result.packages[0]"
+          - state.result.drivers == [series_ii_x86]
+          - state.result.packages == ['x86']
 
   always:
     - name: Remove the third-party drivers and packages
-      ansible.windows.win_inf_printer_driver:
-        driver_name: "{{ item[1] }}"
-        printer_env: "{{ item[0] }}"
-        state: absent
-        remove_from_driver_store: true
-        remove_all: true
-      loop: "{{ ['x64', 'x86'] | product(test_inf_printer_thirdparty_names) | list }}"
+      ansible.windows.win_inf_printer_driver: *remove_thirdparty
+      loop: "{{ thirdparty_drivers }}"
 
     - name: Get the state after cleanup
       ansible.windows.win_powershell: *get_state
       register: state
 
-    - name: Assert the drivers and packages were cleaned up
+    - name: Assert the third-party drivers and packages were cleaned up
       ansible.builtin.assert:
         that:
           - state.result.drivers == []
