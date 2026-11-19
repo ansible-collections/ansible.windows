@@ -8,7 +8,7 @@
 
 - name: Fail to install from a missing INF file
   ansible.windows.win_inf_printer_driver:
-    driver_name: "{{ test_inf_printer_builtin_name }}"
+    driver_name: Ansible Undefined Driver
     inf_file: '{{ remote_tmp_dir }}\missing.inf'
     state: present
   register: missing_inf
@@ -24,11 +24,13 @@
 
 - name: Test that a failed driver query is not reported as an absent driver
   block:
-    - name: Stop the print spooler
-      ansible.windows.win_service:
-        name: Spooler
-        state: stopped
-        force_dependent_services: true
+    - name: Stop the print spooler and record its running dependent services
+      ansible.windows.win_powershell:
+        script: |
+          $spooler = Get-Service -Name Spooler
+          $Ansible.Result = @($spooler.DependentServices | Where-Object Status -eq Running | ForEach-Object Name)
+          Stop-Service -InputObject $spooler -Force -ErrorAction Stop
+      register: spooler_stop
 
     - name: Remove a driver while the print spooler is stopped
       ansible.windows.win_inf_printer_driver:
@@ -38,10 +40,11 @@
       failed_when: "'Failed to query printer drivers' not in spooler_stopped.msg"
 
   always:
-    - name: Start the print spooler
+    - name: Start the print spooler and its previously running dependent services
       ansible.windows.win_service:
-        name: Spooler
+        name: "{{ item }}"
         state: started
+      loop: "{{ ['Spooler'] + spooler_stop.result }}"
 
 - name: Run the built-in driver lifecycle
   module_defaults:
@@ -155,6 +158,8 @@
     - name: Remove the built-in driver
       ansible.windows.win_inf_printer_driver:
         state: absent
+      register: cleanup
+      ignore_errors: true
 
     - name: Get the state after cleanup
       ansible.windows.win_powershell: *get_state
@@ -163,4 +168,8 @@
     - name: Assert the built-in driver was cleaned up
       ansible.builtin.assert:
         that:
+          - cleanup is not failed
           - state.result.drivers == []
+        fail_msg: >-
+          Cleanup errors: {{ [cleanup] | select('failed') | map(attribute='msg') | list }}.
+          Remaining drivers: {{ state.result.drivers }}.

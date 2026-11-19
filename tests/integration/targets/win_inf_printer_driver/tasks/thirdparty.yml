@@ -188,6 +188,8 @@
     - name: Remove the third-party drivers and packages
       ansible.windows.win_inf_printer_driver: *remove_thirdparty
       loop: "{{ thirdparty_drivers }}"
+      register: cleanup
+      ignore_errors: true
 
     - name: Get the state after cleanup
       ansible.windows.win_powershell: *get_state
@@ -196,5 +198,10 @@
     - name: Assert the third-party drivers and packages were cleaned up
       ansible.builtin.assert:
         that:
+          - cleanup is not failed
           - state.result.drivers == []
           - state.result.packages == []
+        fail_msg: >-
+          Cleanup errors: {{ cleanup.results | select('failed') | map(attribute='msg') | list }}.
+          Remaining drivers: {{ state.result.drivers }}.
+          Remaining packages: {{ state.result.packages }}.
