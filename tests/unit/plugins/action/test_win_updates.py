@@ -116,6 +116,11 @@ class UpdateModuleMock:
                     yield AnsibleConnectionFailure("connection error")
                     continue
 
+                if line == b'FAILURE_WSMAN':
+                    # pypsrp exception raised as is by the psrp connection plugin
+                    yield Exception("Received a WSManFault message. (Code: 995)")
+                    continue
+
                 if not line:
                     if not output:
                         continue
@@ -165,13 +170,14 @@ def win_updates_init(task_args, async_val=0, check_mode=False, connection=None):
     return plugin
 
 
-def run_action(monkeypatch, test_id, task_vars, check_mode=False, poll_rc=0, poll_stderr=b'', poll_newline_separator=b'\n'):
+def run_action(monkeypatch, test_id, task_vars, check_mode=False, poll_rc=0, poll_stderr=b'', poll_newline_separator=b'\n',
+               connection=None):
     module_arg_return = task_vars.copy()
 
     plugin = win_updates_init(
         task_vars,
         check_mode=check_mode,
-        connection=MagicMock(),
+        connection=connection or MagicMock(),
     )
     execute_module = MagicMock()
     execute_module.side_effect = UpdateModuleMock(test_id, module_arg_return).__iter__()
@@ -578,6 +584,7 @@ def test_fail_install(monkeypatch):
 def test_connection_failures_during_poll(monkeypatch):
     mock_warning = MagicMock()
     monkeypatch.setattr(win_updates.display, "warning", mock_warning)
+    monkeypatch.setattr(win_updates.time, "sleep", MagicMock())
     actual = run_action(monkeypatch, 'poll_error1.txt', {
         'category_names': ['*'],
     })
@@ -623,17 +630,66 @@ def test_connection_failures_during_poll(monkeypatch):
 def test_multiple_connection_failures_during_poll(monkeypatch):
     mock_warning = MagicMock()
     monkeypatch.setattr(win_updates.display, "warning", mock_warning)
+    monkeypatch.setattr(win_updates.time, "sleep", MagicMock())
+    connection = MagicMock()
     actual = run_action(monkeypatch, 'poll_error2.txt', {
         'category_names': ['*'],
-    })
+    }, connection=connection)
 
     assert actual['unreachable']
     assert actual['msg'] == 'connection error'
 
-    assert mock_warning.call_count == 3
-    assert mock_warning.mock_calls[0][1] == ('Connection failure when polling update result - attempting to retry: connection error',)
-    assert mock_warning.mock_calls[1][1] == ('Unknown failure when polling update result - attempting to cancel task: connection error',)
-    assert mock_warning.mock_calls[2][1] == ('Unknown failure when cancelling update task: connection error',)
+    assert mock_warning.call_count == 12
+    for idx in range(5):
+        assert mock_warning.mock_calls[idx][1] == ('Connection failure when polling update result - attempting to retry: connection error',)
+    assert mock_warning.mock_calls[5][1] == ('Unknown failure when polling update result - attempting to cancel task: connection error',)
+    for idx in range(6, 11):
+        assert mock_warning.mock_calls[idx][1] == ('Connection failure when cancelling update task - attempting to retry: connection error',)
+    assert mock_warning.mock_calls[11][1] == ('Unknown failure when cancelling update task: connection error',)
+
+    # Reset before each poll and cancel retry.
+    assert connection.reset.call_count == 10
+
+
+def test_wsman_fault_during_poll(monkeypatch):
+    mock_warning = MagicMock()
+    monkeypatch.setattr(win_updates.display, "warning", mock_warning)
+    monkeypatch.setattr(win_updates.time, "sleep", MagicMock())
+    connection = MagicMock()
+    actual = run_action(monkeypatch, 'poll_error3.txt', {
+        'category_names': ['*'],
+    }, connection=connection)
+
+    assert 'failed' not in actual
+    assert actual['changed']
+    assert actual['found_update_count'] == 3
+    assert actual['installed_update_count'] == 3
+
+    assert connection.reset.call_count == 1
+    assert mock_warning.call_count == 1
+    assert mock_warning.mock_calls[0][1] == (
+        'Connection failure when polling update result - attempting to retry: Received a WSManFault message. (Code: 995)',
+    )
+
+
+def test_wsman_fault_during_cancel(monkeypatch):
+    mock_warning = MagicMock()
+    monkeypatch.setattr(win_updates.display, "warning", mock_warning)
+    monkeypatch.setattr(win_updates.time, "sleep", MagicMock())
+    connection = MagicMock()
+    actual = run_action(monkeypatch, 'poll_error4.txt', {
+        'category_names': ['*'],
+    }, connection=connection)
+
+    assert 'failed' not in actual
+    assert actual['changed']
+    assert actual['installed_update_count'] == 3
+
+    assert connection.reset.call_count == 1
+    assert mock_warning.call_count == 1
+    assert mock_warning.mock_calls[0][1] == (
+        'Connection failure when cancelling update task - attempting to retry: Received a WSManFault message. (Code: 995)',
+    )
 
 
 def test_repeated_update(monkeypatch):
