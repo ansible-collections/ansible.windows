@@ -4,6 +4,8 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import random
+import time
 import traceback
 
 from ansible.errors import AnsibleActionFail, AnsibleConnectionFailure
@@ -11,13 +13,6 @@ from ansible.module_utils.common.text.converters import to_native, to_text
 from ansible.module_utils.common.validation import check_type_bool, check_type_int
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
-
-# This is not ideal but the psrp connection plugin doesn't catch all these exceptions as an AnsibleConnectionFailure.
-# Until we can guarantee we are using a version of psrp that handles all this we try to handle those issues.
-try:
-    from requests.exceptions import Timeout as RequestTimeoutException
-except ImportError:
-    RequestTimeoutException = AnsibleConnectionFailure
 
 try:
     from typing import (
@@ -941,11 +936,14 @@ class ActionModule(ActionBase):
             # The last thing we should be doing is to cancel the task. This
             # stops a process that might still be running and is also used in
             # a normal operation to signal the exit status has been received.
+            # The update task keeps on running if the cancel does not reach
+            # it so it is retried like the poll.
             try:
                 self._execute_win_updates(
                     task_vars,
                     operation="cancel",
                     operation_options=cancel_options,
+                    retry_on_failure=True,
                 )
             except Exception as e:
                 if has_errored:
@@ -968,12 +966,18 @@ class ActionModule(ActionBase):
         final_options["_operation_options"] = operation_options or {}
 
         # WinRM based connections are problematic when the host is under load.
-        # When polling the output, ignore connection/timeout failures and try
-        # again in case it was a temporary error. We can only do this during
-        # the polling stage as that's the only time we can ignore a dropped
-        # progress message.
+        # When polling the output or cancelling the task, ignore
+        # connection/timeout failures and try again in case it was a temporary
+        # error. We can only do this during the polling stage as that's the
+        # only time we can ignore a dropped progress message, the cancel can
+        # be sent more than once. The update task outlives the WinRM shell so
+        # the connection is reset to run the command on a new shell. The psrp
+        # and winrm connection plugins don't raise all of their connection
+        # errors as an AnsibleConnectionFailure, e.g. a WSManFault when the
+        # shell was aborted, so any error is retried.
         result = {}
-        for idx in range(2):
+        attempts = 6 if retry_on_failure else 1
+        for idx in range(attempts):
             try:
                 result = self._execute_module(
                     module_name='ansible.windows.win_updates',
@@ -981,11 +985,16 @@ class ActionModule(ActionBase):
                     task_vars=task_vars,
                 )
                 break
-            except (AnsibleConnectionFailure, RequestTimeoutException) as e:
-                if not retry_on_failure or idx == 1:
+            except Exception as e:
+                if idx == attempts - 1:
                     raise
 
-                display.warning("Connection failure when polling update result - attempting to retry: %s" % to_text(e))
+                action = "polling update result" if operation == "poll" else "cancelling update task"
+                display.warning("Connection failure when %s - attempting to retry: %s" % (action, to_text(e)))
+                self._reset_connection(task_vars.get('inventory_hostname', None))
+
+                # Use exponential backoff with a max timeout, plus a little bit of randomness
+                time.sleep(min(2**idx, 12) + random.randint(0, 1000) / 1000)
 
         if 'invocation' in result and not self._invocation:
             # First run through we want to update the invocation value in the final results
@@ -1011,6 +1020,13 @@ class ActionModule(ActionBase):
                 display.warning(w)
 
         return result
+
+    def _reset_connection(self, inventory_hostname):  # type: (Optional[str]) -> None
+        """Resets the connection, the next command reconnects if it fails."""
+        try:
+            self._connection.reset()
+        except Exception as e:
+            display.vvvv("Failed to reset connection: %s" % to_text(e), host=inventory_hostname)
 
     def _get_update_info(self, update_id):  # type: (str) -> Dict
         """Gets the update results info value to return."""
