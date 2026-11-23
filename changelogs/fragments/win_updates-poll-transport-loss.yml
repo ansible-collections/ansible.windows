@@ -1,2 +1,4 @@
 bugfixes:
-  - win_updates - Reset the connection and retry polling the update progress on any connection error, like a WSMan fault raised by the ``psrp`` connection plugin, instead of failing and leaving the update task running on the host
+  - win_updates - Reset the connection and retry polling the update progress and cancelling the update task on any
+    connection error, like a WSMan fault raised by the ``psrp`` or ``winrm`` connection plugin, instead of failing and
+    leaving the update task running on the host - https://github.com/ansible-collections/ansible.windows/issues/970
