@@ -693,7 +693,7 @@ if ($module.CheckMode -and -not $supportsShouldProcess) {
     $module.ExitJson()
 }
 
-$isWDACEnabled = 'SystemPolicy' -as [type] -and [SystemPolicy]::GetSystemLockdownPolicy() -ne 'None'
+$isWDACEnabled = 'SystemPolicy' -as [type] -and [SystemPolicy]::GetSystemLockdownPolicy() -eq 'Enforce'
 
 $runspace = $null
 $processId = $null
